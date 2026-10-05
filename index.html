@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080606">
+<title>DARE Arcade — Games by Dontae Amare</title>
+<meta name="description" content="Free browser games from Dontae Amare. Play The Last Don, a match-3 set on Fort Worth's Historic South Side.">
+<meta property="og:title" content="DARE Arcade">
+<meta property="og:description" content="Play The Last Don — take Panther City back, block by block.">
+<meta property="og:image" content="/the-last-don/icon-512.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DARE Arcade">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#080606; --char:#141010; --line:#2a2322;
+  --bone:#D4C8B6; --smoke:#8a7f76;
+  --gold:#C9972A; --gold-lt:#F0C040; --ember:#C0392B;
+  --display:'Bebas Neue','Oswald','Arial Narrow',Impact,sans-serif;
+  --text:'Crimson Pro',Georgia,'Times New Roman',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--ink);-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;min-height:100dvh;background:var(--ink);color:var(--bone);
+  font-family:var(--text);font-size:19px;line-height:1.55;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold-lt);outline-offset:3px}
+.wrap{max-width:720px;margin:0 auto;padding:0 22px}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0 0}
+.mark{font-family:var(--display);font-size:22px;letter-spacing:.14em;color:var(--gold);text-decoration:none}
+.bar a.out{font-size:16px;color:var(--smoke);text-decoration:none;border-bottom:1px solid var(--line)}
+
+/* hero: the actual tile set from the game */
+.mosaic{
+  margin:22px -22px 0;display:grid;grid-template-columns:repeat(9,1fr);gap:5px;padding:0 10px;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
+          mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
+}
+.t{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.08);
+   animation:drop .5s cubic-bezier(.3,1.4,.6,1) both;animation-delay:calc(var(--i) * 28ms)}
+.t svg{width:62%;height:62%}
+.t.crown{background:radial-gradient(ellipse at 35% 30%,#5A4010,#3A2C08 45%,#1A1000)}
+.t.key{background:radial-gradient(ellipse at 35% 30%,#104060,#0C2238 45%,#040F1A)}
+.t.fist{background:radial-gradient(ellipse at 35% 30%,#501010,#320C0C 45%,#0F0404)}
+.t.shield{background:radial-gradient(ellipse at 35% 30%,#104028,#0C2C18 45%,#040F08)}
+.t.chain{background:radial-gradient(ellipse at 35% 30%,#383838,#222 45%,#101010)}
+.t.star{background:radial-gradient(ellipse at 35% 30%,#3C1040,#280E2E 45%,#0F0514)}
+.t.lit{box-shadow:0 0 0 2px var(--gold),0 0 18px rgba(240,192,64,.45)}
+@keyframes drop{from{transform:translateY(-40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.t{animation:none}}
+
+/* feature */
+.feature{padding:6px 0 8px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(84px,24vw,168px);line-height:.82;color:#F4EEE4;letter-spacing:.01em;margin-top:-6px}
+h1 span{display:block}
+.pitch{font-size:21px;max-width:30em;margin:18px 0 6px}
+.facts{font-style:italic;color:var(--smoke);font-size:17px}
+.play{
+  display:inline-flex;align-items:center;gap:12px;margin-top:24px;
+  font-family:var(--display);font-size:28px;letter-spacing:.08em;color:var(--ink);text-decoration:none;
+  background:var(--gold);padding:14px 34px 12px;border-radius:2px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 10px 30px rgba(201,151,42,.25);
+  transition:background .15s,transform .1s;
+}
+.play:hover{background:var(--gold-lt)}
+.play:active{transform:scale(.97)}
+.play svg{width:20px;height:20px}
+.tip{display:block;margin-top:14px;font-size:16px;color:var(--smoke)}
+
+/* queue */
+.queue{margin-top:56px;border-top:1px solid var(--line);padding-top:22px}
+h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04em;color:var(--gold);line-height:1.05;margin-bottom:6px}
+.queue p.lede{color:var(--smoke);font-size:17px;margin-bottom:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.row h3{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.03em;color:#F4EEE4;line-height:1}
+.row p{grid-column:1;font-size:17px;color:var(--bone)}
+.status{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:15px;font-style:italic;color:var(--smoke);
+  border:1px solid var(--line);padding:3px 10px;border-radius:999px;white-space:nowrap}
+
+footer{padding:40px 0 34px;color:var(--smoke);font-size:16px}
+footer a{color:var(--bone)}
+footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <a class="mark" href="/">DARE ARCADE</a>
+    <a class="out" href="https://dontaeamare.com">dontaeamare.com</a>
+  </header>
+
+  <div class="mosaic" id="mosaic" aria-hidden="true"></div>
+
+  <main>
+    <section class="feature" aria-labelledby="tld">
+      <h1 id="tld"><span>The Last</span><span style="color:var(--gold-lt)">Don</span></h1>
+      <p class="pitch">Panther City is falling to the New Order. Match crowns, keys and fists to take Fort Worth's Historic South Side back, one block at a time.</p>
+      <p class="facts">60 levels across five districts, with a three-chapter comic backstory.</p>
+      <a class="play" href="/the-last-don/">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>
+        Play now
+      </a>
+      <span class="tip">Free in your browser. On a phone, use Add to Home Screen to play it full screen.</span>
+    </section>
+
+    <section class="queue" aria-labelledby="next">
+      <h2 id="next">Coming to the arcade</h2>
+      <p class="lede">Each one gets tested on real phones before it goes live here.</p>
+      <div class="row">
+        <h3>Crowd Run</h3>
+        <span class="status">In testing</span>
+        <p>Snake, rebuilt. Grow your crowd without cutting yourself off.</p>
+      </div>
+      <div class="row">
+        <h3>Cosmic Encounter</h3>
+        <span class="status">In testing</span>
+        <p>A Galaga-style shooter. Hold the line against wave after wave.</p>
+      </div>
+      <div class="row">
+        <h3>Rebel Elimination</h3>
+        <span class="status">In testing</span>
+        <p>A platformer starring Dontae Amare.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="links">
+      <a href="https://dontaeamare.com">Music</a>
+      <a href="https://darewear.store">DARE store</a>
+    </div>
+    Desired Ambitions Requires Execution.
+  </footer>
+</div>
+
+<script>
+// Hero mosaic: the real tile art from The Last Don, dropped in once on load.
+(function(){
+  const S={
+    crown:'<polygon points="4,24 28,24 25,11 20,17 16,6 12,17 7,11" fill="#C9972A"/><rect x="4" y="22" width="24" height="5" rx="1" fill="#E0A830"/><circle cx="16" cy="24.5" r="2.5" fill="#CC2020"/><circle cx="8.5" cy="24.5" r="1.8" fill="#2050CC"/><circle cx="23.5" cy="24.5" r="1.8" fill="#2050CC"/><circle cx="16" cy="6" r="1.8" fill="#FFE060"/>',
+    key:'<circle cx="12" cy="13" r="7" fill="#1A3A70"/><circle cx="12" cy="13" r="5" fill="#2A5090"/><circle cx="12" cy="13" r="2.5" fill="#4A80C0"/><rect x="17" y="11.5" width="12" height="4" rx="1.5" fill="#3060A0"/><rect x="25" y="15.5" width="2.5" height="4" rx=".8" fill="#3060A0"/><rect x="21.5" y="15.5" width="2.5" height="3.5" rx=".8" fill="#3060A0"/>',
+    fist:'<rect x="10" y="23" width="13" height="6" rx="2.5" fill="#8A4810"/><rect x="7" y="16" width="18" height="11" rx="3" fill="#A06030"/><rect x="8" y="8" width="5" height="11" rx="3" fill="#C08040"/><rect x="13.5" y="7" width="5" height="12" rx="3" fill="#C08040"/><rect x="19" y="7.5" width="4.5" height="11" rx="2.5" fill="#C08040"/><rect x="22" y="11" width="4" height="8" rx="2" fill="#C08040"/>',
+    shield:'<path d="M16,3 L27,7 L27,17 Q27,27 16,30 Q5,27 5,17 L5,7 Z" fill="#1A6030"/><path d="M16,9 L22,12 L22,17 Q22,22 16,24.5 Q10,22 10,17 L10,12 Z" fill="#38A060"/><rect x="14.5" y="11" width="3" height="12" rx="1.2" fill="rgba(180,255,200,.75)"/><rect x="10" y="15" width="12" height="3" rx="1.2" fill="rgba(180,255,200,.75)"/>',
+    chain:'<ellipse cx="10" cy="10" rx="6.5" ry="3.8" fill="none" stroke="#909090" stroke-width="3"/><ellipse cx="16" cy="16" rx="3.8" ry="6.5" fill="none" stroke="#B0B0B0" stroke-width="3"/><ellipse cx="22" cy="22" rx="6.5" ry="3.8" fill="none" stroke="#909090" stroke-width="3"/>',
+    star:'<polygon points="16,4 18,12 26,12 20,17 22,25 16,20 10,25 12,17 6,12 14,12" fill="#7020C0"/><circle cx="16" cy="15.5" r="3" fill="rgba(220,160,255,.85)"/>'
+  };
+  // Fixed layout (no accidental 3-in-a-rows) with one lit crown match across the middle row.
+  const rows=[
+    'star chain shield crown key fist star shield chain',
+    'key fist crown crown star crown shield fist key',
+    'chain shield fist key chain star key crown star'
+  ];
+  const m=document.getElementById('mosaic');let i=0;
+  rows.forEach((row,r)=>row.split(' ').forEach((t,c)=>{
+    const d=document.createElement('div');
+    d.className='t '+t+(r===1&&(c===2||c===3||c===5)?' lit':'');
+    d.style.setProperty('--i',i++);
+    d.innerHTML='<svg viewBox="0 0 32 32">'+S[t]+'</svg>';
+    m.appendChild(d);
+  }));
+})();
+</script>
+</body>
+</html>

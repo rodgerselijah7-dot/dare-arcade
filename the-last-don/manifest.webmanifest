@@ -1,0 +1,16 @@
+{
+  "name": "The Last Don",
+  "short_name": "The Last Don",
+  "description": "Take Panther City back, block by block.",
+  "start_url": "/the-last-don/",
+  "scope": "/the-last-don/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080606",
+  "theme_color": "#080606",
+  "icons": [
+    { "src": "/the-last-don/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/the-last-don/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/the-last-don/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
