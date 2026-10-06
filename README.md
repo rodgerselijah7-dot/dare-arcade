@@ -7,6 +7,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /the-last-don/         The Last Don (single-file game + icons + manifest)
 /crowd-run/            CROWD RUN (single-file game + icons + manifest)
 /cosmic-encounter/     COSMIC ENCOUNTER (single-file game + icons + manifest)
+/rebel-elimination/    REBEL ELIMINATION (single-file game + icons + manifest)
 /icons/                Arcade icons
 ```
 
