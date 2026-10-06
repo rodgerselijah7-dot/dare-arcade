@@ -288,12 +288,12 @@ body{touch-action:none;font-family:'Press Start 2P',monospace;}
       <div class="ov-rule"></div>
       <button class="btn" style="background:linear-gradient(180deg,#44ff88,#00aa44);border-bottom-color:#005522;width:clamp(200px,55vw,260px);" onclick="setDiff(0)">
         &#9654; RECRUIT
-        <span class="diff-desc">SLOWER ENEMIES &middot; WEAPON DROPS ON HIT</span>
+        <span class="diff-desc">SLOWER ENEMIES &middot; RESPAWN WHERE YOU FALL</span>
         <span class="diff-personality" style="color:rgba(180,255,180,0.7);">"Learn the streets."</span>
       </button>
       <button class="btn" style="width:clamp(200px,55vw,260px);" onclick="setDiff(1)">
         &#9654; SOLDIER
-        <span class="diff-desc">STANDARD SPEED &middot; WEAPON DOWNGRADES ON HIT</span>
+        <span class="diff-desc">STANDARD SPEED &middot; RESPAWN AT CHECKPOINT</span>
         <span class="diff-personality">"Fight like a rebel."</span>
       </button>
       <button class="btn" style="background:linear-gradient(180deg,#ff4444,#aa0000);border-bottom-color:#550000;width:clamp(200px,55vw,260px);" onclick="setDiff(2)">
@@ -984,7 +984,7 @@ function initGame(keepScore=false){
   runId++;_advancing=false;releaseAll();
   try{fitScreen();}catch(e){} // ensure W/H/S/GH are current
   if(!(history.state&&history.state.re))history.pushState({re:1},'');
-  if(!keepScore){score=0;lives=5;stage=1;maxCombo=0;}
+  if(!keepScore){score=0;lives=difficulty===0?7:5;stage=1;maxCombo=0;}
   frameCount=0;bossSpawned=false;bossDefeated=false;enemyCooldown=0;scrollX=0;
   waveSize=0;waveCooldown=0;waveBreak=30;waveCount=0;tempoCheckTimer=0;currentBpm=0;
   combo=0;comboTimer=0;stageKills=0;screenShake=0;flashTimer=0;hitPause=0;stageIntroTimer=90;countUpCurrent=0;countUpActive=false;countUpTimer=0;checkpointReached=false;checkpoint25Reached=false;checkpointX=0;checkpointFlash=0;
@@ -1767,7 +1767,8 @@ function updateBullets(dt=1){
       bullets[i]=bullets[--blen];bullets.length=blen;continue;
     }
     if(b.owner==='enemy'&&!player.invincible&&!player.shieldActive){
-      if(b.x>player.x&&b.x<player.x+player.w&&b.y>player.y&&b.y<player.y+player.h){hitDamage();b.life=0;}
+      const _r=(b.size||5)/2+1;
+      if(b.x+_r>player.x&&b.x-_r<player.x+player.w&&b.y+_r>player.y&&b.y-_r<player.y+player.h){hitDamage();b.life=0;}
     }
   }
 }
@@ -1897,7 +1898,7 @@ function updateParticles(dt=1){
   // Cap arrays to prevent unbounded growth during intense fights
   if(particles.length>200)particles.length=200;
   if(embers.length>100)embers.length=100;
-  if(bullets.length>60)bullets.length=60;
+  if(bullets.length>90){const ex=bullets.length-90;let k=0;bullets=bullets.filter(b=>!(b.owner==='player'&&k++<ex));if(bullets.length>90)bullets.length=90;}
   if(floatTexts.length>20)floatTexts.length=20;
 }
 
@@ -1908,17 +1909,17 @@ function hitDamage(){
   bigExplosion(player.x+13,player.y+19,'#ff0000',false);
   sfxDie();
   if(navigator.vibrate)navigator.vibrate([80,30,40]); // haptic on mobile
-  if(difficulty>0){
-    lives--;
-  } else {
-    // Recruit: drop current weapon instead of losing a life
+  lives--;
+  floatTexts.push({x:player.x+player.w/2,y:player.y-Math.round(20*S),txt:'-1 \u2665',color:'#ff3344',life:60,maxLife:60,vy:-0.9,scale:1.3});
+  if(difficulty===0){
+    // Recruit: also drops the current weapon (it can be picked back up)
     if(player.weapon!=='RIFLE'){
       powerups.push({x:player.x,y:player.y-16,baseY:player.y-16,type:player.weapon,bob:0,spin:0});
       player.weapon='RIFLE';
       floatTexts.push({x:player.x,y:player.y-50,txt:'WEAPON DROPPED!',color:'#ff8800',life:70,maxLife:70,vy:-0.6});
     }
   }
-  player.invincible=140;
+  player.invincible=100;
   if(lives>0)sfxGrunt();
   // Knockback -- push player away from nearest enemy
   const nearE=enemies.length?enemies.reduce((a,b)=>Math.hypot(b.x-player.x,b.y-player.y)<Math.hypot(a.x-player.x,a.y-player.y)?b:a,enemies[0]):null;
@@ -1954,7 +1955,7 @@ function hitDamage(){
       player.y=Math.round(GH*.81);
       player.vy=-3; // small upward pop on respawn -- vx preserved from knockback
       player.grounded=false;
-      player.invincible=220; // extra invincibility on respawn
+      player.invincible=110; // short grace on respawn
     }catch(e){}},700); // delay so death anim plays
   }
 }
@@ -2111,7 +2112,7 @@ function drawHUD(){
   // -- LIVES (left zone, row 1) ---------------------------------
   const lx=Math.round(W*.016);
   // Individual hearts (max 5 shown, filled=alive, hollow=lost)
-  const maxHeartsShow=Math.min(5,Math.max(lives||0,1));
+  const maxHeartsShow=Math.min(7,Math.max(lives||0,5));
   const heartSize=Math.round(fSz*.82);
   const heartGap=Math.round(heartSize*1.35);
   const heartsW=maxHeartsShow*heartGap;
