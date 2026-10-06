@@ -1,0 +1,16 @@
+{
+  "name": "CROWD RUN",
+  "short_name": "Crowd Run",
+  "description": "Lead a growing crowd through six city zones.",
+  "start_url": "/crowd-run/",
+  "scope": "/crowd-run/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07070f",
+  "theme_color": "#07070f",
+  "icons": [
+    { "src": "/crowd-run/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/crowd-run/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/crowd-run/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

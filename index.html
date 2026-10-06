@@ -86,6 +86,9 @@ h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04e
 .row{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:16px 0;border-bottom:1px solid var(--line)}
 .row h3{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.03em;color:#F4EEE4;line-height:1}
 .row p{grid-column:1;font-size:17px;color:var(--bone)}
+.row.live{text-decoration:none;color:inherit}
+.row.live .status{color:var(--ink);background:var(--gold);border-color:var(--gold);font-style:normal;font-family:var(--display);font-size:18px;letter-spacing:.06em;padding:4px 14px 2px}
+.row.live:active h3{color:var(--gold-lt)}
 .status{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:15px;font-style:italic;color:var(--smoke);
   border:1px solid var(--line);padding:3px 10px;border-radius:999px;white-space:nowrap}
 
@@ -116,13 +119,13 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
     </section>
 
     <section class="queue" aria-labelledby="next">
-      <h2 id="next">Coming to the arcade</h2>
-      <p class="lede">Each one gets tested on real phones before it goes live here.</p>
-      <div class="row">
+      <h2 id="next">More games</h2>
+      <p class="lede">New games go live here after they've been tested on real phones.</p>
+      <a class="row live" href="/crowd-run/">
         <h3>Crowd Run</h3>
-        <span class="status">In testing</span>
-        <p>Snake, rebuilt. Grow your crowd without cutting yourself off.</p>
-      </div>
+        <span class="status">Play</span>
+        <p>Lead a growing crowd through six city zones. Grab the right dice, dodge the dogs, and don't run into your own line.</p>
+      </a>
       <div class="row">
         <h3>Cosmic Encounter</h3>
         <span class="status">In testing</span>
@@ -172,5 +175,8 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
   }));
 })();
 </script>
+<!-- Vercel Web Analytics -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

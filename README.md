@@ -5,6 +5,7 @@ Browser games by Dontae Amare. Static site — no build step.
 ```
 /                      Arcade lobby (index.html)
 /the-last-don/         The Last Don (single-file game + icons + manifest)
+/crowd-run/            CROWD RUN (single-file game + icons + manifest)
 /icons/                Arcade icons
 ```
 
