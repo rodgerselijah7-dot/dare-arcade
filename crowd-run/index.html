@@ -20,7 +20,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{--bg:#07070f;--ui:#e8e8e0;--dim:#6c6c7a;--gold:#f5c842;--red:#e8382a;--cyan:#00e5ff;}
 body{background:#000;font-family:'Space Mono',monospace;overflow:hidden;width:100vw;height:100vh;height:100dvh;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;}
-#gc{position:absolute;left:0;top:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:var(--bg);transform-origin:0 0;}
+#gc{position:absolute;left:0;top:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:var(--bg);transform-origin:0 0;--lw:1vw;--lh:1vh;}
 canvas{display:block;width:100%;height:100%;}
 
 /* HUD */
@@ -72,7 +72,7 @@ canvas{display:block;width:100%;height:100%;}
 
 /* Zone flash */
 #zone-flash{position:absolute;inset:0;pointer-events:none;z-index:17;opacity:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .45s ease;}
-#zone-flash-name{font-family:'Bebas Neue',cursive;font-size:clamp(36px,10vw,54px);letter-spacing:.32em;color:#fff;text-shadow:0 0 32px rgba(255,255,255,.4);}
+#zone-flash-name{font-family:'Bebas Neue',cursive;font-size:clamp(36px,calc(var(--lw)*10),54px);letter-spacing:.32em;color:#fff;text-shadow:0 0 32px rgba(255,255,255,.4);}
 #zone-flash-sub{font-size:8px;letter-spacing:.32em;color:rgba(255,255,255,.38);text-transform:uppercase;}
 
 /* Danger ring */
@@ -105,13 +105,13 @@ canvas{display:block;width:100%;height:100%;}
 .screen.hidden{opacity:0;pointer-events:none;}
 
 /* Title */
-#title-screen{justify-content:flex-start;padding-top:0;}
+#title-screen{justify-content:flex-start;padding-top:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;-webkit-overflow-scrolling:touch;}
 #title-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
 #title-canvas{display:block;width:100%;height:100%;}
-.title-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;padding-top:calc(8vh + env(safe-area-inset-top,0px));}
+.title-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;padding-top:calc(var(--lh)*8 + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));}
 .arcade-link{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:14px;z-index:3;font-size:10px;letter-spacing:.2em;color:#9a9aa8;text-decoration:none;border:1px solid #2a2a33;padding:7px 11px;}
 .eyebrow{font-size:9px;letter-spacing:.32em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;}
-.title{font-family:'Bebas Neue',cursive;font-size:clamp(72px,19vw,102px);line-height:.84;color:var(--ui);letter-spacing:.04em;text-align:center;}
+.title{font-family:'Bebas Neue',cursive;font-size:clamp(72px,calc(var(--lw)*19),102px);line-height:.84;color:var(--ui);letter-spacing:.04em;text-align:center;}
 .title span{color:var(--gold);}
 .sub{font-size:8px;letter-spacing:.22em;color:var(--dim);margin-top:8px;text-transform:uppercase;}
 #title-author{font-size:13px;letter-spacing:.3em;color:#ff7020;text-transform:uppercase;margin-top:8px;margin-bottom:2px;font-family:'Bebas Neue',cursive;text-shadow:0 0 18px rgba(255,112,32,.55);}
@@ -133,10 +133,30 @@ canvas{display:block;width:100%;height:100%;}
 .btn:active{transform:translateY(1px);}
 .btn.sec{background:transparent;color:var(--dim);border:1px solid #2a2a2a;margin-top:8px;font-size:11px;padding:8px 26px;}
 
+/* Landscape / laptop: dice in one row, tighter stack */
+#gc.wide #dice-tiles{grid-template-columns:repeat(4,1fr);max-width:940px;margin:12px 0 16px;}
+#gc.short .title-inner{padding-top:calc(var(--lh)*4 + env(safe-area-inset-top,0px));}
+#gc.short .title{font-size:clamp(56px,calc(var(--lh)*11),88px);}
+#gc.short #dice-tiles{margin:10px 0 12px;}
+#gc.short .eyebrow{margin-bottom:4px;}
+#gc.short #title-author{margin-top:4px;}
+#gc.tiny .eyebrow,#gc.tiny .sub{display:none;}
+#gc.tiny .title{font-size:52px;line-height:.82;}
+#gc.tiny .title br{display:none;}
+#gc.tiny .title span{margin-left:.25em;}
+#gc.tiny .dtile{padding:7px 8px 8px;gap:5px;}
+#gc.tiny .dchip{font-size:9px;}
+#gc.tiny .btn{padding:10px 44px;}
+#gc.tiny .btn.sec{margin-top:6px;padding:6px 24px;}
+#gc.wide #go-screen>*{max-width:560px;}
+#gc.short #go-screen{justify-content:flex-start;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px;touch-action:pan-y;}
+#gc.short #go-screen>*{flex-shrink:0;}
+#gc.short #lb-screen{justify-content:flex-start;overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px;touch-action:pan-y;}
+
 /* Game over */
 #go-screen{gap:0;padding:0 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .go-eyebrow{font-size:9px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase;margin-bottom:6px;}
-.go-h{font-family:'Bebas Neue',cursive;font-size:clamp(52px,14vw,76px);color:var(--red);letter-spacing:.06em;line-height:1;text-shadow:0 0 40px rgba(232,56,42,.5);}
+.go-h{font-family:'Bebas Neue',cursive;font-size:clamp(52px,calc(var(--lw)*14),76px);color:var(--red);letter-spacing:.06em;line-height:1;text-shadow:0 0 40px rgba(232,56,42,.5);}
 #go-cause{font-size:10px;letter-spacing:.16em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:10px;}
 #go-best{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:.22em;color:var(--gold);text-shadow:0 0 16px rgba(245,200,66,.65);margin-bottom:10px;display:none;}
 #go-zones{display:flex;gap:4px;margin-bottom:14px;width:100%;}
@@ -281,10 +301,17 @@ let W,H,DPR=1,UIZ=1;
 // Big screens (tablets, desktop): keep a phone-sized view of the city and scale it up to fill the screen.
 // Same visible area as a phone = same game balance, dogs still spawn off-screen, similar drawing cost.
 const VIEW_AREA=440*960; // biggest phones stay at 1x
+const MIN_LOGICAL_H=720; // laptops/landscape: never zoom so far that less than this much height is left
 function layout(){
   const vw=window.innerWidth||380,vh=window.innerHeight||720;
-  UIZ=Math.max(1,Math.sqrt(vw*vh/VIEW_AREA));
-  gc.style.width=(vw/UIZ)+'px';gc.style.height=(vh/UIZ)+'px';
+  UIZ=Math.max(1,Math.min(Math.sqrt(vw*vh/VIEW_AREA),vh/MIN_LOGICAL_H));
+  const lw=vw/UIZ,lh=vh/UIZ;
+  gc.style.width=lw+'px';gc.style.height=lh+'px';
+  gc.style.setProperty('--lw',(lw/100)+'px');gc.style.setProperty('--lh',(lh/100)+'px');
+  gc.classList.toggle('wide',lw>=640&&lw>lh);
+  const land=lw>lh;
+  gc.classList.toggle('short',land&&lh<760);
+  gc.classList.toggle('tiny',land&&lh<560);
   gc.style.transform=UIZ>1?'scale('+UIZ+')':'';
 }
 function pxRatio(w,h){ // backing pixels per logical px: sharp, but capped so big screens don't fill 4x the pixels
