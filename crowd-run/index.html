@@ -20,7 +20,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{--bg:#07070f;--ui:#e8e8e0;--dim:#6c6c7a;--gold:#f5c842;--red:#e8382a;--cyan:#00e5ff;}
 body{background:#000;font-family:'Space Mono',monospace;overflow:hidden;width:100vw;height:100vh;height:100dvh;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;}
-#gc{position:relative;width:100vw;height:100vh;height:100dvh;max-width:430px;max-height:860px;overflow:hidden;background:var(--bg);}
+#gc{position:absolute;left:0;top:0;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:var(--bg);transform-origin:0 0;}
 canvas{display:block;width:100%;height:100%;}
 
 /* HUD */
@@ -273,14 +273,27 @@ canvas{display:block;width:100%;height:100%;}
 // CROWD RUN — Beta Release
 // ═══════════════════════════════════════
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d'),gc=document.getElementById('gc');
-let W,H,DPR=1;
+let W,H,DPR=1,UIZ=1;
+// Big screens (tablets, desktop): keep a phone-sized view of the city and scale it up to fill the screen.
+// Same visible area as a phone = same game balance, dogs still spawn off-screen, similar drawing cost.
+const VIEW_AREA=440*960; // biggest phones stay at 1x
+function layout(){
+  const vw=window.innerWidth||380,vh=window.innerHeight||720;
+  UIZ=Math.max(1,Math.sqrt(vw*vh/VIEW_AREA));
+  gc.style.width=(vw/UIZ)+'px';gc.style.height=(vh/UIZ)+'px';
+  gc.style.transform=UIZ>1?'scale('+UIZ+')':'';
+}
+function pxRatio(w,h){ // backing pixels per logical px: sharp, but capped so big screens don't fill 4x the pixels
+  let d=Math.min(window.devicePixelRatio||1,2)*UIZ;
+  return Math.min(d,Math.sqrt(3.6e6/(w*h)));
+}
 function resize(){
-  const r=gc.getBoundingClientRect();
-  DPR=Math.min(window.devicePixelRatio||1,2); // 2x is sharp on phones; 3x tripled the pixels to fill every frame
-  const w=Math.round(r.width)||380;
-  const h=Math.round(r.height)||720;
-  canvas.width=w*DPR;
-  canvas.height=h*DPR;
+  layout();
+  const w=gc.clientWidth||380;
+  const h=gc.clientHeight||720;
+  DPR=pxRatio(w,h);
+  canvas.width=Math.round(w*DPR);
+  canvas.height=Math.round(h*DPR);
   canvas.style.width=w+'px';
   canvas.style.height=h+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -335,7 +348,7 @@ function sfx(name){
 const tcv=document.getElementById('title-canvas'),tctx=tcv.getContext('2d');
 let titleTick=0;
 let TW=380,TH=720,TDPR=1,titleLoopOn=false;
-function resizeTitle(){const r=gc.getBoundingClientRect(),w=Math.round(r.width)||380,h=Math.round(r.height)||720,d=Math.min(window.devicePixelRatio||1,2);if(w!==TW||h!==TH||d!==TDPR||tcv.width!==w*d){TW=w;TH=h;TDPR=d;tcv.width=w*d;tcv.height=h*d;}tctx.setTransform(TDPR,0,0,TDPR,0,0);}
+function resizeTitle(){const w=gc.clientWidth||380,h=gc.clientHeight||720,d=pxRatio(w,h);if(w!==TW||h!==TH||d!==TDPR||tcv.width!==Math.round(w*d)){TW=w;TH=h;TDPR=d;tcv.width=Math.round(w*d);tcv.height=Math.round(h*d);}tctx.setTransform(TDPR,0,0,TDPR,0,0);}
 resizeTitle();
 function drawTitleBg(){
   resizeTitle();
@@ -1309,10 +1322,10 @@ document.getElementById('resume-btn').addEventListener('click',()=>setPaused(fal
 
 // ── Input ─────────────────────────────────────────────
 function steerTo(x,y){if(state!=='playing'||!followers.length)return;const l=followers[0],dx=x-(W/2+l.x-camX),dy=y-(H/2+l.y-camY);if(Math.abs(dx)>7||Math.abs(dy)>7)tAngle=Math.atan2(dy,dx);}
-function touchSteer(e){e.preventDefault();const t=e.touches[0];if(!t)return;const r=canvas.getBoundingClientRect();steerTo(t.clientX-r.left,t.clientY-r.top);}
+function touchSteer(e){e.preventDefault();const t=e.touches[0];if(!t)return;const r=canvas.getBoundingClientRect();steerTo((t.clientX-r.left)/UIZ,(t.clientY-r.top)/UIZ);}
 canvas.addEventListener('touchstart',e=>{unlockAudio();touchSteer(e);},{passive:false});
 canvas.addEventListener('touchmove',touchSteer,{passive:false});
-canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();steerTo(e.clientX-r.left,e.clientY-r.top);});
+canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();steerTo((e.clientX-r.left)/UIZ,(e.clientY-r.top)/UIZ);});
 window.addEventListener('keydown',e=>{
   if(e.key==='Escape'||e.key==='p'||e.key==='P'){if(state==='playing')setPaused(true);else if(state==='paused')setPaused(false);return;}
   if(state!=='playing')return;
