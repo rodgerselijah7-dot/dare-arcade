@@ -1520,24 +1520,23 @@ function updateEnemies(dt=1){
     if(e.type==='boss'){
       e.spinAngle+=(.04+e.phase*.01)*dt;
       if(e.fleeing){
+        // Phase change: dash across to the far side of the arena, staying on screen
         e.fleeTimer-=dt;
         if(currentBpm>150)currentBpm=Math.max(120,currentBpm-1);
-        const fleeSpd=Math.round(14*S);
-        e.x+=(e.fleeDir||1)*fleeSpd*dt;
-        e.vy=Math.min(e.vy+GRAVITY*.35*dt,10);e.y+=e.vy*dt;
-        const maxOff=Math.round(W*1.2);
-        e.x=Math.max(scrollX-maxOff,Math.min(scrollX+W+maxOff,e.x));
-        if(e.fleeTimer<=0){
+        const _m=Math.round(e.w*0.2+8*S);
+        const _tx=(e.fleeDir||1)>0?scrollX+W-_m-e.w:scrollX+_m;
+        const _d=_tx-e.x;
+        e.vx=Math.sign(_d)*Math.min(Math.abs(_d),Math.round(14*S));
+        if(Math.abs(_d)<4||e.fleeTimer<=0){
           e.fleeing=false;
-          const newDir=-(e.fleeDir||1);
-          e.x=newDir>0?scrollX-e.w-4:scrollX+W+4;
-          e.vx=newDir*Math.round(6*S);
-          e.vy=0;e.hitStun=0;
+          e.vx=-(e.fleeDir||1)*Math.round(3*S);
+          e.hitStun=0;
           screenShake=Math.max(screenShake,10);triggerFlash(0.25);
         }
-      } else {
+      }
+      {
         // BUG9: S2 chargeMode guard  only activate after phase 2 transition
-        if(stage===2&&e.chargeMode&&e.phase>=2){
+        if(stage===2&&e.chargeMode&&e.phase>=2&&!e.fleeing){
           const cd=e.x>player.x?-1:1;
           e.vx+=(cd*Math.round(1.2*S)-e.vx)*0.08*dt;
           if((cd===1&&e.x>player.x)||(cd===-1&&e.x<player.x))e.vx*=-0.7;
@@ -1553,6 +1552,8 @@ function updateEnemies(dt=1){
         });
         const _bTop=Math.round(GH*.12); // keep the whole boss on screen
         if(e.y<_bTop){e.y=_bTop;if(e.vy<0)e.vy=0;}
+        const _floor=stagePlats[0].y;
+        if(e.y+e.h>_floor){e.y=_floor-e.h;if(e.vy>0)e.vy=0;e.grounded=true;}
         e.jumpTimer-=dt;
         if(e.jumpTimer<=0&&e.grounded){e.vy=PJUMP*.75;e.jumpTimer=120+Math.random()*40;}
         const bMarginL=Math.round(e.w*0.2+8*S);
@@ -3149,8 +3150,9 @@ function drawBG(){
       ctx.fillStyle='rgba(255,255,255,0.10)';ctx.fillRect(gx,Math.round(GH*.928),Math.round(48*S),Math.round(GH*.006));
     }
     // Puddle reflections   now using GH
-    for(let px=0;px<W;px+=Math.round(90*S)){
-      const po=((px+scrollX*.4)%(Math.round(90*S))+Math.round(90*S))%Math.round(90*S);
+    const _ps=Math.round(90*S),_p0=-(((scrollX*.4)%_ps)+_ps)%_ps;
+    for(let px=_p0;px<W+_ps;px+=_ps){
+      const po=px+Math.round(25*S);
       const pAlpha=0.05+Math.sin(frameCount*.05+po)*.03;
       // Flat colour -- no gradient allocation per loop iteration
       ctx.fillStyle=`rgba(255,80,0,${(pAlpha*1.5).toFixed(2)})`;
@@ -3164,8 +3166,9 @@ function drawBG(){
       ctx.strokeStyle='rgba(0,180,60,0.18)';ctx.lineWidth=1;ctx.strokeRect(gx,Math.round(GH*.908),pSz-2,Math.round(GH*.09));
     }
     // Toxic slick pools  wider, more defined
-    for(let ox=0;ox<W;ox+=Math.round(88*S)){
-      const oo=((ox+scrollX*.4)%(Math.round(88*S))+Math.round(88*S))%Math.round(88*S);
+    const _os=Math.round(88*S),_o0=-(((scrollX*.4)%_os)+_os)%_os;
+    for(let ox=_o0;ox<W+_os;ox+=_os){
+      const oo=ox;
       const oAlpha=(0.12+Math.sin(frameCount*.04+ox*.1)*.06).toFixed(2);
       ctx.fillStyle=`rgba(0,220,80,${oAlpha})`;
       ctx.fillRect(oo,Math.round(GH*.910),Math.round(55*S),Math.round(GH*.012));
@@ -3196,8 +3199,9 @@ function drawBG(){
       ctx.strokeStyle='rgba(180,0,30,0.20)';ctx.lineWidth=1;ctx.strokeRect(gx,Math.round(GH*.908),tSz-2,Math.round(GH*.09));
     }
     // Blood pools
-    for(let bx=0;bx<W;bx+=Math.round(110*S)){
-      const bo=((bx+scrollX*.4)%(Math.round(110*S))+Math.round(110*S))%Math.round(110*S);
+    const _bs=Math.round(110*S),_b0=-(((scrollX*.4)%_bs)+_bs)%_bs;
+    for(let bx=_b0;bx<W+_bs;bx+=_bs){
+      const bo=bx;
       const bAlpha=(0.10+Math.sin(frameCount*.06+bx*.08)*.05).toFixed(2);
       ctx.fillStyle=`rgba(200,0,20,${bAlpha})`;
       ctx.fillRect(bo,Math.round(GH*.908),Math.round(44*S),Math.round(GH*.015));
