@@ -117,12 +117,16 @@ canvas{display:block;width:100%;height:100%;}
 #title-author{font-size:13px;letter-spacing:.3em;color:#ff7020;text-transform:uppercase;margin-top:8px;margin-bottom:2px;font-family:'Bebas Neue',cursive;text-shadow:0 0 18px rgba(255,112,32,.55);}
 #title-best{font-size:10px;letter-spacing:.18em;color:var(--dim);margin-bottom:0;}
 #title-best span{color:var(--gold);font-family:'Bebas Neue',cursive;font-size:15px;}
-#dice-tiles{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0 18px;padding:0 18px;width:100%;}
-.dtile{display:flex;align-items:center;gap:9px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:2px;transition:border-color .2s;}
+#dice-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 18px;padding:0 14px;width:100%;max-width:460px;}
+.dtile{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:10px 10px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-left:3px solid var(--tc,#fff);border-radius:3px;transition:border-color .2s;}
+.dtile-top{display:flex;align-items:center;gap:9px;}
+.dchips{display:flex;flex-wrap:wrap;gap:4px 9px;}
+.dchip{display:inline-flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.04em;color:rgba(232,232,224,.82);line-height:1.25;white-space:nowrap;}
+.dchip i{width:11px;height:11px;border-radius:2.5px;flex:0 0 11px;display:inline-block;box-shadow:0 0 5px currentColor;}
 .dtile:hover{border-color:rgba(255,255,255,.16);}
-.dtile-die{width:22px;height:22px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(0,0,0,.7);}
+.dtile-die{width:32px;height:32px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:rgba(0,0,0,.72);}
 .dtile-info{display:flex;flex-direction:column;gap:1px;}
-.dtile-name{font-family:'Bebas Neue',cursive;font-size:13px;letter-spacing:.08em;color:var(--ui);line-height:1;}
+.dtile-name{font-family:'Bebas Neue',cursive;font-size:19px;letter-spacing:.07em;color:var(--ui);line-height:1;}
 .dtile-desc{font-size:7.5px;letter-spacing:.07em;color:var(--dim);text-transform:uppercase;line-height:1.4;}
 .btn{font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:.18em;color:var(--bg);background:var(--ui);border:none;padding:13px 48px;cursor:pointer;outline:none;transition:transform .1s,box-shadow .15s;}
 .btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(255,255,255,.2);}
@@ -218,21 +222,21 @@ canvas{display:block;width:100%;height:100%;}
       <div id="title-author">Dontae Amare</div>
       <div id="title-best"></div>
       <div id="dice-tiles">
-        <div class="dtile">
-          <div class="dtile-die" style="background:#fff;box-shadow:0 0 8px rgba(255,255,255,.6)">+1</div>
-          <div class="dtile-info"><div class="dtile-name">Crowd Dice</div><div class="dtile-desc">White adds followers<br>Green doubles crowd</div></div>
+        <div class="dtile" style="--tc:#ffffff">
+          <div class="dtile-top"><div class="dtile-die" style="background:#fff;box-shadow:0 0 10px rgba(255,255,255,.6)">+1</div><div class="dtile-name">Crowd Dice</div></div>
+          <div class="dchips"><span class="dchip"><i style="background:#ffffff;color:#ffffff"></i>+1 follower</span><span class="dchip"><i style="background:#00ff88;color:#00ff88"></i>Doubles crowd</span><span class="dchip"><i style="background:#c0c8d8;color:#c0c8d8"></i>+5 clones</span></div>
         </div>
-        <div class="dtile">
-          <div class="dtile-die" style="background:#f5c842;box-shadow:0 0 8px rgba(245,200,66,.6)">⚡</div>
-          <div class="dtile-info"><div class="dtile-name">Power Dice</div><div class="dtile-desc">Speed · Ghost · Magnet<br>Rage · Freeze · Time</div></div>
+        <div class="dtile" style="--tc:#f5c842">
+          <div class="dtile-top"><div class="dtile-die" style="background:#f5c842;box-shadow:0 0 10px rgba(245,200,66,.6)">⚡</div><div class="dtile-name">Power Dice</div></div>
+          <div class="dchips"><span class="dchip"><i style="background:#f5c842;color:#f5c842"></i>Speed</span><span class="dchip"><i style="background:#00e5ff;color:#00e5ff"></i>Shield</span><span class="dchip"><i style="background:#b06aff;color:#b06aff"></i>Ghost</span><span class="dchip"><i style="background:#ff7020;color:#ff7020"></i>Magnet</span><span class="dchip"><i style="background:#7dd8ff;color:#7dd8ff"></i>Freeze</span><span class="dchip"><i style="background:#a0ffc0;color:#a0ffc0"></i>Slow time</span><span class="dchip"><i style="background:#ff3c00;color:#ff3c00"></i>Rage</span></div>
         </div>
-        <div class="dtile">
-          <div class="dtile-die" style="background:#e8382a;box-shadow:0 0 8px rgba(232,56,42,.6)">!</div>
-          <div class="dtile-info"><div class="dtile-name">Danger Dice</div><div class="dtile-desc">Red loses tail<br>Purple splits crowd</div></div>
+        <div class="dtile" style="--tc:#e8382a">
+          <div class="dtile-top"><div class="dtile-die" style="background:#e8382a;box-shadow:0 0 10px rgba(232,56,42,.6)">!</div><div class="dtile-name">Danger Dice</div></div>
+          <div class="dchips"><span class="dchip"><i style="background:#e8382a;color:#e8382a"></i>−3 followers</span><span class="dchip"><i style="background:#8b3cf7;color:#8b3cf7"></i>Halves crowd</span><span class="dchip"><i style="background:#ff2060;color:#ff2060"></i>Flips steering</span></div>
         </div>
-        <div class="dtile">
-          <div class="dtile-die" style="background:#ff69b4;box-shadow:0 0 8px rgba(255,105,180,.6)">×</div>
-          <div class="dtile-info"><div class="dtile-name">Bonus Dice</div><div class="dtile-desc">Double score · Clone<br>Nuke · Curse</div></div>
+        <div class="dtile" style="--tc:#ff69b4">
+          <div class="dtile-top"><div class="dtile-die" style="background:#ff69b4;box-shadow:0 0 10px rgba(255,105,180,.6)">×</div><div class="dtile-name">Bonus Dice</div></div>
+          <div class="dchips"><span class="dchip"><i style="background:#ff69b4;color:#ff69b4"></i>×2 score</span><span class="dchip"><i style="background:#ffe040;color:#ffe040"></i>Nuke dogs</span><span class="dchip"><i style="background:#20e8c0;color:#20e8c0"></i>Slow-mo</span></div>
         </div>
       </div>
       <button class="btn" id="start-btn">RUN</button>
