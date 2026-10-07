@@ -1366,6 +1366,7 @@ function playerHit(){
   }
 }
 function endGame(){
+  clearCombo();
   gameState='gameover';
   const bestWave=parseInt(localStorage.getItem('ce_best_wave')||'0');
   if(wave>bestWave)localStorage.setItem('ce_best_wave',wave);
@@ -1797,7 +1798,15 @@ function restartGame(){
   document.getElementById('gameOverScreen').style.display='none';
   _init();gameState='playing';setIngame(true);spawnWave(1);
 }
+// Combo readouts are only switched off by the in-game HUD loop, so clear them whenever the run stops
+function clearCombo(){
+  combo=0;comboTimer=0;
+  _on(_hud.cDisp,false);_on(_hud.cBar,false);
+  if(_hud.cDisp){_hud.cDisp.classList.remove('pop');_hud.cDisp._popPending=false;}
+  _txt(_hud.cVal,'0');_txt(_hud.cCt,'0');
+}
 function goToTitle(){
+  clearCombo();
   // BUG 8 FIX: close all possible active screens before returning to title
   document.getElementById('gameOverScreen').style.display='none';
   document.getElementById('pauseScreen').style.display='none';
