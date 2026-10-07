@@ -177,7 +177,8 @@ body{height:100%;height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px)
 .tut-btns{display:flex;gap:10px;justify-content:center;}
 
 /* ═══ GAME ═══ */
-#game{background:var(--black);height:100%;overflow:hidden;display:grid;grid-template-rows:auto auto 1fr auto;}
+#game.on{display:grid;} /* only when active: '#game{display:grid}' outranked '.screen{display:none}', so the HUD showed on every menu */
+#game{background:var(--black);height:100%;overflow:hidden;grid-template-rows:auto auto 1fr auto;}
 @media(orientation:landscape)and(max-height:500px){
   #game{grid-template-rows:auto 1fr auto;}
   .obj-bar{display:none;}
