@@ -936,6 +936,22 @@ let S=1.0; // sprite scale: W/800, set by fitScreen()
 
 
 const WCOOL={RIFLE:10,SPREAD:18,LASER:22,RAPID:4,ROCKET:35};
+// ── FEEL TUNING ──
+const FEEL={
+  phoneSpeed:.72,   // run speed on narrow (phone) screens vs. the original; 1 = original
+  accel:.32,        // how fast you reach top speed (1 = instant, original)
+  leadFwd:.24,      // camera: where you sit on screen when running right (original .35)
+  leadBack:.50,     // ...and when facing left
+  heatMax:100,      // gun heat: holding FIRE ~3s overheats
+  heatCoolDelay:14, // frames after you stop firing before the gun cools
+  heatCool:1.1,     // cooling per frame
+  overheatCool:1.4, // faster cooling while locked out
+  overheatResume:35 // can fire again below this heat
+};
+const HEAT={RIFLE:6,SPREAD:9,LASER:12,RAPID:2.3,ROCKET:18};
+function runSpd(){return PSPEED*Math.min(1,Math.max(FEEL.phoneSpeed,W/620));}
+// enemies only count as "in play" once they're mostly on screen
+function onScreen(e){const sx=e.x-scrollX;return sx<W-e.w*0.6&&sx+e.w*0.6>0;}
 
 let GS='idle',keys={},player,bullets,enemies,particles,shockwaves,embers,floatTexts,powerups;
 let difficulty=1;
@@ -1055,23 +1071,23 @@ function updatePlayer(dt=1){
   if(p.dashCooldown>0)p.dashCooldown-=dt;
   if(p.dashTimer>0){
     p.dashTimer-=dt;
-    p.vx=p.dashDir*PSPEED*2.8;
+    p.vx=p.dashDir*runSpd()*2.8;
     p.invincible=Math.max(p.invincible,p.dashTimer>6?8:1);
     if(p.dashTimer<=0)p.dashTimer=0;
-    if(p.dashTimer<=0)p.vx=p.dashDir*PSPEED*0.6;
+    if(p.dashTimer<=0)p.vx=p.dashDir*runSpd()*0.6;
   } else {
     if(keys['a']){
       if(p.lastTapDir===-1&&frameCount-p.lastTapTime<14&&p.dashCooldown<=0&&p.grounded){
         p.dashTimer=12;p.dashDir=-1;p.dashCooldown=55;p.facing=-1;
         spawnFX(p.x+p.w/2,p.y+p.h*.8,stageCfg.groundLine,8,'jump');sfxJump();
       } else if(!keys['a_prev']){p.lastTapDir=-1;p.lastTapTime=frameCount;}
-      p.vx=-PSPEED;p.facing=-1;p.running=true;
+      p.vx+=(-runSpd()-p.vx)*FEEL.accel;p.facing=-1;p.running=true;
     } else if(keys['d']){
       if(p.lastTapDir===1&&frameCount-p.lastTapTime<14&&p.dashCooldown<=0&&p.grounded){
         p.dashTimer=12;p.dashDir=1;p.dashCooldown=55;p.facing=1;
         spawnFX(p.x+p.w/2,p.y+p.h*.8,stageCfg.groundLine,8,'jump');sfxJump();
       } else if(!keys['d_prev']){p.lastTapDir=1;p.lastTapTime=frameCount;}
-      p.vx=PSPEED;p.facing=1;p.running=true;
+      p.vx+=(runSpd()-p.vx)*FEEL.accel;p.facing=1;p.running=true;
     } else {
       p.vx*=0.55; // friction
     }
@@ -1092,7 +1108,14 @@ function updatePlayer(dt=1){
   if(p.vy<0&&!keys[' '])p.vy*=0.88;
 
   //  Shooting 
-  if(keys['z']&&p.shootCool<=0)doShoot();
+  if(p.heat===undefined){p.heat=0;p.overheat=false;p.sinceShot=99;}
+  p.sinceShot+=dt;
+  if(p.overheat){p.heat=Math.max(0,p.heat-FEEL.overheatCool*dt);if(p.heat<=FEEL.overheatResume){p.overheat=false;}}
+  else if(!keys['z']&&p.sinceShot>FEEL.heatCoolDelay)p.heat=Math.max(0,p.heat-FEEL.heatCool*dt); // cools once you let go of FIRE
+  if(keys['z']&&p.shootCool<=0){
+    if(p.overheat){if(p.sinceShot>20){p.sinceShot=0;tone(160,.05,'square',.08);}}
+    else doShoot();
+  }
 
   //  Fast-fall: ONLY near apex (vy close to 0) 
   // Condition: ArrowDown, airborne, near apex (vy > -2), not already fast-falling
@@ -1172,7 +1195,9 @@ function updatePlayer(dt=1){
   if(p.y>GH+40)hitDamage();
 
   //  Camera 
-  const targetScrollX=p.x-W*0.35;
+  p.lead=(p.lead===undefined?FEEL.leadFwd:p.lead);
+  p.lead+=((p.facing>0?FEEL.leadFwd:FEEL.leadBack)-p.lead)*0.04; // ease, no snap when turning
+  const targetScrollX=p.x-W*p.lead;
   scrollX+=(targetScrollX-scrollX)*0.10;
   scrollX=Math.max(0,scrollX);
   if(p.x-scrollX<100)scrollX=Math.max(0,p.x-100);
@@ -1221,6 +1246,10 @@ function doShoot(){
     if(_last&&_last.owner==='player')_last.dmg+=1;
   }
   p.shootCool=WCOOL[p.weapon];
+  p.sinceShot=0;p.heat=Math.min(FEEL.heatMax,(p.heat||0)+(HEAT[p.weapon]||6));
+  if(p.heat>=FEEL.heatMax&&!p.overheat){p.overheat=true;
+    floatTexts.push({x:p.x+p.w/2,y:p.y-Math.round(30*S),txt:'OVERHEAT',color:'#ff5533',life:55,maxLife:55,vy:-0.7});
+    tone(220,.18,'sawtooth',.12);tone(120,.25,'sawtooth',.08,.08);}
   spawnFX(bx,by,WCOL[p.weapon],3,'muzzle');sfxShoot(p.weapon);
 }
 function mkB(x,y,vx,vy,owner,dmg,color,size,life,rocket=false){return{x,y,vx,vy,owner,dmg,color,size,life,maxLife:life,rocket,trail:[]};}
@@ -1316,7 +1345,7 @@ function updateEnemies(dt=1){
   const _dRT=Math.max(32,55-(stage-1)*8);  // drone reset
 
   for(let i=elen-1;i>=0;i--){
-    const e=enemies[i];
+    const e=enemies[i];e._vis=e.type==='boss'||onScreen(e);
     e.animTimer++;if(e.animTimer>9){e.animFrame=(e.animFrame+1)%4;e.animTimer=0;}
 
     //  DRONE 
@@ -1326,7 +1355,7 @@ function updateEnemies(dt=1){
       e.x+=e.vx*dt;
       // BUG1+2: range check + stage-scaled timer
       const dDist=Math.abs(player.x-e.x);
-      if(dDist<W*.65){
+      if(dDist<W*.65&&e._vis){
         e.shootTimer-=dt;
         if(e.shootTimer<=0){
           const dx=player.x+player.w/2-(e.x+e.w/2);
@@ -1386,7 +1415,7 @@ function updateEnemies(dt=1){
         // BUG3+4: screen-relative range, aimed bullet
         e.shootTimer-=dt;
         const sDist=Math.abs(e.x-player.x);
-        if(e.shootTimer<=0&&sDist<W*.75){
+        if(e.shootTimer<=0&&sDist<W*.75&&e._vis){
           // BUG4: properly aim at player centre
           const sdx=player.x+player.w/2-(e.x+e.w/2);
           const sdy=player.y+player.h/2-(e.y+e.h/2);
@@ -1416,7 +1445,8 @@ function updateEnemies(dt=1){
         e.shootTimer-=dt;
         const jDist=Math.abs(e.x-player.x);
         if(e.shootTimer<=0){
-          if(!e.grounded&&stage>=3&&jDist<W*.5){
+          if(!e._vis){e.shootTimer=20;}
+          else if(!e.grounded&&stage>=3&&jDist<W*.5){
             // S3: mid-air burst toward player
             const jdx=player.x-e.x,jdy=player.y-e.y,jl=Math.sqrt(jdx*jdx+jdy*jdy)||1;
             [-0.25,0,0.25].forEach(sp=>{
@@ -1456,7 +1486,7 @@ function updateEnemies(dt=1){
         }
         e.shootTimer-=dt;
         const shDist=Math.abs(e.x-player.x);
-        if(e.shootTimer<=0&&shDist<W*.7){
+        if(e.shootTimer<=0&&shDist<W*.7&&e._vis){
           const sdx=player.x-e.x;
           // Only fire toward the OPEN side (away from the physical shield)
           if(sdx*e.shieldFacing>0){
@@ -1482,7 +1512,7 @@ function updateEnemies(dt=1){
     //  TURRET 
     if(e.type==='turret'){
       const tDist=Math.abs(player.x-e.x);
-      if(tDist<W*.55){
+      if(tDist<W*.55&&e._vis){
         e.shootTimer-=dt;
         if(!e.targetLocked){
           e.targetLockTimer=(e.targetLockTimer||0)+dt;
@@ -1697,6 +1727,7 @@ function updateEnemies(dt=1){
     //  BULLET HIT DETECTION 
     for(let bi=bullets.length-1;bi>=0;bi--){
       const b=bullets[bi];if(b.owner!=='player')continue;
+      if(!e._vis)break;
       if(b.x>e.x&&b.x<e.x+e.w&&b.y>e.y&&b.y<e.y+e.h){
         if(e.shielded&&b.vx*e.shieldFacing<0&&!b.bypassShield){
           spawnFX(b.x,b.y,'#8888ff',5,'hit');b.life=0;continue;
@@ -1752,7 +1783,7 @@ function updateEnemies(dt=1){
 
 function rocketBlast(x,y){bigExplosion(x,y,'#ff4400',false);sfxExplode();screenShake=14;
   const blastR=Math.max(100,Math.round(120*S));
-  enemies.forEach(e=>{if(Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y)<blastR)e.hp-=4;});}
+  enemies.forEach(e=>{if(onScreen(e)&&Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y)<blastR)e.hp-=4;});}
 
 // == BULLETS ==
 function updateBullets(dt=1){
@@ -1763,7 +1794,8 @@ function updateBullets(dt=1){
     b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
     let hit=false;
     stagePlats.forEach(pl=>{if(b.x>pl.x&&b.x<pl.x+pl.w&&b.y>pl.y&&b.y<pl.y+pl.h)hit=true;});
-    if(hit||b.life<=0||b.x<scrollX-50||b.x>scrollX+W+50||b.y>GH+30){
+    const _edge=b.owner==='player'?4:50;
+    if(hit||b.life<=0||b.x<scrollX-_edge||b.x>scrollX+W+_edge||b.y>GH+30){
       if(hit){spawnFX(b.x,b.y,b.color,5,'hit');if(b.rocket)rocketBlast(b.x,b.y);}
       bullets[i]=bullets[--blen];bullets.length=blen;continue;
     }
@@ -2239,6 +2271,14 @@ function drawHUD(){
       ctx.fillText('+1 DMG',lx+Math.round(14*S)+_wNameW+Math.round(8*S),wcy);
       ctx.shadowBlur=0;
     }
+    // Gun heat bar
+    {const hp=Math.min(1,(player&&player.heat||0)/FEEL.heatMax),hot=player&&player.overheat;
+     const hbW=Math.round(W*.16),hbH=Math.max(3,Math.round(wStripH*.16)),hbX=Math.round(W*.5)+Math.round(10*S),hbY=Math.round(wcy-hbH/2);
+     ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(hbX,hbY,hbW,hbH);
+     ctx.fillStyle=hot?(Math.floor(frameCount/6)%2?'#ff2200':'#ff8800'):hp>.7?'#ff7a30':'#ffd34d';
+     ctx.fillRect(hbX,hbY,Math.round(hbW*hp),hbH);
+     ctx.font='bold '+Math.max(7,Math.round(wSz*.75))+'px "Press Start 2P"';ctx.textAlign='left';ctx.textBaseline='middle';
+     ctx.fillStyle=hot?'#ff5533':'rgba(255,255,255,0.45)';ctx.fillText(hot?'HOT':'HEAT',hbX+hbW+Math.round(6*S),wcy);}
     // Wave label: right side of weapon strip, clearly separated
     if(!bossSpawned){
       ctx.fillStyle='rgba(255,255,255,0.55)';
@@ -4626,6 +4666,12 @@ function drawFrame(shx,shy){
   drawParticles();
   drawBullets();
   drawEnemies();
+  // Incoming warning: enemies just past the right/left edge show as arrows
+  enemies.forEach(e=>{if(e.type==='boss'||e._vis)return;const sx=e.x-scrollX,cy=Math.max(GH*.14,Math.min(GH*.88,e.y+e.h/2));
+    let side=0,dist=0;if(sx>=W-e.w*0.6&&sx<W+W*.9){side=1;dist=sx-W;}else if(sx+e.w*0.6<=0&&sx>-W*.9-e.w){side=-1;dist=-(sx+e.w);}
+    if(!side)return;const a=Math.max(.25,1-dist/(W*.9));const ax=side>0?W-5:5,s2=Math.round(13*Math.max(S,.8));
+    ctx.save();ctx.globalAlpha=a*(.65+.35*Math.sin(frameCount*.25));ctx.fillStyle='#ff3322';
+    ctx.beginPath();ctx.moveTo(ax,cy);ctx.lineTo(ax-side*s2*1.4,cy-s2);ctx.lineTo(ax-side*s2*1.4,cy+s2);ctx.closePath();ctx.fill();ctx.restore();});
   drawPlayer();
   drawDeathAnim();
   drawFloatTexts();
