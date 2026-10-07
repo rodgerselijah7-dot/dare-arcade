@@ -257,6 +257,7 @@ body{touch-action:none;font-family:'Press Start 2P',monospace;}
       <div class="title-tag">3 STAGES &nbsp;&middot;&nbsp; 3 BOSSES &nbsp;&middot;&nbsp; ONE LEGEND</div>
       <div style="display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:6px;width:100%;">
         <button class="btn" style="font-size:clamp(11px,2.8vw,16px);padding:clamp(14px,3.5vw,20px) clamp(28px,8vw,48px);letter-spacing:3px;" onclick="chooseDiff()">&#9654; START MISSION</button>
+        <button class="btn btn-gold" id="contBtn" style="display:none;font-size:clamp(9px,2.3vw,13px);padding:12px 26px;" onclick="continueStage()"></button>
         <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
           <button class="btn btn-teal" onclick="showLB('title')">&#127942; HALL OF REBELS</button>
           <button class="btn btn-howto" onclick="safeCall(()=>{window._howFrom='titleScreen';hideAll();document.getElementById('howToPlay').classList.add('show');})">? HOW TO PLAY</button>
@@ -320,7 +321,8 @@ body{touch-action:none;font-family:'Press Start 2P',monospace;}
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
         <button class="btn" id="goSubmit" onclick="submitScore(false)">&#127942; SUBMIT</button>
-        <button class="btn btn-ghost" onclick="startGame()">&#8634; RETRY</button>
+        <button class="btn btn-ghost" id="goRetry" onclick="retryAfterGameOver()">&#8634; RETRY</button>
+        <button class="btn btn-ghost" id="goFresh" onclick="startGame()" style="display:none;">FROM STAGE 1</button>
         <button class="btn btn-ghost" onclick="quitToTitle()">&#10005; TITLE</button>
       </div>
     </div>
@@ -976,7 +978,7 @@ let runId=0,_advancing=false,_vicSaved=true;
 
 function hideAll(){['titleScreen','pauseScreen','gameOver','stageClear','victoryScreen','lbScreen','diffScreen'].forEach(id=>document.getElementById(id).classList.remove('show'));}
 function quitToTitle(){stopMusic();GS='idle';runId++;_advancing=false;releaseAll();hideAll();document.getElementById('howToPlay').classList.remove('show');
-  if(history.state&&history.state.re)history.back();(function(){const _b=document.getElementById('tPause');if(_b){_b.style.opacity='0';_b.style.pointerEvents='none';}})();document.getElementById('titleScreen').classList.add('show');drawTitleScreen();
+  if(history.state&&history.state.re)history.back();refreshContinue();(function(){const _b=document.getElementById('tPause');if(_b){_b.style.opacity='0';_b.style.pointerEvents='none';}})();document.getElementById('titleScreen').classList.add('show');drawTitleScreen();
   if(!titleAnimInterval)titleAnimInterval=setInterval(()=>{try{const _ts=document.getElementById('titleScreen');if(_ts&&_ts.classList.contains('show'))drawTitleScreen();}catch(e){}},80);
 }
 function togglePause(){
@@ -997,6 +999,21 @@ function togglePause(){
 }
 
 function fullLives(){return difficulty===0?7:5;} // Recruit 7, Soldier/Legend 5
+// ── Stage checkpoint: reach stage 2 or 3 and a game over sends you back to the start of that stage ──
+function getStageSave(){try{const v=JSON.parse(localStorage.getItem('daRE_stage')||'null');return v&&v.stage>=2&&v.stage<=3?v:null;}catch(e){return null;}}
+function saveStage(){try{localStorage.setItem('daRE_stage',JSON.stringify({stage,score,maxCombo,difficulty}));}catch(e){}refreshContinue();}
+function clearStageSave(){try{localStorage.removeItem('daRE_stage');}catch(e){}refreshContinue();}
+function refreshContinue(){const b=document.getElementById('contBtn'),sv=getStageSave();if(!b)return;
+  if(sv){b.style.display='';b.innerHTML='&#8635; CONTINUE &middot; STAGE '+sv.stage+'<span class="diff-desc" style="margin-top:4px">'+['RECRUIT','SOLDIER','LEGEND'][sv.difficulty||0]+' &middot; '+(sv.score||0).toLocaleString()+' PTS</span>';}
+  else b.style.display='none';}
+function continueStage(){
+  const sv=getStageSave();if(!sv){startGame();return;}
+  try{initAudio();hideAll();
+    difficulty=sv.difficulty||0;stage=sv.stage;score=sv.score||0;maxCombo=sv.maxCombo||0;stageKills=0;lives=fullLives();
+    initGame(true);
+    floatTexts.push({x:player.x+player.w/2,y:player.y-Math.round(40*S),txt:'STAGE '+stage+' \u00b7 FULL HEARTS',color:'#ff4d5e',life:110,maxLife:110,vy:-0.4});
+  }catch(e){console.error('continueStage error:',e);}
+}
 function initGame(keepScore=false){
   runId++;_advancing=false;releaseAll();
   try{fitScreen();}catch(e){} // ensure W/H/S/GH are current
@@ -2010,8 +2027,13 @@ function showGameOver(){
   const _gl=document.getElementById('goNameLbl');if(_gl)_gl.innerHTML=isNew?'NEW HIGH SCORE &mdash; ENTER YOUR NAME':'TOP 10 &mdash; ENTER YOUR NAME';
   const _gs=document.getElementById('goSubmit');if(_gs)_gs.style.display=qualifies?'':'none';
   const _ni=document.getElementById('nameInput');if(_ni&&!_ni.value){try{_ni.value=localStorage.getItem('da_rebel_name')||'';}catch(e){}}
+  const _sv=getStageSave(),_rt=document.getElementById('goRetry'),_fr=document.getElementById('goFresh');
+  if(_rt)_rt.innerHTML=_sv?'&#8634; RETRY STAGE '+_sv.stage:'&#8634; RETRY';
+  if(_rt)_rt.className=_sv?'btn':'btn btn-ghost';
+  if(_fr)_fr.style.display=_sv?'':'none';
   document.getElementById('gameOver').classList.add('show');
 }
+function retryAfterGameOver(){getStageSave()?continueStage():startGame();}
 function showStageClear(){
   hideAll();
   const killBonus=stageKills*50,lifeBonus=lives*1500,comboBonus=maxCombo*200;
@@ -2057,7 +2079,7 @@ function showStageClear(){
   },60);
 }
 function showVictory(){
-  hideAll();
+  hideAll();clearStageSave();
   const elapsedSec=Math.round(frameCount/60);
   const accuracy=Math.min(100,Math.round(stageKills/Math.max(1,stageKills+waveCount*2)*100));
   const timeBonus=Math.max(0,300-elapsedSec)*100;
@@ -2089,7 +2111,7 @@ function showVictory(){
 }
 
 function saveVictoryScore(){if(_vicSaved)return;_vicSaved=true;const inp=document.getElementById('nameInputV');const nm=(inp&&inp.value&&inp.value.trim())?inp.value.trim():'REBEL';addScore(nm,score,3);}
-function submitScore(isV){if(isV){if(_vicSaved){showLB('title');return;}_vicSaved=true;}const inp=document.getElementById(isV?'nameInputV':'nameInput');const nm=(inp&&inp.value&&inp.value.trim())?inp.value.trim().toUpperCase().slice(0,8):'REBEL';try{localStorage.setItem('da_rebel_name',nm);}catch(e){}addScore(nm,score,isV?3:stage);isV?showLB('title'):startGame();}
+function submitScore(isV){if(isV){if(_vicSaved){showLB('title');return;}_vicSaved=true;}const inp=document.getElementById(isV?'nameInputV':'nameInput');const nm=(inp&&inp.value&&inp.value.trim())?inp.value.trim().toUpperCase().slice(0,8):'REBEL';try{localStorage.setItem('da_rebel_name',nm);}catch(e){}addScore(nm,score,isV?3:stage);isV?showLB('title'):retryAfterGameOver();}
 function nextStage(){
   if(_advancing)return;_advancing=true;
   if(stage>=3){showVictory();return;}
@@ -2103,6 +2125,7 @@ function nextStage(){
     stage++;stageKills=0;
     const _healed=lives<fullLives();lives=Math.max(lives,fullLives());
     initGame(true);
+    saveStage();
     applyHudTheme(stage-1);
     if(_healed){hudDirty=true;floatTexts.push({x:player.x+player.w/2,y:player.y-Math.round(40*S),txt:'\u2665 HEARTS RESTORED',color:'#ff4d5e',life:110,maxLife:110,vy:-0.4});try{sfxPickup();}catch(e){}}
     const _pb=document.getElementById('tPause');if(_pb){_pb.style.opacity='1';_pb.style.pointerEvents='auto';}
@@ -4976,13 +4999,14 @@ function setDiff(d){
     hideAll();
     initAudio();
     stage=1;score=0;lives=5;maxCombo=0;stageKills=0;
+    clearStageSave();
     initGame(false);
     const _pb=document.getElementById('tPause');if(_pb){_pb.style.opacity='1';_pb.style.pointerEvents='auto';}
   }catch(e){console.error('setDiff error:',e);}
 }
 
 function startGame(){
-  try{initAudio();hideAll();stage=1;score=0;lives=5;maxCombo=0;stageKills=0;initGame(false);}
+  try{initAudio();hideAll();stage=1;score=0;lives=5;maxCombo=0;stageKills=0;clearStageSave();initGame(false);}
   catch(e){console.error('startGame error:',e);}
 }
 
@@ -5003,6 +5027,7 @@ function initWeather(){
 
 try {
   fitScreen();
+  refreshContinue();
   document.getElementById('titleScreen').classList.add('show');
   drawTitleScreen();
   if(!titleAnimInterval) titleAnimInterval = setInterval(()=>{
