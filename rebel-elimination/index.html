@@ -996,11 +996,12 @@ function togglePause(){
   }
 }
 
+function fullLives(){return difficulty===0?7:5;} // Recruit 7, Soldier/Legend 5
 function initGame(keepScore=false){
   runId++;_advancing=false;releaseAll();
   try{fitScreen();}catch(e){} // ensure W/H/S/GH are current
   if(!(history.state&&history.state.re))history.pushState({re:1},'');
-  if(!keepScore){score=0;lives=difficulty===0?7:5;stage=1;maxCombo=0;}
+  if(!keepScore){score=0;lives=fullLives();stage=1;maxCombo=0;}
   frameCount=0;bossSpawned=false;bossDefeated=false;enemyCooldown=0;scrollX=0;
   waveSize=0;waveCooldown=0;waveBreak=30;waveCount=0;tempoCheckTimer=0;currentBpm=0;
   combo=0;comboTimer=0;stageKills=0;screenShake=0;flashTimer=0;hitPause=0;stageIntroTimer=90;countUpCurrent=0;countUpActive=false;countUpTimer=0;checkpointReached=false;checkpoint25Reached=false;checkpointX=0;checkpointFlash=0;
@@ -2030,7 +2031,8 @@ function showStageClear(){
     'LIFE BONUS: <b style="color:#ff4444">+'+lifeBonus.toLocaleString()+'</b><br>'+
     'COMBO BONUS: <b style="color:#ffd700">+'+comboBonus.toLocaleString()+'</b><br>'+
     'TOTAL: <b id="scTotal" style="color:'+stageCfg.groundLine+';font-size:1.2em">'+baseScore.toLocaleString()+'</b>'+
-    (stage<3?'<br><span style="font-size:.65em;color:#555;margin-top:4px;display:block">NEXT: STAGE '+(stage+1)+' -- '+['','CITY STREETS','INDUSTRIAL ZONE','THE FORTRESS'][stage+1]+'</span>':'');
+    (stage<3&&lives<fullLives()?'<br><span style="color:#ff4d5e;display:block;margin-top:4px">\u2665 HEARTS RESTORED FOR STAGE '+(stage+1)+'</span>':'')+
+    (stage<3?'<span style="font-size:.65em;color:#555;margin-top:4px;display:block">NEXT: STAGE '+(stage+1)+' -- '+['','CITY STREETS','INDUSTRIAL ZONE','THE FORTRESS'][stage+1]+'</span>':'');
   document.getElementById('nextBtn').textContent=stage<3?'\u25B6 STAGE '+(stage+1):'\u25B6 FINAL SCORE';
   const nb=document.getElementById('nextBtn');
   if(nb){nb.style.opacity='0.4';nb.style.pointerEvents='none';}
@@ -2099,8 +2101,10 @@ function nextStage(){
   setTimeout(()=>{
     hideAll(); // remove stageClear overlay before starting next stage
     stage++;stageKills=0;
+    const _healed=lives<fullLives();lives=Math.max(lives,fullLives());
     initGame(true);
     applyHudTheme(stage-1);
+    if(_healed){hudDirty=true;floatTexts.push({x:player.x+player.w/2,y:player.y-Math.round(40*S),txt:'\u2665 HEARTS RESTORED',color:'#ff4d5e',life:110,maxLife:110,vy:-0.4});try{sfxPickup();}catch(e){}}
     const _pb=document.getElementById('tPause');if(_pb){_pb.style.opacity='1';_pb.style.pointerEvents='auto';}
     if(typeof initWeather==='function')initWeather();
     // Fade back in after init completes
