@@ -180,8 +180,8 @@ body{height:100%;height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px)
 #game.on{display:grid;} /* only when active: '#game{display:grid}' outranked '.screen{display:none}', so the HUD showed on every menu */
 #game{background:var(--black);height:100%;overflow:hidden;grid-template-rows:auto auto 1fr auto;}
 @media(orientation:landscape)and(max-height:500px){
-  #game{grid-template-rows:auto 1fr auto;}
-  .obj-bar{display:none;}
+  .obj-bar{min-height:22px;padding:2px 11px;}
+  .obj-bar .obj-lbl{display:none;}
   .leon-panel{min-height:46px;padding:3px 8px;}
 }
 /* Header */
@@ -204,7 +204,9 @@ body{height:100%;height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px)
 .obj-lbl{font-size:8px;letter-spacing:3px;color:var(--smoke);}
 .obj-prog{height:3px;background:var(--ash);margin-top:3px;width:64px;border-radius:2px;overflow:hidden;}
 .obj-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-lt));transition:width .35s;}
-.obj-items{display:flex;gap:8px;align-items:center;}
+.obj-items{display:flex;gap:10px;align-items:center;flex-shrink:0;}
+.obj-ic{width:20px;height:20px;flex:0 0 20px;display:inline-flex;align-items:center;justify-content:center;}
+.obj-ic svg{width:20px;height:20px;display:block;flex:none;}
 .obj-item{display:flex;align-items:center;gap:3px;font-family:'Bebas Neue',sans-serif;font-size:16px;}
 .obj-item.done{opacity:.3;text-decoration:line-through;}
 .obj-ct{color:var(--gold);}
@@ -428,6 +430,7 @@ body{height:100%;height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px)
 .comic-progress-fill{height:100%;background:var(--gold);transition:width .3s;width:0%;}
 /* Scroll area */
 .comic-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;background:#0A0808;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));}
+#comic-scroll>*{max-width:600px;margin-left:auto!important;margin-right:auto!important;}
 .comic-scroll::-webkit-scrollbar{width:2px;}
 .comic-scroll::-webkit-scrollbar-thumb{background:var(--ash);border-radius:2px;}
 /* Chapter intro */
@@ -470,6 +473,9 @@ body{height:100%;height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px)
 .speech-bubble.vance-young::after{border-top-color:#1A1008;}
 .speech-bubble.leon-bubble{background:#0E0C08;color:#C8B89A;border:1px solid rgba(150,120,80,.3);}
 .speech-bubble.leon-bubble::after{border-top-color:#0E0C08;}
+.speech-bubble.tl.vance-bubble::after,.speech-bubble.tr.vance-bubble::after{border-top-color:transparent;border-bottom-color:#180A0A;}
+.speech-bubble.tl.vance-young::after,.speech-bubble.tr.vance-young::after{border-top-color:transparent;border-bottom-color:#1A1008;}
+.speech-bubble.tl.leon-bubble::after,.speech-bubble.tr.leon-bubble::after{border-top-color:transparent;border-bottom-color:#0E0C08;}
 /* SFX */
 .panel-sfx{position:absolute;font-family:'Bebas Neue',sans-serif;text-shadow:2px 2px 0 rgba(0,0,0,.8);pointer-events:none;z-index:14;}
 /* Chapter gutter */
@@ -2255,7 +2261,7 @@ function renderObj(prevC){
     const cur=G.objC[tid]||0,done=cur>=need,prev=prevC?prevC[tid]||0:cur;
     d+=Math.min(cur,need);t+=need;
     const div=document.createElement('div');div.className=`obj-item${done?' done':''}`;
-    div.innerHTML=`<span style="width:18px;height:18px;display:inline-flex;align-items:center;">${OBJ_SVG[tid]}</span><span class="obj-ct">${cur}/${need}</span>`;
+    div.innerHTML=`<span class="obj-ic">${OBJ_SVG[tid].replace('<svg ','<svg width="20" height="20" ')}</span><span class="obj-ct">${cur}/${need}</span>`;
     if(prevC&&cur>prev){setTimeout(()=>{div.classList.add('tick');playSound('tick');setTimeout(()=>div.classList.remove('tick'),420);},50);}
     c.appendChild(div);
   });
@@ -2313,7 +2319,7 @@ function spawnConfetti(){
 // COMIC
 // ===================================================----
 let comicChapter=0;
-function openComic(idx=0){comicChapter=idx;renderComicChapter(idx);el('comic-ov').classList.add('on');setTimeout(()=>{const s=el('comic-scroll');if(s)s.scrollTop=0;},50);}
+function openComic(idx=0){comicChapter=idx;el('comic-ov').classList.add('on');renderComicChapter(idx);setTimeout(()=>{const s=el('comic-scroll');if(s)s.scrollTop=0;},50);}
 function closeComic(){el('comic-ov').classList.remove('on');}
 function switchComicChapter(idx){comicChapter=idx;renderComicChapter(idx);const s=el('comic-scroll');if(s)s.scrollTop=0;}
 function renderComicChapter(idx){
@@ -2340,20 +2346,21 @@ function renderComicChapter(idx){
 
   const svgNS='http://www.w3.org/2000/svg';
   const w=Math.min(window.innerWidth||390,480);
+  const colW=Math.min(window.innerWidth||390,600),k=colW/w; // >1 on tablets: scale the art up instead of cropping it
 
   ch.panels.forEach((panel,pi)=>{
     const wrap=document.createElement('div');
     wrap.className='comic-panel-wrap';
     const pDiv=document.createElement('div');
     pDiv.className='comic-panel';
-    pDiv.style.height=panel.h+'px';
+    pDiv.style.height=Math.round(panel.h*k)+'px';
 
     // SVG artwork
     const svg=document.createElementNS(svgNS,'svg');
     svg.setAttribute('viewBox',`0 0 ${w} ${panel.h}`);
     svg.setAttribute('width','100%');
-    svg.setAttribute('height',panel.h);
-    svg.setAttribute('preserveAspectRatio','xMidYMid slice');
+    svg.setAttribute('height','100%');
+    svg.setAttribute('preserveAspectRatio','xMidYMid meet');
     svg.style.display='block';
     try{svg.innerHTML=panel.render(w);}catch(err){console.error('Panel',pi,'render error:',err);}
     pDiv.appendChild(svg);
@@ -2378,6 +2385,7 @@ function renderComicChapter(idx){
     }
     if(panel.bubble)pDiv.appendChild(makeBubble(panel.bubble));
     if(panel.bubble2)pDiv.appendChild(makeBubble(panel.bubble2));
+    pDiv.dataset.fit='1';
 
     // Caption — rendered as block BELOW the SVG artwork, never overlapping it
     if(panel.caption){
@@ -2449,7 +2457,28 @@ function renderComicChapter(idx){
   }
   scroll.onscroll=updateProgress;
   updateProgress();
+  requestAnimationFrame(fitComicBubbles);
 }
+// Nudge speech bubbles so none hangs off a panel edge or sits on top of another bubble
+function fitComicBubbles(){
+  document.querySelectorAll('#comic-scroll .comic-panel[data-fit]').forEach(p=>{
+    const pw=p.clientWidth,ph=p.clientHeight;if(!pw)return;
+    const bs=[...p.querySelectorAll('.speech-bubble')];
+    bs.forEach(b=>{b.style.left=b.style.left;}); // reset to authored spot
+    const boxes=[];
+    bs.forEach(b=>{
+      let x=b.offsetLeft,y=b.offsetTop;const bw=b.offsetWidth,bh=b.offsetHeight,m=8;
+      x=Math.max(m,Math.min(x,pw-bw-m));y=Math.max(m,Math.min(y,ph-bh-m-8));
+      for(const o of boxes){ // overlap with an earlier bubble → slide below it (or above if no room)
+        if(x<o.x+o.w+4&&x+bw>o.x-4&&y<o.y+o.h+4&&y+bh>o.y-4){
+          const below=o.y+o.h+10;y=below+bh<=ph-m?below:Math.max(m,o.y-bh-10);
+        }
+      }
+      b.style.left=x+'px';b.style.top=y+'px';boxes.push({x,y,w:bw,h:bh});
+    });
+  });
+}
+window.addEventListener('resize',()=>{if(el('comic-ov')?.classList.contains('on'))renderComicChapter(comicChapter);});
 
 
 
@@ -2791,7 +2820,7 @@ ${i<2?'<rect x="'+( +px+pw).toFixed(0)+'" y="0" width="1.5" height="220" fill="#
       {
         h:360,layout:'full',
         caption:{text:'"I love this city more than anyone in this room. That\'s exactly why I\'m tearing the old version of it down."',pos:'bottom-center',style:'vance'},
-        sfx:{text:'VANCE GORDON',x:50,y:24,size:11,color:'rgba(192,57,43,.45)',spacing:6},
+        sfx:{text:'VANCE GORDON',x:50,y:24,size:13,color:'rgba(224,90,72,.85)',spacing:6},
         render:(w)=>{
           return `
 <defs>
@@ -2910,8 +2939,8 @@ ${wins}${wins2}
         h:300,layout:'full',
         caption:{text:'Before the fall — Vance Gordon and Leon Capos built the Council together. Thirty years of partnership.',pos:'bottom-left',style:'narrator'},
         loc:{text:'PANTHER CITY · TEN YEARS AGO',x:200,y:16},
-        bubble:{text:'"We built something real here, Vance. Don\'t ever let them buy it."',x:0.3,y:0.55,tail:'br',speaker:'leon'},
-        bubble2:{text:'"Nobody buys what we built. That\'s the code."',x:0.72,y:0.42,tail:'bl',speaker:'vance-young'},
+        bubble:{text:'"We built something real here, Vance. Don\'t ever let them buy it."',x:0.03,y:0.13,tail:'br',speaker:'leon'},
+        bubble2:{text:'"Nobody buys what we built. That\'s the code."',x:0.53,y:0.13,tail:'bl',speaker:'vance-young'},
         render:(w)=>{
           return `
 <defs>
@@ -2943,7 +2972,7 @@ ${wins}${wins2}
       {
         h:280,layout:'full',
         caption:{text:'The New Order came not with soldiers — but with spreadsheets. They bought the city block by block.',pos:'bottom-left',style:'narrator'},
-        sfx:{text:'THE OFFER',x:50,y:24,size:12,color:'rgba(192,57,43,.4)',spacing:5},
+        sfx:{text:'THE OFFER',x:50,y:24,size:13,color:'rgba(224,90,72,.85)',spacing:5},
         render:(w)=>{
           return `
 <defs>
@@ -3021,7 +3050,7 @@ ${cityLights}
 <circle cx="${w/2}" cy="158" r="18" fill="#221208"/>
 <rect x="${(w*.28).toFixed(0)}" y="188" width="${(w*.44).toFixed(0)}" height="28" fill="rgba(192,57,43,.1)" stroke="rgba(192,57,43,.28)" stroke-width=".8" rx="1"/>
 ${[w*.36,w*.5,w*.62].map(mx=>'<line x1="'+(mx-6).toFixed(0)+'" y1="194" x2="'+(mx+6).toFixed(0)+'" y2="206" stroke="rgba(192,57,43,.8)" stroke-width="2" stroke-linecap="round"/><line x1="'+(mx+6).toFixed(0)+'" y1="194" x2="'+(mx-6).toFixed(0)+'" y2="206" stroke="rgba(192,57,43,.8)" stroke-width="2" stroke-linecap="round"/>').join('')}
-<text x="${(w*.5).toFixed(0)}" y="${(202+28/2+4).toFixed(0)}" font-family="Bebas Neue" font-size="7" text-anchor="middle" fill="rgba(192,57,43,.35)" letter-spacing="2">PANTHER CITY</text>
+<text x="${(w*.5).toFixed(0)}" y="${(202+28/2+4).toFixed(0)}" font-family="Bebas Neue" font-size="8" text-anchor="middle" fill="rgba(224,90,72,.7)" letter-spacing="2">PANTHER CITY</text>
 `;
         },
       },
@@ -3084,8 +3113,8 @@ ${[w*.36,w*.5,w*.62].map(mx=>'<line x1="'+(mx-6).toFixed(0)+'" y1="194" x2="'+(m
 <path d="M${(w/2+2).toFixed(0)},86 Q${(w/2+6).toFixed(0)},85 ${(w/2+10).toFixed(0)},87" stroke="#2A1808" stroke-width="2" fill="none" stroke-linecap="round"/>
 <path d="M${(w/2-8).toFixed(0)},106 Q${w/2},109 ${(w/2+8).toFixed(0)},106" fill="none" stroke="#200E00" stroke-width="1.2" stroke-linecap="round"/>
 <path d="M${(w/2-18).toFixed(0)},78 Q${w/2},66 ${(w/2+18).toFixed(0)},78 Q${(w/2+15).toFixed(0)},68 ${w/2},66 Q${(w/2-15).toFixed(0)},68 ${(w/2-18).toFixed(0)},78Z" fill="#110800"/>
-<text x="${(w*.1).toFixed(0)}" y="42" font-family="Bebas Neue" font-size="28" letter-spacing="4" fill="rgba(201,151,42,.3)">1978</text>
-<text x="${(w*.1).toFixed(0)}" y="58" font-family="Oswald" font-size="8" letter-spacing="3" fill="rgba(201,151,42,.2)">PANTHER CITY</text>
+<text x="${(w*.06).toFixed(0)}" y="76" font-family="Bebas Neue" font-size="30" letter-spacing="4" fill="rgba(201,151,42,.42)">1978</text>
+<text x="${(w*.06).toFixed(0)}" y="92" font-family="Oswald" font-size="8" letter-spacing="3" fill="rgba(201,151,42,.32)">PANTHER CITY</text>
 
 `;
         },
@@ -3163,7 +3192,7 @@ ${i<4?'<line x1="'+( w*.09).toFixed(0)+'" y1="'+( 103+i*46)+'" x2="'+( w*.91).to
       // PANEL 4 - Leon passes the torch to Donnie at dusk (MAGNOLIA)
       {
         h:360,layout:'full',
-        bubble:{text:'"The city needs you.\nNot because you\'re the strongest.\n\nBecause you\'re from here.\nAnd you still believe in it."',x:0.3,y:0.22,tail:'br',speaker:'leon'},
+        bubble:{text:'"The city needs you.\nNot because you\'re the strongest.\n\nBecause you\'re from here.\nAnd you still believe in it."',x:0.06,y:0.03,tail:'br',speaker:'leon'},
         caption:{text:'Magnolia Avenue. The Historic South Side of Panther City.\n\nThe code didn\'t die. It just needed a new carrier.',pos:'bottom-left',style:'leon'},
         render:(w)=>{
           const skylineBuilds=[[0,108,22,252],[28,92,26,268],[58,116,18,244],[80,100,28,260],[w-48,104,22,256],[w-74,90,28,270],[w-106,113,20,247],[w-130,126,18,234]];
