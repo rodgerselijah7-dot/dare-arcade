@@ -1,0 +1,16 @@
+{
+  "name": "ORI",
+  "short_name": "ORI",
+  "description": "Place shapes, clear rows, chain combos, survive. A tile game by Dontae Amare.",
+  "start_url": "/ori/",
+  "scope": "/ori/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060912",
+  "theme_color": "#060912",
+  "icons": [
+    { "src": "/ori/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/ori/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/ori/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
