@@ -26,7 +26,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
   user-select:none;-webkit-user-select:none;touch-action:none;
   -webkit-tap-highlight-color:transparent;}
 #bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
-#shell{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;}
+#shell{position:fixed;inset:0;z-index:1;}
+#hud,#controls{position:absolute;}
 
 /* HUD */
 #hud{width:100%;flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;
@@ -50,7 +51,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
 #btn-mute.muted{border-color:rgba(255,68,102,0.30);color:rgba(255,68,102,0.55);}
 
 /* Board */
-#board-wrap{flex-shrink:0;position:relative;align-self:center;
+#board-wrap{position:absolute;
   box-shadow:0 0 0 1px rgba(123,47,190,0.38),
     0 0 26px 4px rgba(123,47,190,0.16),
     0 0 65px 8px rgba(123,47,190,0.06);
@@ -110,12 +111,38 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
   background:rgba(6,9,18,0.76);border:1px solid rgba(123,47,190,0.28);
   border-radius:8px;display:flex;flex-direction:column;align-items:center;
   padding:5px 6px 5px;backdrop-filter:blur(4px);}
-#panel-next{top:7px;left:7px;}
-#panel-hold{top:7px;right:7px;}
 .corner-lbl{letter-spacing:0.28em;text-transform:uppercase;
   color:var(--muted);margin-bottom:3px;line-height:1;}
 .corner-name{letter-spacing:0.18em;text-transform:uppercase;
-  color:rgba(168,85,247,0.55);margin-top:3px;line-height:1;}
+  color:rgba(168,85,247,0.55);margin-top:3px;line-height:1;white-space:nowrap;}
+#next-q{display:none;flex-direction:column;align-items:center;gap:8px;margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(123,47,190,0.22);width:100%;}
+#next-q canvas{opacity:0.78;}
+body.queue #next-q{display:flex;}
+body.compact .corner-name{display:none;}
+body.compact #logo-sm{display:none;}
+body.compact .corner-panel{padding:4px 5px 5px;}
+#hud-extra{display:none;}
+
+/* Wide layout (laptop, tablet sideways): info column | board | next column */
+body.wide #hud{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:22px;
+  background:none;border:none;padding:0;}
+body.wide #hud-stats{flex-direction:column;align-items:flex-start;gap:16px;}
+body.wide .hstat{text-align:left;}
+body.wide #hud-extra{display:flex;flex-direction:column;gap:8px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(238,232,213,0.42);}
+body.wide #hx-zone{color:var(--vl);font-weight:600;}
+#hx-best b{color:var(--amber);font-weight:700;}
+#hx-keys{display:none;margin-top:6px;line-height:1.9;letter-spacing:0.1em;color:rgba(238,232,213,0.32);}
+#hx-keys b{color:rgba(238,232,213,0.6);font-weight:600;}
+body.keys #hx-keys{display:block;}
+body.wide #controls{background:none;pointer-events:none;}
+body.wide #controls>*{position:absolute;pointer-events:auto;}
+body.keys #controls{display:none;}
+/* tall phones: one row of controls */
+body.tall #dpad{flex-direction:row;gap:6px;margin-right:auto;}
+body.tall #dpad-lr{gap:6px;}
+body.tall #right-cluster{order:2;margin-right:10px;}
+body.tall #btn-rot{order:3;}
 #panel-hold.used{opacity:0.40;}
 #panel-hold.used .corner-lbl{color:rgba(255,68,102,0.48);}
 #hold-placeholder{border:1.5px dashed rgba(123,47,190,0.30);
@@ -245,6 +272,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
         <span class="hstat-num" id="lines-num">0</span>
       </div>
     </div>
+    <div id="hud-extra">
+      <div id="hx-zone"></div>
+      <div id="hx-best"></div>
+      <div id="hx-keys"><b>&larr; &rarr;</b> move<br><b>&uarr;</b> rotate<br><b>&darr;</b> soft drop<br><b>Space</b> drop<br><b>C</b> hold &nbsp;·&nbsp; <b>P</b> pause</div>
+    </div>
     <div id="hud-right">
       <button class="hud-icon-btn" id="btn-mute" title="Mute (M)">♪</button>
       <button class="hud-icon-btn" id="btn-pause">II</button>
@@ -261,17 +293,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
     <div id="clear-label"></div>
     <div id="perfect-label">PERFECT CLEAR</div>
     <div id="level-badge"></div>
-    <div class="corner-panel" id="panel-next">
-      <div class="corner-lbl">next</div>
-      <canvas id="next-canvas"></canvas>
-      <div class="corner-name" id="next-name"></div>
-    </div>
-    <div class="corner-panel" id="panel-hold">
-      <div class="corner-lbl">hold</div>
-      <div id="hold-placeholder">+</div>
-      <canvas id="hold-canvas" style="display:none;"></canvas>
-      <div class="corner-name" id="hold-name"></div>
-    </div>
+  </div>
+
+  <div class="corner-panel" id="panel-hold">
+    <div class="corner-lbl">hold</div>
+    <div id="hold-placeholder">+</div>
+    <canvas id="hold-canvas" style="display:none;"></canvas>
+    <div class="corner-name" id="hold-name"></div>
+  </div>
+  <div class="corner-panel" id="panel-next">
+    <div class="corner-lbl">next</div>
+    <canvas id="next-canvas"></canvas>
+    <div class="corner-name" id="next-name"></div>
+    <div id="next-q"><canvas id="nq1"></canvas><canvas id="nq2"></canvas></div>
   </div>
 
   <!-- FIX #10: proper D-pad layout — ◀▶ on top, ▼ centred below -->
@@ -360,6 +394,7 @@ const trailCv=$('drop-trail'),tCtx=trailCv.getContext('2d');
 const rcCanvas=$('row-clear-canvas'),rcCtx=rcCanvas.getContext('2d');
 const ncanvas=$('next-canvas'),nctx=ncanvas.getContext('2d');
 const hcanvas=$('hold-canvas'),hctx=hcanvas.getContext('2d');
+const nq=[$('nq1'),$('nq2')],nqx=nq.map(c=>c.getContext('2d'));
 const flashEl=$('flash'),lockFlashEl=$('lock-flash');
 const clearLbl=$('clear-label'),perfectLbl=$('perfect-label'),lvlBadge=$('level-badge');
 const scoreValEl=$('score-val'),levelNumEl=$('level-num'),linesNumEl=$('lines-num');
@@ -411,68 +446,115 @@ function safeInsets(){
   const cs=getComputedStyle($('sa-probe'));
   return {t:parseFloat(cs.paddingTop)||0,b:parseFloat(cs.paddingBottom)||0};
 }
+let QS=30; // next-queue preview size
+const hasTouch=()=>navigator.maxTouchPoints>0||matchMedia('(pointer:coarse)').matches;
+function place(el,x,y,w,h){const st=el.style;st.left=Math.round(x)+'px';st.top=Math.round(y)+'px';st.right='auto';st.bottom='auto';
+  if(w!=null)st.width=Math.round(w)+'px';if(h!=null)st.height=Math.round(h)+'px';}
 function layout(){
   const W=window.innerWidth,H=window.innerHeight;
   const SA=safeInsets();
   const SAT=SA.t,SAB=Math.max(SA.b,6);
   const avail=H-SAT-SAB;
-  const HUD_H=clamp(avail*0.072,44,60);
-  const CTRL_H=clamp(avail*0.150,92,116); // 2-row D-pad needs ~92px
-  const BOARD_H=H-SAT-HUD_H-CTRL_H-SAB;
-  CS=Math.max(18,Math.min(Math.floor(W/COLS),Math.floor(BOARD_H/ROWS)));
-  const bW=CS*COLS,bH=CS*ROWS;
-  MCS=clamp(CS*3.0,42,68);
-  bgGradCache=null;
+  const touch=hasTouch();
+  const wide=W>=700&&W/H>=0.9;
+  const B=document.body;
+  B.classList.toggle('wide',wide);B.classList.toggle('tall',!wide);B.classList.toggle('keys',wide&&!touch);
+  const pNext=$('panel-next'),pHold=$('panel-hold'),hudX=$('hud-extra');
+  const dpad=$('dpad'),rot=$('btn-rot'),rc=$('right-cluster');
+  [dpad,rot,rc].forEach(e=>{e.style.left=e.style.top='';});
+  let bW,bH,bx,by,HUD_H,BSZ,RSZ,TWB,TWH,pw;
 
-  hudEl.style.height=(HUD_H+SAT)+'px';hudEl.style.paddingTop=SAT+'px';
-  controlsEl.style.height=(CTRL_H+SAB)+'px';controlsEl.style.paddingBottom=SAB+'px';
-  // wide screens (tablet/laptop): keep HUD + controls near the board instead of the far edges
-  const span=Math.max(bW+48,440)+'px';
-  hudEl.style.maxWidth=controlsEl.style.maxWidth=span;
-  // leftover height goes evenly above/below the board
-  const spare=Math.max(0,BOARD_H-bH);
-  boardWrap.style.marginTop=boardWrap.style.marginBottom=Math.floor(spare/2)+'px';
-  boardWrap.style.width=bW+'px';boardWrap.style.height=bH+'px';
+  if(!wide){
+    // ── Portrait: HUD on top, one row of controls at the bottom, board fills the middle
+    HUD_H=clamp(avail*0.078,56,74);
+    const CTRL_H=clamp(avail*0.088,70,96);
+    const BOARD_H=H-SAT-HUD_H-CTRL_H-SAB-10;
+    CS=Math.max(14,Math.min(Math.floor((W-8)/COLS),Math.floor(BOARD_H/ROWS)));
+    bW=CS*COLS;bH=CS*ROWS;bx=(W-bW)/2;by=SAT+HUD_H+5+Math.floor((BOARD_H-bH)/2);
+    const g=bx;                       // side gutter beside the board
+    const side=g>=104;                // tablets: HOLD/NEXT in the gutters, phones: in the HUD row
+    B.classList.toggle('compact',!side);B.classList.toggle('queue',side);
+    if(side){
+      pw=Math.min(g-24,156);MCS=pw-14;QS=Math.round(MCS*0.6);
+      place(pHold,(g-pw)/2,by,pw);place(pNext,bx+bW+(g-pw)/2,by,pw);
+      place(hudEl,0,0,W,HUD_H+SAT);hudEl.style.padding=SAT+'px '+Math.max(14,(W-Math.max(bW+2*pw,520))/2)+'px 0';
+    }else{
+      MCS=HUD_H-20;pw=MCS+12;QS=0;
+      const py=SAT+(HUD_H-(MCS+16))/2;
+      place(pHold,8,py,pw);place(pNext,W-8-pw,py,pw);
+      place(hudEl,0,0,W,HUD_H+SAT);hudEl.style.padding=SAT+'px '+(pw+16)+'px 0';
+    }
+    const cw=Math.min(W,side?640:W);
+    place(controlsEl,(W-cw)/2,H-SAB-CTRL_H,cw,CTRL_H+SAB);
+    controlsEl.style.padding='0 '+(side?16:10)+'px '+SAB+'px';
+    RSZ=clamp(CTRL_H*0.86,52,80);
+    BSZ=clamp(Math.min(CTRL_H*0.74,(cw-20-RSZ-10-6*2-Math.max(60,RSZ*1.1))/3.6),42,66);
+    TWB=clamp(BSZ*1.3,58,90);TWH=Math.round((RSZ-6)/2);
+    const HF=Math.round(HUD_H*0.36),LBL=Math.max(9,Math.round(HUD_H*0.15));
+    $('logo-sm').style.fontSize=Math.round(HUD_H*0.36)+'px';
+    scoreValEl.style.fontSize=HF+'px';levelNumEl.style.fontSize=HF+'px';linesNumEl.style.fontSize=Math.round(HF*0.88)+'px';
+    document.querySelectorAll('.hstat-lbl').forEach(e=>e.style.fontSize=LBL+'px');
+    $('hud-stats').style.gap=(side?18:Math.max(8,Math.round((W-2*pw-160)/14)))+'px';
+    const PSZ=clamp(HUD_H*0.52,28,38);
+    ['btn-pause','btn-mute'].forEach(id=>{const el=$(id);el.style.width=el.style.height=PSZ+'px';el.style.fontSize=Math.round(PSZ*0.36)+'px';});
+    $('hud-right').style.gap=side?'8px':'5px';
+  }else{
+    // ── Landscape / laptop: info column | full-height board | next column
+    B.classList.remove('compact');B.classList.add('queue');
+    const m=Math.max(18,Math.round(H*0.03));
+    CS=Math.floor((H-SAT-SAB-2*m)/ROWS);
+    CS=Math.max(14,Math.min(CS,Math.floor((W-2*230)/COLS)));
+    bW=CS*COLS;bH=CS*ROWS;bx=(W-bW)/2;by=SAT+(H-SAT-SAB-bH)/2;
+    const gap=Math.round(Math.min(48,bx*0.12));
+    const colW=Math.min(280,bx-gap-20);
+    const lx=bx-gap-colW,rx=bx+bW+gap;
+    pw=Math.min(colW,184);MCS=pw-16;QS=Math.round(MCS*0.6);
+    HUD_H=56;
+    place(hudEl,lx,by,colW,null);hudEl.style.height='auto';hudEl.style.padding='0';
+    const HF=Math.round(clamp(CS*1.15,30,52));
+    $('logo-sm').style.fontSize=Math.round(HF*0.9)+'px';
+    scoreValEl.style.fontSize=HF+'px';levelNumEl.style.fontSize=HF+'px';linesNumEl.style.fontSize=Math.round(HF*0.88)+'px';
+    document.querySelectorAll('.hstat-lbl').forEach(e=>e.style.fontSize=Math.round(HF*0.3)+'px');
+    $('hud-stats').style.gap=Math.round(HF*0.38)+'px';
+    hudX.style.fontSize=Math.round(clamp(HF*0.34,12,17))+'px';
+    const PSZ=clamp(HF*0.95,34,46);
+    ['btn-pause','btn-mute'].forEach(id=>{const el=$(id);el.style.width=el.style.height=PSZ+'px';el.style.fontSize=Math.round(PSZ*0.36)+'px';});
+    $('hud-right').style.gap='10px';
+    place(pNext,rx,by,pw);
+    // HOLD goes under the info block (measured after fonts are set)
+    place(pHold,lx,by+hudEl.offsetHeight+Math.round(CS*0.8),pw);
+    // touch controls sit at the bottom of the two side columns
+    BSZ=clamp(CS*1.45,50,66);RSZ=clamp(BSZ*1.3,64,84);TWB=clamp(BSZ*1.55,80,100);TWH=clamp(BSZ*0.72,36,48);
+    place(controlsEl,0,0,W,H);controlsEl.style.padding='0';
+    const dW=BSZ*2+5,dH=BSZ*2+5;
+    place(dpad,lx+(colW-dW)/2,by+bH-dH);
+    place(rc,rx+(pw-TWB)/2,by+bH-(TWH*2+5));
+    place(rot,rx+(pw-RSZ)/2,by+bH-(TWH*2+5)-RSZ-Math.round(CS*0.5));
+  }
+  bgGradCache=null;
+  place(boardWrap,bx,by,bW,bH);
   setupCV(canvas,ctx,bW,bH);setupCV(trailCv,tCtx,bW,bH);
   setupCV(rcCanvas,rcCtx,bW,bH);
   setupCV(ncanvas,nctx,MCS,MCS);setupCV(hcanvas,hctx,MCS,MCS);
+  nq.forEach((c,i)=>setupCV(c,nqx[i],Math.max(QS,1),Math.max(QS,1)));
   setupCV(bgCanvas,bgCtx,W,H);
 
   holdPlaceholder.style.width=holdPlaceholder.style.height=MCS+'px';
   holdPlaceholder.style.fontSize=Math.round(MCS*0.38)+'px';
 
-  // FIX #10: D-pad uses two rows so buttons can be properly sized
-  const BSZ=clamp(CTRL_H*0.42,40,56);  // slightly smaller — two rows fit better
-  const RSZ=clamp(BSZ*1.26,50,70);
-  const TWB=clamp(BSZ*1.52,56,88);
-  const TWH=clamp(BSZ*0.72,28,44);
-  const BFS=Math.round(BSZ*0.40);
-  const RFS=Math.round(RSZ*0.42);
-  const TFS=Math.round(TWH*0.36);
-
+  const BFS=Math.round(BSZ*0.40),RFS=Math.round(RSZ*0.42),TFS=Math.round(clamp(TWH*0.42,11,18));
   ['btn-left','btn-right','btn-down'].forEach(id=>setBtn(id,BSZ,BSZ,BFS));
   setBtn('btn-rot',RSZ,RSZ,RFS);
   setBtn('btn-drop',TWB,TWH,TFS);
   setBtn('btn-hold-ctrl',TWB,TWH,TFS);
 
-  const PSZ=clamp(HUD_H*0.58,26,38);
-  ['btn-pause','btn-mute'].forEach(id=>{
-    const el=$(id);
-    el.style.width=el.style.height=PSZ+'px';
-    el.style.fontSize=Math.round(PSZ*0.36)+'px';
-  });
-
-  const HF=Math.round(HUD_H*0.40),LBL=Math.round(HUD_H*0.16);
-  $('logo-sm').style.fontSize=Math.round(HUD_H*0.38)+'px';
-  scoreValEl.style.fontSize=HF+'px';
-  levelNumEl.style.fontSize=HF+'px';
-  linesNumEl.style.fontSize=Math.round(HF*0.88)+'px';
-  document.querySelectorAll('.hstat-lbl').forEach(e=>e.style.fontSize=LBL+'px');
-  document.querySelectorAll('.corner-lbl').forEach(e=>e.style.fontSize=Math.round(MCS*0.17)+'px');
-  document.querySelectorAll('.corner-name').forEach(e=>e.style.fontSize=Math.round(MCS*0.14)+'px');
+  const lblFS=Math.max(8,Math.round(clamp(MCS*0.15,8,14)));
+  document.querySelectorAll('.corner-lbl').forEach(e=>e.style.fontSize=lblFS+'px');
+  document.querySelectorAll('.corner-name').forEach(e=>e.style.fontSize=Math.max(9,Math.round(MCS*0.12))+'px');
   clearLbl.style.fontSize=Math.round(CS*0.74)+'px';
   perfectLbl.style.fontSize=Math.round(CS*0.52)+'px';
-  lvlBadge.style.fontSize=Math.round(CS*0.38)+'px';
+  lvlBadge.style.fontSize=Math.round(clamp(CS*0.38,11,17))+'px';
+  updateExtra();
 
   const SW=Math.min(W,H*0.52,W>=600?540:380);
   applyFS('so-eyebrow',Math.round(SW*0.030));
@@ -503,13 +585,18 @@ function spaceStart(){
   const r=$('so-rule');if(r)r.style.marginTop=Math.round(g*0.4)+'px';
   const sb=$('so-best');if(sb)sb.style.marginTop=Math.round(g*1.4)+'px';
 }
+function updateExtra(){
+  const zi=zoneIdxOf(level);
+  $('hx-zone').textContent=(ZONES[zi].name==='ORBIT'?'ORBIT · endless':'Zone '+(zi+1)+' · '+ZONES[zi].name);
+  const b=Math.max(getBest(),score|0);$('hx-best').innerHTML=b>0?'Best &nbsp;<b>'+b.toLocaleString()+'</b>':'';
+}
 function refreshBest(){
   const z=getZoneSave(),sc=$('so-cont');
   if(z>0){sc.style.display='';sc.textContent='CONTINUE · '+zoneLabel(z);}else sc.style.display='none';
  const b=getBest();$('so-best').innerHTML=b>0?'Best &nbsp;<b>'+b.toLocaleString()+'</b>':'';}
 
 // ── State ─────────────────────────────────────────────────────────────────
-let board,current,next,held;
+let board,current,next,held,upcoming=[];
 let score=0,lines=0,level=1,speed=750;
 let gameOver=false,paused=false,canHold=true,comboCount=0;
 let piecesSinceRise=0;
@@ -646,8 +733,9 @@ function animateClearRows(rows){
 
 // ── Core ──────────────────────────────────────────────────────────────────
 function spawnPiece(){
-  current=centerPiece(next);
-  next=randPiece();
+  current=centerPiece(upcoming.shift());
+  upcoming.push(randPiece());
+  next=upcoming[0];
   canHold=true;lockResets=0;
   // FIX #8: isValid must pass even with cells above board (nr<0)
   const visibleCells=current.cells.filter(([r])=>r>=0);
@@ -768,6 +856,7 @@ const RISE_COLOR='#5B6088',RUBBLE_COLOR='#6B5E55';
 function enterZone(zi){
   saveZone(zi);piecesSinceRise=0;bgGradCache=null;
   $('logo-sm').querySelector('span').textContent=ZONES[zi].name.toLowerCase();
+  if(typeof updateExtra==='function')updateExtra();
   let over=false;
   if(ZONES[zi].tw.includes('rubble'))for(let i=0;i<3;i++)over=pushRow(3,RUBBLE_COLOR)||over;
   return over;
@@ -920,7 +1009,7 @@ function initGame(startZone=0){
   [clearLbl,perfectLbl,lvlBadge].forEach(e=>e.classList.remove('show'));
   bag=[];
   enterZone(startZone);checkDanger();
-  next=randPiece();spawnPiece();updateHUD(false);hideOverlay();
+  upcoming=[randPiece(),randPiece(),randPiece(),randPiece()];spawnPiece();updateHUD(false);hideOverlay();updateExtra();
   if(startZone>0)showLevelBadge(false,true);
   lastTick=performance.now();rafId=requestAnimationFrame(gameLoop);
 }
@@ -950,6 +1039,7 @@ function toggleMute(){
 let prevScoreAnim=0;
 function updateHUD(anim){
   levelNumEl.textContent=level;linesNumEl.textContent=lines;
+  if(anim)updateExtra();
   if(anim){
     [scoreValEl,linesNumEl].forEach(el=>{el.classList.remove('popping');void el.offsetWidth;el.classList.add('popping');});
     if(scoreRaf)cancelAnimationFrame(scoreRaf);
@@ -1017,7 +1107,10 @@ function drawCell(context,r,c,color,glow,alpha,isActive){
 }
 function drawNext(){
   if(!next)return;
-  if(!twist('nonext')){drawMini(nctx,MCS,next);nextNameEl.textContent=next.name;return;}
+  const hidden=twist('nonext');
+  nqx.forEach((cx,i)=>{if(!QS)return;const p=upcoming[i+1];
+    if(hidden||!p){cx.fillStyle=levelTint().bg;cx.fillRect(0,0,QS,QS);}else drawMini(cx,QS,p);});
+  if(!hidden){drawMini(nctx,MCS,next);nextNameEl.textContent=next.name;return;}
   nctx.fillStyle=levelTint().bg;nctx.fillRect(0,0,MCS,MCS);
   nctx.fillStyle='rgba(168,85,247,0.55)';nctx.font='700 '+Math.round(MCS*0.5)+'px "Barlow Condensed",sans-serif';
   nctx.textAlign='center';nctx.textBaseline='middle';nctx.fillText('?',MCS/2,MCS/2+1);
