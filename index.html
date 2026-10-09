@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080606">
+<meta name="theme-color" content="#FFFFFF">
 <title>DARE Arcade — Games by Dontae Amare</title>
 <meta name="description" content="Free browser games from Dontae Amare. Play The Last Don, a match-3 set on Fort Worth's Historic South Side.">
 <meta property="og:title" content="DARE Arcade">
@@ -13,7 +13,7 @@
 <link rel="icon" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="DARE Arcade">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,23 +23,26 @@
   --ink:#080606; --char:#141010; --line:#2a2322;
   --bone:#D4C8B6; --smoke:#8a7f76;
   --gold:#C9972A; --gold-lt:#F0C040; --ember:#C0392B;
+  /* DARE store palette */
+  --wall:#FFFFFF; --black:#000000; --grey:#6B6B6B; --hair:#E6E6E4; --red:#D8261B;
   --display:'Bebas Neue','Oswald','Arial Narrow',Impact,sans-serif;
   --text:'Crimson Pro',Georgia,'Times New Roman',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{background:var(--ink);-webkit-text-size-adjust:100%}
+html{background:var(--wall);-webkit-text-size-adjust:100%}
 body{
-  min-height:100vh;min-height:100dvh;background:var(--ink);color:var(--bone);
+  min-height:100vh;min-height:100dvh;background:var(--wall);color:var(--black);
   font-family:var(--text);font-size:19px;line-height:1.55;
   padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
 }
 a{color:inherit}
-:focus-visible{outline:2px solid var(--gold-lt);outline-offset:3px}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
 .wrap{max-width:720px;margin:0 auto;padding:0 22px}
 
 /* top bar */
 .bar{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0 0}
-.mark{font-family:var(--display);font-size:22px;letter-spacing:.14em;color:var(--gold);text-decoration:none}
+.mark{font-family:var(--display);font-size:22px;letter-spacing:.14em;color:var(--black);text-decoration:none}
+.mark::before{content:'';display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);margin-right:9px;vertical-align:3px}
 
 /* hero: the actual tile set from the game */
 .mosaic{
@@ -47,7 +50,7 @@ a{color:inherit}
   -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
           mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
 }
-.t{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.08);
+.t{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;border:1px solid rgba(0,0,0,.10);
    animation:drop .5s cubic-bezier(.3,1.4,.6,1) both;animation-delay:calc(var(--i) * 28ms)}
 .t svg{width:62%;height:62%}
 .t.crown{background:radial-gradient(ellipse at 35% 30%,#5A4010,#3A2C08 45%,#1A1000)}
@@ -62,37 +65,37 @@ a{color:inherit}
 
 /* feature */
 .feature{padding:6px 0 8px}
-h1{font-family:var(--display);font-weight:400;font-size:clamp(84px,24vw,168px);line-height:.82;color:#F4EEE4;letter-spacing:.01em;margin-top:-6px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(84px,24vw,168px);line-height:.82;color:var(--black);letter-spacing:.01em;margin-top:-6px}
 h1 span{display:block}
 .pitch{font-size:21px;max-width:30em;margin:18px 0 6px}
-.facts{font-style:italic;color:var(--smoke);font-size:17px}
+.facts{font-style:italic;color:var(--grey);font-size:17px}
 .play{
   display:inline-flex;align-items:center;gap:12px;margin-top:24px;
-  font-family:var(--display);font-size:28px;letter-spacing:.08em;color:var(--ink);text-decoration:none;
-  background:var(--gold);padding:14px 34px 12px;border-radius:2px;
-  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 10px 30px rgba(201,151,42,.25);
+  font-family:var(--display);font-size:28px;letter-spacing:.08em;color:var(--wall);text-decoration:none;
+  background:var(--black);padding:14px 34px 12px;border-radius:0;
   transition:background .15s,transform .1s;
 }
-.play:hover{background:var(--gold-lt)}
+.play:hover{background:var(--red)}
 .play:active{transform:scale(.97)}
 .play svg{width:20px;height:20px}
-.tip{display:block;margin-top:14px;font-size:16px;color:var(--smoke)}
+.tip{display:block;margin-top:14px;font-size:16px;color:var(--grey)}
 
 /* queue */
-.queue{margin-top:56px;border-top:1px solid var(--line);padding-top:22px}
-h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04em;color:var(--gold);line-height:1.05;margin-bottom:6px}
-.queue p.lede{color:var(--smoke);font-size:17px;margin-bottom:10px}
-.row{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:16px 0;border-bottom:1px solid var(--line)}
-.row h3{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.03em;color:#F4EEE4;line-height:1}
-.row p{grid-column:1;font-size:17px;color:var(--bone)}
+.queue{margin-top:56px;border-top:1px solid var(--hair);padding-top:22px}
+h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04em;color:var(--black);line-height:1.05;margin-bottom:6px}
+.queue p.lede{color:var(--grey);font-size:17px;margin-bottom:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:16px 0;border-bottom:1px solid var(--hair)}
+.row h3{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.03em;color:var(--black);line-height:1}
+.row p{grid-column:1;font-size:17px;color:#222}
 .row.live{text-decoration:none;color:inherit}
-.row.live .status{color:var(--ink);background:var(--gold);border-color:var(--gold);font-style:normal;font-family:var(--display);font-size:18px;letter-spacing:.06em;padding:4px 14px 2px}
-.row.live:active h3{color:var(--gold-lt)}
-.status{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:15px;font-style:italic;color:var(--smoke);
-  border:1px solid var(--line);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.row.live .status{color:var(--wall);background:var(--black);border-color:var(--black);font-style:normal;font-family:var(--display);font-size:18px;letter-spacing:.06em;padding:4px 14px 2px}
+.row.live:active h3{color:var(--red)}
+.row.live:hover .status{background:var(--red);border-color:var(--red)}
+.status{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:15px;font-style:italic;color:var(--grey);
+  border:1px solid var(--hair);padding:3px 10px;border-radius:999px;white-space:nowrap}
 
-footer{padding:40px 0 34px;color:var(--smoke);font-size:16px}
-footer a{color:var(--bone)}
+footer{padding:40px 0 34px;color:var(--grey);font-size:16px}
+footer a{color:var(--black)}
 footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
 </style>
 </head>
@@ -106,7 +109,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
 
   <main>
     <section class="feature" aria-labelledby="tld">
-      <h1 id="tld"><span>The Last</span><span style="color:var(--gold-lt)">Don</span></h1>
+      <h1 id="tld"><span>The Last</span><span style="color:var(--red)">Don</span></h1>
       <p class="pitch">Panther City is falling to the New Order. Match crowns, keys and fists to take Fort Worth's Historic South Side back, one block at a time.</p>
       <p class="facts">60 levels across five districts, with a three-chapter comic backstory.</p>
       <a class="play" href="/the-last-don/">
