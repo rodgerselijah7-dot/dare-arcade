@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <title>DARE Arcade — Games by Dontae Amare</title>
 <meta name="description" content="Free browser games from Dontae Amare. Play The Last Don, a match-3 set on Fort Worth's Historic South Side.">
 <meta property="og:title" content="DARE Arcade">
@@ -26,10 +28,19 @@
   --ink:#080606; --char:#141010; --line:#2a2322;
   --bone:#D4C8B6; --smoke:#8a7f76;
   --gold:#C9972A; --gold-lt:#F0C040; --ember:#C0392B;
-  /* DARE store palette */
+  /* DARE store palette. --wall = page background, --black = text (they swap in dark mode) */
   --wall:#FFFFFF; --black:#000000; --grey:#6B6B6B; --hair:#E6E6E4; --red:#D8261B;
+  --body:#222222; --tileline:rgba(0,0,0,.10);
+  color-scheme:light dark;
   --display:'Bebas Neue','Oswald','Arial Narrow',Impact,sans-serif;
   --text:'Crimson Pro',Georgia,'Times New Roman',serif;
+}
+/* Follows the phone's Light / Dark setting */
+@media (prefers-color-scheme: dark){
+  :root{
+    --wall:#000000; --black:#FFFFFF; --grey:#9A9A9A; --hair:#262626; --red:#EF3B2F;
+    --body:#D9D9D9; --tileline:rgba(255,255,255,.12);
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--wall);-webkit-text-size-adjust:100%}
@@ -53,7 +64,7 @@ a{color:inherit}
   -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
           mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
 }
-.t{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;border:1px solid rgba(0,0,0,.10);
+.t{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;border:1px solid var(--tileline);
    animation:drop .5s cubic-bezier(.3,1.4,.6,1) both;animation-delay:calc(var(--i) * 28ms)}
 .t svg{width:62%;height:62%}
 .t.crown{background:radial-gradient(ellipse at 35% 30%,#5A4010,#3A2C08 45%,#1A1000)}
@@ -89,7 +100,7 @@ h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04e
 .queue p.lede{color:var(--grey);font-size:17px;margin-bottom:10px}
 .row{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:16px 0;border-bottom:1px solid var(--hair)}
 .row h3{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.03em;color:var(--black);line-height:1}
-.row p{grid-column:1;font-size:17px;color:#222}
+.row p{grid-column:1;font-size:17px;color:var(--body)}
 .row.live{text-decoration:none;color:inherit}
 .row.live .status{color:var(--wall);background:var(--black);border-color:var(--black);font-style:normal;font-family:var(--display);font-size:18px;letter-spacing:.06em;padding:4px 14px 2px}
 .row.live:active h3{color:var(--red)}
