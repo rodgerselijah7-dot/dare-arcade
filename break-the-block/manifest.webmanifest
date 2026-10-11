@@ -1,0 +1,15 @@
+{
+  "name": "Break the Block",
+  "short_name": "Break the Block",
+  "description": "A brick breaker across 80 levels and eight Fort Worth zones. By Dontae Amare.",
+  "start_url": "/break-the-block/",
+  "scope": "/break-the-block/",
+  "display": "standalone",
+  "background_color": "#0B0909",
+  "theme_color": "#0B0909",
+  "icons": [
+    { "src": "/break-the-block/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/break-the-block/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/break-the-block/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
