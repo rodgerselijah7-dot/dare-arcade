@@ -179,7 +179,34 @@ body{height:100%;height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px)
 /* ═══ GAME ═══ */
 #game.on{display:grid;} /* only when active: '#game{display:grid}' outranked '.screen{display:none}', so the HUD showed on every menu */
 #game{background:var(--black);height:100%;overflow:hidden;grid-template-rows:auto auto 1fr auto;}
-@media(orientation:landscape)and(max-height:500px){
+@media (orientation:landscape) and (max-height:500px){
+  #tutorial,#level-intro{justify-content:flex-start;overflow-y:auto;touch-action:pan-y;padding:10px 24px;}
+  #tutorial>:first-child,#level-intro>:first-child{margin-top:auto;}
+  #tutorial>:last-child,#level-intro>:last-child{margin-bottom:auto;}
+  #tutorial .tut-title{font-size:26px;margin-bottom:6px;}
+  #tutorial .tut-icon{font-size:34px;margin-bottom:6px;}
+  #tutorial .tut-head{font-size:20px;margin-bottom:4px;}
+  #tutorial .tut-body{font-size:14px;line-height:1.45;margin-bottom:10px;max-width:560px;}
+  #tutorial .tut-dots{margin-bottom:10px;}
+  #tutorial>.btn-sm{margin-top:8px!important;}
+  #level-intro .li-num{font-size:clamp(56px,22vh,110px);}
+  #level-intro .li-obj{margin:8px 0;}
+  #level-intro .li-moves{margin-bottom:8px;}
+  #title,#story{justify-content:flex-start;overflow-y:auto;touch-action:pan-y;padding-top:12px;padding-bottom:12px;}
+  #title .logo-pre{margin-top:auto;font-size:14px;letter-spacing:9px;}
+  #title .logo-main{font-size:clamp(44px,15vh,84px);}
+  #title .tagline{margin:6px 0 0;}
+  #title .byline{margin-bottom:2px;}
+  #title .hi-score{margin-bottom:10px;}
+  #title .btns{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px;max-width:600px;margin-bottom:auto;}
+  #title .btns .btn{padding:9px 30px;font-size:18px;}
+  #title .btns .btn-sm{padding:7px 16px;margin-top:0!important;}
+  #story .s-ch{margin-top:auto;}
+  #story>div:last-child{margin-bottom:auto;}
+  #story .s-title{font-size:clamp(28px,9vh,46px);margin-bottom:6px;}
+  #story .s-ports{margin-bottom:6px;}
+  #story .sp-img{width:40px;height:40px;}
+  #story .s-body{line-height:1.5;margin-bottom:8px;}
   .obj-bar{min-height:22px;padding:2px 11px;}
   .obj-bar .obj-lbl{display:none;}
   .leon-panel{min-height:46px;padding:3px 8px;}
@@ -633,6 +660,7 @@ body{height:100%;height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px)
 .tile.wrapped-hit{animation:wrap-hit .38s ease;}
 @keyframes wrap-hit{0%{outline-color:rgba(255,255,255,.9)}100%{outline-color:rgba(120,200,255,.75)}}
 </style>
+<script src="/dare-unlock.js"></script>
 </head>
 <body>
 
@@ -1325,7 +1353,9 @@ function onBegin(){
   goStory(ch);
 }
 
+const OWN=g=>!window.DARE||DARE.owned(g); // free tryout: past the free part needs an unlock (see /dare-unlock.js)
 function goStory(ch){
+  if(ch>=1&&!OWN('the-last-don')){DARE.gate('the-last-don',()=>goStory(ch),{title:'District 1 reclaimed',onExit:()=>show('title')});return;}
   G.ch=ch;applyTheme(ch);const d=DISTRICTS[ch];
   el('sg').style.background=`radial-gradient(ellipse 80% 60% at 50% 60%,${d.glow},transparent 70%)`;
   el('s-ch').textContent=`CHAPTER 0${ch+1} · ${d.n}`;
@@ -1346,6 +1376,7 @@ function goStory(ch){
 // LEVEL INTRO SCREEN
 // ===================================================----
 function showLevelIntro(ch,lv){
+  if(ch>=1&&!OWN('the-last-don')){DARE.gate('the-last-don',()=>showLevelIntro(ch,lv),{title:'District '+(ch+1)+' is in the full game',onExit:()=>show('title')});return;}
   if(LIVES_ENFORCED&&getLives()<=0){showNoLives(ch);return;}
   const cfg=LVLS[Math.min(lv,LVLS.length-1)];
   const d=DISTRICTS[ch];
@@ -1585,6 +1616,7 @@ function updateTut(){
 // GAME START
 // ===================================================----
 function startGame(ch,lv){
+  if(ch>=1&&!OWN('the-last-don')){DARE.gate('the-last-don',()=>startGame(ch,lv),{title:'District '+(ch+1)+' is in the full game',onExit:()=>show('title')});return;}
   const cfg=LVLS[Math.min(lv,LVLS.length-1)];
   applyTheme(ch);
   scoreDisplay=0;scoreTarget=0;
@@ -3232,5 +3264,9 @@ ${skylineBuilds.map(([bx,by,bw,bh])=>`<rect x="${bx}" y="${by}" width="${bw}" he
   }
 
 ];</script>
+<script>
+// iPhones can report the new size a moment after rotating: lay out again once it settles
+window.addEventListener('orientationchange',()=>{setTimeout(()=>window.dispatchEvent(new Event('resize')),350);});
+</script>
 </body>
 </html>

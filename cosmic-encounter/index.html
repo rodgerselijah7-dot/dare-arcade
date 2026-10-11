@@ -285,7 +285,16 @@ body.ingame #controlBar{display:flex;}
 /* boss phase tag sat on top of the WAVE counter */
 #bossPhaseEl{top:calc(26px + var(--sat));left:50%;right:auto;transform:translateX(-50%);font-size:9px;white-space:nowrap;}
 .arcade-link{position:absolute;top:calc(14px + var(--sat));left:14px;z-index:5;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;color:rgba(0,255,200,0.7);text-decoration:none;border:1px solid rgba(0,255,200,0.3);padding:9px 12px;background:rgba(0,0,0,0.5);}
+/* Phone held sideways: this is an upright shooter, so ask to turn back and pause meanwhile */
+#rotateNote{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:rgba(2,4,10,0.97);text-align:center;padding:24px;font-family:'Orbitron','Courier New',monospace;}
+#rotateNote .rn-icon{width:44px;height:72px;border:2.5px solid #00ffc8;border-radius:10px;box-shadow:0 0 22px rgba(0,255,200,0.45);animation:rnTurn 1.8s ease-in-out infinite;}
+@keyframes rnTurn{0%,25%{transform:rotate(-90deg);}55%,100%{transform:rotate(0deg);}}
+#rotateNote .rn-txt{font-weight:700;font-size:16px;letter-spacing:3px;color:#00ffc8;text-transform:uppercase;}
+#rotateNote .rn-sub{font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.45);}
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){#rotateNote{display:flex;}}
 </style>
+<script src="/dare-unlock.js"></script>
 </head>
 <body>
 
@@ -1606,8 +1615,10 @@ function closeEnc(){
 }
 
 // ═══ UPGRADE SCREEN ═══════════════════════════════════════════════
+const OWN=g=>!window.DARE||DARE.owned(g); // free tryout: past the free part needs an unlock (see /dare-unlock.js)
 function showUpgradeScreen(){
   if(gameState==='gameover')return;
+  if(wave>5&&!OWN('cosmic-encounter')){gameState='upgrade';DARE.gate('cosmic-encounter',showUpgradeScreen,{title:'First boss down',onExit:goToTitle});return;}
   const picks=pickUpgrades(3);
   if(!picks.length){gameState='playing';waveClearing=false;spawnWave(wave);return;}
   gameState='upgrade';sfxUpgrade();
@@ -1878,5 +1889,20 @@ window.addEventListener('popstate',()=>{
 document.addEventListener('touchend',function _unlock(){try{const ac=getAC();if(ac&&ac.state==='suspended')ac.resume();}catch(e){}document.removeEventListener('touchend',_unlock);});
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+<div id="rotateNote" aria-live="polite"><div class="rn-icon"></div><div class="rn-txt">Turn your phone upright</div><div class="rn-sub">Cosmic Encounter plays in portrait</div></div>
+<script>
+// pause the run while the phone is sideways (the game stays paused until RESUME is tapped)
+(function(){
+  function checkRotate(){
+    const n=document.getElementById('rotateNote');
+    if(!n||getComputedStyle(n).display==='none')return;
+    try{releaseControls();}catch(e){}
+    if(typeof gameState!=='undefined'&&gameState==='playing'){try{togglePause();}catch(e){}}
+  }
+  window.addEventListener('resize',checkRotate);
+  window.addEventListener('orientationchange',()=>{setTimeout(checkRotate,250);setTimeout(()=>{try{applyLayout();}catch(e){}},600);});
+  checkRotate();
+})();
+</script>
 </body>
 </html>

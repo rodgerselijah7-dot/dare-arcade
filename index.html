@@ -108,6 +108,15 @@ h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04e
 .status{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:15px;font-style:italic;color:var(--grey);
   border:1px solid var(--hair);padding:3px 10px;border-radius:999px;white-space:nowrap}
 
+/* pricing / unlocks */
+.price{grid-column:1;display:block;font-size:15px;font-style:italic;color:var(--grey);margin-top:4px}
+.price.owned,.pricing.owned{color:var(--black);font-style:normal}
+.price.owned:before,.pricing.owned:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:8px;vertical-align:1px}
+.pricing{font-size:16px;color:var(--grey);margin:10px 0 0;font-style:italic}
+.row.pass{text-decoration:none;color:inherit;border-bottom:1px solid var(--black);border-top:1px solid var(--black);margin-top:-1px}
+.row.pass .status{color:var(--wall);background:var(--red);border-color:var(--red);font-style:normal;font-family:var(--display);font-size:18px;letter-spacing:.06em;padding:4px 14px 2px}
+.row.pass.owned .status{background:var(--black);border-color:var(--black)}
+.unlock-link{background:none;border:0;padding:0;font:inherit;color:var(--black);text-decoration:underline;cursor:pointer}
 footer{padding:40px 0 34px;color:var(--grey);font-size:16px}
 footer a{color:var(--black)}
 footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
@@ -130,7 +139,8 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>
         Play now
       </a>
-      <span class="tip">Free in your browser. On a phone, use Add to Home Screen to play it full screen.</span>
+      <p class="pricing" data-game="the-last-don">District 1 is free to play. Full game $4.99.</p>
+      <span class="tip">Plays in your browser. On a phone, use Add to Home Screen to play it full screen.</span>
     </section>
 
     <section class="queue" aria-labelledby="next">
@@ -140,28 +150,39 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
         <h3>Crowd Run</h3>
         <span class="status">Play</span>
         <p>Lead a growing crowd through six city zones. Grab the right dice, dodge the dogs, and don't run into your own line.</p>
+        <span class="price">Free to play</span>
       </a>
       <a class="row live" href="/cosmic-encounter/">
         <h3>Cosmic Encounter</h3>
         <span class="status">Play</span>
         <p>A Galaga-style shooter. Pick a ship, clear the waves, make your choices in the encounters, and take down the bosses.</p>
+        <span class="price" data-game="cosmic-encounter">First boss free. Full game $2.99</span>
       </a>
       <a class="row live" href="/rebel-elimination/">
         <h3>Rebel Elimination</h3>
         <span class="status">Play</span>
         <p>Fort Worth is under siege. Run, gun, and take down three bosses as Dontae Amare.</p>
+        <span class="price" data-game="rebel-elimination">Stage 1 free. Full game $3.99</span>
       </a>
       <a class="row live" href="/ori/">
         <h3>ORI</h3>
         <span class="status">Play</span>
         <p>A new kind of tile game. Master 18 five-block shapes across 30 levels and six zones, from rising rows to a hidden next piece.</p>
+        <span class="price" data-game="ori">Zone 1 free. Full game $2.99</span>
       </a>
+      <a class="row pass" id="passRow" href="/shop/?add=all-access">
+        <h3>All-Access Pass</h3>
+        <span class="status">$9.99</span>
+        <p>Every paid game, fully unlocked. Save $4.97 over buying them one by one.</p>
+      </a>
+      <p class="pricing"><a href="/shop/" style="color:var(--black)">Shop the full games</a> · Bought one? <button class="unlock-link" id="unlockBtn" type="button">Enter your unlock code</button></p>
     </section>
   </main>
 
   <footer>
     <div class="links">
       <a href="https://darewear.store">DARE store</a>
+      <a href="/shop/">Shop</a>
     </div>
     Desired Ambitions Requires Execution.
   </footer>
@@ -192,6 +213,29 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
     d.innerHTML='<svg viewBox="0 0 32 32">'+S[t]+'</svg>';
     m.appendChild(d);
   }));
+})();
+</script>
+<script src="/dare-unlock.js"></script>
+<script>
+// Show what this device has unlocked
+(function(){
+  if(!window.DARE)return;
+  const GAMES=['the-last-don','rebel-elimination','cosmic-encounter','ori'];
+  function paint(){
+    document.querySelectorAll('[data-game]').forEach(el=>{
+      const g=el.dataset.game;
+      if(!el.dataset.base)el.dataset.base=el.textContent;
+      const own=DARE.owned(g);
+      el.classList.toggle('owned',own);
+      el.textContent=own?'Full game unlocked':el.dataset.base;
+    });
+    const all=GAMES.every(DARE.owned),row=document.getElementById('passRow');
+    row.classList.toggle('owned',all);
+    row.querySelector('.status').textContent=all?'Owned':'$9.99';
+    if(all)row.removeAttribute('href');else row.setAttribute('href','/shop/?add=all-access');
+  }
+  paint();DARE.onChange(paint);
+  document.getElementById('unlockBtn').onclick=()=>DARE.panel({startWith:'code',onUnlocked:paint});
 })();
 </script>
 <!-- Vercel Web Analytics -->

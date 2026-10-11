@@ -1,0 +1,7 @@
+[
+  { "id": "the-last-don", "name": "The Last Don", "price": 4.99, "tryout": "District 1 (levels 1 to 12)", "unlocks": "Districts 2 to 5, levels 13 to 60" },
+  { "id": "rebel-elimination", "name": "Rebel Elimination", "price": 3.99, "tryout": "Stage 1 and its boss", "unlocks": "Stages 2 and 3 and their bosses" },
+  { "id": "cosmic-encounter", "name": "Cosmic Encounter", "price": 2.99, "tryout": "Waves 1 to 5 and the first boss", "unlocks": "Every wave after the first boss" },
+  { "id": "ori", "name": "ORI", "price": 2.99, "tryout": "Zone 1 (levels 1 to 5)", "unlocks": "Zones 2 to 6 and endless ORBIT" },
+  { "id": "all-access", "name": "All-Access Pass", "price": 9.99, "pass": true, "games": ["the-last-don", "rebel-elimination", "cosmic-encounter", "ori"], "unlocks": "Every paid game in the arcade" }
+]

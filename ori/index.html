@@ -230,6 +230,7 @@ body.tall #btn-rot{order:3;}
 #rotate-note .rn-sub{font-size:15px;letter-spacing:0.12em;color:rgba(238,232,213,0.45);}
 @media (orientation:landscape) and (max-height:520px) and (pointer:coarse){#rotate-note{display:flex;}}
 </style>
+<script src="/dare-unlock.js"></script>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
@@ -328,6 +329,8 @@ body.tall #btn-rot{order:3;}
 
 <script>
 'use strict';
+const OWN=g=>!window.DARE||DARE.owned(g); // free tryout: past the free part needs an unlock (see /dare-unlock.js)
+let gated=false;
 
 // ── Constants ─────────────────────────────────────────────────────────────
 const COLS=10, ROWS=20, DANGER_ROW=4;
@@ -823,6 +826,7 @@ function lock(){
 
     // Spawn next piece immediately — no wait for animation
     spawnPiece();
+    tryoutGate();
   }else{
     comboCount=0;
     updateHUD(false);
@@ -990,7 +994,13 @@ function showLevelBadge(newShapes,newZone){
 }
 
 // ── Game flow ─────────────────────────────────────────────────────────────
+function tryoutGate(){ // reaching zone 2 without the full game: pause and offer the unlock
+  if(gameOver||gated||zoneIdxOf(level)<1||OWN('ori'))return;
+  gated=true;paused=true;stopAR();cancelLD();
+  DARE.gate('ori',()=>{gated=false;paused=false;lastTick=performance.now();},{title:'Zone 1 cleared',onExit:()=>{gated=false;goMenu();}});
+}
 function initGame(startZone=0){
+  if(startZone>0&&!OWN('ori')){DARE.gate('ori',()=>initGame(startZone),{title:'Zone '+(startZone+1)+' is in the full game',onExit:goMenu});return;}
   stopAR();cancelLD();
   if(rcAnim)cancelAnimationFrame(rcAnim);rcAnim=null;
   if(trailTO){clearTimeout(trailTO);trailTO=null;}
@@ -1020,7 +1030,7 @@ function endGame(){
   sndOver();setTimeout(()=>showOverlay('gameover'),440);
 }
 function togglePause(){
-  if(gameOver)return;
+  if(gameOver||gated)return;
   if(!paused){
     [clearLbl,perfectLbl,lvlBadge].forEach(e=>e.classList.remove('show'));
     stopAR();cancelLD();

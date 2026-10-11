@@ -136,7 +136,14 @@ body{touch-action:none;font-family:'Press Start 2P',monospace;}
 @media(pointer:coarse) and (orientation:landscape){
   #touchControls{height:calc(22vh + env(safe-area-inset-bottom,0px));max-height:160px;}
   .overlay{padding-bottom:calc(22vh + env(safe-area-inset-bottom,0px));}
+  /* short screens: tighter menus so every button fits above the touch controls */
+  .overlay:not(#titleScreen) .ov-content{gap:6px;padding:8px 18px;}
+  .overlay:not(#titleScreen) .ov-title{font-size:clamp(18px,8vh,34px);}
+  .overlay:not(#titleScreen) .btn{padding-top:4px;padding-bottom:4px;min-height:0;}
+  .overlay:not(#titleScreen) .ov-content{gap:5px;}
 }
+/* the page blocks touch scrolling for gameplay; let long menus scroll again */
+.ov-content{touch-action:pan-y;}
 .dpad{display:flex;gap:2vw;align-items:center;}
 .dpad-mid{display:flex;flex-direction:column;gap:2px;align-items:center;}
 .fire-cluster{display:flex;align-items:center;justify-content:center;}
@@ -235,6 +242,7 @@ body{touch-action:none;font-family:'Press Start 2P',monospace;}
 .diff-desc{font-size:clamp(8px,2vw,10px);}
 .ov-content{max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 </style>
+<script src="/dare-unlock.js"></script>
 </head>
 <body>
 <div id="gameWrapper">
@@ -998,6 +1006,7 @@ function togglePause(){
   }
 }
 
+const OWN=g=>!window.DARE||DARE.owned(g); // free tryout: past the free part needs an unlock (see /dare-unlock.js)
 function fullLives(){return difficulty===0?7:5;} // Recruit 7, Soldier/Legend 5
 // ── Stage checkpoint: reach stage 2 or 3 and a game over sends you back to the start of that stage ──
 function getStageSave(){try{const v=JSON.parse(localStorage.getItem('daRE_stage')||'null');return v&&v.stage>=2&&v.stage<=3?v:null;}catch(e){return null;}}
@@ -1008,6 +1017,7 @@ function refreshContinue(){const b=document.getElementById('contBtn'),sv=getStag
   else b.style.display='none';}
 function continueStage(){
   const sv=getStageSave();if(!sv){startGame();return;}
+  if(sv.stage>=2&&!OWN('rebel-elimination')){DARE.gate('rebel-elimination',continueStage,{title:'Stage '+sv.stage+' is in the full game',onExit:quitToTitle});return;}
   try{initAudio();hideAll();
     difficulty=sv.difficulty||0;stage=sv.stage;score=sv.score||0;maxCombo=sv.maxCombo||0;stageKills=0;lives=fullLives();
     initGame(true);
@@ -2113,7 +2123,12 @@ function showVictory(){
 function saveVictoryScore(){if(_vicSaved)return;_vicSaved=true;const inp=document.getElementById('nameInputV');const nm=(inp&&inp.value&&inp.value.trim())?inp.value.trim():'REBEL';addScore(nm,score,3);}
 function submitScore(isV){if(isV){if(_vicSaved){showLB('title');return;}_vicSaved=true;}const inp=document.getElementById(isV?'nameInputV':'nameInput');const nm=(inp&&inp.value&&inp.value.trim())?inp.value.trim().toUpperCase().slice(0,8):'REBEL';try{localStorage.setItem('da_rebel_name',nm);}catch(e){}addScore(nm,score,isV?3:stage);isV?showLB('title'):retryAfterGameOver();}
 function nextStage(){
-  if(_advancing)return;_advancing=true;
+  if(_advancing)return;
+  if(stage===1&&!OWN('rebel-elimination')){
+    // keep their place: buying from here (or later from the menu) continues at stage 2
+    try{localStorage.setItem('daRE_stage',JSON.stringify({stage:2,score,maxCombo,difficulty}));}catch(e){}refreshContinue();
+    DARE.gate('rebel-elimination',nextStage,{title:'Stage 1 cleared',onExit:quitToTitle});return;}
+  _advancing=true;
   if(stage>=3){showVictory();return;}
   // Fade to black, then init next stage at peak black, then fade in
   const fl=document.getElementById('flashOverlay');

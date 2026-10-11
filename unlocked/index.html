@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="/manifest.webmanifest?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DARE Arcade">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<title>Unlocked · DARE Arcade</title>
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --ink:#080606; --char:#141010; --line:#2a2322;
+  --bone:#D4C8B6; --smoke:#8a7f76;
+  --gold:#C9972A; --gold-lt:#F0C040; --ember:#C0392B;
+  /* DARE store palette. --wall = page background, --black = text (they swap in dark mode) */
+  --wall:#FFFFFF; --black:#000000; --grey:#6B6B6B; --hair:#E6E6E4; --red:#D8261B;
+  --body:#222222; --tileline:rgba(0,0,0,.10);
+  color-scheme:light dark;
+  --display:'Bebas Neue','Oswald','Arial Narrow',Impact,sans-serif;
+  --text:'Crimson Pro',Georgia,'Times New Roman',serif;
+}
+/* Follows the phone's Light / Dark setting */
+@media (prefers-color-scheme: dark){
+  :root{
+    --wall:#000000; --black:#FFFFFF; --grey:#9A9A9A; --hair:#262626; --red:#EF3B2F;
+    --body:#D9D9D9; --tileline:rgba(255,255,255,.12);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--wall);-webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;min-height:100dvh;background:var(--wall);color:var(--black);
+  font-family:var(--text);font-size:19px;line-height:1.55;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.wrap{max-width:720px;margin:0 auto;padding:0 22px}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0 0}
+.mark{font-family:var(--display);font-size:22px;letter-spacing:.14em;color:var(--black);text-decoration:none}
+.mark::before{content:'';display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);margin-right:9px;vertical-align:3px}
+
+/* hero: the actual tile set from the game */
+.mosaic{
+  margin:22px -22px 0;display:grid;grid-template-columns:repeat(9,1fr);gap:5px;padding:0 10px;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
+          mask-image:linear-gradient(180deg,transparent 0,#000 30%,#000 70%,transparent 100%);
+}
+.t{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;border:1px solid var(--tileline);
+   animation:drop .5s cubic-bezier(.3,1.4,.6,1) both;animation-delay:calc(var(--i) * 28ms)}
+.t svg{width:62%;height:62%}
+.t.crown{background:radial-gradient(ellipse at 35% 30%,#5A4010,#3A2C08 45%,#1A1000)}
+.t.key{background:radial-gradient(ellipse at 35% 30%,#104060,#0C2238 45%,#040F1A)}
+.t.fist{background:radial-gradient(ellipse at 35% 30%,#501010,#320C0C 45%,#0F0404)}
+.t.shield{background:radial-gradient(ellipse at 35% 30%,#104028,#0C2C18 45%,#040F08)}
+.t.chain{background:radial-gradient(ellipse at 35% 30%,#383838,#222 45%,#101010)}
+.t.star{background:radial-gradient(ellipse at 35% 30%,#3C1040,#280E2E 45%,#0F0514)}
+.t.lit{box-shadow:0 0 0 2px var(--gold),0 0 18px rgba(240,192,64,.45)}
+@keyframes drop{from{transform:translateY(-40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.t{animation:none}}
+
+/* feature */
+.feature{padding:6px 0 8px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(84px,24vw,168px);line-height:.82;color:var(--black);letter-spacing:.01em;margin-top:-6px}
+h1 span{display:block}
+.pitch{font-size:21px;max-width:30em;margin:18px 0 6px}
+.facts{font-style:italic;color:var(--grey);font-size:17px}
+.play{
+  display:inline-flex;align-items:center;gap:12px;margin-top:24px;
+  font-family:var(--display);font-size:28px;letter-spacing:.08em;color:var(--wall);text-decoration:none;
+  background:var(--black);padding:14px 34px 12px;border-radius:0;
+  transition:background .15s,transform .1s;
+}
+.play:hover{background:var(--red)}
+.play:active{transform:scale(.97)}
+.play svg{width:20px;height:20px}
+.tip{display:block;margin-top:14px;font-size:16px;color:var(--grey)}
+
+/* queue */
+.queue{margin-top:56px;border-top:1px solid var(--hair);padding-top:22px}
+h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04em;color:var(--black);line-height:1.05;margin-bottom:6px}
+.queue p.lede{color:var(--grey);font-size:17px;margin-bottom:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:16px 0;border-bottom:1px solid var(--hair)}
+.row h3{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.03em;color:var(--black);line-height:1}
+.row p{grid-column:1;font-size:17px;color:var(--body)}
+.row.live{text-decoration:none;color:inherit}
+.row.live .status{color:var(--wall);background:var(--black);border-color:var(--black);font-style:normal;font-family:var(--display);font-size:18px;letter-spacing:.06em;padding:4px 14px 2px}
+.row.live:active h3{color:var(--red)}
+.row.live:hover .status{background:var(--red);border-color:var(--red)}
+.status{grid-row:1 / span 2;grid-column:2;align-self:center;font-size:15px;font-style:italic;color:var(--grey);
+  border:1px solid var(--hair);padding:3px 10px;border-radius:999px;white-space:nowrap}
+
+footer{padding:40px 0 34px;color:var(--grey);font-size:16px}
+footer a{color:var(--black)}
+footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
+
+/* shared page bits for shop + unlocked */
+.page-h{font-family:var(--display);font-weight:400;font-size:clamp(64px,18vw,112px);line-height:.85;color:var(--black);margin:26px 0 10px}
+.page-h span{color:var(--red)}
+.lede{font-size:19px;color:var(--body);max-width:32em;margin-bottom:6px}
+.fine{font-size:15px;color:var(--grey);margin-top:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:var(--display);font-size:24px;letter-spacing:.08em;
+  color:var(--wall);background:var(--black);border:1px solid var(--black);padding:12px 28px 10px;text-decoration:none;cursor:pointer;border-radius:0;transition:background .15s}
+.btn:hover{background:var(--red);border-color:var(--red)}
+.btn[disabled]{opacity:.35;cursor:not-allowed;background:var(--black);border-color:var(--black)}
+.btn.q{background:transparent;color:var(--black)}
+.btn.q:hover{background:var(--black);color:var(--wall)}
+.textbtn{background:none;border:0;padding:0;font:inherit;color:var(--black);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+.box{border:1px solid var(--black);padding:22px;margin:22px 0}
+.box .eyebrow{font-family:var(--display);font-size:16px;letter-spacing:.14em;color:var(--red)}
+.code{white-space:nowrap;font-family:var(--display);font-size:clamp(34px,10.5vw,58px);letter-spacing:.06em;color:var(--black);line-height:1;margin:8px 0 6px;user-select:all;-webkit-user-select:all}
+.games{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.games a{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--black);border:1px solid var(--hair);padding:8px 14px 8px 8px;font-family:var(--display);font-size:20px;letter-spacing:.05em}
+.games a:hover{border-color:var(--black)}
+.games img{width:36px;height:36px;border-radius:8px}
+.copy{margin-left:10px;font-size:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar"><a class="mark" href="/">DARE ARCADE</a></header>
+  <main>
+    <h1 class="page-h" id="h">One<br><span>moment</span></h1>
+    <p class="lede" id="lede">Confirming your purchase…</p>
+    <div id="out"></div>
+  </main>
+  <footer><div class="links"><a href="/">All games</a><a href="/shop/">Shop</a></div>Desired Ambitions Requires Execution.</footer>
+</div>
+<script src="/dare-unlock.js"></script>
+<script>
+(async function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const id=new URLSearchParams(location.search).get("session_id");
+  const fail=t=>{$("h").innerHTML="Hold<br><span>on</span>";$("lede").textContent=t;$("out").innerHTML='<p class="fine">Your payment is safe. If this keeps happening, email <a href="mailto:darewareusa@gmail.com">darewareusa@gmail.com</a> with your receipt.</p><p><a class="btn q" href="/">Back to the arcade</a></p>';};
+  if(!id){fail("We couldn't find a purchase on this page.");return;}
+  let o=null;
+  for(let i=0;i<6;i++){ // the payment can take a moment to settle
+    try{const r=await fetch("/api/order?session_id="+encodeURIComponent(id),{cache:"no-store"});o=await r.json();if(r.ok&&o.paid&&o.code)break;}catch(e){}
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  if(!o||!o.code){fail((o&&o.error)||"We couldn't confirm the payment yet. Refresh this page in a minute.");return;}
+  // remember it on this device; another tab with a game waiting unlocks by itself
+  try{await DARE.redeem(o.code);}catch(e){DARE.save(o.code,o.games);}
+  $("h").innerHTML="You're<br><span>unlocked</span>";
+  $("lede").textContent=(o.names.length===4?"Every game in the arcade":o.names.join(", "))+(o.names.length===1?" is":" are")+" yours to play in full."+(o.email?" A receipt is on its way to "+o.email+".":"");
+  $("out").innerHTML=`<div class="box"><div class="eyebrow">YOUR UNLOCK CODE</div><div class="code" id="code">${esc(o.code)}</div>
+    <p class="fine">Keep it. It's also in your email. On another phone or computer, or in the arcade app on your Home Screen, open a game and tap "Enter unlock code".<button class="textbtn copy" id="copy" type="button">Copy code</button></p></div>
+    <p class="lede">Came from a game in another tab? It's already unlocked, so switch back and keep playing. Or jump in here:</p>
+    <div class="games">${o.games.map(g=>`<a href="/${g}/"><img src="/${g}/icon-192.png" alt="">${esc((DARE.GAMES[g]||{}).name||g)}</a>`).join("")}</div>`;
+  $("copy").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(o.code).then(()=>{$("copy").textContent="Copied";});};
+})();
+</script>
+</body>
+</html>
