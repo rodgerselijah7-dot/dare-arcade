@@ -29,7 +29,7 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;backgrou
 .top-btn{position:absolute;z-index:20;top:calc(10px + env(safe-area-inset-top,0px));
   font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;letter-spacing:.12em;color:var(--bone);
   background:rgba(0,0,0,.55);border:1px solid rgba(233,225,211,.28);padding:7px 12px 5px;text-decoration:none;cursor:pointer;line-height:1}
-#arcadeLink{left:calc(10px + env(safe-area-inset-left,0px));}
+#arcadeLink{left:calc(10px + env(safe-area-inset-left,0px));z-index:40;}
 #pauseBtn{right:calc(10px + env(safe-area-inset-right,0px));display:none;}
 #pauseBtn.on{display:block;}
 
@@ -52,6 +52,7 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;backgrou
 .btn:active{background:var(--red);color:var(--bone);}
 .btn.ghost{background:transparent;color:var(--bone);border:1px solid rgba(233,225,211,.4);font-size:21px;padding:10px 22px 8px;}
 .btn.ghost:active{border-color:var(--red);color:var(--red);}
+a.btn{text-decoration:none;display:inline-block;text-align:center}
 .btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .row2{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 .row2 .btn{min-width:0;}
@@ -187,6 +188,7 @@ html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;backgrou
   <button class="btn ghost" id="bRestart" type="button">Restart level</button>
   <button class="btn ghost" id="bMute2" type="button">Sound on</button>
   <button class="btn ghost" id="bQuit" type="button">Quit to title</button>
+  <a class="btn ghost" id="bPauseArcade" href="/">Back to the arcade</a>
 </div></div>
 
 <!-- LEVEL CLEAR / ZONE CLEAR -->
