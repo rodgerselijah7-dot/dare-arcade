@@ -9,6 +9,9 @@ Browser games by Dontae Amare. Static site — no build step.
 /cosmic-encounter/     COSMIC ENCOUNTER (single-file game + icons + manifest)
 /rebel-elimination/    REBEL ELIMINATION (single-file game + icons + manifest)
 /ori/                  ORI (single-file game + icons + manifest)
+/break-the-block/      Break the Block (single-file game + icons + manifest)
+/buckets/              DARE Buckets (single-file game + icons + manifest)
+/api/room.js           Live match rooms for DARE Buckets online play (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -28,3 +31,9 @@ Every push to `main` redeploys automatically.
 - Lives: 3, one regenerates every 5 minutes. To let players retry without waiting, set `LIVES_ENFORCED=false` in `the-last-don/index.html`.
 - Timed levels: 90 seconds (`TIMED_SECONDS`).
 - Saves (progress, stars, high score) live in each player's browser via localStorage.
+
+## DARE Buckets online play
+- Modes: Solo, Vs CPU, 2 Player (one phone) and Online (two phones with a 4-character match code).
+- Online matches run through `/api/room`, using the same Upstash Redis database as checkout (keys start with `arc:room:` and expire after 10 minutes).
+- Each phone polls about 6 times a second during a match and about once a second in the lobby, so a full match costs roughly 3,000 Redis commands.
+- The same `buckets/index.html` also works as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.

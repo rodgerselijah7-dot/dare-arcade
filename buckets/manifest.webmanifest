@@ -1,0 +1,16 @@
+{
+  "name": "DARE Buckets",
+  "short_name": "DARE Buckets",
+  "description": "A 60-second basketball shootout. Solo, vs CPU, two players on one phone, or online. By Dontae Amare.",
+  "start_url": "/buckets/",
+  "scope": "/buckets/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0c0b",
+  "theme_color": "#0d0c0b",
+  "icons": [
+    { "src": "/buckets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/buckets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/buckets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
