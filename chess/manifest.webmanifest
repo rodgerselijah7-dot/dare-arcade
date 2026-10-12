@@ -1,0 +1,16 @@
+{
+  "name": "DARE Chess",
+  "short_name": "DARE Chess",
+  "description": "A 3D chessboard with a ten-lesson tutorial, three computer levels, and two-player pass and play. By Dontae Amare.",
+  "start_url": "/chess/",
+  "scope": "/chess/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e0a0c",
+  "theme_color": "#0e0a0c",
+  "icons": [
+    { "src": "/chess/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/chess/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/chess/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
