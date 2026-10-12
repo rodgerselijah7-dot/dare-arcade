@@ -12,7 +12,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /break-the-block/      Break the Block (single-file game + icons + manifest)
 /buckets/              DARE Buckets (single-file game + icons + manifest)
 /chess/                DARE Chess (single-file 3D game + icons + manifest; loads three.js r128 from cdnjs)
-/api/room.js           Live match rooms for DARE Buckets online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets and DARE Chess online play (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -38,3 +38,9 @@ Every push to `main` redeploys automatically.
 - Online matches run through `/api/room`, using the same Upstash Redis database as checkout (keys start with `arc:room:` and expire after 10 minutes).
 - Each phone polls about 6 times a second during a match and about once a second in the lobby, so a full match costs roughly 3,000 Redis commands.
 - The same `buckets/index.html` also works as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
+
+## DARE Chess online play
+- Modes: Tutorial, Vs Computer (Novice, Club, Master) and Online (two phones with a 4-character match code).
+- Online matches use the same `/api/room` as DARE Buckets (rooms are named `ch-<code>`, so they never collide with Buckets rooms).
+- Each phone sends the full move list of the current game with every poll, so a dropped request never loses a move. It polls about every 0.7s while waiting on the opponent, 1.5s on its own turn, and 1s in the lobby, roughly 2,000 to 3,000 Redis commands for a 20-minute game.
+- The host picks colors; colors swap on every rematch. A player who stays disconnected for 45 seconds loses the game.

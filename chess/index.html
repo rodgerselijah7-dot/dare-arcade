@@ -129,6 +129,21 @@ button:disabled{opacity:.35;cursor:default}
 .seg button{padding:11px 4px;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:rgba(209,170,88,.18);color:var(--gold-hi)}
+.sub{display:flex;flex-direction:column;gap:14px}
+.field{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ivory);font:inherit;font-size:16px;-webkit-user-select:text;user-select:text}
+.field::placeholder{color:#7d7066}
+.field:focus{outline:2px solid var(--gold);outline-offset:1px}
+.joinrow{display:grid;grid-template-columns:1fr auto;gap:8px}
+.field.code{font-family:var(--mono);letter-spacing:.4em;text-transform:uppercase;text-align:center}
+.or{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.codecard{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 16px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+.bigcode{font-family:var(--mono);font-weight:500;font-size:46px;letter-spacing:.3em;padding-left:.3em;color:var(--gold-hi);line-height:1;-webkit-user-select:all;user-select:all}
+.oppline{display:flex;align-items:center;gap:10px;padding:13px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--mute);font-weight:500}
+.oppline .led{width:9px;height:9px;border-radius:50%;background:#5c5049;flex:none}
+.oppline.in{color:var(--ivory);border-color:var(--gold)}
+.oppline.in .led{background:#7fd08a;box-shadow:0 0 8px #7fd08a}
+.olnote{margin:0;color:var(--mute);font-size:13px;text-align:center}
 .toggle{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-align:left;width:100%}
 .toggle .tx{flex:1}
 .sw{width:44px;height:26px;border-radius:999px;background:rgba(240,231,212,.15);position:relative;flex:none;transition:background .2s}
@@ -226,7 +241,7 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
     </div>
     <div class="list">
       <button class="row" id="goAI"><span class="glyph">&#9818;&#xFE0E;</span><span class="tx"><div class="t">Play the Computer</div><div class="d">Three levels, from Novice to Master</div></span><span class="chev">›</span></button>
-      <button class="row" id="goPvp"><span class="glyph">&#9822;&#xFE0E;</span><span class="tx"><div class="t">Pass &amp; Play</div><div class="d">Two players on one device</div></span><span class="chev">›</span></button>
+      <button class="row" id="goOnline"><span class="glyph">&#9822;&#xFE0E;</span><span class="tx"><div class="t">Play Online</div><div class="d">Face another player with a match code</div></span><span class="chev">›</span></button>
       <button class="row" id="goTut"><span class="glyph">&#9817;&#xFE0E;</span><span class="tx"><div class="t">Tutorial</div><div class="d" id="tutProg">Ten hands-on lessons on the board</div></span><span class="chev">›</span></button>
       <button class="row" id="goRules"><span class="glyph">&#9820;&#xFE0E;</span><span class="tx"><div class="t">How to Play</div><div class="d">Rules, special moves, and controls</div></span><span class="chev">›</span></button>
     </div>
@@ -253,13 +268,31 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
   </div>
 </section>
 
-<!-- Pass & play setup -->
-<section class="screen" id="scrPvp" hidden>
+<!-- Online setup + lobby -->
+<section class="screen" id="scrOnline" hidden>
   <div class="sheet">
-    <div class="head"><button class="iconbtn" data-back aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><h2>Pass &amp; Play</h2></div>
-    <p class="lead">Two players share this device. White moves first, then hand it across the table.</p>
-    <button class="toggle" id="optFlip" role="switch" aria-checked="true"><span class="tx"><div class="t" style="font-weight:600">Turn the board each move</div><div class="d" style="color:var(--mute);font-size:13px;margin-top:2px">The camera swings to whoever moves next</div></span><span class="sw"></span></button>
-    <button class="btn gold wide" id="startPvp">Start game</button>
+    <div class="head"><button class="iconbtn" id="olBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><h2>Play Online</h2></div>
+    <div class="sub" id="olSetup">
+      <p class="lead">Face another player on their own phone. One of you creates a match and shares the 4-character code. The other joins with it.</p>
+      <div class="label">Your name</div>
+      <input class="field" id="olNick" maxlength="12" placeholder="Player" autocomplete="nickname" enterkeyhint="done">
+      <div class="label">If you create the match, you play</div>
+      <div class="seg" id="olSides">
+        <button data-hc="w"><span class="disc w"></span>White</button>
+        <button data-hc="random">Random</button>
+        <button data-hc="b"><span class="disc b"></span>Black</button>
+      </div>
+      <button class="btn gold wide" id="olCreate">Create match</button>
+      <div class="or">or join one</div>
+      <div class="joinrow"><input class="field code" id="olCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go"><button class="btn" id="olJoin">Join</button></div>
+    </div>
+    <div class="sub" id="olLobby" hidden>
+      <div class="codecard"><div class="label">Match code</div><div class="bigcode" id="olCodeShow">----</div><button class="btn sm" id="olCopy">Copy code</button></div>
+      <div class="oppline" id="olOpp"><span class="led"></span><span id="olOppTx">Waiting for your opponent to join</span></div>
+      <button class="btn gold wide" id="olStart" disabled>Start match</button>
+      <p class="olnote" id="olNote">Send the code to your opponent. They open DARE Chess, tap Play Online, and enter it.</p>
+    </div>
+    <div class="feedback bad" id="olStatus" aria-live="polite"></div>
   </div>
 </section>
 
@@ -310,7 +343,7 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
     <h3>Game modes</h3>
     <ul>
       <li><strong>Play the Computer.</strong> Novice is forgiving, Club plays solid tactics, Master thinks for up to two seconds a move.</li>
-      <li><strong>Pass &amp; Play.</strong> Two people, one device. The board can turn to face whoever moves next.</li>
+      <li><strong>Play Online.</strong> Face another player on their own phone. One player creates a match and shares the 4-character code, the other joins with it. The host picks colors, and colors swap on every rematch. If a player stays disconnected for 45 seconds, the other wins.</li>
       <li><strong>Tutorial.</strong> Ten short lessons. Each sets up a position and asks you to find one move.</li>
     </ul>
   </div>
@@ -1022,12 +1055,11 @@ function loop(){
    ====================================================================== */
 let S=E.loadFEN(START), legalNow=E.legal(S);
 let mode='menu', humanColor='w', aiLevel=store.get('level','club'), sideChoice=store.get('side','w');
-let flipEach=store.get('flip',true);
 let selected=-1, lastMove=null, hintMoves=[], gameOver=null, busy=false, thinking=false;
 let sanList=[], posKeys=[], gameId=0;
 let lessonIdx=0, lessonDone=false, lessonBest=store.get('lessons',0);
 
-function isHumanTurn(){ return mode==='pvp'||mode==='tutorial'||(mode==='ai'&&S.turn===humanColor); }
+function isHumanTurn(){ return mode==='tutorial'||((mode==='ai'||mode==='online')&&S.turn===humanColor); }
 
 function refreshBoard(){
   for(let i=0;i<64;i++){ overlays[i].material.opacity=0; overlays[i].material.color.set(0xd1aa58); dots[i].visible=false; rings[i].visible=false; }
@@ -1065,6 +1097,7 @@ async function commit(m){
   busy=true; selected=-1; hintMoves=[];
   const san=E.san(S,m,legalNow);
   E.make(S,m); sanList.push(san); posKeys.push(E.key(S)); lastMove=m;
+  if(mode==='online') netPushMoves();
   legalNow=E.legal(S);
   for(let i=0;i<64;i++){ dots[i].visible=false; rings[i].visible=false; }
   const gid=gameId;
@@ -1078,7 +1111,6 @@ async function commit(m){
   detectEnd();
   updateHUD();
   if(gameOver){ setTimeout(()=>{ if(gid===gameId) showOver(); },650); return; }
-  if(mode==='pvp'&&flipEach) turnTo(S.turn);
   maybeAI();
 }
 
@@ -1112,7 +1144,7 @@ function newGame(fen){
 
 function popMove(){ const m=E.undo(S); sanList.pop(); posKeys.pop(); return m; }
 function undoMove(){
-  if(busy||!S.hist.length||mode==='tutorial') return;
+  if(busy||!S.hist.length||mode==='tutorial'||mode==='online') return;
   gameId++; gameOver=null; $('over').hidden=true;
   if(mode==='ai'){
     while(S.hist.length){ const m=popMove(); if(m.p[0]===humanColor) break; }
@@ -1120,7 +1152,6 @@ function undoMove(){
   const h=S.hist[S.hist.length-1]; lastMove=h?h.m:null;
   legalNow=E.legal(S); selected=-1; hintMoves=[];
   fullSync(); refreshBoard(); updateHUD();
-  if(mode==='pvp'&&flipEach) turnTo(S.turn);
   maybeAI();
 }
 
@@ -1146,9 +1177,8 @@ function updateHUD(override){
   const tut=mode==='tutorial';
   $('players').hidden=tut; $('tutTitle').hidden=!tut; $('dock').hidden=tut; $('lesson').hidden=!tut;
   if(tut){ $('movesPanel').hidden=true; }
-  const names=mode==='ai'
-    ?{w:humanColor==='w'?'You':'Computer · '+LEVELS[aiLevel].label, b:humanColor==='b'?'You':'Computer · '+LEVELS[aiLevel].label}
-    :{w:'White',b:'Black'};
+  const other=mode==='ai'?'Computer · '+LEVELS[aiLevel].label:mode==='online'?(NET.oppNick||'Opponent')+(NET.oppOnline?'':' · offline'):'';
+  const names=other?{w:humanColor==='w'?'You':other, b:humanColor==='b'?'You':other}:{w:'White',b:'Black'};
   $('nmW').textContent=names.w; $('nmB').textContent=names.b;
   const diff=material('w')-material('b');
   for(const c of ['w','b']){
@@ -1165,13 +1195,20 @@ function updateHUD(override){
   else if(tut) tx=lessonDone?'Lesson complete':'White to move';
   else if(gameOver) tx=overText().title;
   else if(thinking) tx='Computer is thinking';
+  else if(mode==='online'){
+    if(!NET.connected) tx='Reconnecting…';
+    else if(!NET.oppOnline) tx='Waiting for '+(NET.oppNick||'opponent')+' to reconnect';
+    else if(S.turn===humanColor){ tx=chk?'Check! Protect your king':'Your move'; alert=chk; }
+    else tx=(NET.oppNick||'Opponent')+(chk?' is in check':'’s move');
+  }
   else if(mode==='ai') { tx=chk?'Check! Protect your king':'Your move'; alert=chk; }
   else { tx=(S.turn==='w'?'White':'Black')+' to move'+(chk?' · Check!':''); alert=chk; }
   $('statusTx').textContent=tx; $('status').classList.toggle('alert',alert);
-  $('spin').hidden=!thinking;
+  $('spin').hidden=!(thinking||(mode==='online'&&!gameOver&&(S.turn!==humanColor||!NET.oppOnline||!NET.connected)));
   $('status').hidden=tut;
   $('btnUndo').disabled=busy||!S.hist.length;
   $('btnHint').disabled=busy||!!gameOver||!isHumanTurn();
+  $('btnUndo').hidden=$('btnHint').hidden=mode==='online';
   $('btnMoves').classList.toggle('lit',!$('movesPanel').hidden);
   renderMoves();
 }
@@ -1192,8 +1229,11 @@ function overText(){
   const moves=Math.ceil(sanList.length/2);
   if(g.type==='mate'){
     if(mode==='ai') return g.winner===humanColor?{eyebrow:'Victory',title:'Checkmate',text:'You win. The computer’s king has nowhere to go.',win:true}:{eyebrow:'Defeat',title:'Checkmate',text:'The computer wins this one. Undo a couple of moves or start again.',lose:true};
+    if(mode==='online') return g.winner===humanColor?{eyebrow:'Victory',title:'Checkmate',text:'You beat '+(NET.oppNick||'your opponent')+' in '+moves+' moves.',win:true}:{eyebrow:'Defeat',title:'Checkmate',text:(NET.oppNick||'Your opponent')+' wins in '+moves+' moves.',lose:true};
     return {eyebrow:'Game over',title:'Checkmate',text:(g.winner==='w'?'White':'Black')+' wins in '+moves+' moves.',win:true};
   }
+  if(g.type==='abandon') return {eyebrow:'Victory',title:'Opponent left',text:(NET.oppNick||'Your opponent')+' disconnected and didn’t come back. You win.',win:true};
+  if(g.type==='resign'&&mode==='online') return g.by==='me'?{eyebrow:'Resigned',title:'Game over',text:'You resigned. '+(NET.oppNick||'Your opponent')+' wins.',lose:true}:{eyebrow:'Victory',title:'They resigned',text:(NET.oppNick||'Your opponent')+' resigned. You win.',win:true};
   if(g.type==='resign') return mode==='ai'?{eyebrow:'Resigned',title:'Game over',text:'You resigned. The computer takes the point.',lose:true}:{eyebrow:'Resigned',title:'Game over',text:(g.winner==='w'?'White':'Black')+' wins by resignation.'};
   const why={stalemate:['Stalemate','The side to move has no legal move and is not in check. The game is a draw.'],
     fifty:['Draw','Fifty moves passed with no capture or pawn move.'],
@@ -1204,8 +1244,9 @@ function overText(){
 function showOver(){
   const o=overText();
   $('ovEyebrow').textContent=o.eyebrow; $('ovTitle').textContent=o.title; $('ovText').textContent=o.text;
-  $('ovMeta').textContent=(mode==='ai'?LEVELS[aiLevel].label+' · ':'Pass & Play · ')+Math.ceil(sanList.length/2)+' moves';
+  $('ovMeta').textContent=(mode==='ai'?LEVELS[aiLevel].label+' · ':'Online vs '+(NET.oppNick||'Opponent')+' · ')+Math.ceil(sanList.length/2)+' moves';
   $('over').hidden=false;
+  updateRematch();
   sfx(o.lose?'lose':'win');
   updateHUD();
 }
@@ -1305,6 +1346,7 @@ function showScreen(id){
   $('hud').hidden=!!id;
 }
 function goMenu(){
+  netLeave();
   gameId++; mode='menu'; busy=false; thinking=false;
   for(const id of ['pause','over','promo']) $(id).hidden=true;
   $('movesPanel').hidden=true;
@@ -1317,7 +1359,6 @@ function startAI(){
   showScreen(null); newGame(START); cam.zoom=1; turnTo(humanColor);
   setTimeout(maybeAI,700);
 }
-function startPvp(){ mode='pvp'; showScreen(null); newGame(START); cam.zoom=1; turnTo('w'); }
 function startTutorial(){ mode='tutorial'; showScreen(null); cam.zoom=1; turnTo('w'); loadLesson(Math.min(lessonBest,LESSONS.length-1)); }
 
 function bindPress(sel,attr,cb,cur){
@@ -1330,16 +1371,12 @@ bindPress('[data-lvl]','lvl',v=>{ aiLevel=v; store.set('level',v); },aiLevel);
 bindPress('[data-side]','side',v=>{ sideChoice=v; store.set('side',v); },sideChoice);
 
 $('goAI').onclick=()=>showScreen('scrAI');
-$('goPvp').onclick=()=>showScreen('scrPvp');
+$('goOnline').onclick=openOnline;
 $('goTut').onclick=startTutorial;
 $('goRules').onclick=()=>{ rulesReturn='scrMenu'; showScreen('scrRules'); $('scrRules').scrollTop=0; };
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>showScreen('scrMenu'));
 $('rulesBack').onclick=()=>{ if(rulesReturn==='game'){ showScreen(null); } else showScreen(rulesReturn); };
 $('startAI').onclick=startAI;
-$('startPvp').onclick=startPvp;
-const flipBtn=$('optFlip');
-flipBtn.setAttribute('aria-checked',String(flipEach));
-flipBtn.onclick=()=>{ flipEach=!flipEach; store.set('flip',flipEach); flipBtn.setAttribute('aria-checked',String(flipEach)); };
 
 $('btnUndo').onclick=undoMove;
 $('btnHint').onclick=hint;
@@ -1349,22 +1386,26 @@ $('btnSound').onclick=()=>{ soundOn=!soundOn; store.set('sound',soundOn); setSou
 setSoundIcon();
 
 $('btnPause').onclick=()=>{
-  $('pauseTitle').textContent=mode==='tutorial'?'Tutorial':mode==='ai'?'Vs Computer':'Pass & Play';
+  $('pauseTitle').textContent=mode==='tutorial'?'Tutorial':mode==='ai'?'Vs Computer':'Online';
   $('pResign').hidden=mode==='tutorial'||!!gameOver;
-  $('pRestart').textContent=mode==='tutorial'?'Restart lesson':'Restart game';
+  $('pRestart').textContent=mode==='tutorial'?'Restart lesson':mode==='online'?'Rematch':'Restart game';
+  $('pRestart').hidden=mode==='online'&&!gameOver;
+  $('pMenu').textContent=mode==='online'?'Leave match':'Main menu';
   $('pause').hidden=false;
 };
 $('pause').onclick=e=>{ if(e.target===$('pause')) $('pause').hidden=true; };
 $('pResume').onclick=()=>$('pause').hidden=true;
 $('pRules').onclick=()=>{ $('pause').hidden=true; rulesReturn='game'; showScreen('scrRules'); $('scrRules').scrollTop=0; };
-$('pRestart').onclick=()=>{ $('pause').hidden=true; if(mode==='tutorial') loadLesson(lessonIdx); else if(mode==='ai'){ newGame(START); turnTo(humanColor); setTimeout(maybeAI,700); } else { newGame(START); turnTo('w'); } };
+$('pRestart').onclick=()=>{ $('pause').hidden=true; if(mode==='online'){ $('over').hidden=false; netRematch(); return; } if(mode==='tutorial') loadLesson(lessonIdx); else if(mode==='ai'){ newGame(START); turnTo(humanColor); setTimeout(maybeAI,700); } };
 $('pResign').onclick=()=>{
-  $('pause').hidden=true; gameId++; busy=false; thinking=false;
+  $('pause').hidden=true;
+  if(mode==='online'){ if(gameOver) return; netResign(); return; }
+  gameId++; busy=false; thinking=false;
   gameOver={type:'resign',winner:mode==='ai'?(humanColor==='w'?'b':'w'):(S.turn==='w'?'b':'w')};
   showOver();
 };
 $('pMenu').onclick=goMenu;
-$('ovAgain').onclick=()=>{ $('over').hidden=true; if(mode==='ai') startAI(); else startPvp(); };
+$('ovAgain').onclick=()=>{ if(mode==='online'){ netRematch(); return; } $('over').hidden=true; startAI(); };
 $('ovReview').onclick=()=>{ $('over').hidden=true; };
 $('ovMenu').onclick=goMenu;
 
@@ -1372,6 +1413,177 @@ $('lsPrev').onclick=()=>loadLesson(lessonIdx-1);
 $('lsNext').onclick=()=>{ if(lessonIdx===LESSONS.length-1){ goMenu(); toast('Tutorial complete. Try the computer on Novice.'); } else loadLesson(lessonIdx+1); };
 $('lsRetry').onclick=()=>loadLesson(lessonIdx);
 $('lsHint').onclick=()=>{ const L=LESSONS[lessonIdx]; if(lessonDone||busy) return; selected=-1; hintMoves=[E.sqIndex(L.hint[0]),E.sqIndex(L.hint[1])]; refreshBoard(); $('lsFb').textContent='Move the piece on '+L.hint[0]+' to '+L.hint[1]+'.'; $('lsFb').className='feedback'; };
+
+/* ======================================================================
+   ONLINE PLAY over /api/room (same match server as DARE Buckets)
+   Each phone posts its presence and reads its opponent's: ~every 0.7s while
+   waiting on the opponent, ~1.5s on your own turn, 1s in the lobby.
+   Presence: {app,role,nick,opp,g,mv,go,hc,res,re}. mv is the full move list
+   of game g ("e2e4 e7e5 ..."), so a missed poll never loses a move.
+   ====================================================================== */
+const PEER_ABC='abcdefghijklmnopqrstuvwxyz0123456789', CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const rid=(n,abc)=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>abc[b%abc.length]).join('');
+const NET={me:rid(12,PEER_ABC),alive:false,room:'',code:'',role:'',opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,
+  game:0,hostColor:'w',pres:{},timer:null,inflight:false,again:false,full:false,oppRe:false,joinedAt:0};
+const ONLINE_OK=/^https?:$/.test(location.protocol);
+let hcChoice=store.get('hc','w');
+const cleanNick=s=>String(s||'').replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().slice(0,12);
+const myNick=()=>cleanNick($('olNick').value)||'Player';
+$('olNick').value=store.get('nick','');
+$('olNick').addEventListener('change',()=>store.set('nick',cleanNick($('olNick').value)));
+$('olCode').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4); });
+$('olCode').addEventListener('keydown',e=>{ if(e.key==='Enter') $('olJoin').click(); });
+bindPress('[data-hc]','hc',v=>{ hcChoice=v; store.set('hc',v); },hcChoice);
+
+async function roomPost(body,keep){
+  const r=await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:!!keep});
+  if(!r.ok){ let msg=''; try{ msg=(await r.json()).error||''; }catch(e){} const err=new Error(msg||'Couldn’t reach the match server.'); err.status=r.status; throw err; }
+  return r.json();
+}
+function encMoves(){ return S.hist.map(h=>E.sqName(h.m.from)+E.sqName(h.m.to)+(h.m.promo||'')).join(' '); }
+function netPushMoves(){ if(mode!=='online') return; NET.pres.mv=encMoves(); netKick(); }
+
+function openOnline(){
+  showScreen('scrOnline'); $('olSetup').hidden=false; $('olLobby').hidden=true;
+  $('olStatus').textContent=ONLINE_OK?'':'Online play runs on the DARE Arcade site. Open DARE Chess there to play someone.';
+  $('olCreate').disabled=$('olJoin').disabled=!ONLINE_OK;
+}
+$('olBack').onclick=()=>{ netLeave(); showScreen('scrMenu'); };
+$('olCreate').onclick=()=>{ let c=''; for(let i=0;i<4;i++) c+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)]; enterRoom(c,'h'); };
+$('olJoin').onclick=()=>{ const c=$('olCode').value.trim().toUpperCase(); if(c.length!==4){ $('olStatus').textContent='Enter the 4-character code from your opponent.'; return; } enterRoom(c,'g'); };
+$('olCopy').onclick=()=>{
+  const done=()=>{ $('olCopy').textContent='Copied'; setTimeout(()=>$('olCopy').textContent='Copy code',1400); };
+  const sel=()=>{ const r=document.createRange(); r.selectNodeContents($('olCodeShow')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); };
+  try{ navigator.clipboard.writeText(NET.code).then(done,sel); }catch(e){ sel(); }
+};
+$('olStart').onclick=()=>{
+  if(NET.role!=='h'||!NET.opp||!NET.oppOnline) return;
+  const c=hcChoice==='random'?(Math.random()<.5?'w':'b'):hcChoice;
+  hostStart(NET.game+1,c);
+};
+
+async function enterRoom(code,role){
+  sfx('select'); store.set('nick',myNick());
+  $('olStatus').textContent=''; $('olCreate').disabled=$('olJoin').disabled=true;
+  netLeave();
+  Object.assign(NET,{room:'ch-'+code.toLowerCase(),code,role,opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,game:0,full:false,oppRe:false,
+    pres:{app:'chess',role,nick:myNick()},alive:true,joinedAt:Date.now()});
+  let d=null;
+  try{ d=await roomPost({room:NET.room,peer:NET.me,presence:NET.pres}); }
+  catch(e){ NET.alive=false; $('olStatus').textContent=e.message||'Couldn’t connect. Check your connection and try again.'; }
+  $('olCreate').disabled=$('olJoin').disabled=false;
+  if(!d) return;
+  $('olSetup').hidden=true; $('olLobby').hidden=false;
+  $('olCodeShow').textContent=code;
+  $('olCopy').hidden=role!=='h'; $('olStart').hidden=role!=='h';
+  $('olNote').textContent=role==='h'?'Send the code to your opponent. They open DARE Chess, tap Play Online, and enter it.':'The host starts the match and picks the colors.';
+  netPeers(d.peers||[]);
+  NET.timer=setTimeout(netTick,1000);
+}
+
+function netKick(){ if(!NET.alive) return; if(NET.inflight){ NET.again=true; return; } clearTimeout(NET.timer); netTick(); }
+async function netTick(){
+  if(!NET.alive||NET.inflight) return;
+  NET.inflight=true; NET.again=false;
+  const room=NET.room; let d=null;
+  try{ d=await roomPost({room,peer:NET.me,presence:NET.pres}); setConn(true); }
+  catch(e){ setConn(false); }
+  NET.inflight=false;
+  if(!NET.alive||room!==NET.room) return;
+  if(d) netPeers(d.peers||[]);
+  if(!NET.alive) return;
+  const wait=NET.again?0:mode!=='online'?1000:(gameOver||S.turn===humanColor)?1500:700;
+  NET.timer=setTimeout(netTick,wait);
+}
+function setConn(ok){ if(ok!==NET.connected){ NET.connected=ok; if(mode==='online') updateHUD(); } }
+
+function netPeers(list){
+  const os=list.filter(p=>p&&p.peer!==NET.me&&p.presence&&p.presence.app==='chess');
+  let o=NET.opp?os.find(p=>p.peer===NET.opp):null;
+  if(!NET.opp){
+    const cand=os.find(p=>p.presence.role!==NET.role&&(NET.role==='h'||!p.presence.opp||p.presence.opp===NET.me));
+    if(cand){ NET.opp=cand.peer; o=cand; NET.full=false; NET.pres.opp=cand.peer; sfx('check'); netKick(); }
+    else NET.full=NET.role==='g'&&os.some(p=>p.presence.role==='h');
+  }
+  if(o&&NET.role==='g'&&o.presence.opp&&o.presence.opp!==NET.me){ NET.opp=null; o=null; NET.full=true; delete NET.pres.opp; }
+  const was=NET.oppOnline; NET.oppOnline=!!o;
+  if(o) NET.oppNick=cleanNick(o.presence.nick)||'Opponent';
+  if(mode!=='online'){
+    if(o&&NET.role==='g'&&(o.presence.go|0)>NET.game) return startOnlineGame(o.presence.go|0,o.presence.hc==='w'?'b':'w');
+    return updateLobby();
+  }
+  // ---- in a game ----
+  if(!o){
+    if(!NET.offSince) NET.offSince=Date.now();
+    if(was) updateHUD();
+    if(!gameOver&&NET.opp&&Date.now()-NET.offSince>45000){ gameOver={type:'abandon',winner:humanColor}; NET.pres.res=0; showOver(); }
+    if(gameOver) updateRematch();
+    return;
+  }
+  NET.offSince=0;
+  if(!was) updateHUD();
+  const p=o.presence;
+  if(NET.role==='g'&&(p.go|0)>NET.game) return startOnlineGame(p.go|0,p.hc==='w'?'b':'w');
+  NET.oppRe=(p.re|0)===NET.game;
+  if((p.g|0)===NET.game){
+    if((p.res|0)===NET.game&&!gameOver){ gameOver={type:'resign',winner:humanColor,by:'opp'}; busy=false; showOver(); return; }
+    if(!gameOver) applyRemote(String(p.mv||''));
+  }
+  if(gameOver){
+    if(NET.role==='h'&&NET.oppRe&&(NET.pres.re|0)===NET.game&&gameOver.type!=='abandon') return hostStart(NET.game+1,NET.hostColor==='w'?'b':'w');
+    updateRematch();
+  }
+}
+function applyRemote(mv){
+  if(busy||S.turn===humanColor) return;
+  const mine=encMoves();
+  if(mv.length<=mine.length) return;
+  if(mine&&mv.slice(0,mine.length+1)!==mine+' ') return;
+  const next=mv.slice(mine?mine.length+1:0).split(' ')[0];
+  const m=legalNow.find(x=>E.sqName(x.from)+E.sqName(x.to)+(x.promo||'')===next);
+  if(m) commit(m);
+}
+function hostStart(g,hc){ NET.pres.go=g; NET.pres.hc=hc; startOnlineGame(g,hc); }
+function startOnlineGame(g,color){
+  NET.game=g; humanColor=color; if(NET.role==='h') NET.hostColor=color;
+  NET.pres.g=g; NET.pres.mv=''; delete NET.pres.res; NET.oppRe=false; NET.offSince=0;
+  for(const id of ['pause','over','promo']) $(id).hidden=true;
+  mode='online'; showScreen(null); newGame(START); cam.zoom=1; turnTo(humanColor);
+  sfx('check'); toast('You play '+(color==='w'?'White. You move first.':'Black. White moves first.'));
+  netKick();
+}
+function updateLobby(){
+  const o=NET.opp&&NET.oppOnline;
+  $('olOpp').classList.toggle('in',!!o);
+  $('olOppTx').textContent=o?NET.oppNick+(NET.role==='h'?' is here':' (host) is here')
+    :NET.full?'This match already has two players.'
+    :NET.opp?NET.oppNick+' is reconnecting…'
+    :NET.role==='h'?'Waiting for your opponent to join'
+    :Date.now()-NET.joinedAt>5000?'No host with that code yet. Check it, or wait for them to create it.':'Looking for the host…';
+  $('olStart').disabled=!o;
+}
+function updateRematch(){
+  if(mode!=='online'||!gameOver) return;
+  const b=$('ovAgain'), mine=(NET.pres.re|0)===NET.game&&NET.game>0;
+  if(gameOver.type==='abandon'||!NET.oppOnline){ b.textContent='Opponent offline'; b.disabled=true; return; }
+  b.disabled=mine;
+  b.textContent=mine?'Waiting for '+NET.oppNick+'…':NET.oppRe?'Accept rematch':'Rematch';
+  if(NET.oppRe&&!mine) $('ovMeta').textContent=NET.oppNick+' wants a rematch · colors swap';
+}
+function netRematch(){ if(mode!=='online'||!gameOver) return; NET.pres.re=NET.game; updateRematch(); netKick(); }
+function netResign(){
+  NET.pres.res=NET.game;
+  gameOver={type:'resign',winner:humanColor==='w'?'b':'w',by:'me'}; busy=false;
+  netKick(); showOver();
+}
+function netLeave(){
+  if(!NET.alive&&!NET.room) return;
+  NET.alive=false; clearTimeout(NET.timer);
+  const room=NET.room; NET.room='';
+  if(room) roomPost({room,peer:NET.me,leave:true},true).catch(()=>{});
+  $('ovAgain').disabled=false; $('ovAgain').textContent='Play again';
+}
+window.addEventListener('pagehide',()=>{ if(NET.room) roomPost({room:NET.room,peer:NET.me,leave:true},true).catch(()=>{}); });
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ for(const id of ['promo','pause']) if(!$(id).hidden){ $(id).hidden=true; return; } }
