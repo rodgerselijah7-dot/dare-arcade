@@ -120,7 +120,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 </style>
 
 <div class="app">
-  <div class="board" role="status" aria-live="polite">
+  <div class="board" id="board" role="status" aria-live="polite" hidden>
     <div class="row">
       <div class="cell"><span class="lbl" id="lblL">Score</span><span class="val" id="scoreL">0</span></div>
       <div class="cell c"><span class="lbl" id="lblC">Clock</span><span class="val clock" id="clock">60</span></div>
@@ -518,7 +518,7 @@ function resize(){
   buildBg();buildSprites();
   players.forEach(p=>{if(!p.remote&&(!p.ball||!p.ball.fly))spawn(p)});
 }
-let rT=0;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(resize,80)});
+let rT=0;const onSize=()=>{clearTimeout(rT);rT=setTimeout(resize,60)};addEventListener('resize',onSize);if(window.ResizeObserver)new ResizeObserver(onSize).observe(cv);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(W)resize()});
 
 /* ---------- game flow ---------- */
@@ -537,7 +537,7 @@ function spawn(p){
   p.ball={x:homeX(p)+(Math.random()*2-1)*W*spread,y,y0:y,vx:0,vy:0,s:1,t:0,tA:1,fly:false,rot:Math.random()*6,touched:false,scored:false,bob:p.i*1.3,trail:[]};
   p.think=p.cpu&&S.state==='play'?.7+Math.random()*.8:1.4+Math.random()*1.2;
 }
-function showOnly(id){['intro','courts','online','lobby','over'].forEach(k=>$(k).hidden=k!==id)}
+function showOnly(id){['intro','courts','online','lobby','over'].forEach(k=>$(k).hidden=k!==id);$('board').hidden=['intro','courts','online','lobby'].includes(id)} // menus get the full court; the scoreboard shows only in games and results
 function labels(){
   const vs=players.length>1,n=names();
   $('lblL').textContent=vs?n[0]:'Score';$('lblR').textContent=vs?n[1]:'Best';$('lblC').textContent='Clock';
