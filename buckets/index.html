@@ -359,7 +359,7 @@ function labels(){
 function start(mode){
   if(mode)S.mode=mode;
   unlockAudio();
-  Object.assign(S,{state:'play',time:60,elapsed:0,buzzer:false,ot:0,evN:0,ev:null});
+  Object.assign(S,{state:'play',time:60,elapsed:0,buzzer:false,ot:0,evN:0,ev:null,shotN:0,shot:null});
   hoop.phase=0;hoop.amp=0;
   swipes.clear();pN=0;floats=[];setupPlayers();players.forEach(spawn);labels();
   cv.setAttribute('aria-label',S.mode==='2p'?'Basketball court. Left half shoots the amber ball, right half shoots the bone ball. Swipe up to shoot.':'Basketball court. Swipe up to shoot.');
@@ -464,7 +464,23 @@ function launch(pl,aimX,p){
   Object.assign(b,{vx:(aimX-b.x)/f.T,vy:f.vy,tA:f.tA,fly:true,t:0,trail:[]});
   if(S.state==='play')pl.shots++;
   play('shot',pl.i);
+  // online: share the shot itself (start, aim relative to the hoop, power) so the other phone can fly it locally
+  if(S.mode==='online'&&!pl.remote&&S.state==='play'){
+    const r3=v=>Math.round(v*1000)/1000;
+    S.shotN++;S.shot=[S.shotN,r3(b.x/W),r3((aimX-hoopAt(f.T))/hoop.r),r3(p)];
+  }
 }
+/* the opponent's shot, replayed here with the same physics: start mirrored to my right side and aim
+   mirrored about the rim, so it hits or misses the same way it did on their phone */
+function replayShot(o,sh){
+  const x0=(1-Math.max(0,Math.min(1,+sh[1]||.3)))*W,off=Math.max(-6,Math.min(6,+sh[2]||0)),p=Math.max(.8,Math.min(1.22,+sh[3]||1));
+  const y=H-R*1.7;
+  o.ball={x:x0,y,y0:y,vx:0,vy:0,s:1,t:0,tA:1,fly:false,rot:0,touched:false,scored:false,bob:0,trail:[],ghost:true};
+  const f=flight(o.ball,p);
+  Object.assign(o.ball,{vx:(hoopAt(f.T)-off*hoop.r-x0)/f.T,vy:f.vy,tA:f.tA,fly:true});
+  play('shot',1);
+}
+function flushEv(){const e=NET.pendingEv;if(e){NET.pendingEv=null;celebrate(players[1],e.sw,e.pts,e.nf,e.bz)}}
 function shootSwipe(pl,dx,dy){
   const b=pl.ball,p=Math.max(.8,Math.min(1.22,(-dy)/(H*.3)*.42+.72));
   launch(pl,b.x+(dx/(-dy))*(b.y-hoop.y),p);
@@ -492,8 +508,8 @@ function rimHit(b,px,py){
   }
 }
 function stepPlayer(pl,dt){
-  if(pl.remote)return;
   const b=pl.ball;
+  if(pl.remote&&(!b||!b.fly))return; // a resting opponent ball is placed by applyRemote
   if(!b){pl.respawn-=dt;if(pl.respawn<=0&&!(S.state==='play'&&S.buzzer)&&S.state!=='wait')spawn(pl);return}
   if(!b.fly){
     b.bob+=dt;
@@ -506,10 +522,14 @@ function stepPlayer(pl,dt){
   b.s=1-.42*Math.min(1,b.t/b.tA);
   if(desc&&!b.scored){
     rimHit(b,hoop.x-hoop.r,hoop.y);rimHit(b,hoop.x+hoop.r,hoop.y);
-    if(prevY<hoop.y&&b.y>=hoop.y&&b.vy>0&&Math.abs(b.x-hoop.x)<hoop.r-R*b.s*.25)score(pl);
+    if(prevY<hoop.y&&b.y>=hoop.y&&b.vy>0&&Math.abs(b.x-hoop.x)<hoop.r-R*b.s*.25){
+      if(pl.remote){b.scored=true;b.vy*=.5;fx.netStretch=1;fx.netWobble=1;flushEv()}else score(pl);
+    }
   }
+  if(pl.remote&&b.t>b.tA&&b.y>hoop.y+R*2&&NET.pendingEv)flushEv();
   if(b.scored){b.vx*=.9;b.x+=(hoop.x-b.x)*Math.min(1,dt*8)}
   if(b.y>H+R*2||b.x<-R*3||b.x>W+R*3){
+    if(pl.remote){pl.ball=null;flushEv();return}
     if(!b.scored&&S.state==='play'){if(pl.streak>=3)floats.push({x:homeX(pl),y:H*.55,txt:(players.length>1?names()[pl.i]+' ':'')+'FIRE OUT',life:1,c:'#9a8d7a'});pl.streak=0}
     pl.ball=null;pl.respawn=.3;
   }
@@ -698,7 +718,7 @@ function netRematch(){
 }
 function beginOnline(){
   start('online');
-  S.state='count';S.count=3;S.lastBeep=0;NET.oppFinal=false;NET.seenEv=0;NET.remoteT=null;NET.want=0;NET.lastPr=null;NET.lastB=null;NET.vel=null;
+  S.state='count';S.count=3;S.lastBeep=0;NET.oppFinal=false;NET.seenEv=0;NET.remoteT=null;NET.want=0;NET.seenShot=0;NET.pendingEv=null;
   const opp=players[1];opp.ball=null;
   $('netBadge').hidden=false;
 }
@@ -722,26 +742,29 @@ function applyRemote(pr,dt){
   if(pr.fin&&live())NET.oppFinal=true;
   // scoring moments
   const ev=pr.ev;
-  if(Array.isArray(ev)&&ev[0]>NET.seenEv){NET.seenEv=ev[0];if(live())celebrate(o,!!ev[2],n(ev[1],9),[0,2,3].includes(ev[3])?ev[3]:0,!!ev[4])}
-  // their ball, mirrored to my right side and pulled onto my hoop as it nears the rim
-  const b=pr.b;
-  if(!Array.isArray(b)||!(live()||S.state==='count')){o.ball=null;return}
-  const [nx0,ny0,s,rot,fly,beh,hx]=b,sc0=Math.max(.5,Math.min(1,+s||1));
-  // between updates, carry the ball along its last measured velocity so it glides instead of stepping
-  if(pr!==NET.lastPr){
-    const now=performance.now();
-    if(NET.lastB&&fly&&NET.lastB[3]){const du=Math.max(.03,(now-NET.lastAt)/1000);NET.vel=[((+nx0)-NET.lastB[0])/du,((+ny0)-NET.lastB[1])/du,(sc0-NET.lastB[2])/du]}else NET.vel=[0,0,0];
-    NET.lastPr=pr;NET.lastB=[+nx0,+ny0,sc0,fly];NET.lastAt=now;NET.since=0;
-  }else NET.since+=dt;
-  const ex=fly?Math.min(NET.since,.25):0,v=NET.vel||[0,0,0];
-  const nx=(+nx0||.5)+v[0]*ex,ny=(+ny0||.9)+v[1]*ex,sc=Math.max(.5,Math.min(1,sc0+v[2]*ex));
-  const k=Math.max(0,Math.min(1,(1-sc)/.42)),mh=(1-(+hx||.5))*W;
-  const tx=(1-nx)*W+(hoop.x-mh)*k,ty=ny*H;
-  if(!o.ball||(!o.ball.fly&&fly)||Math.hypot(o.ball.x-tx,o.ball.y-ty)>H*.25){
-    o.ball={x:tx,y:ty,y0:H-R*1.7,s:sc,rot:-(+rot||0),fly:!!fly,beh:!!beh,t:0,tA:1,bob:0,trail:[]};
-  }else{
-    const a=Math.min(1,dt*18),ob=o.ball;
-    ob.x+=(tx-ob.x)*a;ob.y+=(ty-ob.y)*a;ob.s+=(sc-ob.s)*a;ob.rot=-(+rot||0);ob.fly=!!fly;ob.beh=!!beh;
+  if(!(live()||S.state==='count')){o.ball=null;NET.pendingEv=null;return}
+  // a new shot from them: fly it here
+  const sh=pr.ls;
+  if(Array.isArray(sh)&&sh[0]>NET.seenShot){NET.seenShot=sh[0];if(live()){flushEv();replayShot(o,sh)}}
+  // their makes: hold the callout until the replayed ball reaches the rim so the two line up
+  if(Array.isArray(ev)&&ev[0]>NET.seenEv){
+    NET.seenEv=ev[0];
+    if(live()){
+      flushEv();
+      NET.pendingEv={sw:!!ev[2],pts:n(ev[1],9),nf:[0,2,3].includes(ev[3])?ev[3]:0,bz:!!ev[4],at:performance.now()};
+      const g=o.ball;if(!g||!g.fly||g.scored||(g.t>g.tA&&g.y>hoop.y))flushEv();
+    }
+  }
+  if(NET.pendingEv&&performance.now()-NET.pendingEv.at>900)flushEv();
+  // their resting ball, waiting for the next shot
+  if(!o.ball||!o.ball.fly){
+    const rx=pr.rx;
+    if(typeof rx==='number'&&rx>=0&&rx<=1){
+      const x=(1-rx)*W,y=H-R*1.7;
+      if(o.ball&&!o.ball.fly)o.ball.x+=(x-o.ball.x)*Math.min(1,dt*12);
+      else o.ball={x,y,y0:y,vx:0,vy:0,s:1,t:0,tA:1,fly:false,rot:0,touched:false,scored:false,bob:1.3,trail:[]};
+      o.ball.bob+=dt;
+    }else if(o.ball&&!o.ball.fly)o.ball=null;
   }
 }
 function sendPresence(force,extra){
@@ -751,8 +774,8 @@ function sendPresence(force,extra){
   const p={app:'buckets',v:1,role:NET.role,nick:myNick(),round:NET.round,want:NET.want,joined:NET.joinedAt||0,
     sc:me?me.score:0,sk:me?me.streak:0,mk:me?me.makes:0,sh:me?me.shots:0,sw:me?me.swish:0,bs:me?me.bestStreak:0,
     fin:S.state==='wait'||(S.state==='over'&&S.mode==='online')?1:0,
-    ev:S.ev,
-    b:(live()||S.state==='count')&&b?[r3(b.x/W),r3(b.y/H),r3(b.s),Math.round(b.rot*100)/100,b.fly?1:0,b.fly&&b.t>b.tA?1:0,r3(hoop.x/W)]:null};
+    ev:S.ev,ls:S.shot,
+    rx:(live()||S.state==='count')&&b&&!b.fly?r3(b.x/W):null};
   if(NET.role==='h'){p.go=NET.lastGo;p.opp=NET.oppPeer||null}
   if(extra)Object.assign(p,extra);
   const js=JSON.stringify(p);
@@ -901,7 +924,7 @@ function draw(){
   drawStage();
   for(const p of players)if(p.ball)drawShadow(p.ball);
   drawBoard();rimBack();
-  const isBehind=p=>p.ball&&p.ball.fly&&(p.remote?p.ball.beh:p.ball.t>p.ball.tA);
+  const isBehind=p=>p.ball&&p.ball.fly&&p.ball.t>p.ball.tA;
   for(const p of players)if(isBehind(p))drawBall(p);
   drawNet();rimFront();
   for(const p of players)if(p.ball&&!isBehind(p))drawBall(p);
