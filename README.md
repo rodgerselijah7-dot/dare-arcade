@@ -12,6 +12,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /break-the-block/      Break the Block (single-file game + icons + manifest)
 /buckets/              DARE Buckets (single-file game + icons + manifest)
 /chess/                DARE Chess (single-file 3D game + icons + manifest; loads three.js r128 from cdnjs)
+/dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /api/room.js           Live match rooms for DARE Buckets and DARE Chess online play (Upstash Redis)
 /icons/                Arcade icons
 ```

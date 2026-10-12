@@ -1,0 +1,16 @@
+{
+  "name": "Dead Rise",
+  "short_name": "Dead Rise",
+  "description": "A 3D zombie survival shooter across five areas with 15 weapons and 10 power-ups. By Dontae Amare.",
+  "start_url": "/dead-rise/",
+  "scope": "/dead-rise/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#100d1b",
+  "theme_color": "#100d1b",
+  "icons": [
+    { "src": "/dead-rise/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/dead-rise/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/dead-rise/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
