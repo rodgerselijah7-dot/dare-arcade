@@ -139,14 +139,15 @@ html.gated.leaving .wrap{visibility:visible}
   padding:calc(env(safe-area-inset-top,0px) + 22px) 22px calc(env(safe-area-inset-bottom,0px) + 24px);overflow:hidden;
   transition:transform .7s cubic-bezier(.7,0,.2,1)}
 html.leaving .gate{transform:translateY(-100%)}
-.field{position:absolute;inset:-10px;display:grid;grid-template-columns:repeat(var(--cols,6),1fr);gap:6px;padding:0 6px;
-  opacity:.32;animation:drift 60s linear infinite;pointer-events:none}
-.field .t{animation:none}
-.gate::after{content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse 85% 55% at 50% 52%,rgba(0,0,0,.92),rgba(0,0,0,.55) 60%,rgba(0,0,0,.2)),
-             linear-gradient(180deg,#000 0,transparent 18%,transparent 82%,#000 100%)}
-@keyframes drift{from{transform:translateY(0)}to{transform:translateY(-50%)}}
-.gate>*:not(.field){position:relative;z-index:1}
+.reel{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;
+  opacity:0;filter:saturate(1.2) contrast(1.05);transition:opacity .8s}
+.reel.on{opacity:.8}
+.gate::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px)}
+.gate::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse 75% 42% at 50% 50%,rgba(0,0,0,.78),rgba(0,0,0,.45) 65%,rgba(0,0,0,.15)),
+             linear-gradient(180deg,rgba(0,0,0,.85) 0,transparent 16%,transparent 80%,rgba(0,0,0,.9) 100%)}
+.gate>*:not(.reel){position:relative;z-index:2}
 .g-top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);letter-spacing:.14em;font-size:15px;color:#9A9A9A}
 .g-top b{font-weight:400;color:#fff}
 .g-top b::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF3B2F;margin-right:8px;vertical-align:2px}
@@ -166,12 +167,12 @@ html.leaving .gate{transform:translateY(-100%)}
 .g-hint{display:block;margin-top:16px;font-family:var(--display);letter-spacing:.3em;font-size:14px;color:#8a8a8a;animation:blink 1.2s steps(2,start) infinite}
 @keyframes blink{to{visibility:hidden}}
 .g-foot{text-align:center;font-style:italic;color:#8a8a8a;font-size:15px}
-@media (prefers-reduced-motion:reduce){.field,.g-hint{animation:none}.gate{transition:opacity .3s}html.leaving .gate{transform:none;opacity:0}}
+@media (prefers-reduced-motion:reduce){.g-hint{animation:none}.gate{transition:opacity .3s}html.leaving .gate{transform:none;opacity:0}}
 </style>
 </head>
 <body>
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
-  <div class="field" id="field" aria-hidden="true"></div>
+  <video class="reel" id="reel" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
   <div class="g-top"><b>DARE</b></div>
   <div class="g-mid">
     <p class="g-pre">DONTAE AMARE PRESENTS</p>
@@ -302,14 +303,17 @@ html.leaving .gate{transform:translateY(-100%)}
   const html=document.documentElement;
   if(!html.classList.contains('gated')){dropMosaic();return;}
 
-  // Enter gate: drifting wall of tiles behind the title
-  const gate=document.getElementById('gate'),field=document.getElementById('field'),btn=document.getElementById('enterBtn');
-  const kinds=Object.keys(S),cols=innerWidth>=900?12:innerWidth>=560?9:6;
-  field.style.setProperty('--cols',cols);
-  const rowsNeeded=Math.ceil(innerHeight/(innerWidth/cols))+2,half=[];
-  let prev='';
-  for(let k=0;k<rowsNeeded*cols;k++){let t;do{t=kinds[(Math.random()*kinds.length)|0]}while(t===prev);prev=t;half.push(t)}
-  field.innerHTML=half.concat(half).map((t,k)=>'<div class="t '+t+(k%17===5?' lit':'')+'"><svg viewBox="0 0 32 32">'+S[t]+'</svg></div>').join('');
+  // Enter gate: gameplay reel from the arcade games behind the title
+  const gate=document.getElementById('gate'),btn=document.getElementById('enterBtn'),reel=document.getElementById('reel');
+  (function(){
+    const wide=innerWidth/innerHeight>0.9,v=wide?'d':'m';
+    reel.poster='/media/reel-'+v+'.jpg';
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches||(navigator.connection&&navigator.connection.saveData)){reel.classList.add('on');return;}
+    reel.src='/media/reel-'+v+(reel.canPlayType('video/mp4; codecs="avc1.640028"')?'.mp4':'.webm');reel.preload='auto';
+    const show=()=>reel.classList.add('on');
+    reel.addEventListener('playing',show,{once:true});
+    const p=reel.play();if(p&&p.catch)p.catch(show);
+  })();
 
   const lobby=document.querySelector('.wrap');lobby.inert=true;
   let done=false;
@@ -318,13 +322,13 @@ html.leaving .gate{transform:translateY(-100%)}
     try{sessionStorage.setItem('dare-entered','1')}catch(e){}
     lobby.inert=false;window.scrollTo(0,0);
     html.classList.add('leaving');dropMosaic();
-    const fin=()=>{html.classList.remove('gated','leaving');html.classList.add('entered');gate.remove();
+    const fin=()=>{try{reel.pause();reel.removeAttribute('src');reel.load()}catch(e){}html.classList.remove('gated','leaving');html.classList.add('entered');gate.remove();
       const a=document.querySelector('.play');a&&a.focus({preventScroll:true});};
     matchMedia('(prefers-reduced-motion: reduce)').matches?setTimeout(fin,300):gate.addEventListener('transitionend',fin,{once:true});
     setTimeout(()=>{if(gate.isConnected)fin()},1200);
   }
   btn.addEventListener('click',enter);
-  gate.addEventListener('click',e=>{if(e.target===gate||e.target.closest('.field,.g-title,.g-hint'))enter()});
+  gate.addEventListener('click',e=>{if(e.target===gate||e.target.closest('.reel,.g-title,.g-hint'))enter()});
   addEventListener('keydown',e=>{if(!done&&(e.key==='Enter'||e.key===' '||e.key==='Escape')){e.preventDefault();enter()}});
 })();
 </script>

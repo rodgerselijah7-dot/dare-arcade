@@ -45,3 +45,7 @@ Every push to `main` redeploys automatically.
 - Online matches use the same `/api/room` as DARE Buckets (rooms are named `ch-<code>`, so they never collide with Buckets rooms).
 - Each phone sends the full move list of the current game with every poll, so a dropped request never loses a move. It polls about every 0.7s while waiting on the opponent, 1.5s on its own turn, and 1s in the lobby, roughly 2,000 to 3,000 Redis commands for a 20-minute game.
 - The host picks colors; colors swap on every rematch. A player who stays disconnected for 45 seconds loses the game.
+
+## Enter screen
+- First visit each session shows the enter screen; returning from a game skips it.
+- Background is a gameplay reel: `/media/reel-m.mp4` (phones, portrait) and `/media/reel-d.mp4` (wide screens, three staggered columns), with `.jpg` posters. To refresh it, record new clips and replace those four files.
