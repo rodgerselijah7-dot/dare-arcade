@@ -5,7 +5,13 @@ const crypto = require("crypto");
 const CATALOG = require("../games.json");
 const GAME_IDS = CATALOG.filter(p => !p.pass).map(p => p.id);
 const findItem = id => CATALOG.find(p => p.id === id);
-const gamesOf = id => { const p = findItem(id); return p ? (p.pass ? p.games : [p.id]) : []; };
+const gamesOf = id => { const p = findItem(id); return p ? (p.pass ? [p.id, ...p.games] : [p.id]) : []; };
+// The pass grows with the arcade: a license that holds it covers every paid game in games.json today.
+// Passes bought before the pass was recorded on the license are recognised by the four games they came with.
+const PASS_ITEM = CATALOG.find(p => p.pass);
+const LEGACY_PASS = ["the-last-don", "rebel-elimination", "cosmic-encounter", "ori"];
+const expandPass = games => (PASS_ITEM && (games.includes(PASS_ITEM.id) || LEGACY_PASS.every(g => games.includes(g))))
+  ? [...new Set([...games, PASS_ITEM.id, ...PASS_ITEM.games])] : games;
 
 /* ---------- Upstash Redis over REST ---------- */
 const R_URL = () => process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -87,7 +93,7 @@ async function grantGames(sessionId, email, games) {
 async function licenseGames(code) {
   if (!hasRedis() || !isCode(code)) return null;
   const raw = await redis("GET", `arc:lic:${code}`);
-  return raw ? JSON.parse(raw).games || [] : null;
+  return raw ? expandPass(JSON.parse(raw).games || []) : null;
 }
 const SITE = req => (process.env.SITE_URL || `https://${(req.headers || {}).host}`).replace(/\/$/, "");
 const nameOf = g => (findItem(g) || {}).name || g;

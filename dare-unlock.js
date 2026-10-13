@@ -13,12 +13,14 @@
     "the-last-don": { name: "The Last Don", price: 4.99, rest: "Districts 2 to 5, levels 13 to 60" },
     "rebel-elimination": { name: "Rebel Elimination", price: 3.99, rest: "Stages 2 and 3 and their bosses" },
     "cosmic-encounter": { name: "Cosmic Encounter", price: 2.99, rest: "Every wave after the first boss" },
-    "ori": { name: "ORI", price: 2.99, rest: "Zones 2 to 6 and endless ORBIT" }
+    "ori": { name: "ORI", price: 2.99, rest: "Zones 2 to 6 and endless ORBIT" },
+    "dead-rise": { name: "Dead Rise", price: 3.99, rest: "Every wave after the Warden, across all five areas" },
+    "break-the-block": { name: "Break the Block", price: 2.99, rest: "Zones 3 to 8, levels 21 to 80" }
   };
-  const PASS = { id: "all-access", name: "All-Access Pass", price: 9.99 };
+  const PASS = { id: "all-access", name: "All-Access Pass", price: 12.99 };
   // prices live in /games.json (the same file checkout charges from); the numbers above are just a fallback
   fetch(API + "/games.json", { cache: "no-cache" }).then(r => r.json()).then(list => list.forEach(p => {
-    if (p.pass) { PASS.price = p.price; PASS.name = p.name; } else if (GAMES[p.id]) { GAMES[p.id].price = p.price; GAMES[p.id].rest = p.unlocks; GAMES[p.id].tryout = p.tryout; }
+    if (p.pass) { PASS.price = p.price; PASS.name = p.name; } else { const g = GAMES[p.id] || (GAMES[p.id] = {}); g.name = p.name; g.price = p.price; g.rest = p.unlocks; g.tryout = p.tryout; }
   })).catch(() => {});
   const K_CODE = "dare_unlock_code", K_OWNED = "dare_owned";
   const ls = {
@@ -29,7 +31,7 @@
   const fmt = c => clean(c).replace(/(.{4})(?=.)/g, "$1-");
   const money = n => "$" + n.toFixed(2);
   const listeners = [];
-  const owned = g => (ls.get(K_OWNED, []) || []).includes(g);
+  const owned = g => { const l = ls.get(K_OWNED, []) || []; return l.includes(g) || l.includes(PASS.id); };
   const code = () => ls.get(K_CODE, "");
 
   async function check(c) {
@@ -109,7 +111,7 @@
         <p>Unlock the full game to keep going. <b>${esc(g.rest)}</b>, plus everything you've already played.</p>
         <button class="dul-btn" data-buy="${esc(opt.game)}">Unlock full game · ${money(g.price)}</button>
         <button class="dul-btn dul-q" data-buy="${PASS.id}">All-Access Pass · ${money(PASS.price)}</button>
-        <p class="dul-fine">The pass unlocks every game in the arcade.</p>`
+        <p class="dul-fine">The pass unlocks every paid game in the arcade, including new ones.</p>`
       : `<h2>${esc(opt.title || "Unlock your games")}</h2><p>Bought a game or the All-Access Pass? Enter the unlock code from your confirmation page or email.</p>`}
       <div class="dul-msg" aria-live="polite"></div>
       <div class="dul-links">

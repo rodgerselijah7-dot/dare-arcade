@@ -9,7 +9,7 @@
 <title>DARE Arcade — Games by Dontae Amare</title>
 <meta name="description" content="Free browser games from Dontae Amare. Play The Last Don, a match-3 set on Fort Worth's Historic South Side.">
 <meta property="og:title" content="DARE Arcade">
-<meta property="og:description" content="Free browser games by Dontae Amare. Nine games, free to play.">
+<meta property="og:description" content="Browser games by Dontae Amare. Nine games, every one free to start.">
 <meta property="og:image" content="https://dare-arcade.vercel.app/icons/og.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -174,7 +174,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
         <h3>Break the Block</h3>
         <span class="status">Play</span>
         <p>A brick breaker across eight Fort Worth zones. Eighty levels of steel, ghost, regrowing and exploding bricks, with upgrades to earn along the way.</p>
-        <span class="price">Free to play</span>
+        <span class="price" data-game="break-the-block">Zones 1 and 2 free. Full game $2.99</span>
       </a>
       <a class="row live" href="/buckets/">
         <h3>DARE Buckets</h3>
@@ -192,12 +192,12 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
         <h3>Dead Rise</h3>
         <span class="status">Play</span>
         <p>A 3D zombie survival shooter. Fight wave after wave across five areas, from the South Side streets to a snowed-in rail yard, with 15 weapons, 10 power-ups and a boss every fifth wave.</p>
-        <span class="price">Free to play</span>
+        <span class="price" data-game="dead-rise">First boss free. Full game $3.99</span>
       </a>
       <a class="row pass" id="passRow" href="/shop/?add=all-access">
         <h3>All-Access Pass</h3>
-        <span class="status">$9.99</span>
-        <p>Every paid game, fully unlocked. Save $4.97 over buying them one by one.</p>
+        <span class="status">$12.99</span>
+        <p>All six paid games, fully unlocked, plus every paid game added later. Save $8.95 over buying them one by one.</p>
       </a>
       <p class="pricing"><a href="/shop/" style="color:var(--black)">Shop the full games</a> · Bought one? <button class="unlock-link" id="unlockBtn" type="button">Enter your unlock code</button></p>
     </section>
@@ -244,7 +244,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
 // Show what this device has unlocked
 (function(){
   if(!window.DARE)return;
-  const GAMES=['the-last-don','rebel-elimination','cosmic-encounter','ori'];
+  const GAMES=['the-last-don','rebel-elimination','dead-rise','cosmic-encounter','ori','break-the-block'];
   function paint(){
     document.querySelectorAll('[data-game]').forEach(el=>{
       const g=el.dataset.game;
@@ -253,9 +253,9 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
       el.classList.toggle('owned',own);
       el.textContent=own?'Full game unlocked':el.dataset.base;
     });
-    const all=GAMES.every(DARE.owned),row=document.getElementById('passRow');
+    const all=DARE.owned('all-access')||GAMES.every(DARE.owned),row=document.getElementById('passRow');
     row.classList.toggle('owned',all);
-    row.querySelector('.status').textContent=all?'Owned':'$9.99';
+    row.querySelector('.status').textContent=all?'Owned':'$'+(DARE.PASS.price||12.99).toFixed(2);
     if(all)row.removeAttribute('href');else row.setAttribute('href','/shop/?add=all-access');
   }
   paint();DARE.onChange(paint);

@@ -1,7 +1,9 @@
 [
-  { "id": "the-last-don", "name": "The Last Don", "price": 4.99, "tryout": "District 1 (levels 1 to 12)", "unlocks": "Districts 2 to 5, levels 13 to 60" },
-  { "id": "rebel-elimination", "name": "Rebel Elimination", "price": 3.99, "tryout": "Stage 1 and its boss", "unlocks": "Stages 2 and 3 and their bosses" },
-  { "id": "cosmic-encounter", "name": "Cosmic Encounter", "price": 2.99, "tryout": "Waves 1 to 5 and the first boss", "unlocks": "Every wave after the first boss" },
-  { "id": "ori", "name": "ORI", "price": 2.99, "tryout": "Zone 1 (levels 1 to 5)", "unlocks": "Zones 2 to 6 and endless ORBIT" },
-  { "id": "all-access", "name": "All-Access Pass", "price": 9.99, "pass": true, "games": ["the-last-don", "rebel-elimination", "cosmic-encounter", "ori"], "unlocks": "Every paid game in the arcade" }
+  {"id": "the-last-don", "name": "The Last Don", "price": 4.99, "tryout": "District 1 (levels 1 to 12)", "unlocks": "Districts 2 to 5, levels 13 to 60"},
+  {"id": "rebel-elimination", "name": "Rebel Elimination", "price": 3.99, "tryout": "Stage 1 and its boss", "unlocks": "Stages 2 and 3 and their bosses"},
+  {"id": "dead-rise", "name": "Dead Rise", "price": 3.99, "tryout": "Waves 1 to 5 and the first boss", "unlocks": "Every wave after the Warden, across all five areas"},
+  {"id": "cosmic-encounter", "name": "Cosmic Encounter", "price": 2.99, "tryout": "Waves 1 to 5 and the first boss", "unlocks": "Every wave after the first boss"},
+  {"id": "ori", "name": "ORI", "price": 2.99, "tryout": "Zone 1 (levels 1 to 5)", "unlocks": "Zones 2 to 6 and endless ORBIT"},
+  {"id": "break-the-block", "name": "Break the Block", "price": 2.99, "tryout": "Zones 1 and 2 (levels 1 to 20)", "unlocks": "Zones 3 to 8, levels 21 to 80"},
+  {"id": "all-access", "name": "All-Access Pass", "price": 12.99, "pass": true, "games": ["the-last-don", "rebel-elimination", "dead-rise", "cosmic-encounter", "ori", "break-the-block"], "unlocks": "Every paid game in the arcade, including new ones"}
 ]

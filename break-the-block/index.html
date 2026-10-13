@@ -11,6 +11,7 @@
 <link rel="manifest" href="/break-the-block/manifest.webmanifest">
 <link rel="icon" href="/break-the-block/icon-192.png">
 <link rel="apple-touch-icon" href="/break-the-block/apple-touch-icon.png">
+<script src="/dare-unlock.js"></script>
 <title>Break the Block — Dontae Amare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -499,8 +500,15 @@ function resetPaddleAndBall(){
   balls=[newBall(paddle.x,paddle.y-paddle.h/2-6,0,0)];balls[0].stuck=true;balls[0].off=0;
   caps=[];bolts=[];combo=0;
 }
+const FREE_LEVELS=20; // zones 1 and 2 are the free tryout
 function startLevel(l,fresh){
-  level=Math.max(0,Math.min(NLV-1,l));
+  const want=Math.max(0,Math.min(NLV-1,l));
+  if(want>=FREE_LEVELS&&window.DARE&&!DARE.owned('break-the-block')){
+    showPause(false);
+    DARE.gate('break-the-block',()=>startLevel(want,fresh),{title:'Zones 1 and 2 cleared',onExit:toTitle});
+    return;
+  }
+  level=want;
   if(fresh){score=0;}
   lives=3+up('lives');
   levelStartScore=score;levelTime=0;netLeft=up('net');levelGold=0;

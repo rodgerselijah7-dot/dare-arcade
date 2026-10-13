@@ -295,6 +295,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:3px}
   </section>
 </div>
 
+<script src="/dare-unlock.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (()=>{
@@ -1210,7 +1211,14 @@ function pickType(){const w=wave,pool=[['walker',10]];if(w>=2)pool.push(['runner
   let s=pool.reduce((a,b)=>a+b[1],0),r=Math.random()*s;for(const[k,v]of pool){r-=v;if(r<=0)return k;}return'walker';}
 function spawnOne(){const[x,z]=spawnPos();makeZombie(pickType(),x,z,1);alive++;toSpawn--;}
 function spawnBoss(){const[x,z]=spawnPos(18,28);bossZ=makeZombie('boss',x,z,1);alive++;$('boss').hidden=false;sRoar();shake=.4;toast('BOSS','THE WARDEN','#ff5a4a');}
-function startWave(n){wave=n;const boss=n%5===0;toSpawn=Math.min(70,boss?6+n*2:8+n*3);bossPending=boss;spawnT=1.4;waveActive=true;
+const FREE_WAVES=5; // waves 1 to 5 and the Warden are the free tryout
+function startWave(n){
+  if(n>FREE_WAVES&&window.DARE&&!DARE.owned('dead-rise')){
+    state='gate';app.classList.remove('playing');firing=false;releaseTouches();if(document.pointerLockElement)document.exitPointerLock();
+    DARE.gate('dead-rise',()=>{state='playing';app.classList.add('playing');initAudio();tryLock();last=performance.now();startWave(n);},{title:'You beat the Warden',onExit:toMenu});
+    return;
+  }
+  wave=n;const boss=n%5===0;toSpawn=Math.min(70,boss?6+n*2:8+n*3);bossPending=boss;spawnT=1.4;waveActive=true;
   const[cx,cz]=spawnPos(8,20);spawnPickup('crate',null,cx,cz,60);
   banner(boss?'BOSS WAVE':`WAVE ${n}`,boss?'The Warden is coming':n===1?'Hold the area':'Supply crate dropped');}
 function travel(){travelT=0;travelBuilt=false;nextArea=(curArea+1)%AREAS.length;const A=AREAS[nextArea];$('fadeKick').textContent='AREA '+(areasCleared+1);$('fadeTitle').textContent=A.name.toUpperCase();$('fadeSub').textContent=A.sub;$('fade').classList.add('on');firing=false;releaseTouches();}
