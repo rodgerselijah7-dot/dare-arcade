@@ -144,6 +144,7 @@ button:disabled{opacity:.35;cursor:default}
 .oppline.in{color:var(--ivory);border-color:var(--gold)}
 .oppline.in .led{background:#7fd08a;box-shadow:0 0 8px #7fd08a}
 .olnote{margin:0;color:var(--mute);font-size:13px;text-align:center}
+.dp-alerts,.dp-orow{border-radius:14px!important;background:var(--panel)!important}
 .toggle{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-align:left;width:100%}
 .toggle .tx{flex:1}
 .sw{width:44px;height:26px;border-radius:999px;background:rgba(240,231,212,.15);position:relative;flex:none;transition:background .2s}
@@ -282,9 +283,13 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
         <button data-hc="random">Random</button>
         <button data-hc="b"><span class="disc b"></span>Black</button>
       </div>
-      <button class="btn gold wide" id="olCreate">Create match</button>
+      <button class="btn gold wide" id="olFind">Find an opponent</button>
+      <p class="olnote" style="margin-top:-6px">Posts an open match anyone can join. Players with match alerts on get a notification.</p>
+      <button class="btn wide" id="olCreate">Create a private match</button>
       <div class="or">or join one</div>
+      <div id="olOpen" hidden></div>
       <div class="joinrow"><input class="field code" id="olCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go"><button class="btn" id="olJoin">Join</button></div>
+      <div id="olAlerts"></div>
     </div>
     <div class="sub" id="olLobby" hidden>
       <div class="codecard"><div class="label">Match code</div><div class="bigcode" id="olCodeShow">----</div><button class="btn sm" id="olCopy">Copy code</button></div>
@@ -390,6 +395,7 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/dare-play.js"></script>
 <script>
 function engineFactory(){
   const VAL={p:100,n:320,b:330,r:500,q:900,k:0};
@@ -1426,11 +1432,23 @@ const rid=(n,abc)=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>abc[b
 const NET={me:rid(12,PEER_ABC),alive:false,room:'',code:'',role:'',opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,
   game:0,hostColor:'w',pres:{},timer:null,inflight:false,again:false,full:false,oppRe:false,joinedAt:0};
 const ONLINE_OK=/^https?:$/.test(location.protocol);
+const DP=window.DAREPlay||null;
+const CHAT=DP&&DP.chat({accent:'#E2B85C',pos:{right:'14px',bottom:'calc(env(safe-area-inset-bottom,0px) + 86px)'},
+  quick:['Good luck','Nice move','Hmm…','Check!','GG','Rematch?','😂','🔥'],
+  onSend(){ NET.pres.chat=CHAT.outbox(); netKick(); }});
 let hcChoice=store.get('hc','w');
 const cleanNick=s=>String(s||'').replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().slice(0,12);
 const myNick=()=>cleanNick($('olNick').value)||'Player';
-$('olNick').value=store.get('nick','');
-$('olNick').addEventListener('change',()=>store.set('nick',cleanNick($('olNick').value)));
+$('olNick').value=store.get('nick','')||(DP?cleanNick(DP.nick()):'');
+$('olNick').addEventListener('change',()=>{ const n=cleanNick($('olNick').value); store.set('nick',n); if(DP) DP.setNick(n); });
+// Open matches ("Find an opponent"): posted to /api/lfg while waiting for someone to join
+function lfgStop(){ if(NET.lfg){ clearInterval(NET.lfgT); DP&&DP.cancel('chess',NET.code); NET.lfg=false; } }
+function joinOpen(code){ netLeave(); for(const id of ['pause','over','promo']) $(id).hidden=true; openOnline(); $('olCode').value=code; enterRoom(code,'g'); return true; }
+if(DP){
+  DP.openList($('olOpen'),'chess',m=>joinOpen(m.code));
+  DP.feed({accent:'#E2B85C',onJoin:m=>m.game==='chess'?joinOpen(m.code):false});
+  DP.alerts.toggle($('olAlerts'),['chess'],{accent:'#E2B85C',label:'Get a notification when someone wants to play chess.'});
+}
 $('olCode').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4); });
 $('olCode').addEventListener('keydown',e=>{ if(e.key==='Enter') $('olJoin').click(); });
 bindPress('[data-hc]','hc',v=>{ hcChoice=v; store.set('hc',v); },hcChoice);
@@ -1446,10 +1464,13 @@ function netPushMoves(){ if(mode!=='online') return; NET.pres.mv=encMoves(); net
 function openOnline(){
   showScreen('scrOnline'); $('olSetup').hidden=false; $('olLobby').hidden=true;
   $('olStatus').textContent=ONLINE_OK?'':'Online play runs on the DARE Arcade site. Open DARE Chess there to play someone.';
-  $('olCreate').disabled=$('olJoin').disabled=!ONLINE_OK;
+  $('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=!ONLINE_OK;
+  if(DP) DP.refresh();
 }
 $('olBack').onclick=()=>{ netLeave(); showScreen('scrMenu'); };
-$('olCreate').onclick=()=>{ let c=''; for(let i=0;i<4;i++) c+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)]; enterRoom(c,'h'); };
+const newCode=()=>{ let c=''; for(let i=0;i<4;i++) c+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)]; return c; };
+$('olCreate').onclick=()=>enterRoom(newCode(),'h');
+$('olFind').onclick=()=>enterRoom(newCode(),'h',true);
 $('olJoin').onclick=()=>{ const c=$('olCode').value.trim().toUpperCase(); if(c.length!==4){ $('olStatus').textContent='Enter the 4-character code from your opponent.'; return; } enterRoom(c,'g'); };
 $('olCopy').onclick=()=>{
   const done=()=>{ $('olCopy').textContent='Copied'; setTimeout(()=>$('olCopy').textContent='Copy code',1400); };
@@ -1462,21 +1483,28 @@ $('olStart').onclick=()=>{
   hostStart(NET.game+1,c);
 };
 
-async function enterRoom(code,role){
-  sfx('select'); store.set('nick',myNick());
-  $('olStatus').textContent=''; $('olCreate').disabled=$('olJoin').disabled=true;
+async function enterRoom(code,role,open){
+  sfx('select'); store.set('nick',myNick()); if(DP) DP.setNick(myNick());
+  $('olStatus').textContent=''; $('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=true;
   netLeave();
   Object.assign(NET,{room:'ch-'+code.toLowerCase(),code,role,opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,game:0,full:false,oppRe:false,
     pres:{app:'chess',role,nick:myNick()},alive:true,joinedAt:Date.now()});
   let d=null;
   try{ d=await roomPost({room:NET.room,peer:NET.me,presence:NET.pres}); }
   catch(e){ NET.alive=false; $('olStatus').textContent=e.message||'Couldn’t connect. Check your connection and try again.'; }
-  $('olCreate').disabled=$('olJoin').disabled=false;
+  $('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=false;
   if(!d) return;
+  if(DP){ DP.busy=true; CHAT.reset(); CHAT.attach(); }
+  if(open&&DP){
+    NET.lfg=true;
+    DP.post('chess',code,myNick()).then(r=>{ if(NET.code===code&&NET.lfg&&!NET.opp) $('olNote').textContent=r.alerted?'Your match is posted. '+r.alerted+' player'+(r.alerted===1?' was':'s were')+' alerted. You can also share the code.':'Your match is posted for anyone to join. You can also share the code.'; })
+      .catch(e=>{ NET.lfg=false; if(NET.code===code) $('olNote').textContent='Couldn’t post the match ('+e.message+'). Share the code instead.'; });
+    NET.lfgT=setInterval(()=>{ if(NET.lfg&&!NET.opp) DP.keep('chess',code); },45000);
+  }
   $('olSetup').hidden=true; $('olLobby').hidden=false;
   $('olCodeShow').textContent=code;
   $('olCopy').hidden=role!=='h'; $('olStart').hidden=role!=='h';
-  $('olNote').textContent=role==='h'?'Send the code to your opponent. They open DARE Chess, tap Play Online, and enter it.':'The host starts the match and picks the colors.';
+  $('olNote').textContent=role!=='h'?'The host starts the match and picks the colors.':open?'Posting your match…':'Send the code to your opponent. They open DARE Chess, tap Play Online, and enter it.';
   netPeers(d.peers||[]);
   NET.timer=setTimeout(netTick,1000);
 }
@@ -1486,6 +1514,7 @@ async function netTick(){
   if(!NET.alive||NET.inflight) return;
   NET.inflight=true; NET.again=false;
   const room=NET.room; let d=null;
+  if(CHAT){ const ob=CHAT.outbox(); if(ob) NET.pres.chat=ob; }
   try{ d=await roomPost({room,peer:NET.me,presence:NET.pres}); setConn(true); }
   catch(e){ setConn(false); }
   NET.inflight=false;
@@ -1499,15 +1528,19 @@ function setConn(ok){ if(ok!==NET.connected){ NET.connected=ok; if(mode==='onlin
 
 function netPeers(list){
   const os=list.filter(p=>p&&p.peer!==NET.me&&p.presence&&p.presence.app==='chess');
+  const hadOpp=!!NET.opp;
   let o=NET.opp?os.find(p=>p.peer===NET.opp):null;
   if(!NET.opp){
     const cand=os.find(p=>p.presence.role!==NET.role&&(NET.role==='h'||!p.presence.opp||p.presence.opp===NET.me));
-    if(cand){ NET.opp=cand.peer; o=cand; NET.full=false; NET.pres.opp=cand.peer; sfx('check'); netKick(); }
+    if(cand){ NET.opp=cand.peer; o=cand; NET.full=false; NET.pres.opp=cand.peer; sfx('check'); lfgStop();
+      if(CHAT){ CHAT.setOpp(cleanNick(cand.presence.nick)||'Opponent'); CHAT.note((cleanNick(cand.presence.nick)||'Your opponent')+' joined the match'); }
+      netKick(); }
     else NET.full=NET.role==='g'&&os.some(p=>p.presence.role==='h');
   }
   if(o&&NET.role==='g'&&o.presence.opp&&o.presence.opp!==NET.me){ NET.opp=null; o=null; NET.full=true; delete NET.pres.opp; }
   const was=NET.oppOnline; NET.oppOnline=!!o;
-  if(o) NET.oppNick=cleanNick(o.presence.nick)||'Opponent';
+  if(o){ NET.oppNick=cleanNick(o.presence.nick)||'Opponent'; if(CHAT){ CHAT.setOpp(NET.oppNick); CHAT.receive(o.peer,o.presence.chat); } }
+  if(CHAT&&hadOpp&&NET.opp&&was!==!!o) CHAT.note(o?NET.oppNick+' is back':(NET.oppNick||'Your opponent')+' disconnected');
   if(mode!=='online'){
     if(o&&NET.role==='g'&&(o.presence.go|0)>NET.game) return startOnlineGame(o.presence.go|0,o.presence.hc==='w'?'b':'w');
     return updateLobby();
@@ -1577,13 +1610,14 @@ function netResign(){
   netKick(); showOver();
 }
 function netLeave(){
+  lfgStop(); if(DP){ DP.busy=false; CHAT.detach(); }
   if(!NET.alive&&!NET.room) return;
   NET.alive=false; clearTimeout(NET.timer);
   const room=NET.room; NET.room='';
   if(room) roomPost({room,peer:NET.me,leave:true},true).catch(()=>{});
   $('ovAgain').disabled=false; $('ovAgain').textContent='Play again';
 }
-window.addEventListener('pagehide',()=>{ if(NET.room) roomPost({room:NET.room,peer:NET.me,leave:true},true).catch(()=>{}); });
+window.addEventListener('pagehide',()=>{ lfgStop(); if(NET.room) roomPost({room:NET.room,peer:NET.me,leave:true},true).catch(()=>{}); });
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ for(const id of ['promo','pause']) if(!$(id).hidden){ $(id).hidden=true; return; } }
@@ -1594,6 +1628,7 @@ document.addEventListener('keydown',e=>{
 goMenu();
 cam.phi=cam.defPhi;
 loop();
+if(DP&&DP.joinCode()){ const c=DP.joinCode(); DP.clearJoin(); if(ONLINE_OK) joinOpen(c); }
 })();
 </script>
 </body>

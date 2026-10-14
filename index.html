@@ -128,6 +128,23 @@ h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04e
 .row.pass .status{color:var(--wall);background:var(--red);border-color:var(--red);font-style:normal;font-family:var(--display);font-size:18px;letter-spacing:.06em;padding:4px 14px 2px}
 .row.pass.owned .status{background:var(--black);border-color:var(--black)}
 .unlock-link{background:none;border:0;padding:0;font:inherit;color:var(--black);text-decoration:underline;cursor:pointer}
+/* play live */
+.live{margin-top:56px;border-top:1px solid var(--hair);padding-top:22px}
+.live .lede{color:var(--grey);font-size:17px;margin-bottom:14px}
+.live-games{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.live-games a{display:block;text-decoration:none;border:1px solid var(--black);padding:12px 14px 10px;color:var(--black)}
+.live-games a b{display:block;font-family:var(--display);font-weight:400;font-size:24px;letter-spacing:.04em;line-height:1}
+.live-games a span{font-size:15px;color:var(--grey);font-style:italic}
+.live-games a:hover{background:var(--black);color:var(--wall)}
+.live-games a:hover span{color:var(--wall)}
+#liveOpen{margin-bottom:10px}
+html .dp{--dp-bg:var(--wall);--dp-ink:var(--black);--dp-dim:var(--grey);--dp-line:var(--hair);--dp-acc:var(--red)!important}
+html .dp-sw{background:var(--hair)}
+html .dp-toast{border-color:var(--black);border-left-color:var(--red)}
+.live .dp-orow,.live .dp-alerts{border-radius:0;background:transparent}
+.live .dp-join{color:#fff}
+.dp-toast .dp-join{color:#fff}
+.dp-toast{border-radius:0}
 footer{padding:40px 0 34px;color:var(--grey);font-size:16px}
 footer a{color:var(--black)}
 footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
@@ -292,6 +309,17 @@ html.standalone .fs-link,html.standalone .tip{display:none}
       </a>
       <p class="pricing"><a href="/shop/" style="color:var(--black)">Shop the full games</a> · Bought one? <button class="unlock-link" id="unlockBtn" type="button">Enter your unlock code</button></p>
     </section>
+    <section class="live" aria-labelledby="liveH">
+      <h2 id="liveH">Play live</h2>
+      <p class="lede">Go head to head with another player on their own phone, and chat during the match.</p>
+      <div class="live-games">
+        <a href="/buckets/"><b>DARE Buckets</b><span>Online shootout</span></a>
+        <a href="/chess/"><b>DARE Chess</b><span>Online match</span></a>
+      </div>
+      <div id="liveOpen" hidden></div>
+      <div id="liveOpen2" hidden></div>
+      <div id="liveAlerts"></div>
+    </section>
   </main>
 
   <footer>
@@ -410,6 +438,16 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 })();
 </script>
 <script src="/dare-unlock.js"></script>
+<script src="/dare-play.js"></script>
+<script>
+if(window.DAREPlay){
+  DAREPlay.openList(document.getElementById('liveOpen'),'buckets');
+  DAREPlay.openList(document.getElementById('liveOpen2'),'chess');
+  DAREPlay.alerts.toggle(document.getElementById('liveAlerts'),['buckets','chess'],{label:'Get a notification when someone wants to play Buckets or Chess.',onNeedsInstall:()=>{const b=document.querySelector('[data-hs]');if(b)b.click()}});
+  const startFeed=()=>DAREPlay.feed({});
+  if(document.documentElement.classList.contains('gated')){const mo=new MutationObserver(()=>{if(!document.documentElement.classList.contains('gated')){mo.disconnect();startFeed()}});mo.observe(document.documentElement,{attributes:true,attributeFilter:['class']})}else startFeed();
+}
+</script>
 <script>
 // Show what this device has unlocked
 (function(){

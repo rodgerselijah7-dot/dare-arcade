@@ -57,6 +57,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .net{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;pointer-events:none}
 .net i{width:7px;height:7px;border-radius:50%;background:#6fcf7a;box-shadow:0 0 6px #6fcf7a}
 .net.bad i{background:var(--amber-hot);box-shadow:0 0 6px var(--amber-hot)}
+#online{justify-content:flex-start;padding-top:max(24px,env(safe-area-inset-top))}
+#online>:first-child{margin-top:auto}#online>:last-child{margin-bottom:auto}
+.dp-orow .dp-join,.dp-alerts{font-family:var(--ui)}
 .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,rgba(13,12,11,.55),rgba(13,12,11,.9) 70%);animation:fade .35s ease-out;overflow-y:auto}
 @keyframes fade{from{opacity:0}}
 .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted)}
@@ -163,13 +166,16 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
       <div class="kicker">Online · Head to Head</div>
       <h2 class="h2">Play a Friend</h2>
       <div class="field"><label for="nick">Your name</label><input id="nick" maxlength="12" autocomplete="nickname" placeholder="Player"></div>
-      <button class="btn" id="createBtn" style="width:100%;max-width:280px">Create Match</button>
-      <div class="or">or join with a code</div>
+      <button class="btn" id="findBtn" style="width:100%;max-width:280px">Find Opponent<small>Open match · alerts players</small></button>
+      <button class="btn alt slim" id="createBtn" style="width:100%;max-width:280px">Private Match</button>
+      <div class="or">or join a match</div>
+      <div id="openList" style="width:100%;max-width:320px" hidden></div>
       <div class="joinrow">
         <div class="field"><label for="codeIn">Match code</label><input id="codeIn" class="code" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD"></div>
         <button class="btn alt slim" id="joinBtn">Join</button>
       </div>
       <p class="status" id="onlineStatus"></p>
+      <div id="alertsRow" style="width:100%;max-width:320px"></div>
       <button class="btn alt slim" id="onlineBack">Back</button>
     </div>
 
@@ -199,6 +205,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
   </div>
 </div>
 
+<script src="/dare-play.js"></script>
 <script>
 (function(){
 const $=id=>document.getElementById(id);
@@ -814,20 +821,35 @@ NET.roomP=(window.claude&&typeof window.claude.use==='function')
   ?window.claude.use('room').catch(()=>null)
   :Promise.resolve(/^https?:$/.test(location.protocol)?httpRoom():null);
 const CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const DP=window.DAREPlay||null;
+const CHAT=DP&&DP.chat({accent:'#F4A83A',quick:['Good luck','Splash!','Nice shot','You\'re cooking 🔥','GG','Rematch?','😂'],
+  pos:{right:'14px',bottom:'calc(env(safe-area-inset-bottom,0px) + 18px)'},onSend(){sendPresence(true)}});
+let chatBtnOn=true;
+function lfgStop(){if(NET.lfg){clearInterval(NET.lfgT);DP&&DP.cancel('buckets',NET.code);NET.lfg=false}}
+async function joinOpen(code){netLeave();S.mode='solo';showOnly('online');$('codeIn').value=code;$('onlineStatus').textContent='';await NET.roomP;enterRoom(code,'g');return true}
+if(DP){
+  DP.openList($('openList'),'buckets',m=>{joinOpen(m.code);return true});
+  DP.feed({accent:'#F4A83A',onJoin:m=>m.game==='buckets'?(joinOpen(m.code),true):false});
+  DP.alerts.toggle($('alertsRow'),['buckets'],{accent:'#F4A83A',label:'Get a notification when someone wants to play.'});
+}
 const clean=s=>String(s||'').replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().slice(0,12);
 const myNick=()=>clean($('nick').value)||'Player';
-$('nick').value=store.get('dare-buckets-nick')||'';
-$('nick').addEventListener('change',()=>store.set('dare-buckets-nick',clean($('nick').value)));
+$('nick').value=store.get('dare-buckets-nick')||(DP?clean(DP.nick()):'');
+$('nick').addEventListener('change',()=>{const n=clean($('nick').value);store.set('dare-buckets-nick',n);if(DP)DP.setNick(n)});
 $('codeIn').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)});
 $('codeIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('joinBtn').click()});
 
 $('onlineBtn').onclick=async()=>{
   showOnly('online');$('onlineStatus').textContent='';
   const room=await NET.roomP;
-  if(!room){$('onlineStatus').textContent='Online play needs this game opened in Claude while signed in. Both players need access to the page.';$('createBtn').disabled=$('joinBtn').disabled=true}
+  if(!room){$('onlineStatus').textContent='Online play needs this game opened in Claude while signed in. Both players need access to the page.';$('createBtn').disabled=$('joinBtn').disabled=$('findBtn').disabled=true}
+  if(DP)DP.refresh();
 };
+$('findBtn').hidden=!DP||!DP.online;
 $('onlineBack').onclick=()=>showOnly('intro');
-$('createBtn').onclick=()=>{let c='';for(let i=0;i<4;i++)c+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)];enterRoom(c,'h')};
+const newCode=()=>{let c='';for(let i=0;i<4;i++)c+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)];return c};
+$('createBtn').onclick=()=>enterRoom(newCode(),'h');
+$('findBtn').onclick=()=>enterRoom(newCode(),'h',true);
 $('joinBtn').onclick=()=>{const c=$('codeIn').value.trim().toUpperCase();if(c.length!==4){$('onlineStatus').textContent='Enter the 4-character code from your opponent.';return}enterRoom(c,'g')};
 $('copyBtn').onclick=()=>{
   const done=()=>{$('copyBtn').textContent='Copied';setTimeout(()=>$('copyBtn').textContent='Copy code',1400)};
@@ -837,19 +859,27 @@ function selectCode(){const r=document.createRange();r.selectNodeContents($('cod
 $('leaveBtn').onclick=menu;
 $('tipBtn').onclick=()=>{if(NET.role==='h'&&NET.oppPeer)netGo()};
 
-async function enterRoom(code,role){
+async function enterRoom(code,role,open){
   unlockAudio();
-  store.set('dare-buckets-nick',myNick());
-  $('onlineStatus').textContent='Connecting…';$('createBtn').disabled=$('joinBtn').disabled=true;
+  store.set('dare-buckets-nick',myNick());if(DP)DP.setNick(myNick());
+  $('onlineStatus').textContent='Connecting…';$('createBtn').disabled=$('joinBtn').disabled=$('findBtn').disabled=true;
   const room=await NET.roomP;
   let lobby=null;
   try{lobby=room&&await room.join('bk-'+code.toLowerCase())}catch(e){lobby=null}
-  $('createBtn').disabled=$('joinBtn').disabled=false;
+  $('createBtn').disabled=$('joinBtn').disabled=$('findBtn').disabled=false;
   if(!lobby){$('onlineStatus').textContent='Couldn’t connect to the match. Check your connection and try again.';return}
   Object.assign(NET,{room,lobby,code,role,oppPeer:null,oppNick:'',oppFinal:false,lastGo:0,round:0,want:0,lastSent:'',seenEv:0,leftMsg:''});
   S.mode='online';S.state='lobby';setupPlayers();players.forEach(spawn);
   $('codeShow').textContent=code;
   $('lobbyHow').hidden=role!=='h';$('copyBtn').hidden=role!=='h';
+  $('lobbyHow').innerHTML='Send this code to your opponent. They open DARE Buckets, tap <b>Online</b>, and join with it.';
+  if(CHAT){DP.busy=true;CHAT.reset();CHAT.attach();chatBtnOn=true;CHAT.showButton(true)}
+  if(open&&DP){
+    NET.lfg=true;$('lobbyHow').textContent='Posting your match…';
+    DP.post('buckets',code,myNick()).then(r=>{if(NET.code===code&&NET.lfg&&!NET.oppPeer)$('lobbyHow').textContent=r.alerted?'Your match is posted. '+r.alerted+' player'+(r.alerted===1?' was':'s were')+' alerted. You can also send the code.':'Your match is posted for anyone to join. You can also send the code.'})
+      .catch(e=>{NET.lfg=false;if(NET.code===code)$('lobbyHow').textContent='Couldn’t post the match ('+e.message+'). Send the code instead.'});
+    NET.lfgT=setInterval(()=>{if(NET.lfg&&!NET.oppPeer)DP.keep('buckets',code)},45000);
+  }
   $('lobbyStatus').textContent=role==='g'?'Looking for the host…':'';
   showOnly('lobby');updateLobby();
   NET.unsubPeers=lobby.onPeers(()=>{netPeers()},()=>netDropped());
@@ -867,6 +897,7 @@ function netPeers(){
   const os=others();
   const cur=NET.oppPeer?os.find(p=>p.peer===NET.oppPeer):null;
   if(NET.oppPeer&&!cur){ // opponent closed the game or lost connection
+    if(CHAT)CHAT.note((NET.oppNick||'Your opponent')+' left the match');
     if(live()||S.state==='count'){forfeit()}
     else if(S.state==='over'){$('overStatus').textContent=(NET.oppNick||'Opponent')+' left the match.';$('againBtn').disabled=true}
     NET.oppPeer=null;
@@ -875,12 +906,13 @@ function netPeers(){
   if(!NET.oppPeer&&S.state==='lobby'){
     // host takes the first guest; a guest takes the host unless the host already locked someone else
     const cand=os.find(p=>p.presence.role!==NET.role&&(NET.role==='h'||!p.presence.opp||p.presence.opp===myPeer()));
-    if(cand){NET.oppPeer=cand.peer;sfx.join()}
+    if(cand){NET.oppPeer=cand.peer;sfx.join();lfgStop();if(CHAT){const n=clean(cand.presence.nick)||'Opponent';CHAT.setOpp(n);CHAT.note(n+' joined the match')}}
     else if(NET.role==='g'&&os.some(p=>p.presence.role==='h'))NET.full=true;
   }
   const o=NET.oppPeer&&os.find(p=>p.peer===NET.oppPeer);
   if(o){
     NET.oppNick=clean(o.presence.nick)||'Opponent';
+    if(CHAT){CHAT.setOpp(NET.oppNick);CHAT.receive(o.peer,o.presence.chat)}
     if(NET.role==='g'&&o.presence.opp&&o.presence.opp!==myPeer()){NET.oppPeer=null;NET.full=true}
   }
   updateLobby();
@@ -911,6 +943,7 @@ function beginOnline(){
 }
 function netTick(dt){
   if(!NET.lobby)return;
+  if(CHAT){const on=!(live()||S.state==='count');if(on!==chatBtnOn){chatBtnOn=on;CHAT.showButton(on)}}
   const os=others(),opp=NET.oppPeer?os.find(p=>p.peer===NET.oppPeer):null;
   const pr=opp&&opp.presence;
   // guest follows the host's start signal
@@ -964,6 +997,7 @@ function sendPresence(force,extra){
     ev:S.ev,ls:S.shot,
     rx:(live()||S.state==='count')&&b&&!b.fly?r3(b.x/W):null};
   if(NET.role==='h'){p.go=NET.lastGo;p.opp=NET.oppPeer||null}
+  if(CHAT){const ob=CHAT.outbox();if(ob)p.chat=ob}
   if(extra)Object.assign(p,extra);
   const js=JSON.stringify(p);
   if(!force&&js===NET.lastSent)return;
@@ -1000,12 +1034,15 @@ function netDropped(){
   $('netBadge').classList.add('bad');$('netText').textContent='Offline';
 }
 function netLeave(){
+  lfgStop();if(CHAT){DP.busy=false;CHAT.detach()}
   if(NET.unsubPeers)NET.unsubPeers();if(NET.unsubConn)NET.unsubConn();
   if(NET.lobby)NET.lobby.leave().catch(()=>{});
   Object.assign(NET,{lobby:null,oppPeer:null,unsubPeers:null,unsubConn:null,code:'',role:''});
   $('netBadge').hidden=true;
 }
 NET.joinedAt=Date.now();
+addEventListener('pagehide',()=>lfgStop());
+if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(DP.online)joinOpen(c)}
 $('arcadeLink').hidden=!!window.claude||!/^https?:$/.test(location.protocol); // shown on the arcade site, not inside Claude
 
 /* ---------- drawing ---------- */
