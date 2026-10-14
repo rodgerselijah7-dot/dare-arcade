@@ -1284,7 +1284,7 @@ function startGame(){
 }
 function pause(){if(state!=='playing')return;state='paused';app.classList.remove('playing');firing=false;releaseTouches();show('pauseS',true);if(document.pointerLockElement)document.exitPointerLock();}
 function resume(){if(state!=='paused')return;show('pauseS',false);state='playing';app.classList.add('playing');initAudio();tryLock();last=performance.now();}
-function toMenu(){state='menu';app.classList.remove('playing');$('fade').classList.remove('on');show('pauseS',false);show('over',false);show('hud',false);el.cross.hidden=true;$('bestN').textContent=best.toLocaleString();setupMenuScene();if(document.pointerLockElement)document.exitPointerLock();}
+function toMenu(){state='menu';app.classList.remove('playing');firing=false;releaseTouches();travelT=-1;waveActive=false;bossPending=false;bossZ=null;$('fade').classList.remove('on');show('pauseS',false);show('over',false);show('arsenal',false);show('hud',false);$('boss').hidden=true;el.cross.hidden=true;el.banner.classList.remove('go');el.toast.classList.remove('go');tintT=0;$('tint').style.background='transparent';$('bestN').textContent=best.toLocaleString();setupMenuScene();show('menu',true);if(document.pointerLockElement)document.exitPointerLock();if(wl){wl.release().catch(()=>{});wl=null;}}
 function die(){state='dying';app.classList.remove('playing');dyingT=0;firing=false;releaseTouches();if(document.pointerLockElement)document.exitPointerLock();}
 function gameOver(){
   state='over';show('hud',false);el.cross.hidden=true;
