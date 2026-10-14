@@ -1,0 +1,16 @@
+{
+  "name": "DARE Dice",
+  "short_name": "DARE Dice",
+  "description": "Roll six 3D dice, keep what scores, and bank it before you bust. Spell D-A-R-E for 1,000. Shake your phone to roll. By Dontae Amare.",
+  "start_url": "/dice/",
+  "scope": "/dice/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0a0c",
+  "theme_color": "#0d0a0c",
+  "icons": [
+    { "src": "/dice/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/dice/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/dice/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

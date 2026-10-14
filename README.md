@@ -13,8 +13,9 @@ Browser games by Dontae Amare. Static site — no build step.
 /buckets/              DARE Buckets (single-file game + icons + manifest)
 /chess/                DARE Chess (single-file 3D game + icons + manifest; loads three.js r128 from cdnjs)
 /connect/              DARE Connect (single-file game + icons + manifest)
+/dice/                 DARE Dice (single-file 3D dice game + icons + manifest; loads three.js r128 from cdnjs)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess and DARE Connect online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -54,8 +55,15 @@ Every push to `main` redeploys automatically.
 - Gold always moves first. The host is gold in the first game and colors swap on every rematch. Leaving mid-game counts as a loss, and a player who stays disconnected for 45 seconds loses the game.
 - The same `connect/index.html` also works as a Claude artifact, with Vs CPU and 2 Player only.
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect)
-- `dare-play.js` is shared by all three games. It adds:
+## DARE Dice
+- Push-your-luck dice: six 3D dice (D, A, R, E, Crown, Star faces), each a different color. Keep scoring dice, then roll the rest or bank. A roll with nothing that scores is a bust. First to 4,000; if the first player gets there, the other gets one last turn.
+- Scoring: Crown 100, Star 50, D-A-R-E 1,000, three of a letter 300, three Stars 500, three Crowns 1,000, and each extra matching die doubles a set.
+- Shake to roll: phones roll the dice when shaken (device motion). iPhones ask for motion access the first time a player taps Play or Roll. Players can turn it off with the Shake button.
+- Online uses the same `/api/room` (rooms are named `dd-<code>`). Each game is a list of tokens: `r<faces>` for a roll, `k<dice>` for a keep, `b` for a bank. Only the player whose turn it is rolls, and each phone sends the whole list with every poll, so a missed poll never loses a roll.
+- Modes: Vs CPU, 2 Player (one phone) and Online (two phones with a 4-character match code). The host rolls first; first roll swaps on every rematch.
+
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
+- `dare-play.js` is shared by all four games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
   - **Match alerts**: phone notifications when someone posts an open match (Web Push through `/sw.js`). Players turn them on with the switch on a game's online screen. iPhones need the arcade on the Home Screen first (iOS 16.4+).

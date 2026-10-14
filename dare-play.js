@@ -1,5 +1,5 @@
 /* DARE Arcade · play together
-   Shared by the arcade lobby, DARE Buckets, DARE Chess and DARE Connect:
+   Shared by the arcade lobby, DARE Buckets, DARE Chess, DARE Connect and DARE Dice:
    - DAREPlay.chat(opts)    in-match chat. Messages ride inside each player's match presence, so they work
                             over /api/room and inside Claude alike. outbox() goes into presence, receive() reads.
    - DAREPlay.feed(opts)    "X wants to play" alerts for open matches, polled from /api/lfg while the page is open.
@@ -9,7 +9,7 @@
   if (window.DAREPlay) return;
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   const ss = { get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} } };
-  const GAMES = { buckets: "DARE Buckets", chess: "DARE Chess", connect: "DARE Connect" };
+  const GAMES = { buckets: "DARE Buckets", chess: "DARE Chess", connect: "DARE Connect", dice: "DARE Dice" };
   const ONLINE = /^https?:$/.test(location.protocol) && !window.claude;
   const peer = (() => { let p = ls.get("dare-peer"); if (!/^[a-z0-9]{12}$/.test(p || "")) { p = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => "abcdefghijklmnopqrstuvwxyz0123456789"[b % 36]).join(""); ls.set("dare-peer", p); } return p; })();
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
