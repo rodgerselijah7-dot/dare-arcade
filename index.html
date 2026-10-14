@@ -24,6 +24,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script>
+if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('standalone');
+</script>
+<script>
 // Enter gate: shows once per visit. Coming back from a game (or ?enter=0) goes straight to the lobby.
 (function(){var d=document.documentElement,q=location.search,ok=false;
   try{ok=sessionStorage.getItem('dare-entered')==='1'}catch(e){}
@@ -160,6 +163,41 @@ html.leaving .gate{transform:translateY(-100%)}
 @keyframes blink{to{visibility:hidden}}
 .g-foot{text-align:center;font-style:italic;color:#8a8a8a;font-size:15px}
 @media (prefers-reduced-motion:reduce){.g-hint{animation:none}.gate{transition:opacity .3s}html.leaving .gate{transform:none;opacity:0}}
+
+/* ===== Home Screen guide ===== */
+.fs-link{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:none;border:0;cursor:pointer;
+  font-family:var(--display);letter-spacing:.18em;font-size:16px;color:#fff;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.35)}
+.fs-link svg{width:16px;height:16px}
+.fs-link:hover{color:#EF3B2F;border-color:#EF3B2F}
+.tip-btn{background:none;border:0;padding:0;font:inherit;color:var(--black);text-decoration:underline;cursor:pointer}
+html.standalone .fs-link,html.standalone .tip{display:none}
+.hs{position:fixed;inset:0;z-index:80;display:none}
+.hs.open{display:block}
+.hs-scrim{position:absolute;inset:0;background:rgba(0,0,0,.6);opacity:0;transition:opacity .25s}
+.hs.show .hs-scrim{opacity:1}
+.hs-card{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--wall);color:var(--black);
+  padding:22px 22px calc(env(safe-area-inset-bottom,0px) + 24px);border-top:3px solid var(--red);
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:92dvh;overflow:auto}
+.hs.show .hs-card{transform:none}
+.hs-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.hs h2{margin:0}
+.hs-x{background:none;border:0;cursor:pointer;color:var(--black);width:40px;height:40px;margin:-8px -10px 0 0;display:grid;place-items:center}
+.hs-x svg{width:20px;height:20px}
+.hs-lede{color:var(--grey);font-size:17px;margin:2px 0 14px}
+.hs-tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--black)}
+.hs-tabs button{font-family:var(--display);font-size:20px;letter-spacing:.08em;padding:10px 0 7px;border:0;cursor:pointer;background:var(--wall);color:var(--black)}
+.hs-tabs button[aria-selected=true]{background:var(--black);color:var(--wall)}
+.hs ol{list-style:none;margin:18px 0 0;padding:0;counter-reset:s}
+.hs li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair);font-size:18px;line-height:1.4}
+.hs li:last-child{border-bottom:0}
+.hs li::before{content:counter(s);font-family:var(--display);font-size:22px;width:34px;height:34px;display:grid;place-items:center;background:var(--red);color:#fff;padding-top:3px}
+.hs b{font-weight:600}
+.ico{display:inline-grid;place-items:center;width:26px;height:26px;border:1px solid var(--hair);border-radius:6px;vertical-align:-6px;margin:0 2px}
+.ico svg{width:16px;height:16px}
+.hs-note{font-size:15px;color:var(--grey);font-style:italic;margin-top:10px}
+.hs-install{display:none;width:100%;margin-top:6px;font-family:var(--display);font-size:24px;letter-spacing:.08em;background:var(--red);color:#fff;border:0;padding:12px 0 9px;cursor:pointer}
+.hs-install.ready{display:block}
+@media (prefers-reduced-motion:reduce){.hs-card,.hs-scrim{transition:none}}
 </style>
 </head>
 <body>
@@ -172,6 +210,7 @@ html.leaving .gate{transform:translateY(-100%)}
     <button class="enter" id="enterBtn" type="button">ENTER
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg></button>
     <span class="g-hint" aria-hidden="true">PRESS START</span>
+    <div><button class="fs-link" type="button" data-hs><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="1.5" width="10" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 15.5h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>PLAY FULL SCREEN</button></div>
   </div>
   <p class="g-foot">Desired Ambitions Requires Execution.</p>
 </div>
@@ -192,7 +231,7 @@ html.leaving .gate{transform:translateY(-100%)}
         Play now
       </a>
       <p class="pricing" data-game="the-last-don">District 1 is free to play. Full game $4.99.</p>
-      <span class="tip">Plays in your browser. On a phone, use Add to Home Screen to play it full screen.</span>
+      <span class="tip">Plays in your browser. On a phone, <button class="tip-btn" type="button" data-hs>add it to your Home Screen</button> to play full screen.</span>
     </section>
 
     <section class="queue" aria-labelledby="next">
@@ -311,7 +350,63 @@ html.leaving .gate{transform:translateY(-100%)}
   }
   btn.addEventListener('click',enter);
   gate.addEventListener('click',e=>{if(e.target===gate||e.target.closest('.g-title,.g-hint'))enter()});
-  addEventListener('keydown',e=>{if(!done&&(e.key==='Enter'||e.key===' '||e.key==='Escape')){e.preventDefault();enter()}});
+  addEventListener('keydown',e=>{if(!done&&!document.getElementById('hs').classList.contains('open')&&(e.key==='Enter'||e.key===' '||e.key==='Escape')){e.preventDefault();enter()}});
+})();
+</script>
+<div class="hs" id="hs" aria-hidden="true">
+  <div class="hs-scrim" data-hs-close></div>
+  <div class="hs-card" role="dialog" aria-modal="true" aria-labelledby="hsTitle">
+    <div class="hs-head"><h2 id="hsTitle">Play full screen</h2>
+      <button class="hs-x" type="button" data-hs-close aria-label="Close"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4 4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+    <p class="hs-lede">Save the DARE Arcade to your Home Screen. It opens like an app, with no browser bars in the way.</p>
+    <div class="hs-tabs" role="tablist">
+      <button type="button" role="tab" id="tabIos" aria-controls="paneIos" aria-selected="true">iPhone</button>
+      <button type="button" role="tab" id="tabAnd" aria-controls="paneAnd" aria-selected="false">Android</button>
+    </div>
+    <div role="tabpanel" id="paneIos" aria-labelledby="tabIos">
+      <ol>
+        <li><span>Open this page in <b>Safari</b>.</span></li>
+        <li><span>Tap the <b>Share</b> button <span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v11M6.5 5.5 10 2l3.5 3.5" fill="none" stroke="#0A84FF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 8H5v10h10V8h-2" fill="none" stroke="#0A84FF" stroke-width="1.7" stroke-linejoin="round"/></svg></span> in the toolbar. If you don't see the toolbar, tap the bottom of the screen.</span></li>
+        <li><span>Scroll down and tap <b>Add to Home Screen</b> <span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 6.5v7M6.5 10h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>.</span></li>
+        <li><span>Tap <b>Add</b> in the top-right corner.</span></li>
+        <li><span>Open <b>DARE Arcade</b> from your Home Screen to play full screen.</span></li>
+      </ol>
+      <p class="hs-note">On newer iPhones, Chrome works too: tap the Share button next to the address bar, then Add to Home Screen.</p>
+    </div>
+    <div role="tabpanel" id="paneAnd" aria-labelledby="tabAnd" hidden>
+      <button class="hs-install" id="hsInstall" type="button">Install DARE Arcade</button>
+      <ol>
+        <li><span>Open this page in <b>Chrome</b>.</span></li>
+        <li><span>Tap the <b>menu</b> button <span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="4" r="1.8" fill="currentColor"/><circle cx="10" cy="10" r="1.8" fill="currentColor"/><circle cx="10" cy="16" r="1.8" fill="currentColor"/></svg></span> in the top-right corner.</span></li>
+        <li><span>Tap <b>Add to Home screen</b> (on some phones it says <b>Install app</b>).</span></li>
+        <li><span>Tap <b>Install</b> or <b>Add</b> to confirm.</span></li>
+        <li><span>Open <b>DARE Arcade</b> from your Home Screen to play full screen.</span></li>
+      </ol>
+      <p class="hs-note">Samsung Internet: tap the menu button at the bottom, then Add page to, then Home screen.</p>
+    </div>
+  </div>
+</div>
+<script>
+// Home Screen guide (iPhone / Android)
+(function(){
+  const hs=document.getElementById('hs'),tI=document.getElementById('tabIos'),tA=document.getElementById('tabAnd'),
+        pI=document.getElementById('paneIos'),pA=document.getElementById('paneAnd'),inst=document.getElementById('hsInstall');
+  const ua=navigator.userAgent,isAndroid=/Android/i.test(ua);
+  let last=null,deferred=null;
+  function tab(and){tI.setAttribute('aria-selected',!and);tA.setAttribute('aria-selected',and);pI.hidden=and;pA.hidden=!and;}
+  function open(){last=document.activeElement;tab(isAndroid);hs.classList.add('open');hs.setAttribute('aria-hidden','false');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>hs.classList.add('show')));hs.querySelector('.hs-x').focus({preventScroll:true});}
+  function close(){hs.classList.remove('show');hs.setAttribute('aria-hidden','true');
+    setTimeout(()=>hs.classList.remove('open'),matchMedia('(prefers-reduced-motion: reduce)').matches?0:300);
+    if(last&&last.isConnected)last.focus({preventScroll:true});}
+  document.querySelectorAll('[data-hs]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();open()}));
+  hs.querySelectorAll('[data-hs-close]').forEach(b=>b.addEventListener('click',close));
+  tI.onclick=()=>tab(false);tA.onclick=()=>tab(true);
+  addEventListener('keydown',e=>{if(hs.classList.contains('open')&&e.key==='Escape'){e.stopImmediatePropagation();e.preventDefault();close()}},true);
+  // Android Chrome: one-tap install when the browser offers it
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;inst.classList.add('ready')});
+  inst.onclick=async()=>{if(!deferred)return;deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;inst.classList.remove('ready');close()};
+  addEventListener('appinstalled',()=>{document.documentElement.classList.add('standalone');close()});
 })();
 </script>
 <script src="/dare-unlock.js"></script>
