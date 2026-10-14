@@ -56,8 +56,8 @@ Every push to `main` redeploys automatically.
 - The same `connect/index.html` also works as a Claude artifact, with Vs CPU and 2 Player only.
 
 ## DARE Dice
-- Push-your-luck dice: six 3D dice (D, A, R, E, Crown, Star faces), each a different color. Keep scoring dice, then roll the rest or bank. A roll with nothing that scores is a bust. First to 4,000; if the first player gets there, the other gets one last turn.
-- Scoring: Crown 100, Star 50, D-A-R-E 1,000, three of a letter 300, three Stars 500, three Crowns 1,000, and each extra matching die doubles a set.
+- Push-your-luck dice with four standard 3D dice (three.js r128), each a different color. Keep scoring dice, then roll the rest or bank. A roll with nothing that scores is a bust. Score with all four and you roll all four again (hot dice). First to 3,000; if the first player gets there, the other gets one last turn.
+- Scoring: 1 = 100, 5 = 50, three of a kind = face × 100 (three 1s = 1,000), four of a kind doubles that, a straight of four (1-2-3-4, 2-3-4-5, 3-4-5-6) = 500.
 - Shake to roll: phones roll the dice when shaken (device motion). iPhones ask for motion access the first time a player taps Play or Roll. Players can turn it off with the Shake button.
 - Online uses the same `/api/room` (rooms are named `dd-<code>`). Each game is a list of tokens: `r<faces>` for a roll, `k<dice>` for a keep, `b` for a bank. Only the player whose turn it is rolls, and each phone sends the whole list with every poll, so a missed poll never loses a roll.
 - Modes: Vs CPU, 2 Player (one phone) and Online (two phones with a 4-character match code). The host rolls first; first roll swaps on every rematch.

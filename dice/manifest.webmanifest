@@ -1,7 +1,7 @@
 {
   "name": "DARE Dice",
   "short_name": "DARE Dice",
-  "description": "Roll six 3D dice, keep what scores, and bank it before you bust. Spell D-A-R-E for 1,000. Shake your phone to roll. By Dontae Amare.",
+  "description": "Roll four 3D dice, keep what scores, and bank it before you bust. Shake your phone to roll. By Dontae Amare.",
   "start_url": "/dice/",
   "scope": "/dice/",
   "display": "standalone",

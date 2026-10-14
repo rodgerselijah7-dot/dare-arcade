@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0d0a0c">
-<meta name="description" content="DARE Dice by Dontae Amare. Roll six dice, keep what scores, and bank it before you bust. Spell D-A-R-E for 1,000. Play the computer, a friend on the same phone, or a friend online.">
+<meta name="description" content="DARE Dice by Dontae Amare. Roll four 3D dice, keep what scores, and bank it before you bust. Shake your phone to roll. Play the computer, a friend on the same phone, or a friend online.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DARE Dice">
@@ -200,8 +200,8 @@ input{-webkit-user-select:text;user-select:text}
     <button class="btn ghost" id="resume" hidden>Resume game</button>
   </div>
   <ul class="howto">
-    <li><b>Roll</b>Throw six dice: D, A, R, E, Crown and Star faces.</li>
-    <li><b>Keep</b>Set aside scoring dice. Spell D-A-R-E for 1,000.</li>
+    <li><b>Roll</b>Throw four dice. Shake your phone or tap Roll.</li>
+    <li><b>Keep</b>Set aside scoring dice: 1s, 5s, three of a kind, straights.</li>
     <li><b>Bank</b>Bank your points or roll on. No scoring dice means bust.</li>
   </ul>
   <div class="links"><button class="linkbtn" id="rulesTitle">Scoring and rules</button></div>
@@ -255,7 +255,7 @@ input{-webkit-user-select:text;user-select:text}
     <div class="plate p1" id="pl1"><div class="row"><span class="nm" id="n1">You</span><span class="pd" id="pd1"></span></div><span class="sc" id="sc1">0</span><div class="track"><i id="tr1"></i><b id="tb1"></b></div></div>
     <div class="plate p2" id="pl2"><div class="row"><span class="nm" id="n2">CPU</span><span class="pd" id="pd2"></span></div><span class="sc" id="sc2">0</span><div class="track"><i id="tr2"></i><b id="tb2"></b></div></div>
   </div>
-  <div class="target"><span>0</span><span>First to 4,000</span></div>
+  <div class="target"><span>0</span><span>First to 3,000</span></div>
   <div class="status" id="status" aria-live="polite"></div>
   <div class="table" id="table">
     <div class="turnline"><div class="tp"><span class="label">This turn</span><b id="turnPts">0</b></div><div class="kept" id="kept"></div></div>
@@ -279,8 +279,8 @@ input{-webkit-user-select:text;user-select:text}
       <li>Every roll, keep at least one scoring die, then <b>roll the rest</b> or <b>bank</b> your turn total.</li>
       <li>Kept dice only count when they all score together.</li>
       <li>Roll with nothing that scores and you <b>bust</b>: the turn total is lost.</li>
-      <li>Keep all six dice and you get <b>hot dice</b>: roll all six again.</li>
-      <li>First to <b>4,000</b> wins. If the first player gets there, the other player gets one last turn to beat them.</li>
+      <li>Score with all four dice and you get <b>hot dice</b>: roll all four again.</li>
+      <li>First to <b>3,000</b> wins. If the first player gets there, the other player gets one last turn to beat them.</li>
     </ul>
     <button class="btn big" id="rulesClose">Got it</button>
   </div>
@@ -299,7 +299,7 @@ input{-webkit-user-select:text;user-select:text}
 <script src="/dare-play.js"></script>
 <script>
 (function(){
-const FACES='DARECS', TARGET=4000;
+const FACES='123456', ND=4, TARGET=3000;
 const $=id=>document.getElementById(id);
 const fmt=n=>Number(n).toLocaleString('en-US');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -308,13 +308,13 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
 /* ---------- faces ---------- */
-const CROWN='<svg viewBox="0 0 32 32" aria-label="Crown"><path d="M4 23 L6.5 10 L12 16 L16 6 L20 16 L25.5 10 L28 23 Z" fill="#c9952b"/><path d="M4 23 L6.5 10 L12 16 L16 6 L20 16 L25.5 10 L28 23 Z" fill="none" stroke="#7a5718" stroke-width="1.4" stroke-linejoin="round"/><rect x="4" y="23" width="24" height="4.5" rx="1.2" fill="#a87a1e"/><circle cx="16" cy="6" r="2" fill="#f6d47e"/><circle cx="6.5" cy="10" r="1.7" fill="#f6d47e"/><circle cx="25.5" cy="10" r="1.7" fill="#f6d47e"/><circle cx="16" cy="25.2" r="1.5" fill="#c0283f"/></svg>';
-const STAR='<svg viewBox="0 0 32 32" aria-label="Star"><path d="M16 3.5 L19.6 12 L28.6 12.6 L21.7 18.5 L23.9 27.4 L16 22.6 L8.1 27.4 L10.3 18.5 L3.4 12.6 L12.4 12 Z" fill="#c0283f" stroke="#7d1426" stroke-width="1.3" stroke-linejoin="round"/><path d="M16 8 L18 13.6 L13.5 13.6 Z" fill="#ee6378" opacity=".7"/></svg>';
-// Six dice, six colors: [body, ink]
-const COLORS=[['#f2b705','#2a1a04'],['#d0102c','#fff6e6'],['#1d5fe0','#fff6e6'],['#0fa35c','#fff6e6'],['#7b3be3','#fff6e6'],['#17151a','#e9b949']];
-const inked=(svg,ink)=>svg.replace(/fill="#[0-9a-f]{6}"/gi,'fill="'+ink+'"').replace(/stroke="#[0-9a-f]{6}"/gi,'stroke="none"').replace(/opacity="\.7"/,'opacity="0"');
-const faceHTML=(f,ink)=>f==='C'?(ink?inked(CROWN,ink):CROWN):f==='S'?(ink?inked(STAR,ink):STAR):f?'<span class="lt">'+f+'</span>':'';
-const miniDie=(f,i)=>{const [c,k]=COLORS[i%6];return '<span class="die" style="--c:'+c+';--k:'+k+'">'+faceHTML(f,k)+'</span>'};
+// Standard pip layouts on a 32-unit face
+const PIPS={1:[[16,16]],2:[[8.5,8.5],[23.5,23.5]],3:[[8.5,8.5],[16,16],[23.5,23.5]],4:[[8.5,8.5],[23.5,8.5],[8.5,23.5],[23.5,23.5]],
+  5:[[8.5,8.5],[23.5,8.5],[16,16],[8.5,23.5],[23.5,23.5]],6:[[8.5,8,],[23.5,8],[8.5,16],[23.5,16],[8.5,24],[23.5,24]]};
+// Four dice, four colors: [body, pips]
+const COLORS=[['#f2b705','#2a1a04'],['#d0102c','#fff6e6'],['#1d5fe0','#fff6e6'],['#0fa35c','#fff6e6']];
+const faceHTML=(f,ink)=>f?'<svg viewBox="0 0 32 32" aria-label="'+f+'">'+PIPS[f].map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="'+(f==='1'?4.6:3.3)+'" fill="'+(ink||'#1d1418')+'"/>').join('')+'</svg>':'';
+const miniDie=(f,i)=>{const [c,k]=COLORS[i%ND];return '<span class="die" style="--c:'+c+';--k:'+k+'">'+faceHTML(f,k)+'</span>'};
 
 /* ---------- scoring ---------- */
 const memo=new Map();
@@ -325,40 +325,40 @@ function bestP(c){
   if(c.every(x=>!x))res={p:0,parts:[]};
   else{
     const t=(cc,add,label)=>{const r=bestP(cc);if(r&&(!res||r.p+add>res.p))res={p:r.p+add,parts:[label,...r.parts]}};
-    if(c[0]&&c[1]&&c[2]&&c[3]){const cc=c.slice();for(let i=0;i<4;i++)cc[i]--;t(cc,1000,'D-A-R-E')}
-    for(let i=0;i<6;i++)for(let n=3;n<=c[i];n++){const cc=c.slice();cc[i]-=n;t(cc,(i===4?1000:i===5?500:300)*(1<<(n-3)),n+' '+(i===4?'Crowns':i===5?'Stars':FACES[i]+'s'))}
-    if(c[4]){const cc=c.slice();cc[4]--;t(cc,100,'Crown')}
-    if(c[5]){const cc=c.slice();cc[5]--;t(cc,50,'Star')}
+    for(let st=0;st<3;st++)if(c[st]&&c[st+1]&&c[st+2]&&c[st+3]){const cc=c.slice();for(let i=st;i<st+4;i++)cc[i]--;t(cc,500,'Straight')}
+    for(let i=0;i<6;i++)for(let n=3;n<=c[i];n++){const cc=c.slice();cc[i]-=n;t(cc,(i===0?1000:(i+1)*100)*(1<<(n-3)),(n===3?'Three ':'Four ')+(i+1)+'s')}
+    if(c[0]){const cc=c.slice();cc[0]--;t(cc,100,'One')}
+    if(c[4]){const cc=c.slice();cc[4]--;t(cc,50,'Five')}
   }
   memo.set(key,res);return res;
 }
 const counts=fs=>{const c=[0,0,0,0,0,0];for(const f of fs)c[FACES.indexOf(f)]++;return c};
 function tidy(parts){
   const m=new Map();for(const p of parts)m.set(p,(m.get(p)||0)+1);
-  return [...m].map(([p,n])=>n===1?p:(p==='Crown'||p==='Star')?n+' '+p+'s':n+' × '+p).join(' + ');
+  return [...m].map(([p,n])=>n===1?p:(p==='One'||p==='Five')?n+' '+p+'s':n+' × '+p).join(' + ');
 }
 function score(fs){if(!fs.length)return null;const r=bestP(counts(fs));if(!r||r.p<=0)return null;return{p:r.p,label:tidy(r.parts)}}
 function canScore(fs){
-  if(fs.some(f=>f==='C'||f==='S'))return true;
-  const c=counts(fs);return (c[0]&&c[1]&&c[2]&&c[3])||c.some(x=>x>=3);
+  if(fs.some(f=>f==='1'||f==='5'))return true;
+  const c=counts(fs);return c.some(x=>x>=3)||[0,1,2].some(st=>c[st]&&c[st+1]&&c[st+2]&&c[st+3]);
 }
 // scoring table for the rules sheet
 $('stable').innerHTML=[
-  [['C'],'Crown','100 each'],[['S'],'Star','50 each'],
-  [['D','A','R','E'],'D-A-R-E, one of each','1,000'],
-  [['R','R','R'],'Three of a letter','300'],[['S','S','S'],'Three Stars','500'],[['C','C','C'],'Three Crowns','1,000'],
-  [['A','A','A','A'],'Each extra matching die','× 2']
+  [['1'],'One','100 each'],[['5'],'Five','50 each'],
+  [['2','3','4','5'],'Straight, four in a row','500'],
+  [['4','4','4'],'Three of a kind','Face × 100'],[['1','1','1'],'Three Ones','1,000'],
+  [['6','6','6','6'],'Four of a kind','Double it'],
 ].map(([fs,lab,pts],r)=>`<tr><td><span class="mini">${fs.map((f,j)=>miniDie(f,r+j)).join('')}</span>${lab}</td><td>${pts}</td></tr>`).join('');
-// title cubes: D, A, R, E on four different dice
-$('cubes').innerHTML='DARE'.split('').map((L,i)=>{const [c,k]=COLORS[[0,1,2,3][i]];const sides=[L,'C','S',...'DARE'.replace(L,'').slice(0,3)];
-  return `<div class="cubewrap"><div class="cube" style="--c:${c};--k:${k};--d:-${i*1.2}s">${sides.map(f=>'<i>'+faceHTML(f,k)+'</i>').join('')}</div></div>`}).join('');
+// title cubes: four dice showing a 1-2-3-4 straight
+$('cubes').innerHTML=['1','2','3','4'].map((f,i)=>{const [c,k]=COLORS[i];const opp={1:'6',2:'5',3:'4',4:'3'}[f];const sides=[f,...'123456'.replace(f,'').replace(opp,'').split(''),opp];
+  return `<div class="cubewrap"><div class="cube" style="--c:${c};--k:${k};--d:-${i*1.2}s">${sides.map(x=>'<i>'+faceHTML(x,k)+'</i>').join('')}</div></div>`}).join('');
 
 /* ---------- state ---------- */
 let S=null, menuMode='cpu', screen='title';
 function loadScores(){try{const s=JSON.parse(ls.get('dd-scores'));if(s&&s.cpu&&s['2p']&&s.online)return s}catch(e){}return{cpu:{1:0,2:0,d:0},'2p':{1:0,2:0,d:0},online:{w:0,l:0,d:0}}}
 const allScores=loadScores();
 const saveScores=()=>ls.set('dd-scores',JSON.stringify(allScores));
-const six=v=>Array(6).fill(v);
+const six=v=>Array(ND).fill(v); // one entry per die
 function fresh(mode,starter){
   return {mode,me:1,starter,turn:starter,sc:{1:0,2:0},faces:six(null),live:six(true),lastLive:null,sel:six(false),
     turnPts:0,kept:[],phase:'start',log:[],final:false,over:false,winner:0,flash:null,end:'',tallied:false};
@@ -369,13 +369,13 @@ function apply(t){
   S.log.push(t);
   const k=t[0];
   if(k==='r'){
-    let j=0;for(let i=0;i<6;i++)if(S.live[i])S.faces[i]=t[1+j++]||'D';
+    let j=0;for(let i=0;i<ND;i++)if(S.live[i])S.faces[i]=t[1+j++]||'1';
     S.sel=six(false);S.flash=null;S.lastLive=null;
     const lf=S.faces.filter((_,i)=>S.live[i]);
     if(!canScore(lf)){S.flash={type:'bust',who:S.turn,pts:S.turnPts};endTurn(false)}
     else S.phase='pick';
   }else if(k==='k'){
-    const idx=[...t.slice(1)].map(Number).filter(i=>i>=0&&i<6&&S.live[i]);
+    const idx=[...t.slice(1)].map(Number).filter(i=>i>=0&&i<ND&&S.live[i]);
     const fs=idx.map(i=>S.faces[i]),r=score(fs);
     if(!r)return;
     S.turnPts+=r.p;S.kept.push({fs,idx,label:r.label,p:r.p});
@@ -416,31 +416,30 @@ function myTurn(){
 }
 
 /* ---------- 3D table (three.js) ---------- */
-const NORM=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]; // box material slots; slot k shows FACES[k]
+const NORM=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]; // box material slots
+const SLOTFACE='162534'; // slot k shows this face; opposite faces add up to 7 like real dice
 const UPV=[[0,1,0],[0,1,0],[0,0,-1],[0,0,1],[0,1,0],[0,-1,0]];   // texture "up" on each slot (-z is drawn upside down so the face nearest you reads upright)
-const SPOTS=[[-1.75,-0.35],[0,-0.35],[1.75,-0.35],[-1.75,1.45],[0,1.45],[1.75,1.45]];
+const SPOTS=[[-1.2,-0.15],[1.2,-0.15],[-1.2,1.6],[1.2,1.6]];
 const RAILZ=-2.25;
 let R3=null;
 function faceTex(i,f){
   const cv=document.createElement('canvas');cv.width=cv.height=256;
   const draw=()=>{
     const g=cv.getContext('2d'),[c,k]=COLORS[i];
-    g.setTransform(1,0,0,1,0,0);if(f==='S'){g.translate(256,256);g.rotate(Math.PI)}
+    g.setTransform(1,0,0,1,0,0);
     g.fillStyle=c;g.fillRect(0,0,256,256);
     const gr=g.createRadialGradient(90,80,10,128,128,200);gr.addColorStop(0,'rgba(255,255,255,.22)');gr.addColorStop(1,'rgba(0,0,0,.18)');
     g.fillStyle=gr;g.fillRect(0,0,256,256);
-    g.fillStyle=k;
-    if(f==='C'||f==='S'){
-      g.save();g.translate(40,40);g.scale(176/32,176/32);
-      if(f==='C'){g.fill(new Path2D('M4 23 L6.5 10 L12 16 L16 6 L20 16 L25.5 10 L28 23 Z'));g.fillRect(4,23.8,24,4.2);
-        g.beginPath();g.arc(16,5.4,2.1,0,7);g.arc(6.5,9.6,1.8,0,7);g.fill();g.beginPath();g.arc(25.5,9.6,1.8,0,7);g.fill()}
-      else g.fill(new Path2D('M16 3.5 L19.6 12 L28.6 12.6 L21.7 18.5 L23.9 27.4 L16 22.6 L8.1 27.4 L10.3 18.5 L3.4 12.6 L12.4 12 Z'));
-      g.restore();
-    }else{g.font='170px "Alfa Slab One", Rockwell, Georgia, serif';g.textAlign='center';g.textBaseline='middle';g.fillText(f,128,140)}
+    const S8=256/32;
+    for(const [x,y] of PIPS[f]){
+      const r=(f==='1'?4.6:3.3)*S8,cx=x*S8,cy=y*S8;
+      g.beginPath();g.arc(cx,cy+2,r,0,7);g.fillStyle='rgba(0,0,0,.28)';g.fill();      // drilled shadow
+      g.beginPath();g.arc(cx,cy,r,0,7);g.fillStyle=k;g.fill();
+      g.beginPath();g.arc(cx-r*.3,cy-r*.3,r*.35,0,7);g.fillStyle='rgba(255,255,255,.18)';g.fill();
+    }
   };
   draw();
   const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;
-  if(document.fonts&&document.fonts.load)document.fonts.load('170px "Alfa Slab One"').then(()=>{draw();t.needsUpdate=true}).catch(()=>{});
   return t;
 }
 function roundedBox(r=.15,seg=7){
@@ -454,7 +453,7 @@ function roundedBox(r=.15,seg=7){
 }
 const _y=()=>new THREE.Vector3(0,1,0);
 function faceQuat(f,yaw){
-  const k=FACES.indexOf(f),N=new THREE.Vector3(...NORM[k]),U=new THREE.Vector3(...UPV[k]),W=new THREE.Vector3().crossVectors(N,U);
+  const k=SLOTFACE.indexOf(f),N=new THREE.Vector3(...NORM[k]),U=new THREE.Vector3(...UPV[k]),W=new THREE.Vector3().crossVectors(N,U);
   const mL=new THREE.Matrix4().makeBasis(N,U,W),mW=new THREE.Matrix4().makeBasis(_y(),new THREE.Vector3(0,0,-1),new THREE.Vector3(-1,0,0));
   const q=new THREE.Quaternion().setFromRotationMatrix(mW.multiply(mL.transpose()));
   return new THREE.Quaternion().setFromAxisAngle(_y(),yaw||0).multiply(q);
@@ -477,10 +476,10 @@ function init3D(){
   const rim=new THREE.DirectionalLight(0xffd9a0,.35);rim.position.set(-6,4,-6);scene.add(rim);
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.ShadowMaterial({opacity:.5}));
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
-  const geo=roundedBox(), ringGeo=new THREE.RingGeometry(.78,.9,48);
+  const geo=roundedBox(), ringGeo=new THREE.RingGeometry(.86,.98,48);
   const dice=[];
-  for(let i=0;i<6;i++){
-    const mats=FACES.split('').map(f=>new THREE.MeshStandardMaterial({map:faceTex(i,f),roughness:.3,metalness:.05}));
+  for(let i=0;i<ND;i++){
+    const mats=SLOTFACE.split('').map(f=>new THREE.MeshStandardMaterial({map:faceTex(i,f),roughness:.3,metalness:.05}));
     const mesh=new THREE.Mesh(geo,mats);mesh.castShadow=true;mesh.userData.i=i;
     const [x,z]=SPOTS[i];mesh.position.set(x,.5,z);mesh.quaternion.copy(faceQuat(FACES[i],0));
     scene.add(mesh);
@@ -508,7 +507,7 @@ function fit3D(){
   const r=$('table').getBoundingClientRect();if(!r.width||!r.height)return;
   R3.renderer.setSize(r.width,r.height,false);
   const cam=R3.camera;cam.aspect=r.width/r.height;
-  const k=Math.max(.92,0.66/cam.aspect);
+  const k=Math.max(.9,0.62/cam.aspect);
   cam.position.set(0,10.4*k,7.4*k+.3);cam.lookAt(0,0,0.3);cam.updateProjectionMatrix();
 }
 function frame(){
@@ -537,7 +536,7 @@ function sync3D(){
   if(!R3||!S)return;
   const idle=!S.faces.some(Boolean),resting=S.phase==='start'||S.over;
   const rail=S.kept.flatMap(k=>k.idx||[]);
-  for(let i=0;i<6;i++){
+  for(let i=0;i<ND;i++){
     const d=R3.dice[i];
     const f=S.faces[i]||FACES[i];
     let x,y=.5,z,yaw=0,sc=1;
@@ -552,12 +551,12 @@ function sync3D(){
 }
 function rollAnim(t){
   if(!R3)return sleep(250);
-  const live=[];for(let i=0;i<6;i++)if(S.live[i])live.push(i);
+  const live=[];for(let i=0;i<ND;i++)if(S.live[i])live.push(i);
   const spots=SPOTS.map(s=>s.slice()).sort(()=>Math.random()-.5);
   let longest=0;const now=performance.now();
   live.forEach((i,j)=>{
     const d=R3.dice[i],[sx,sz]=spots[j],f=t[1+j];
-    const x=sx+(Math.random()-.5)*.55,z=sz+(Math.random()-.5)*.45,yaw=(Math.random()-.5)*1.1;
+    const x=sx+(Math.random()-.5)*.4,z=sz+(Math.random()-.5)*.35,yaw=(Math.random()-.5)*1.1;
     d.home={x,z,yaw};
     const dur=1050+Math.random()*350,delay=Math.random()*120;longest=Math.max(longest,dur+delay);
     d.mesh.scale.setScalar(1);
@@ -598,7 +597,7 @@ $('shakeBtn').onclick=()=>{
 };
 renderShake();
 
-const selIdx=()=>{const a=[];for(let i=0;i<6;i++)if(S.sel[i])a.push(i);return a};
+const selIdx=()=>{const a=[];for(let i=0;i<ND;i++)if(S.sel[i])a.push(i);return a};
 function toggle(i){
   if(!S||S.phase!=='pick'||!S.live[i]||!myTurn()||busy())return;
   S.sel[i]=!S.sel[i];render();
@@ -637,11 +636,11 @@ function render(){
   const roll=$('roll'),bank=$('bank'),locked=Date.now()<lockUntil;
   if(!S.over){
     if(!myTurn()){roll.disabled=true;bank.disabled=true;roll.textContent=S.mode==='cpu'?'CPU’s turn':'Their turn';bank.textContent='Bank'}
-    else if(S.phase==='start'){roll.disabled=busy()||locked||(online()&&(!NET.oppOnline||!NET.connected));roll.textContent='Roll 6 dice';bank.disabled=true;bank.textContent='Bank'}
+    else if(S.phase==='start'){roll.disabled=busy()||locked||(online()&&(!NET.oppOnline||!NET.connected));roll.textContent='Roll 4 dice';bank.disabled=true;bank.textContent='Bank'}
     else if(S.phase==='pick'){
       const live=S.live.filter(Boolean).length, n=sel?live-selIdx().length:0;
       roll.disabled=!sel||busy();bank.disabled=!sel||busy();
-      roll.textContent=sel?(n===0?'Roll 6 · hot dice':'Roll '+n+(n===1?' die':' dice')):'Roll';
+      roll.textContent=sel?(n===0?'Roll 4 · hot dice':'Roll '+n+(n===1?' die':' dice')):'Roll';
       bank.textContent=sel?'Bank '+fmt(S.turnPts+sel.p):'Bank';
     }else{roll.disabled=true;bank.disabled=true}
   }else updateRematch();
@@ -671,7 +670,7 @@ function renderStatus(){
     st.textContent=(isYou(f.who)?'You banked ':name(f.who)+' banked ')+fmt(f.pts)+'.'+(f.final?' '+(isYou(other(f.who))?'Your':name(other(f.who))+'’s')+' last turn: beat '+fmt(S.sc[f.who])+'.':'');
     return;
   }
-  if(f&&f.type==='hot'){st.classList.add('bank');st.textContent='Hot dice! All six roll again.';return}
+  if(f&&f.type==='hot'){st.classList.add('bank');st.textContent='Hot dice! All four roll again.';return}
   const who=S.turn, you=isYou(who)||S.mode==='2p';
   const lead=S.final?' · beat '+fmt(S.sc[3-who]):'';
   if(S.mode==='2p')st.textContent=name(who)+(S.phase==='start'?' to roll':' · pick dice')+lead;
@@ -724,8 +723,8 @@ function tallyEnd(){
 
 /* ---------- computer ---------- */
 let cpuT=null;
-const FUT=[0,30,60,100,170,260,420];         // rough value of rolling n dice on
-const BANK_AT=[0,250,300,400,700,2000,3000]; // bank once the turn is worth this, by dice left to roll
+const FUT=[0,30,60,110,190];          // rough value of rolling n dice on (4 = hot dice)
+const BANK_AT=[0,250,300,450,1200];   // bank once the turn is worth this, by dice left to roll
 function maybeCpu(){
   if(!S||S.mode!=='cpu'||S.over||S.turn!==2||pumping||cpuT||screen!=='game')return;
   const delay=Math.max(0,lockUntil-Date.now())+(S.phase==='start'?650:450);
@@ -735,19 +734,19 @@ function cpuStep(){
   if(S.mode!=='cpu'||S.over||S.turn!==2||pumping||screen!=='game')return;
   if(S.phase==='start'){enqueue(['R'],true,false);return}
   if(S.phase!=='pick')return;
-  const li=[];for(let i=0;i<6;i++)if(S.live[i])li.push(i);
+  const li=[];for(let i=0;i<ND;i++)if(S.live[i])li.push(i);
   let best=null;
   for(let m=1;m<1<<li.length;m++){
     const idx=li.filter((_,j)=>m>>j&1), r=score(idx.map(i=>S.faces[i]));
     if(!r)continue;
-    const rem=li.length-idx.length||6, v=r.p+FUT[rem];
+    const rem=li.length-idx.length||ND, v=r.p+FUT[rem];
     if(!best||v>best.v)best={idx,p:r.p,rem,v};
   }
   const turn=S.turnPts+best.p, me=S.sc[2], opp=S.sc[1];
   let bank;
   if(S.final)bank=me+turn>opp;
   else if(me+turn>=TARGET)bank=true;
-  else{let th=BANK_AT[best.rem];if(opp>=TARGET-900&&opp-me>500)th*=1.6;bank=turn>=th}
+  else{let th=BANK_AT[best.rem];if(opp>=TARGET-700&&opp-me>400)th*=1.6;bank=turn>=th}
   enqueue(['k'+best.idx.join(''),bank?'b':'R'],true,false);
 }
 
