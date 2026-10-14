@@ -12,8 +12,9 @@ Browser games by Dontae Amare. Static site — no build step.
 /break-the-block/      Break the Block (single-file game + icons + manifest)
 /buckets/              DARE Buckets (single-file game + icons + manifest)
 /chess/                DARE Chess (single-file 3D game + icons + manifest; loads three.js r128 from cdnjs)
+/connect/              DARE Connect (single-file game + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
-/api/room.js           Live match rooms for DARE Buckets and DARE Chess online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess and DARE Connect online play (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -46,9 +47,15 @@ Every push to `main` redeploys automatically.
 - Each phone sends the full move list of the current game with every poll, so a dropped request never loses a move. It polls about every 0.7s while waiting on the opponent, 1.5s on its own turn, and 1s in the lobby, roughly 2,000 to 3,000 Redis commands for a 20-minute game.
 - The host picks colors; colors swap on every rematch. A player who stays disconnected for 45 seconds loses the game.
 
+## DARE Connect online play
+- Modes: Vs CPU, 2 Player (one phone) and Online (two phones with a 4-character match code).
+- Online matches use the same `/api/room` (rooms are named `dc-<code>`, so they never collide with Buckets or Chess rooms).
+- Each phone sends the full move list of the current game with every poll ("3D4A2R…"), so a dropped request never loses a move. It polls about every 0.7s while waiting on the opponent, 1.5s on its own turn, and 1s in the lobby.
+- Gold always moves first. The host is gold in the first game and colors swap on every rematch. Leaving mid-game counts as a loss, and a player who stays disconnected for 45 seconds loses the game.
+- The same `connect/index.html` also works as a Claude artifact, with Vs CPU and 2 Player only.
 
-## Chat and match alerts (DARE Buckets, DARE Chess)
-- `dare-play.js` is shared by both games. It adds:
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect)
+- `dare-play.js` is shared by all three games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
   - **Match alerts**: phone notifications when someone posts an open match (Web Push through `/sw.js`). Players turn them on with the switch on a game's online screen. iPhones need the arcade on the Home Screen first (iOS 16.4+).
