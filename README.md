@@ -48,9 +48,9 @@ Every push to `main` redeploys automatically.
 
 
 ## Chat and match alerts (DARE Buckets, DARE Chess)
-- `dare-play.js` is shared by the lobby and both games. It adds:
+- `dare-play.js` is shared by both games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
-  - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with the arcade or a game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens and in the lobby's "Play live" section. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
-  - **Match alerts**: phone notifications when someone posts an open match (Web Push through `/sw.js`). Players turn them on with the switch in the lobby or on a game's online screen. iPhones need the arcade on the Home Screen first (iOS 16.4+).
+  - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
+  - **Match alerts**: phone notifications when someone posts an open match (Web Push through `/sw.js`). Players turn them on with the switch on a game's online screen. iPhones need the arcade on the Home Screen first (iOS 16.4+).
 - Joining from an alert opens `/<game>/?join=CODE` and drops the player straight into the match.
 - `/api/lfg` keys in Redis: `arc:lfg` (open matches), `arc:push` (alert subscriptions), `arc:pushthr:*` (one alert per phone per minute), `arc:vapid` (push signing keys, created on first use; set `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` env vars to use your own).
