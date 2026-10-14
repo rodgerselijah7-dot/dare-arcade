@@ -823,7 +823,7 @@ NET.roomP=(window.claude&&typeof window.claude.use==='function')
 const CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const DP=window.DAREPlay||null;
 const CHAT=DP&&DP.chat({accent:'#F4A83A',quick:['Good luck','Splash!','Nice shot','You\'re cooking 🔥','GG','Rematch?','😂'],
-  pos:{right:'14px',bottom:'calc(env(safe-area-inset-bottom,0px) + 18px)'},onSend(){sendPresence(true)}});
+  pos:{right:'14px',bottom:'calc(env(safe-area-inset-bottom,0px) + 16px)'},onSend(){sendPresence(true)}});
 let chatBtnOn=true;
 function lfgStop(){if(NET.lfg){clearInterval(NET.lfgT);DP&&DP.cancel('buckets',NET.code);NET.lfg=false}}
 async function joinOpen(code){netLeave();S.mode='solo';showOnly('online');$('codeIn').value=code;$('onlineStatus').textContent='';await NET.roomP;enterRoom(code,'g');return true}
@@ -943,7 +943,6 @@ function beginOnline(){
 }
 function netTick(dt){
   if(!NET.lobby)return;
-  if(CHAT){const on=!(live()||S.state==='count');if(on!==chatBtnOn){chatBtnOn=on;CHAT.showButton(on)}}
   const os=others(),opp=NET.oppPeer?os.find(p=>p.peer===NET.oppPeer):null;
   const pr=opp&&opp.presence;
   // guest follows the host's start signal

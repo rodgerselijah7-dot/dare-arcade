@@ -20,17 +20,18 @@
 .dp{--dp-acc:#F0C040;--dp-bg:rgba(14,12,10,.96);--dp-ink:#F4EEE4;--dp-dim:#A39A8E;--dp-line:rgba(255,255,255,.12);
   font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--dp-ink);-webkit-tap-highlight-color:transparent}
 .dp button{font:inherit;color:inherit;cursor:pointer}
-.dp-fab{position:fixed;z-index:9000;width:52px;height:52px;border-radius:50%;border:1px solid var(--dp-line);background:var(--dp-bg);
-  display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.45);transition:transform .12s}
-.dp-fab:active{transform:scale(.92)}
-.dp-fab svg{width:24px;height:24px}
+.dp-fab{position:fixed;z-index:9000;height:46px;padding:0 16px 0 13px;border-radius:23px;border:1.5px solid var(--dp-acc);background:var(--dp-bg);
+  display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;letter-spacing:.02em;box-shadow:0 6px 20px rgba(0,0,0,.45);transition:transform .12s;touch-action:manipulation}
+.dp-fab:active{transform:scale(.94)}
+.dp-fab svg{width:20px;height:20px;color:var(--dp-acc)}
+.dp-fab.ping{animation:dpPing .5s ease-out 2}
 .dp-fab[hidden]{display:none}
 .dp-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#E5352B;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
 .dp-badge[hidden]{display:none}
 .dp-peek{position:fixed;z-index:9001;max-width:min(270px,calc(100vw - 90px));background:var(--dp-bg);border:1px solid var(--dp-line);border-radius:14px 14px 4px 14px;
   padding:8px 12px;box-shadow:0 6px 20px rgba(0,0,0,.4);pointer-events:none;animation:dpIn .2s ease-out}
 .dp-peek b{color:var(--dp-acc);font-weight:600;display:block;font-size:12px;letter-spacing:.04em}
-.dp-sheet{position:fixed;z-index:9002;left:0;right:0;bottom:0;margin:0 auto;max-width:460px;height:min(70dvh,520px);background:var(--dp-bg);
+.dp-sheet{position:fixed;z-index:9002;left:0;right:0;bottom:0;margin:0 auto;max-width:460px;height:min(70vh,520px);max-height:var(--dp-vh,100vh);background:var(--dp-bg);
   border:1px solid var(--dp-line);border-bottom:0;border-radius:18px 18px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.5);
   padding-bottom:env(safe-area-inset-bottom,0px);animation:dpUp .22s cubic-bezier(.2,.8,.2,1)}
 .dp-sheet[hidden]{display:none}
@@ -56,6 +57,12 @@
 .dp-send{width:44px;height:44px;flex:none;border-radius:50%;border:0;background:var(--dp-acc);color:#111;display:grid;place-items:center}
 .dp-send svg{width:20px;height:20px}
 .dp-send:disabled{opacity:.4}
+.dp-msg{pointer-events:auto;width:100%;max-width:420px;display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--dp-bg);border:1px solid var(--dp-line);border-left:3px solid var(--dp-acc);
+  border-radius:12px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:dpDrop .25s cubic-bezier(.2,.8,.2,1)}
+.dp-msg svg{width:18px;height:18px;flex:none;margin-top:2px;color:var(--dp-acc)}
+.dp-msg b{display:block;font-size:13px;color:var(--dp-acc)}
+.dp-msg span{display:block;font-size:16px;word-wrap:break-word}
+.dp-open[hidden]{display:none}
 .dp-toasts{position:fixed;z-index:9003;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
 .dp-toast{pointer-events:auto;width:100%;max-width:420px;display:flex;align-items:center;gap:12px;background:var(--dp-bg);border:1px solid var(--dp-line);border-left:3px solid var(--dp-acc);
   border-radius:12px;padding:10px 10px 10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:dpDrop .25s cubic-bezier(.2,.8,.2,1)}
@@ -79,6 +86,7 @@
 .dp-sw[aria-checked=true]{background:#3DDC84}
 .dp-sw[aria-checked=true]::after{transform:translateX(18px)}
 .dp-sw:disabled{opacity:.4}
+@keyframes dpPing{50%{transform:scale(1.12)}}
 @keyframes dpIn{from{opacity:0;transform:translateY(6px)}}
 @keyframes dpUp{from{transform:translateY(100%)}}
 @keyframes dpDrop{from{opacity:0;transform:translateY(-14px)}}
@@ -87,6 +95,8 @@
   let root = null;
   const rootEl = () => { if (!root) { root = document.createElement("div"); root.className = "dp"; document.body.appendChild(root); } return root; };
   const setAccent = c => { if (c) rootEl().style.setProperty("--dp-acc", c); };
+  let toastWrap = null;
+  const toastHost = () => { if (!toastWrap) { toastWrap = document.createElement("div"); toastWrap.className = "dp-toasts"; rootEl().appendChild(toastWrap); } return toastWrap; };
 
   const I = {
     chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg>',
@@ -104,7 +114,7 @@
     const quick = opts.quick || ["Good luck", "Nice!", "GG", "Rematch?", "One more", "🔥", "😂"];
     const fab = document.createElement("button");
     fab.className = "dp-fab"; fab.type = "button"; fab.hidden = true; fab.setAttribute("aria-label", "Open chat");
-    fab.innerHTML = I.chat + '<span class="dp-badge" hidden>0</span>';
+    fab.innerHTML = I.chat + '<span>Chat</span><span class="dp-badge" hidden>0</span>';
     Object.assign(fab.style, pos);
     const sheet = document.createElement("div");
     sheet.className = "dp-sheet"; sheet.hidden = true; sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-label", "Match chat");
@@ -131,16 +141,26 @@
     }
     function setBadge() { badge.hidden = !unread; badge.textContent = unread > 9 ? "9+" : unread; }
     function peek(text) {
-      if (!fabOk || !attached) return;
+      if (!attached) return;
+      const wrap = toastHost();
       if (peekEl) peekEl.remove();
-      peekEl = document.createElement("div"); peekEl.className = "dp-peek";
-      peekEl.innerHTML = `<b>${esc(opp)}</b>`; peekEl.appendChild(document.createTextNode(text));
-      const fr = fab.hidden ? null : fab.getBoundingClientRect();
-      if (fr) { peekEl.style.right = (innerWidth - fr.left + 8) + "px"; peekEl.style.bottom = (innerHeight - fr.bottom) + "px"; }
-      else { peekEl.style.right = "14px"; peekEl.style.top = "calc(env(safe-area-inset-top,0px) + 64px)"; }
-      r.appendChild(peekEl);
-      clearTimeout(peekT); const el = peekEl; peekT = setTimeout(() => { el.remove(); if (peekEl === el) peekEl = null; }, 4200);
+      const el = peekEl = document.createElement("button"); el.type = "button"; el.className = "dp-msg";
+      el.innerHTML = I.chat + `<div><b>${esc(opp)}</b><span></span></div>`;
+      el.querySelector("span").textContent = text;
+      el.onclick = e => { e.stopPropagation(); el.remove(); open(); };
+      wrap.appendChild(el);
+      fab.classList.remove("ping"); void fab.offsetWidth; fab.classList.add("ping");
+      clearTimeout(peekT); peekT = setTimeout(() => { el.remove(); if (peekEl === el) peekEl = null; }, 6000);
     }
+    const vv = window.visualViewport;
+    function fit() { // iOS keeps fixed elements behind the keyboard; lift the sheet to the visible area
+      if (!vv || sheet.hidden) return;
+      const hidden = Math.max(0, innerHeight - vv.height - vv.offsetTop);
+      sheet.style.bottom = hidden + "px"; sheet.style.setProperty("--dp-vh", Math.max(240, vv.height - 8) + "px");
+    }
+    if (vv) { vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); }
+    input.addEventListener("focus", () => setTimeout(fit, 250));
+    input.addEventListener("blur", () => setTimeout(() => { sheet.style.bottom = "0px"; fit(); }, 100));
     function open() { sheet.hidden = false; fab.hidden = true; unread = 0; setBadge(); if (peekEl) { peekEl.remove(); peekEl = null; } log.scrollTop = log.scrollHeight; if (opts.onOpen) opts.onOpen(true); setTimeout(() => { if (!matchMedia("(pointer:coarse)").matches) input.focus(); }, 60); }
     function close() { sheet.hidden = true; input.blur(); fab.hidden = !(attached && fabOk); if (opts.onOpen) opts.onOpen(false); }
     function send(text) {
@@ -215,9 +235,8 @@
   }
   function onOpen(fn) { feedState.subs.push(fn); fn(feedState.list); startPolling(); }
 
-  let toastWrap = null;
   function toast(m, onJoin) {
-    if (!toastWrap) { toastWrap = document.createElement("div"); toastWrap.className = "dp-toasts"; rootEl().appendChild(toastWrap); }
+    const toastWrap = toastHost();
     while (toastWrap.children.length >= 2) toastWrap.firstChild.remove();
     const el = document.createElement("div"); el.className = "dp-toast"; el.setAttribute("role", "status");
     el.innerHTML = `<div class="tx"><b>${esc(m.nick)} wants to play</b><span>${GAMES[m.game]} · match ${esc(m.code)}</span></div><button class="dp-join" type="button">Join</button><button class="dp-x" type="button" aria-label="Dismiss">✕</button>`;
