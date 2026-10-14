@@ -1215,7 +1215,7 @@ const FREE_WAVES=5; // waves 1 to 5 and the Warden are the free tryout
 function startWave(n){
   if(n>FREE_WAVES&&window.DARE&&!DARE.owned('dead-rise')){
     state='gate';app.classList.remove('playing');firing=false;releaseTouches();if(document.pointerLockElement)document.exitPointerLock();
-    DARE.gate('dead-rise',()=>{state='playing';app.classList.add('playing');initAudio();tryLock();last=performance.now();startWave(n);},{title:'You beat the Warden',onExit:toMenu});
+    DARE.gate('dead-rise',()=>{state='playing';app.classList.add('playing');initAudio();tryLock();last=performance.now();startWave(n);},{title:'You beat the Warden',onExit:quitToTitle});
     return;
   }
   wave=n;const boss=n%5===0;toSpawn=Math.min(70,boss?6+n*2:8+n*3);bossPending=boss;spawnT=1.4;waveActive=true;
@@ -1284,6 +1284,18 @@ function startGame(){
 }
 function pause(){if(state!=='playing')return;state='paused';app.classList.remove('playing');firing=false;releaseTouches();show('pauseS',true);if(document.pointerLockElement)document.exitPointerLock();}
 function resume(){if(state!=='paused')return;show('pauseS',false);state='playing';app.classList.add('playing');initAudio();tryLock();last=performance.now();}
+// Leaving a run: fade out and reload straight to the title. A fresh page frees the phone's graphics memory and
+// resets every piece of game state, so the title screen always comes back responsive (iPhone could freeze here).
+let quitting=false;
+function quitToTitle(){
+  if(quitting)return;quitting=true;
+  state='menu';app.classList.remove('playing');firing=false;releaseTouches();
+  ['pauseS','over','arsenal','hud'].forEach(id=>show(id,false));
+  $('fadeKick').textContent='DEAD RISE';$('fadeTitle').textContent='BACK TO TITLE';$('fadeSub').textContent='';$('fade').classList.add('on');
+  if(document.pointerLockElement)document.exitPointerLock();if(wl){wl.release().catch(()=>{});wl=null;}
+  setTimeout(()=>location.replace(location.pathname),450);
+  setTimeout(()=>{quitting=false;toMenu();},4000); // fallback if the reload is blocked
+}
 function toMenu(){state='menu';app.classList.remove('playing');firing=false;releaseTouches();travelT=-1;waveActive=false;bossPending=false;bossZ=null;$('fade').classList.remove('on');show('pauseS',false);show('over',false);show('arsenal',false);show('hud',false);$('boss').hidden=true;el.cross.hidden=true;el.banner.classList.remove('go');el.toast.classList.remove('go');tintT=0;$('tint').style.background='transparent';$('bestN').textContent=best.toLocaleString();setupMenuScene();show('menu',true);if(document.pointerLockElement)document.exitPointerLock();if(wl){wl.release().catch(()=>{});wl=null;}}
 function die(){state='dying';app.classList.remove('playing');dyingT=0;firing=false;releaseTouches();if(document.pointerLockElement)document.exitPointerLock();}
 function gameOver(){
@@ -1314,9 +1326,9 @@ function renderArsenal(){
   $('pGrid').innerHTML=POWERUPS.map(p=>`<div class="acard pcard"><img src="${ICONURL[p.id]}" alt=""><div><div class="nm" style="font-family:var(--f-display)">${p.name}</div><p>${p.desc}</p></div></div>`).join('');
 }
 $('bestN').textContent=best.toLocaleString();
-$('startBtn').onclick=startGame;$('againBtn').onclick=startGame;$('menuBtn').onclick=toMenu;
+$('startBtn').onclick=startGame;$('againBtn').onclick=startGame;$('menuBtn').onclick=quitToTitle;
 $('arsBtn').onclick=()=>{renderArsenal();show('menu',false);show('arsenal',true);};$('arsClose').onclick=()=>{show('arsenal',false);show('menu',true);};
-$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;$('quitBtn').onclick=toMenu;
+$('pauseBtn').onclick=pause;$('resumeBtn').onclick=resume;$('quitBtn').onclick=quitToTitle;
 $('muteBtn').onclick=()=>{muted=!muted;if(master)master.gain.value=muted?0:.45;$('muteIco').setAttribute('d',muted?'M3 9v6h4l5 5V4L7 9H3zm13.6 3 2.7-2.7-1.4-1.4-2.7 2.7-2.7-2.7-1.4 1.4 2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4z':'M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z');$('muteBtn').setAttribute('aria-label',muted?'Unmute sound':'Mute sound');};
 $('wcard').addEventListener('pointerdown',e=>{if(state==='playing'){e.preventDefault();nextWeapon(1);}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
