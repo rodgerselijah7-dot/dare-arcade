@@ -17,6 +17,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /2048/                 DARE 2048 (single-file sliding number puzzle + icons + manifest)
 /1010/                 DARE 1010 (single-file 10x10 block puzzle + icons + manifest)
 /bubble/               DARE Bubble Blaster (single-file canvas bubble shooter + icons + manifest)
+/grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
 /icons/                Arcade icons
@@ -76,10 +77,17 @@ Every push to `main` redeploys automatically.
 - Scoring: 1 point per square placed, plus 10, 30, 60, 100... for clearing 1, 2, 3, 4... lines at once, multiplied by the clear streak (up to x5) when you clear on back-to-back moves.
 - Home screen (best, total lines, games, Continue / New game) and a separate game screen. Game, best and stats are saved on the phone (localStorage keys `d1010-*`).
 
+## DARE Grand Prix
+- Pole Position style pseudo-3D racer drawn on a 2D canvas (segment road with curves and hills, sprites scaled by depth, parallax backgrounds). No libraries.
+- Three tracks: Downtown Nights, Sunset Coast, Red Rock Canyon (each a list of road sections in `TRACKS`; rivals get a little faster on the later tracks).
+- Qualifying: one timed lap with slower traffic. The lap time sets your grid spot against seven rival times (based on the track's flat-out lap time); running out of time starts you last.
+- Race: three laps against seven rivals with a countdown clock; each completed lap adds time. Gas is automatic; steer and brake (buttons, tilt or arrow keys / A D, Down or Space to brake). Hitting a roadside sign or post at speed crashes the car; bumping a rival slows you.
+- Records per track (best lap, best race time, best finish, wins) saved on the phone (localStorage keys `dgp-*`).
+
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade).
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.

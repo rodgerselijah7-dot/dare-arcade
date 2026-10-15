@@ -1,0 +1,15 @@
+{
+  "name": "DARE Grand Prix",
+  "short_name": "Grand Prix",
+  "description": "Qualify for your grid spot, then race seven rivals over three laps before the clock runs out. By Dontae Amare.",
+  "start_url": "/grand-prix/",
+  "scope": "/grand-prix/",
+  "display": "standalone",
+  "background_color": "#0a0a0d",
+  "theme_color": "#0a0a0d",
+  "icons": [
+    { "src": "/grand-prix/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/grand-prix/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/grand-prix/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
