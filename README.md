@@ -83,6 +83,7 @@ Every push to `main` redeploys automatically.
 - Qualifying: one timed lap with slower traffic. The lap time sets your grid spot against seven rival times (based on the track's flat-out lap time); running out of time starts you last.
 - Race: three laps against seven rivals with a countdown clock; each completed lap adds time. Gas is automatic; steer and brake (buttons, tilt or arrow keys / A D, Down or Space to brake). Hitting a roadside sign or post at speed crashes the car; bumping a rival slows you.
 - Records per track (best lap, best race time, best finish, wins) saved on the phone (localStorage keys `dgp-*`).
+- Look: sprites drawn at 2x, rolling tyre frames, brake-light glow, tyre smoke / off-road dust, crash fireball and flash, speed lines, kerbs + shoulders + edge lines, lamp light pools at night, grandstands and pit garages on the start straight, horizon haze, LO/HI gear and rev meter, a lap progress rail with every car, and a light scanline overlay.
 
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
