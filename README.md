@@ -14,6 +14,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /chess/                DARE Chess (single-file 3D game + icons + manifest; loads three.js r128 from cdnjs)
 /connect/              DARE Connect (single-file game + icons + manifest)
 /dice/                 DARE Dice (single-file 3D dice game + icons + manifest; loads three.js r128 from cdnjs)
+/2048/                 DARE 2048 (single-file sliding number puzzle + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
 /icons/                Arcade icons
@@ -63,6 +64,10 @@ Every push to `main` redeploys automatically.
 - Rolling: hold the Roll button to shake the dice, let go to throw. On phones, shaking the phone throws them too (device motion; iPhones ask for motion access the first time a player taps Play, a bill or Roll). Players can turn it off with the Shake button.
 - Solo: play Slim, who calls his own shots when he has the dice and sometimes only covers part of a big bet. The game is saved on the phone (Resume).
 - Online: rooms are named `dd-<code>` on `/api/room`. Every move is a token in the acting player's presence: `a<amount>` (call), `c<amount>` (fade/cover), `r<die1><die2>` (roll). Only one player can act at a time, so the lists never fork, and each phone replays the other's new tokens. The host gets the dice first; first dice swap on every rematch. The host sets the buy-in in the lobby ($100, $500, $1K, $5K or any amount from $10 to $1,000,000); it rides in the host's presence as `bi`, and the guest's lobby shows it before the match starts.
+
+## DARE 2048
+- Classic 4x4 sliding merge puzzle. Each tile value is a rank: 2 Spark, 4 Dream, 8 Plan, 16 Grind, 32 Hustle, 64 Focus, 128 Rise, 256 Boss, 512 Mogul, 1024 Legend, 2048 Crown, and Rare beyond.
+- Swipe, arrow keys or WASD. Three undos per game. The game in progress, best score and sound setting are saved on the phone (localStorage keys `d2048-*`). Reaching 2048 offers Keep going or New game.
 
 ## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
 - `dare-play.js` is shared by all four games. It adds:

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d0b0c">
+<meta name="description" content="DARE 2048 by Dontae Amare. Swipe to slide the tiles, merge matching numbers, and climb from Spark to the Crown.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DARE 2048">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="/2048/manifest.webmanifest">
+<link rel="icon" href="/2048/icon-192.png">
+<link rel="apple-touch-icon" href="/2048/apple-touch-icon.png">
+<title>DARE 2048</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Manrope:wght@500;700;800&display=swap">
+<style>
+/* Layout: one screen. Header (arcade link, wordmark, score + best), the rank you've reached, a square board that takes the
+   remaining height, and New / Undo under it at thumb level. Tiles climb a ladder of ranks from ivory through gold and crimson to
+   a black-and-gold Crown. Single dark theme by choice. */
+:root{
+  --ink:#0d0b0c; --plate:#181415; --line:#2c2527; --well:#1f1a1c; --cell:#2a2326;
+  --ivory:#f2e9d8; --mute:#9a8f91; --gold:#d6a43a; --gold-hi:#f6d47e; --crim:#c0283f;
+  --slab:"Alfa Slab One", Rockwell, "Roboto Slab", Georgia, serif;
+  --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gap:10px; --size:360px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--ink);color:var(--ivory);font-family:var(--body);font-size:14px;
+  background-image:radial-gradient(110% 60% at 50% -10%,#2a1a1d 0%,transparent 62%);
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+[hidden]{display:none!important}
+button,a{font-family:var(--body)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+.app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-block:10px 14px}
+
+.top{display:flex;align-items:center;gap:8px}
+.pill{height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ivory);
+  font:800 11.5px var(--body);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;flex:none}
+.pill:disabled{opacity:.4;cursor:default}
+.grow{flex:1}
+
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.mark{line-height:.86}
+.mark small{display:block;font:400 12px var(--slab);letter-spacing:.42em;color:var(--gold);margin-bottom:4px}
+.mark b{font:400 clamp(46px,14vw,64px)/.86 var(--slab);color:var(--ivory);letter-spacing:.01em}
+.scores{display:flex;gap:8px}
+.box{min-width:78px;padding:8px 12px;border-radius:12px;background:var(--plate);border:1px solid var(--line);text-align:center;position:relative}
+.box span{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.box b{display:block;font:400 22px/1.15 var(--slab);font-variant-numeric:tabular-nums}
+.box.best b{color:var(--gold-hi)}
+.plus{position:absolute;left:0;right:0;top:4px;font:800 14px var(--body);color:var(--gold-hi);pointer-events:none;animation:rise .8s ease-out forwards}
+@keyframes rise{to{transform:translateY(-34px);opacity:0}}
+
+.rank{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:var(--plate);border:1px solid var(--line)}
+.rank .chip{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font:400 13px var(--slab);flex:none}
+.rank .tx{flex:1;min-width:0;font-size:13px;color:var(--mute)}
+.rank .tx b{color:var(--ivory);font-weight:800}
+.ladder{display:flex;gap:3px;flex:none}
+.ladder i{width:7px;height:16px;border-radius:2px;background:var(--cell)}
+.ladder i.on{background:var(--gold)}
+
+.stage{flex:1;min-height:0;display:grid;place-items:center}
+.board{position:relative;width:var(--size);height:var(--size);padding:var(--gap);border-radius:18px;background:var(--well);
+  box-shadow:inset 0 0 0 1px #2e2629,0 18px 40px rgba(0,0,0,.45);touch-action:none}
+.cells{position:absolute;inset:var(--gap);display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:var(--gap)}
+.cells i{border-radius:10px;background:var(--cell)}
+.tiles{position:absolute;inset:var(--gap)}
+.tile{--t:calc((var(--size) - var(--gap)*5)/4);position:absolute;left:0;top:0;width:var(--t);height:var(--t);border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:transform 110ms ease-in-out;will-change:transform}
+.tile .n{font:400 calc(var(--t)*.4)/1 var(--slab);letter-spacing:-.01em}
+.tile .r{font:800 calc(var(--t)*.105)/1 var(--body);letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.tile.d3 .n{font-size:calc(var(--t)*.32)}.tile.d4 .n{font-size:calc(var(--t)*.26)}.tile.d5 .n{font-size:calc(var(--t)*.21)}
+.tile .face{position:absolute;inset:0;border-radius:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.tile.new .face{animation:appear .18s ease-out .08s both}
+.tile.merged .face{animation:pop .2s ease-out .08s both}
+@keyframes appear{from{transform:scale(0);opacity:0}}
+@keyframes pop{0%{transform:scale(.6)}55%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+/* the rank ladder: colors per tile */
+.v2 .face{background:#efe5d2;color:#3a2e26}
+.v4 .face{background:#e8d6b4;color:#3a2e26}
+.v8 .face{background:#e9b765;color:#2b1c04}
+.v16 .face{background:#e29a3b;color:#2b1504}
+.v32 .face{background:#d6762f;color:#fff3e4}
+.v64 .face{background:#c6502c;color:#fff1e6}
+.v128 .face{background:#c0283f;color:#fff0f2;box-shadow:0 0 18px rgba(192,40,63,.35)}
+.v256 .face{background:#9c1834;color:#ffe9ee;box-shadow:0 0 22px rgba(192,40,63,.45)}
+.v512 .face{background:#6e1b4a;color:#ffd9ee;box-shadow:0 0 24px rgba(160,40,110,.45)}
+.v1024 .face{background:linear-gradient(160deg,#3a2a12,#1b130a);color:var(--gold-hi);box-shadow:inset 0 0 0 2px #b8862c,0 0 26px rgba(214,164,58,.35)}
+.v2048 .face{background:linear-gradient(160deg,#f6d47e,#d6a43a 55%,#8a611c);color:#1b1206;box-shadow:inset 0 0 0 2px #fff0bd,0 0 34px rgba(246,212,126,.6)}
+.vbig .face{background:linear-gradient(160deg,#141114,#000);color:var(--gold-hi);box-shadow:inset 0 0 0 2px var(--gold),0 0 34px rgba(246,212,126,.45)}
+.crown{width:calc(var(--t)*.34);height:calc(var(--t)*.2);margin-bottom:-2px}
+
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{font:800 14px var(--body);letter-spacing:.12em;text-transform:uppercase;padding:15px 18px;border-radius:999px;cursor:pointer;border:1px solid var(--line);background:none;color:var(--ivory)}
+.btn.big{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#2b1c04;border:0;box-shadow:0 10px 26px rgba(214,164,58,.22)}
+.btn:disabled{opacity:.4;cursor:default}
+.hint{margin:0;text-align:center;font-size:12px;color:var(--mute)}
+
+.over{position:absolute;inset:0;border-radius:18px;z-index:5;display:grid;place-items:center;text-align:center;padding:20px;
+  background:rgba(13,11,12,.78);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fade .35s ease}
+.over.win{background:radial-gradient(circle at 50% 40%,rgba(246,212,126,.35),rgba(13,11,12,.86) 70%)}
+@keyframes fade{from{opacity:0}}
+.over h2{margin:0;font:400 34px/1 var(--slab)}
+.over p{margin:8px 0 16px;color:var(--mute);font-weight:700}
+.over .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}.tile .face{animation:none!important}.plus{animation:none;opacity:0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <a class="pill" href="/" id="arcade">‹ DARE Arcade</a>
+    <span class="grow"></span>
+    <button class="pill" id="soundBtn" aria-pressed="true">Sound on</button>
+  </div>
+  <div class="head">
+    <div class="mark"><small>DARE</small><b>2048</b></div>
+    <div class="scores">
+      <div class="box"><span>Score</span><b id="score">0</b></div>
+      <div class="box best"><span>Best</span><b id="best">0</b></div>
+    </div>
+  </div>
+  <div class="rank" id="rank">
+    <span class="chip" id="rankChip">2</span>
+    <span class="tx" id="rankTx">Rank: <b>Spark</b> · next up Dream</span>
+    <span class="ladder" id="ladder" aria-hidden="true"></span>
+  </div>
+  <div class="stage" id="stage">
+    <div class="board" id="board" aria-label="Game board. Swipe or use the arrow keys.">
+      <div class="cells" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="tiles" id="tiles"></div>
+      <div class="over" id="over" hidden></div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="undo">Undo · 3</button>
+    <button class="btn big" id="newGame">New game</button>
+  </div>
+  <p class="hint">Swipe to slide every tile. Two matching tiles merge into the next rank.</p>
+</div>
+
+<script>
+(function(){
+const N=4, UNDOS=3;
+const RANKS={2:'Spark',4:'Dream',8:'Plan',16:'Grind',32:'Hustle',64:'Focus',128:'Rise',256:'Boss',512:'Mogul',1024:'Legend',2048:'Crown'};
+const rankOf=v=>RANKS[v]||'Rare';
+const LADDER=[2,4,8,16,32,64,128,256,512,1024,2048];
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('en-US');
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const CROWN='<svg class="crown" viewBox="0 0 34 20" aria-hidden="true"><path d="M2 18 L4 5 L11 11 L17 2 L23 11 L30 5 L32 18 Z" fill="currentColor"/></svg>';
+
+/* ---------- state ---------- */
+let G=null, nextId=1, best=+ls.get('d2048-best')||0, history=[];
+function emptyGrid(){return Array.from({length:N},()=>Array(N).fill(null))}
+function fresh(){
+  G={grid:emptyGrid(),score:0,undos:UNDOS,won:false,keepGoing:false,over:false,top:2};
+  history=[];addRandom();addRandom();
+}
+function cellsFree(){const a=[];for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(!G.grid[r][c])a.push([r,c]);return a}
+function addRandom(){
+  const free=cellsFree();if(!free.length)return;
+  const [r,c]=free[Math.floor(Math.random()*free.length)];
+  G.grid[r][c]={id:nextId++,v:Math.random()<.9?2:4,r,c,isNew:true};
+}
+function snapshot(){return JSON.stringify({grid:G.grid.map(row=>row.map(t=>t?{v:t.v}:null)),score:G.score,won:G.won,keepGoing:G.keepGoing,top:G.top})}
+function restore(s){
+  const o=JSON.parse(s);
+  G.grid=o.grid.map((row,r)=>row.map((t,c)=>t?{id:nextId++,v:t.v,r,c}:null));
+  G.score=o.score;G.won=o.won;G.keepGoing=o.keepGoing;G.top=o.top;G.over=false;
+}
+function save(){ls.set('d2048-game',JSON.stringify({s:snapshot(),undos:G.undos,over:G.over}))}
+
+/* ---------- moving ---------- */
+const VEC={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]};
+function move(dir){
+  if(!G||G.over||($('over').hidden===false&&!G.over))return false;
+  const [dr,dc]=VEC[dir];
+  const before=snapshot();
+  const rows=[...Array(N).keys()],cols=[...Array(N).keys()];
+  if(dr===1)rows.reverse();if(dc===1)cols.reverse();
+  let moved=false,gained=0;const merged=new Set(),gone=[];
+  for(const row of G.grid)for(const t of row)if(t){t.isNew=false;t.merged=false}
+  for(const r of rows)for(const c of cols){
+    const t=G.grid[r][c];if(!t)continue;
+    let nr=r,nc=c;
+    while(true){
+      const tr=nr+dr,tc=nc+dc;
+      if(tr<0||tr>=N||tc<0||tc>=N)break;
+      const o=G.grid[tr][tc];
+      if(!o){nr=tr;nc=tc;continue}
+      if(o.v===t.v&&!merged.has(o.id)){
+        // merge: the moving tile slides onto the other one, then both become one tile of the next rank
+        G.grid[r][c]=null;
+        const v=t.v*2,nt={id:nextId++,v,r:tr,c:tc,merged:true};
+        G.grid[tr][tc]=nt;merged.add(nt.id);
+        t.r=tr;t.c=tc;o.r=tr;o.c=tc;gone.push(t,o);
+        gained+=v;if(v>G.top)G.top=v;moved=true;
+        nr=null;break;
+      }
+      break;
+    }
+    if(nr===null)continue;
+    if(nr!==r||nc!==c){G.grid[r][c]=null;G.grid[nr][nc]=t;t.r=nr;t.c=nc;moved=true}
+  }
+  if(!moved){nudge(dir);return false}
+  history.push(before);if(history.length>20)history.shift();
+  G.score+=gained;
+  if(G.score>best){best=G.score;ls.set('d2048-best',String(best))}
+  addRandom();
+  draw(gone);
+  if(gained)plus(gained);
+  sound(gained?Math.min(1,Math.log2(gained)/11):0);
+  if(!G.won&&G.top>=2048){G.won=true;setTimeout(()=>showOver('win'),260)}
+  else if(!canMove()){G.over=true;setTimeout(()=>showOver('lose'),260)}
+  save();
+  return true;
+}
+function canMove(){
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const t=G.grid[r][c];if(!t)return true;
+    if(c<N-1&&G.grid[r][c+1]&&G.grid[r][c+1].v===t.v)return true;
+    if(r<N-1&&G.grid[r+1][c]&&G.grid[r+1][c].v===t.v)return true;
+  }
+  return false;
+}
+
+/* ---------- drawing ---------- */
+const els=new Map(); // tile id -> element
+let cellPx=0,gapPx=10;
+function layout(){
+  const st=$('stage').getBoundingClientRect();
+  const size=Math.floor(Math.max(240,Math.min(st.width,st.height,500)));
+  gapPx=Math.round(Math.max(7,Math.min(12,size*.028)));
+  document.documentElement.style.setProperty('--size',size+'px');
+  document.documentElement.style.setProperty('--gap',gapPx+'px');
+  cellPx=(size-gapPx*5)/4;
+  for(const [,el] of els)el.style.transform=xy(+el.dataset.r,+el.dataset.c);
+}
+const xy=(r,c)=>`translate(${c*(cellPx+gapPx)}px,${r*(cellPx+gapPx)}px)`;
+function tileClass(v){return 'tile '+(v>2048?'vbig':'v'+v)+' d'+String(v).length}
+function makeEl(t){
+  const el=document.createElement('div');
+  el.className=tileClass(t.v)+(t.isNew?' new':'')+(t.merged?' merged':'');
+  el.dataset.r=t.r;el.dataset.c=t.c;
+  el.innerHTML='<div class="face">'+(t.v>=2048?CROWN:'')+'<span class="n">'+fmt(t.v)+'</span><span class="r">'+rankOf(t.v)+'</span></div>';
+  el.setAttribute('aria-label',t.v+' '+rankOf(t.v));
+  el.style.transform=xy(t.r,t.c);
+  $('tiles').appendChild(el);els.set(t.id,el);
+  return el;
+}
+function draw(gone){
+  const live=new Set();
+  // tiles that merged slide to their target, then disappear under the new tile
+  for(const t of gone||[]){
+    const el=els.get(t.id);if(!el)continue;
+    el.style.zIndex=1;el.dataset.r=t.r;el.dataset.c=t.c;el.style.transform=xy(t.r,t.c);
+    els.delete(t.id);setTimeout(()=>el.remove(),120);
+  }
+  for(const row of G.grid)for(const t of row){
+    if(!t)continue;live.add(t.id);
+    let el=els.get(t.id);
+    if(!el){el=makeEl(t);if(t.merged||t.isNew){el.style.zIndex=2}}
+    else{el.className=tileClass(t.v);el.dataset.r=t.r;el.dataset.c=t.c;el.style.transform=xy(t.r,t.c);el.style.zIndex=''}
+  }
+  for(const [id,el] of els)if(!live.has(id)){el.remove();els.delete(id)}
+  $('score').textContent=fmt(G.score);$('best').textContent=fmt(best);
+  $('undo').textContent='Undo · '+G.undos;$('undo').disabled=!G.undos||!history.length;
+  // rank
+  const top=G.top,i=LADDER.indexOf(top),next=i>=0?LADDER[i+1]:null;
+  const chip=$('rankChip');chip.className='chip '+(top>2048?'vbig':'v'+top);chip.innerHTML='<span style="position:relative">'+(top>=1000?(top/1024|0)+'K':top)+'</span>';
+  chip.style.background=getComputedStyle(document.documentElement).getPropertyValue('--cell');
+  const probe=makeProbe(top);chip.style.background=probe.bg;chip.style.color=probe.fg;
+  $('rankTx').innerHTML='Rank: <b>'+rankOf(top)+'</b>'+(next?' · next up '+rankOf(next):top>=2048?' · beyond the Crown':'');
+  $('ladder').innerHTML=LADDER.map(v=>'<i class="'+(v<=top?'on':'')+'"></i>').join('');
+}
+const probeCache={};
+function makeProbe(v){
+  if(probeCache[v])return probeCache[v];
+  const d=document.createElement('div');d.className=tileClass(v);d.style.cssText='position:absolute;visibility:hidden';d.innerHTML='<div class="face"></div>';
+  document.body.appendChild(d);const f=d.firstChild,cs=getComputedStyle(f);
+  const r={bg:cs.backgroundImage!=='none'?cs.backgroundImage:cs.backgroundColor,fg:cs.color};d.remove();return probeCache[v]=r;
+}
+function redrawAll(){for(const [,el] of els)el.remove();els.clear();for(const row of G.grid)for(const t of row)if(t){t.isNew=false;t.merged=false}draw()}
+function plus(n){const b=document.querySelector('.box');const p=document.createElement('span');p.className='plus';p.textContent='+'+fmt(n);b.appendChild(p);setTimeout(()=>p.remove(),850)}
+function nudge(dir){ // bump the board when nothing can move that way
+  const [dr,dc]=VEC[dir],b=$('board');
+  b.animate([{transform:'none'},{transform:`translate(${dc*6}px,${dr*6}px)`},{transform:'none'}],{duration:160,easing:'ease-out'});
+}
+function showOver(kind){
+  const o=$('over');o.hidden=false;o.className='over'+(kind==='win'?' win':'');
+  if(kind==='win'){
+    o.innerHTML='<div><h2>You wore the Crown</h2><p>2048 reached · '+fmt(G.score)+' points</p><div class="row"><button class="btn big" id="keep">Keep going</button><button class="btn" id="again">New game</button></div></div>';
+    $('keep').onclick=()=>{G.keepGoing=true;o.hidden=true;save()};
+  }else{
+    o.innerHTML='<div><h2>No moves left</h2><p>'+fmt(G.score)+' points · rank '+rankOf(G.top)+(G.score>=best&&G.score>0?' · new best!':'')+'</p><div class="row">'+(G.undos&&history.length?'<button class="btn" id="undo2">Undo · '+G.undos+'</button>':'')+'<button class="btn big" id="again">Try again</button></div></div>';
+    if($('undo2'))$('undo2').onclick=undo;
+  }
+  $('again').onclick=newGame;
+}
+function undo(){
+  if(!G.undos||!history.length)return;
+  restore(history.pop());G.undos--;$('over').hidden=true;redrawAll();save();
+}
+function newGame(){$('over').hidden=true;fresh();redrawAll();save()}
+
+/* ---------- sound: a short soft click, brighter for bigger merges ---------- */
+let AC=null,soundOn=ls.get('d2048-sound')!=='0';
+function sound(level){
+  if(!soundOn)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;
+    o.type='triangle';o.frequency.value=level?260+level*520:180;
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(level?.12:.05,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.14);
+    o.connect(g).connect(AC.destination);o.start(t);o.stop(t+.16);
+  }catch(e){}
+}
+function renderSound(){$('soundBtn').textContent=soundOn?'Sound on':'Sound off';$('soundBtn').setAttribute('aria-pressed',soundOn)}
+
+/* ---------- input ---------- */
+document.addEventListener('keydown',e=>{
+  const k={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'}[e.key];
+  if(k){e.preventDefault();move(k)}
+  else if((e.key==='z'||e.key==='Z')&&(e.metaKey||e.ctrlKey||true)&&!e.repeat){if(e.key.toLowerCase()==='z')undo()}
+});
+let sx=0,sy=0,tracking=false;
+const board=$('board');
+board.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;tracking=true;sx=e.clientX;sy=e.clientY;try{board.setPointerCapture(e.pointerId)}catch(_){}});
+board.addEventListener('pointermove',e=>{
+  if(!tracking)return;
+  const dx=e.clientX-sx,dy=e.clientY-sy;
+  if(Math.max(Math.abs(dx),Math.abs(dy))<26)return;
+  tracking=false;
+  move(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));
+});
+board.addEventListener('pointerup',()=>{tracking=false});
+board.addEventListener('pointercancel',()=>{tracking=false});
+$('undo').onclick=undo;
+$('newGame').onclick=newGame;
+$('soundBtn').onclick=()=>{soundOn=!soundOn;ls.set('d2048-sound',soundOn?'1':'0');renderSound()};
+$('arcade').hidden=!/^https?:$/.test(location.protocol)||!!window.claude;
+try{new ResizeObserver(layout).observe($('stage'))}catch(e){addEventListener('resize',layout)}
+
+/* ---------- boot ---------- */
+let saved=null;try{saved=JSON.parse(ls.get('d2048-game'))}catch(e){}
+fresh();
+if(saved&&saved.s){try{restore(saved.s);G.undos=saved.undos??UNDOS;G.over=!!saved.over}catch(e){fresh()}}
+renderSound();layout();redrawAll();
+if(G.over)showOver('lose');
+window.__g={get G(){return G},move,undo,newGame,canMove};
+})();
+</script>
+</body>
+</html>
