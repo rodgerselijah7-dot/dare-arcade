@@ -15,6 +15,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /connect/              DARE Connect (single-file game + icons + manifest)
 /dice/                 DARE Dice (single-file 3D dice game + icons + manifest; loads three.js r128 from cdnjs)
 /2048/                 DARE 2048 (single-file sliding number puzzle + icons + manifest)
+/1010/                 DARE 1010 (single-file 10x10 block puzzle + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
 /icons/                Arcade icons
@@ -68,6 +69,11 @@ Every push to `main` redeploys automatically.
 ## DARE 2048
 - Classic 4x4 sliding merge puzzle. Each tile value is a rank: 2 Spark, 4 Dream, 8 Plan, 16 Grind, 32 Hustle, 64 Focus, 128 Rise, 256 Boss, 512 Mogul, 1024 Legend, 2048 Crown, and Rare beyond.
 - Swipe, arrow keys or WASD. Three undos per game. The game in progress, best score and sound setting are saved on the phone (localStorage keys `d2048-*`). Reaching 2048 offers Keep going or New game.
+
+## DARE 1010
+- 10x10 block puzzle. Three blocks at a time (19 shapes: dots, lines of 2 to 5, 2x2 and 3x3 squares, small and big L's); drag them onto the board. Full rows and columns clear. The game ends when none of the remaining blocks fit.
+- Scoring: 1 point per square placed, plus 10, 30, 60, 100... for clearing 1, 2, 3, 4... lines at once, multiplied by the clear streak (up to x5) when you clear on back-to-back moves.
+- Home screen (best, total lines, games, Continue / New game) and a separate game screen. Game, best and stats are saved on the phone (localStorage keys `d1010-*`).
 
 ## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
 - `dare-play.js` is shared by all four games. It adds:

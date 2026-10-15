@@ -1,0 +1,16 @@
+{
+  "name": "DARE 1010",
+  "short_name": "DARE 1010",
+  "description": "Drag blocks onto a 10 by 10 board, fill rows and columns to clear them, and keep going as long as the pieces fit. By Dontae Amare.",
+  "start_url": "/1010/",
+  "scope": "/1010/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0b0c",
+  "theme_color": "#0d0b0c",
+  "icons": [
+    { "src": "/1010/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/1010/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/1010/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

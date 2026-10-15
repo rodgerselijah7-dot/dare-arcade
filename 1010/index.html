@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d0b0c">
+<meta name="description" content="DARE 1010 by Dontae Amare. Drag blocks onto a 10 by 10 board, fill rows and columns to clear them, and keep going as long as the pieces fit.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DARE 1010">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="/1010/manifest.webmanifest">
+<link rel="icon" href="/1010/icon-192.png">
+<link rel="apple-touch-icon" href="/1010/apple-touch-icon.png">
+<title>DARE 1010</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Manrope:wght@500;700;800&display=swap">
+<style>
+/* Layout: two screens. Home = pixel-block 1010 logo, best score, lines cleared, Continue / New game. Game = Menu bar, score + best,
+   a square 10x10 board, and a tray of three blocks at thumb level that you drag up onto the board. Single dark theme by choice. */
+:root{
+  --ink:#0d0b0c; --plate:#181415; --line:#2c2527; --well:#1c1719; --cell:#262022;
+  --ivory:#f2e9d8; --mute:#9a8f91; --gold:#d6a43a; --gold-hi:#f6d47e; --crim:#c0283f; --ok:#5fd68a; --bad:#ee6378;
+  --slab:"Alfa Slab One", Rockwell, "Roboto Slab", Georgia, serif;
+  --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --c:30px; --g:3px; --pad:7px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--ink);color:var(--ivory);font-family:var(--body);font-size:14px;
+  background-image:radial-gradient(110% 60% at 50% -10%,#2a1a1d 0%,transparent 62%);
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+[hidden]{display:none!important}
+button,a{font-family:var(--body)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+.app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-block:10px 14px}
+.top{display:flex;align-items:center;gap:8px}
+.grow{flex:1}
+.pill{height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ivory);
+  font:800 11.5px var(--body);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;flex:none}
+.btn{font:800 14px var(--body);letter-spacing:.12em;text-transform:uppercase;padding:16px 18px;border-radius:999px;cursor:pointer;border:1px solid var(--line);background:none;color:var(--ivory)}
+.btn.big{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#2b1c04;border:0;box-shadow:0 10px 26px rgba(214,164,58,.22)}
+.box{padding:8px 12px;border-radius:12px;background:var(--plate);border:1px solid var(--line);text-align:center;position:relative;min-width:84px}
+.box span{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.box b{display:block;font:400 22px/1.15 var(--slab);font-variant-numeric:tabular-nums}
+.box.best b{color:var(--gold-hi)}
+.hint{margin:0;text-align:center;font-size:12px;color:var(--mute)}
+
+/* block look shared by board cells, tray pieces and the dragged piece */
+.blk{border-radius:calc(var(--c)*.2);background:var(--k);box-shadow:inset 0 calc(var(--c)*.09) 0 rgba(255,255,255,.28),inset 0 calc(var(--c)*-.11) 0 rgba(0,0,0,.22)}
+
+/* ---------- home ---------- */
+#home{justify-content:space-between;gap:18px;overflow-y:auto}
+.hero{display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:clamp(8px,4vh,40px);text-align:center}
+.hero .pre{font:400 14px var(--slab);letter-spacing:.5em;padding-left:.5em;color:var(--gold)}
+.logo{display:flex;gap:clamp(8px,3vw,14px)}
+.glyph{display:grid;grid-template-columns:repeat(3,var(--p));grid-auto-rows:var(--p);gap:3px;--p:clamp(14px,4.4vw,22px)}
+.glyph i{border-radius:4px;opacity:0}
+.glyph i.on{opacity:1;background:var(--k);box-shadow:inset 0 3px 0 rgba(255,255,255,.28),inset 0 -3px 0 rgba(0,0,0,.22);animation:fall .5s cubic-bezier(.3,1.3,.5,1) both;animation-delay:var(--d)}
+@keyframes fall{from{transform:translateY(-90px);opacity:0}}
+.hero .tag{margin:0;font-size:13px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats .box{text-align:left;padding:12px}
+.how{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.how li{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--plate);border:1px solid var(--line);font-size:13px;color:var(--mute)}
+.how li b{color:var(--ivory)}
+.how .ic{display:grid;grid-template-columns:repeat(3,9px);grid-auto-rows:9px;gap:2px;flex:none}
+.how .ic i{border-radius:2px;background:var(--cell)}
+.how .ic i.on{background:var(--k)}
+.cta{display:flex;flex-direction:column;gap:10px}
+
+/* ---------- game ---------- */
+#game{gap:10px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mark{line-height:.86}
+.mark small{display:block;font:400 11px var(--slab);letter-spacing:.42em;color:var(--gold);margin-bottom:3px}
+.mark b{font:400 clamp(36px,11vw,48px)/.86 var(--slab)}
+.scores{display:flex;gap:8px}
+.plus{position:absolute;left:0;right:0;top:4px;font:800 14px var(--body);color:var(--gold-hi);pointer-events:none;animation:rise .8s ease-out forwards}
+@keyframes rise{to{transform:translateY(-34px);opacity:0}}
+.play{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.board{position:relative;padding:var(--pad);border-radius:16px;background:var(--well);box-shadow:inset 0 0 0 1px #2e2629,0 18px 40px rgba(0,0,0,.45)}
+.grid{display:grid;grid-template-columns:repeat(10,var(--c));grid-template-rows:repeat(10,var(--c));gap:var(--g)}
+.cell{border-radius:calc(var(--c)*.2);background:var(--cell);position:relative}
+.cell.f{background:var(--k);box-shadow:inset 0 calc(var(--c)*.09) 0 rgba(255,255,255,.28),inset 0 calc(var(--c)*-.11) 0 rgba(0,0,0,.22)}
+.cell.ghost{background:var(--k);opacity:.45}
+.cell.hot::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(255,255,255,.28);box-shadow:0 0 0 1px rgba(255,255,255,.5)}
+.cell.pop{animation:clear .38s ease-out forwards}
+@keyframes clear{0%{transform:scale(1);filter:brightness(1.8)}60%{transform:scale(1.15);opacity:.9}100%{transform:scale(.2);opacity:0}}
+.cell.landed{animation:land .18s ease-out}
+@keyframes land{0%{transform:scale(1.12)}100%{transform:scale(1)}}
+.tray{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;height:calc(var(--c)*3.1);align-items:center}
+.slot{height:100%;display:grid;place-items:center;border-radius:14px;touch-action:none;cursor:grab;position:relative}
+.slot.dead{opacity:.28}
+.piece{display:grid;gap:2px;--c:calc(var(--mc))}
+.piece i{width:var(--c);height:var(--c)}
+.piece i.e{visibility:hidden}
+.drag{position:fixed;left:0;top:0;z-index:30;pointer-events:none;display:grid;gap:var(--g);filter:drop-shadow(0 14px 18px rgba(0,0,0,.5))}
+.drag i{width:var(--c);height:var(--c)}
+.drag i.e{visibility:hidden}
+.combo{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;text-align:center;font:400 30px/1 var(--slab);color:var(--gold-hi);
+  text-shadow:0 3px 0 #6b4512,0 8px 24px rgba(0,0,0,.6);animation:combo 1s ease-out forwards;white-space:nowrap}
+.combo small{display:block;font:800 13px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--ivory);margin-top:6px}
+@keyframes combo{0%{transform:translate(-50%,-30%) scale(.6);opacity:0}20%{transform:translate(-50%,-50%) scale(1.08);opacity:1}75%{opacity:1}100%{transform:translate(-50%,-80%);opacity:0}}
+.over{position:absolute;inset:0;border-radius:16px;z-index:6;display:grid;place-items:center;text-align:center;padding:20px;
+  background:rgba(13,11,12,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fade .35s ease}
+@keyframes fade{from{opacity:0}}
+.over h2{margin:0;font:400 32px/1 var(--slab)}
+.over p{margin:8px 0 16px;color:var(--mute);font-weight:700}
+.over .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){.cell.pop,.cell.landed,.glyph i.on,.combo,.plus{animation:none}.cell.pop{opacity:0}}
+</style>
+</head>
+<body>
+
+<section class="app" id="home">
+  <div class="top">
+    <a class="pill" href="/" id="arcade">‹ DARE Arcade</a>
+    <span class="grow"></span>
+    <button class="pill" id="soundBtn" aria-pressed="true">Sound on</button>
+  </div>
+  <div class="hero">
+    <span class="pre">DARE</span>
+    <div class="logo" id="logo" aria-label="1010"></div>
+    <p class="tag">Place it · clear it · keep going</p>
+  </div>
+  <div class="stats">
+    <div class="box best"><span>Best</span><b id="hBest">0</b></div>
+    <div class="box"><span>Lines</span><b id="hLines">0</b></div>
+    <div class="box"><span>Games</span><b id="hGames">0</b></div>
+  </div>
+  <ul class="how" id="how"></ul>
+  <div class="cta">
+    <button class="btn big" id="hContinue">Continue</button>
+    <button class="btn" id="hNew">New game</button>
+  </div>
+</section>
+
+<section class="app" id="game" hidden>
+  <div class="top">
+    <button class="pill" id="menuBtn">‹ Menu</button>
+    <span class="grow"></span>
+    <button class="pill" id="newBtn">New game</button>
+  </div>
+  <div class="head">
+    <div class="mark"><small>DARE</small><b>1010</b></div>
+    <div class="scores">
+      <div class="box" id="scoreBox"><span>Score</span><b id="score">0</b></div>
+      <div class="box best"><span>Best</span><b id="best">0</b></div>
+    </div>
+  </div>
+  <div class="play" id="play">
+    <div class="board" id="board">
+      <div class="grid" id="grid" aria-label="10 by 10 board"></div>
+      <div class="over" id="over" hidden></div>
+    </div>
+    <div class="tray" id="tray"></div>
+  </div>
+  <p class="hint">Drag a block onto the board. Fill a row or column to clear it.</p>
+</section>
+
+<script>
+(function(){
+const N=10;
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('en-US');
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ---------- pieces ---------- */
+const COL=['#efe2c8','#e8b54a','#e2913b','#d6692f','#c0283f','#a2336f','#5fae7a','#4f86c9','#7e55d6'];
+const P=[]; // {cells:[[r,c]...], k:colorIndex, w}
+const add=(cells,k,w)=>P.push({cells,k,w});
+add([[0,0]],0,6);
+add([[0,0],[0,1]],1,6);add([[0,0],[1,0]],1,6);
+add([[0,0],[0,1],[0,2]],2,6);add([[0,0],[1,0],[2,0]],2,6);
+add([[0,0],[0,1],[0,2],[0,3]],3,4);add([[0,0],[1,0],[2,0],[3,0]],3,4);
+add([[0,0],[0,1],[0,2],[0,3],[0,4]],4,3);add([[0,0],[1,0],[2,0],[3,0],[4,0]],4,3);
+add([[0,0],[0,1],[1,0],[1,1]],5,6);
+add([[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]],6,2);
+for(const s of [[[0,0],[1,0],[1,1]],[[0,0],[0,1],[1,0]],[[0,0],[0,1],[1,1]],[[0,1],[1,0],[1,1]]])add(s,7,2.5);
+for(const s of [[[0,0],[1,0],[2,0],[2,1],[2,2]],[[0,0],[0,1],[0,2],[1,0],[2,0]],[[0,0],[0,1],[0,2],[1,2],[2,2]],[[0,2],[1,2],[2,2],[2,1],[2,0]]])add(s,8,1.5);
+const TOTALW=P.reduce((a,p)=>a+p.w,0);
+function randPiece(){let r=Math.random()*TOTALW;for(let i=0;i<P.length;i++){r-=P[i].w;if(r<=0)return i}return 0}
+const dims=i=>{const c=P[i].cells;return[Math.max(...c.map(x=>x[0]))+1,Math.max(...c.map(x=>x[1]))+1]};
+
+/* ---------- state ---------- */
+let G=null, best=+ls.get('d1010-best')||0, stats=(()=>{try{return JSON.parse(ls.get('d1010-stats'))||{lines:0,games:0}}catch(e){return{lines:0,games:0}}})(), screen='home';
+function fresh(){G={board:Array(N*N).fill(-1),tray:[randPiece(),randPiece(),randPiece()],score:0,streak:0,over:false,moves:0}}
+function save(){ls.set('d1010-game',JSON.stringify(G));ls.set('d1010-best',String(best));ls.set('d1010-stats',JSON.stringify(stats))}
+function fits(pi,r,c){
+  for(const [dr,dc] of P[pi].cells){const rr=r+dr,cc=c+dc;if(rr<0||cc<0||rr>=N||cc>=N||G.board[rr*N+cc]>=0)return false}
+  return true;
+}
+function fitsAnywhere(pi){for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(fits(pi,r,c))return true;return false}
+// rows and columns that would be full if piece pi went at (r,c)
+function wouldClear(pi,r,c){
+  const b=G.board.slice();for(const [dr,dc] of P[pi].cells)b[(r+dr)*N+c+dc]=1;
+  const rows=[],cols=[];
+  for(let i=0;i<N;i++){let fr=true,fc=true;for(let j=0;j<N;j++){if(b[i*N+j]<0)fr=false;if(b[j*N+i]<0)fc=false}if(fr)rows.push(i);if(fc)cols.push(i)}
+  return {rows,cols};
+}
+function place(slot,r,c){
+  const pi=G.tray[slot];if(pi==null||!fits(pi,r,c))return false;
+  const k=P[pi].k,cells=P[pi].cells.map(([dr,dc])=>(r+dr)*N+c+dc);
+  for(const i of cells)G.board[i]=k;
+  G.tray[slot]=null;G.moves++;
+  const {rows,cols}=wouldClear(pi,r,c);
+  const lines=rows.length+cols.length;
+  let gained=cells.length,clear=new Set();
+  if(lines){
+    for(const rr of rows)for(let j=0;j<N;j++)clear.add(rr*N+j);
+    for(const cc of cols)for(let j=0;j<N;j++)clear.add(j*N+cc);
+    G.streak++;
+    const bonus=10*lines*(lines+1)/2*(G.streak>1?Math.min(G.streak,5):1);
+    gained+=bonus;stats.lines+=lines;
+  }else G.streak=0;
+  G.score+=gained;if(G.score>best)best=G.score;
+  if(G.tray.every(x=>x==null))G.tray=[randPiece(),randPiece(),randPiece()];
+  // draw the placement first, then the clear
+  drawBoard(cells);
+  if(clear.size){
+    for(const i of clear)G.board[i]=-1;
+    setTimeout(()=>{for(const i of clear){const el=cellEls[i];el.classList.add('pop')}
+      setTimeout(()=>{drawBoard();for(const i of clear)cellEls[i].classList.remove('pop')},380)},90);
+    comboText(lines,gained);
+  }
+  plus(gained);sound(lines);
+  drawTray();drawScore();
+  if(!G.tray.some(pi=>pi!=null&&fitsAnywhere(pi))){G.over=true;stats.games++;setTimeout(showOver,clear.size?700:350)}
+  save();return true;
+}
+
+/* ---------- drawing ---------- */
+const cellEls=[];
+function buildGrid(){const g=$('grid');g.innerHTML='';cellEls.length=0;for(let i=0;i<N*N;i++){const d=document.createElement('div');d.className='cell';g.appendChild(d);cellEls.push(d)}}
+function drawBoard(landed){
+  for(let i=0;i<N*N;i++){
+    const el=cellEls[i],k=G.board[i];
+    el.className='cell'+(k>=0?' f':'');el.style.setProperty('--k',k>=0?COL[k]:'');
+  }
+  if(landed)for(const i of landed){cellEls[i].classList.add('landed')}
+}
+function pieceHTML(pi,cls){
+  const [h,w]=dims(pi),on=new Set(P[pi].cells.map(([r,c])=>r*w+c));
+  let s='';for(let i=0;i<h*w;i++)s+='<i class="'+(on.has(i)?'blk':'e')+'"></i>';
+  return '<div class="'+cls+'" style="--k:'+COL[P[pi].k]+';grid-template-columns:repeat('+w+',var(--c))">'+s+'</div>';
+}
+function drawTray(){
+  $('tray').innerHTML=G.tray.map((pi,i)=>'<div class="slot'+(pi!=null&&!fitsAnywhere(pi)?' dead':'')+'" data-slot="'+i+'">'+(pi!=null?pieceHTML(pi,'piece'):'')+'</div>').join('');
+}
+function drawScore(){$('score').textContent=fmt(G.score);$('best').textContent=fmt(best)}
+function plus(n){const p=document.createElement('span');p.className='plus';p.textContent='+'+fmt(n);$('scoreBox').appendChild(p);setTimeout(()=>p.remove(),850)}
+function comboText(lines,gained){
+  const words=['','Clean','Double','Triple','Quad','Monster','Legendary'];
+  const d=document.createElement('div');d.className='combo';
+  d.innerHTML=(words[Math.min(lines,6)]||'Legendary')+'!<small>'+lines+(lines>1?' lines':' line')+(G.streak>1?' · streak ×'+Math.min(G.streak,5):'')+'</small>';
+  $('board').appendChild(d);setTimeout(()=>d.remove(),1000);
+}
+function layout(){
+  const pl=$('play').getBoundingClientRect();if(!pl.width)return;
+  // the board plus a tray about a third of its height must fit
+  const maxBoard=Math.min(pl.width,(pl.height-14)/1.33,520);
+  const g=Math.max(2,Math.round(maxBoard*.008)),pad=Math.max(5,Math.round(maxBoard*.018));
+  const c=Math.floor((maxBoard-pad*2-g*9)/10);
+  const R=document.documentElement.style;R.setProperty('--c',c+'px');R.setProperty('--g',g+'px');R.setProperty('--pad',pad+'px');
+  R.setProperty('--mc',Math.floor(Math.min(c*.62,(pl.width/3-20)/5.4))+'px');
+  geom=null;
+}
+let geom=null;
+function boardGeom(){
+  if(geom)return geom;
+  const r=$('grid').getBoundingClientRect(),cs=getComputedStyle(document.documentElement);
+  const c=parseFloat(cs.getPropertyValue('--c')),g=parseFloat(cs.getPropertyValue('--g'));
+  return geom={left:r.left,top:r.top,c,g,step:c+g};
+}
+
+/* ---------- dragging ---------- */
+let drag=null;
+function clearPreview(){for(const el of cellEls){el.classList.remove('ghost','hot');if(!el.classList.contains('f'))el.style.removeProperty('--k')}}
+function startDrag(e,slot){
+  const pi=G.tray[slot];if(pi==null||G.over)return;
+  const gm=boardGeom(),[h,w]=dims(pi);
+  const el=document.createElement('div');el.className='drag';el.style.setProperty('--k',COL[P[pi].k]);el.style.gridTemplateColumns='repeat('+w+',var(--c))';
+  const on=new Set(P[pi].cells.map(([r,c])=>r*w+c));let s='';for(let i=0;i<h*w;i++)s+='<i class="'+(on.has(i)?'blk':'e')+'"></i>';el.innerHTML=s;
+  document.body.appendChild(el);
+  const lift=Math.max(gm.step*1.6,60); // the piece rides above your finger so you can see it
+  drag={slot,pi,el,h,w,lift,pw:w*gm.step-gm.g,ph:h*gm.step-gm.g,r:null,c:null};
+  $('tray').querySelector('[data-slot="'+slot+'"]').style.opacity=.25;
+  moveDrag(e);sound(-1);
+}
+function moveDrag(e){
+  if(!drag)return;
+  const gm=boardGeom(),x=e.clientX-drag.pw/2,y=e.clientY-drag.ph-drag.lift;
+  drag.el.style.transform=`translate(${x}px,${y}px)`;
+  const c=Math.round((x-gm.left)/gm.step),r=Math.round((y-gm.top)/gm.step);
+  if(r===drag.r&&c===drag.c)return;
+  drag.r=r;drag.c=c;clearPreview();
+  if(fits(drag.pi,r,c)){
+    const k=COL[P[drag.pi].k];
+    for(const [dr,dc] of P[drag.pi].cells){const el=cellEls[(r+dr)*N+c+dc];el.classList.add('ghost');el.style.setProperty('--k',k)}
+    const {rows,cols}=wouldClear(drag.pi,r,c);
+    for(const rr of rows)for(let j=0;j<N;j++)cellEls[rr*N+j].classList.add('hot');
+    for(const cc of cols)for(let j=0;j<N;j++)cellEls[j*N+cc].classList.add('hot');
+    drag.ok=true;
+  }else drag.ok=false;
+}
+function endDrag(){
+  if(!drag)return;
+  const d=drag;drag=null;clearPreview();d.el.remove();
+  const s=$('tray').querySelector('[data-slot="'+d.slot+'"]');if(s)s.style.opacity='';
+  if(d.ok)place(d.slot,d.r,d.c);else sound(-2);
+}
+$('tray').addEventListener('pointerdown',e=>{
+  const s=e.target.closest('.slot');if(!s)return;e.preventDefault();
+  try{$('tray').setPointerCapture(e.pointerId)}catch(_){}
+  geom=null;startDrag(e,+s.dataset.slot);
+});
+$('tray').addEventListener('pointermove',e=>moveDrag(e));
+$('tray').addEventListener('pointerup',endDrag);
+$('tray').addEventListener('pointercancel',()=>{if(drag){drag.ok=false;endDrag()}});
+
+/* ---------- screens ---------- */
+function showOver(){
+  const o=$('over');o.hidden=false;
+  const nb=G.score>=best&&G.score>0;
+  o.innerHTML='<div><h2>No room left</h2><p>'+fmt(G.score)+' points'+(nb?' · new best!':'')+'</p><div class="row"><button class="btn" id="oMenu">Menu</button><button class="btn big" id="oAgain">Play again</button></div></div>';
+  $('oAgain').onclick=()=>{newGame()};$('oMenu').onclick=()=>show('home');
+  sound(-3);save();
+}
+function newGame(){fresh();$('over').hidden=true;drawBoard();drawTray();drawScore();save()}
+const inProgress=()=>G&&!G.over&&G.moves>0;
+function renderHome(){
+  $('hBest').textContent=fmt(best);$('hLines').textContent=fmt(stats.lines);$('hGames').textContent=fmt(stats.games);
+  const cont=inProgress();
+  $('hContinue').hidden=!cont;$('hContinue').textContent='Continue · '+fmt(G.score);
+  $('hNew').className=cont?'btn':'btn big';$('hNew').textContent=cont?'New game':'Play';
+}
+function show(w){
+  screen=w;$('home').hidden=w!=='home';$('game').hidden=w!=='game';
+  if(w==='game')requestAnimationFrame(()=>{layout();drawBoard();drawTray();drawScore();if(G.over)showOver()});
+  else renderHome();
+}
+// home logo: "1010" drawn in blocks
+const FONT={'1':['010','110','010','010','111'],'0':['111','101','101','101','111']};
+$('logo').innerHTML='1010'.split('').map((ch,gi)=>'<div class="glyph">'+FONT[ch].join('').split('').map((b,i)=>'<i class="'+(b==='1'?'on':'')+'" style="--k:'+COL[[1,4,6,8][gi]]+';--d:'+(gi*.12+(4-Math.floor(i/3))*.05).toFixed(2)+'s"></i>').join('')+'</div>').join('');
+const ICON=(cells,k)=>'<span class="ic">'+[0,1,2,3,4,5,6,7,8].map(i=>'<i class="'+(cells.includes(i)?'on':'')+'" style="--k:'+COL[k]+'"></i>').join('')+'</span>';
+$('how').innerHTML=[
+  [ICON([0,3,6,7],8),'<b>Drag</b> any of the three blocks onto the board.'],
+  [ICON([3,4,5],2),'<b>Fill a row or column</b> to clear it. Clear several at once for a bigger bonus.'],
+  [ICON([0,1,3,4],5),'<b>Plan ahead.</b> The game ends when none of your blocks fit.']
+].map(([ic,t])=>'<li>'+ic+'<span>'+t+'</span></li>').join('');
+
+/* ---------- sound ---------- */
+let AC=null,soundOn=ls.get('d1010-sound')!=='0';
+function tone(f,dur,vol,type){
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;
+    o.type=type||'triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g).connect(AC.destination);o.start(t);o.stop(t+dur+.02)}catch(e){}
+}
+function sound(lines){
+  if(!soundOn)return;
+  if(lines===-1)tone(520,.06,.04);else if(lines===-2)tone(150,.1,.05,'sine');else if(lines===-3){tone(300,.25,.08);setTimeout(()=>tone(200,.35,.08),180)}
+  else if(!lines)tone(240,.08,.07);
+  else for(let i=0;i<Math.min(lines,4);i++)setTimeout(()=>tone(440*Math.pow(1.26,i),.16,.09),i*70);
+}
+function renderSound(){$('soundBtn').textContent=soundOn?'Sound on':'Sound off';$('soundBtn').setAttribute('aria-pressed',soundOn)}
+$('soundBtn').onclick=()=>{soundOn=!soundOn;ls.set('d1010-sound',soundOn?'1':'0');renderSound()};
+
+/* ---------- wiring ---------- */
+$('menuBtn').onclick=()=>show('home');
+$('hContinue').onclick=()=>show('game');
+let armH=0,armG=0;
+$('hNew').onclick=()=>{
+  if(inProgress()&&Date.now()-armH>2500){armH=Date.now();$('hNew').textContent='Tap again to start over';setTimeout(renderHome,2600);return}
+  newGame();show('game');
+};
+$('newBtn').onclick=()=>{
+  if(inProgress()&&Date.now()-armG>2500){armG=Date.now();$('newBtn').textContent='Tap again';setTimeout(()=>{$('newBtn').textContent='New game'},2600);return}
+  $('newBtn').textContent='New game';newGame();
+};
+$('arcade').hidden=!/^https?:$/.test(location.protocol)||!!window.claude;
+try{new ResizeObserver(()=>{if(screen==='game')layout()}).observe($('play'))}catch(e){addEventListener('resize',()=>{if(screen==='game')layout()})}
+addEventListener('scroll',()=>{geom=null},true);
+
+/* ---------- boot ---------- */
+buildGrid();
+let saved=null;try{saved=JSON.parse(ls.get('d1010-game'))}catch(e){}
+if(saved&&Array.isArray(saved.board)&&saved.board.length===N*N&&Array.isArray(saved.tray))G=saved;else fresh();
+renderSound();show('home');
+window.__t={get G(){return G},place,fits,fitsAnywhere,P,newGame,show};
+})();
+</script>
+</body>
+</html>
