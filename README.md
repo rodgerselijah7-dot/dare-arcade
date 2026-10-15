@@ -55,12 +55,13 @@ Every push to `main` redeploys automatically.
 - Gold always moves first. The host is gold in the first game and colors swap on every rematch. Leaving mid-game counts as a loss, and a player who stays disconnected for 45 seconds loses the game.
 - The same `connect/index.html` also works as a Claude artifact, with Vs CPU and 2 Player only.
 
-## DARE Dice (craps)
-- A craps table with two 3D dice (three.js r128, red and gold) and play chips only. Bets: Pass Line, Don't Pass, Odds (up to 3x the line bet, true odds) and Field (2 pays 2x, 12 pays 3x).
-- Come-out: 7 or 11 wins the Pass Line, 2, 3 or 12 is craps (12 pushes Don't Pass). Any other number is the point; the point wins the Pass Line, a 7 sevens out.
-- Solo: you against the house with a 1,000-chip stack that's saved on the phone. Out of chips? Tap for 1,000 more. The best stack is shown on the title screen.
-- Shake to roll: phones roll the dice when shaken (device motion). iPhones ask for motion access the first time a player taps Play, a bet or Roll. Players can turn it off with the Shake button.
-- Online: two phones share one table through `/api/room` (rooms are named `dd-<code>`). The shooter rolls for the table and keeps the dice until they seven out. Both players bet every roll; each phone settles its own bets. The shooter waits until the other player taps "Bets in" (or 10 seconds pass). Most chips after 30 rolls wins. The rolls travel as `r<die1><die2>` tokens in the shooter's presence, and every phone replays them, so a missed poll never loses a roll.
+## DARE Dice (street craps)
+- Two 3D dice (three.js r128, red and gold) thrown off a brick wall onto night pavement. Play cash only; each player starts with $1,000.
+- The shooter calls a bet with cash buttons ($5, $20, $100, All in). The fader fades all of it or covers part; the bet is whatever the fader covers. Both stacks go on the ground as the pot.
+- Come-out: 7 or 11 wins, 2, 3 or 12 is craps and loses (the shooter keeps the dice). Anything else is the point: hit it again to win, a 7 first is a seven-out, the shooter loses and the dice pass. Whoever breaks the other player wins.
+- Rolling: hold the Roll button to shake the dice, let go to throw. On phones, shaking the phone throws them too (device motion; iPhones ask for motion access the first time a player taps Play, a bill or Roll). Players can turn it off with the Shake button.
+- Solo: play Slim, who calls his own shots when he has the dice and sometimes only covers part of a big bet. The game is saved on the phone (Resume).
+- Online: rooms are named `dd-<code>` on `/api/room`. Every move is a token in the acting player's presence: `a<amount>` (call), `c<amount>` (fade/cover), `r<die1><die2>` (roll). Only one player can act at a time, so the lists never fork, and each phone replays the other's new tokens. The host gets the dice first; first dice swap on every rematch.
 
 ## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
 - `dare-play.js` is shared by all four games. It adds:

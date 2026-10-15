@@ -1,7 +1,7 @@
 {
   "name": "DARE Dice",
   "short_name": "DARE Dice",
-  "description": "Craps with two 3D dice and play chips. Shake your phone to roll. By Dontae Amare.",
+  "description": "Street craps with 3D dice and stacks of play cash. Shake your phone to roll. By Dontae Amare.",
   "start_url": "/dice/",
   "scope": "/dice/",
   "display": "standalone",
