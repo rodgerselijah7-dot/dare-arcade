@@ -133,8 +133,6 @@ p{margin:0}
 
 /* end */
 .grade{font-family:var(--display);font-weight:900;font-size:7rem;line-height:.8;color:var(--gold)}
-.reward{border:1px dashed var(--gold);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#211a10}
-.code{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--gold);letter-spacing:.08em;user-select:all}
 .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;text-align:center}
 .vs .who{font-size:.85rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vs .pts{font-family:var(--display);font-weight:900;font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
@@ -222,7 +220,6 @@ p{margin:0}
       <div>rounds<b id="hRounds">0</b></div>
       <div>daily streak<b id="hDaily">0</b></div>
     </div>
-    <p class="small" id="rewardLine" hidden></p>
   </section>
 
   <!-- ONLINE -->
@@ -298,12 +295,6 @@ p{margin:0}
       <p class="small" id="vsLine"></p>
       <div class="row"><button class="btn primary" id="rematch">Rematch</button><button class="btn ghost sm" id="chatBtn2">Chat</button></div>
     </div>
-    <div class="reward" id="reward" hidden>
-      <div class="label"><b>Perfect round</b> · DARE store reward</div>
-      <p>You went 10 for 10. Take <b id="rewardPct"></b> off at darewear.store with this code:</p>
-      <div class="row" style="align-items:center"><span class="code" id="rewardCode"></span><button class="btn ghost sm" id="rewardCopy">Copy</button></div>
-      <a class="btn primary" href="https://darewear.store" target="_blank" rel="noopener">Shop darewear.store</a>
-    </div>
     <div class="card" id="shareCard" hidden>
       <div class="label">Your Daily Dig</div>
       <pre class="share" id="shareBox"></pre>
@@ -324,7 +315,6 @@ p{margin:0}
 (function boot(){ if(!window.CRATES){ return setTimeout(boot,30) } main() })();
 function main(){
 /* ======================= settings ======================= */
-const STORE_CODE='DIGGER10', STORE_PCT='10%';   // must match a promotion code in Stripe (Product catalog > Coupons)
 const ROUND=10, LAUNCH='2026-10-15', SITE='games.darewear.store';
 const TIMES={mc:15,origin:15,year:20,order:20};
 const KIND={mc:'Trivia',origin:"Who's from where",year:'Name the year',order:'Which came first'};
@@ -460,7 +450,6 @@ function renderHome(){
   if(rec){$('dailyGrid').textContent=gridOf(rec.marks);$('dailyLine').textContent=`${rec.right}/10 · ${fmt(rec.score)} pts · next dig ${untilTomorrow()}`}
   $('hBest').textContent=fmt(ls.get('dcd-best',0));$('hRounds').textContent=ls.get('dcd-rounds',0);
   const ds=ls.get('dcd-dstreak',{last:'',n:0});$('hDaily').textContent=(ds.last===d||ds.last===prevDay(d))?ds.n:0;
-  const rw=ls.get('dcd-reward',false);$('rewardLine').hidden=!rw;if(rw)$('rewardLine').innerHTML=`Store reward unlocked: <b style="color:var(--gold)">${STORE_CODE}</b> for ${STORE_PCT} off at darewear.store`;
 }
 function untilTomorrow(){
   const now=new Date(),parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'numeric',hour12:false}).formatToParts(now);
@@ -595,8 +584,6 @@ function finish(){
   $('endLabel').textContent=S.mode==='daily'?`Daily Dig #${dayNum(S.seed)}`:S.mode==='online'?'Race finished':'Round complete';
   if(S.score>ls.get('dcd-best',0))ls.set('dcd-best',S.score);
   ls.set('dcd-rounds',ls.get('dcd-rounds',0)+1);
-  $('reward').hidden=g!=='S';
-  if(g==='S'){ls.set('dcd-reward',true);$('rewardCode').textContent=STORE_CODE;$('rewardPct').textContent=STORE_PCT}
   $('shareCard').hidden=S.mode!=='daily';
   if(S.mode==='daily'){
     const d=S.seed,rec={score:S.score,right:S.right,marks:S.marks};
@@ -619,7 +606,6 @@ $('next').onclick=next;$('fifty').onclick=useFifty;
 $('again').onclick=()=>newRound('classic');
 $('toHome').onclick=()=>{if(S&&S.mode==='online')netLeave();renderHome();show('home')};
 $('shareCopy').onclick=()=>copyText($('shareBox').textContent,$('shareCopy'),$('shareBox'));
-$('rewardCopy').onclick=()=>copyText(STORE_CODE,$('rewardCopy'),$('rewardCode'));
 $('quit').onclick=()=>{$('quitTx').textContent=S&&S.mode==='online'?'Leave the race? Your opponent wins.':S&&S.mode==='daily'?'Leave? Today\'s dig counts as played.':'Leave this round?';$('quitBox').hidden=false};
 $('quitNo').onclick=()=>{$('quitBox').hidden=true};
 $('quitYes').onclick=()=>{

@@ -113,5 +113,4 @@ Every push to `main` redeploys automatically.
 - No repeats: each phone remembers which questions it has seen (`dcd-seen`) and serves unseen ones first, then starts over once a mix is used up.
 - Daily Dig: the same 10 questions for everyone each day (seeded from the Central Time date, fixed easy-to-hard plan), one try, with a copyable result grid. Daily Dig #1 is October 15, 2026.
 - Head to head: rooms `cd-<code>` on `/api/room`. The host starts each race with a random seed; both phones build the same 10 questions and play at their own pace, each sending its points per question (`p`) so the other sees the score live. Rematches, chat, Find an opponent and match alerts work like the other online games (`crate-digger` in `dare-play.js` and `/api/lfg`).
-- Perfect round (10/10) shows a darewear.store code: `STORE_CODE` / `STORE_PCT` at the top of the game script (currently DIGGER10, 10% off). The code has to exist as a promotion code in Stripe (Product catalog > Coupons) to work at checkout.
 - Sound is synthesized with Web Audio (808 kick on correct, record scratch on wrong, hi-hat ticks in the last 5 seconds). Saved on the phone: localStorage keys `dcd-*`.
