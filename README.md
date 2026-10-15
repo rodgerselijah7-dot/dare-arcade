@@ -18,8 +18,9 @@ Browser games by Dontae Amare. Static site — no build step.
 /1010/                 DARE 1010 (single-file 10x10 block puzzle + icons + manifest)
 /bubble/               DARE Bubble Blaster (single-file canvas bubble shooter + icons + manifest)
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
+/crate-digger/         DARE Crate Digger (hip hop trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice and Crate Digger online play (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -88,7 +89,7 @@ Every push to `main` redeploys automatically.
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix.
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), DARE Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -97,10 +98,20 @@ Every push to `main` redeploys automatically.
 - Home screen (best, total popped, top round, Continue / New game) and a separate game screen. Saved on the phone (localStorage keys `dbub-*`).
 - Paid game ($2.99, also in the All-Access Pass): rounds 1 to 3 are the free tryout. Clearing round 3, or continuing a saved game past it, shows the unlock panel from `/dare-unlock.js`.
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Crate Digger)
 - `dare-play.js` is shared by all four games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
   - **Match alerts**: phone notifications when someone posts an open match (Web Push through `/sw.js`). Players turn them on with the switch on a game's online screen. iPhones need the arcade on the Home Screen first (iOS 16.4+).
 - Joining from an alert opens `/<game>/?join=CODE` and drops the player straight into the match.
 - `/api/lfg` keys in Redis: `arc:lfg` (open matches), `arc:push` (alert subscriptions), `arc:pushthr:*` (one alert per phone per minute), `arc:vapid` (push signing keys, created on first use; set `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` env vars to use your own).
+
+## DARE Crate Digger
+- Hip hop trivia. Four question types: Trivia (four choices), Who's from where (hometowns), Name the year (slider, one year off still counts for 60% of the points) and Which came first (tap three releases oldest first).
+- Questions live in `crate-digger/questions.js`: `mc` (four-choice questions with category, era `c`/`n`, difficulty 1 to 3 and a liner note), `rel` (releases with years, used for Name the year and Which came first) and `ori` (artist hometowns). Add new questions by appending lines; keep each `id` unique.
+- Classic round: 10 questions filtered by era (All, Classics, New era 2020+) and category (13 categories plus Hometowns and Timeline). Difficulty follows the streak: easy at the start, medium from a 2-streak, hard from 5. A wrong answer on a hard question halves the streak instead of resetting it. At most 2 Name the year, 2 Which came first and 3 hometown questions per round.
+- No repeats: each phone remembers which questions it has seen (`dcd-seen`) and serves unseen ones first, then starts over once a mix is used up.
+- Daily Dig: the same 10 questions for everyone each day (seeded from the Central Time date, fixed easy-to-hard plan), one try, with a copyable result grid. Daily Dig #1 is October 15, 2026.
+- Head to head: rooms `cd-<code>` on `/api/room`. The host starts each race with a random seed; both phones build the same 10 questions and play at their own pace, each sending its points per question (`p`) so the other sees the score live. Rematches, chat, Find an opponent and match alerts work like the other online games (`crate-digger` in `dare-play.js` and `/api/lfg`).
+- Perfect round (10/10) shows a darewear.store code: `STORE_CODE` / `STORE_PCT` at the top of the game script (currently DIGGER10, 10% off). The code has to exist as a promotion code in Stripe (Product catalog > Coupons) to work at checkout.
+- Sound is synthesized with Web Audio (808 kick on correct, record scratch on wrong, hi-hat ticks in the last 5 seconds). Saved on the phone: localStorage keys `dcd-*`.

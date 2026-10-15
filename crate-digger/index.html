@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0b10">
+<meta name="description" content="DARE Crate Digger by Dontae Amare. Hip hop trivia from the Bronx park jams to 2026: a Daily Dig, classic rounds that get harder as you streak, and head-to-head races online.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crate Digger">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="/crate-digger/manifest.webmanifest">
+<link rel="icon" href="/crate-digger/icon-192.png">
+<link rel="apple-touch-icon" href="/crate-digger/apple-touch-icon.png">
+<title>DARE Crate Digger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Archivo:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap">
+<style>
+/* Layout: one column, phone first. Home = Daily Dig card, Classic round card (era + category), Head-to-head card.
+   Game = score strip, timer, the question on a ruled "liner note" sheet, answers at thumb level. Single dark theme by choice. */
+:root{
+  --ink:#0d0b10; --stage:#17131c; --sheet:#211b29; --line:#3a3046;
+  --gold:#e8b53b; --gold-dim:#8d6d24; --cream:#f3ecdf; --muted:#a79cb3;
+  --good:#4fd18b; --warn:#f2c94c; --bad:#ff5d6c;
+  --display:"Big Shoulders Display",Impact,"Arial Narrow",sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Space Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--ink);color:var(--cream);font:15px/1.45 var(--body);-webkit-tap-highlight-color:transparent;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:16px;
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 24px)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-family:var(--display);font-weight:900;font-size:1.6rem;letter-spacing:.02em;line-height:1;text-transform:uppercase;text-decoration:none;color:var(--cream)}
+.brand span{color:var(--gold)}
+.topr{display:flex;gap:8px;align-items:center}
+.icon{appearance:none;background:transparent;border:1px solid var(--line);border-radius:6px;height:36px;min-width:36px;padding:0 10px;cursor:pointer;
+  font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.icon:hover{color:var(--cream);border-color:var(--gold-dim)}
+.icon svg{width:16px;height:16px}
+.stats{display:flex;gap:14px;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.72rem;color:var(--muted)}
+.stats b{display:block;color:var(--cream);font-size:1rem}
+.stat{text-align:right}
+.screen{display:flex;flex-direction:column;gap:14px;flex:1}
+.label{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.label b{color:var(--gold);font-weight:700}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(3rem,15vw,5rem);line-height:.86;margin:0;text-transform:uppercase;text-wrap:balance}
+h1 em{font-style:normal;color:var(--gold);display:block}
+h2{font-family:var(--display);font-weight:900;font-size:1.9rem;line-height:1;margin:0;text-transform:uppercase}
+p{margin:0}
+.lede{color:var(--muted);max-width:44ch}
+.card{background:var(--stage);border:1px solid var(--line);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:12px}
+.card.daily{border-color:var(--gold-dim);background:linear-gradient(180deg,#221a12,var(--stage) 60%)}
+.cardhd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;border:1px solid var(--line);background:transparent;border-radius:999px;padding:7px 12px;font-size:.85rem;cursor:pointer;color:var(--muted)}
+.chip.on{border-color:var(--gold);color:var(--ink);background:var(--gold);font-weight:600}
+.chip:hover:not(.on){color:var(--cream)}
+.small{font-size:.82rem;color:var(--muted)}
+.small button{appearance:none;background:none;border:0;padding:0;color:var(--gold);text-decoration:underline;cursor:pointer;font-size:inherit}
+.grid10{font-size:1.3rem;letter-spacing:2px;line-height:1}
+.btn{appearance:none;border:0;border-radius:6px;padding:15px 18px;font-family:var(--body);font-weight:800;font-size:.95rem;
+  letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex:1;text-align:center;text-decoration:none;display:inline-block}
+.btn.primary{background:var(--gold);color:var(--ink)}
+.btn.ghost{background:transparent;color:var(--cream);border:1px solid var(--line)}
+.btn.sm{padding:10px 12px;font-size:.78rem;flex:none}
+.btn:disabled{opacity:.35;cursor:default}
+.row{display:flex;gap:10px}
+.pad:focus-visible,.btn:focus-visible,.chip:focus-visible,.icon:focus-visible,.tile:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.72rem;color:var(--muted)}
+.trio div{border-top:2px solid var(--line);padding-top:8px}
+.trio b{display:block;font-size:1.2rem;color:var(--cream)}
+
+/* game */
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.timer{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--gold);transform-origin:left}
+.timer.low i{background:var(--bad)}
+.sheet{background:var(--sheet);border-radius:6px;padding:16px 18px 22px;position:relative;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 37px,rgba(255,255,255,.07) 37px 38px);background-position:0 46px}
+.sheet p{font-family:var(--display);font-weight:700;font-size:clamp(1.45rem,6vw,1.9rem);line-height:38px;text-wrap:pretty}
+.tags{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.cat{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:var(--ink);padding:3px 8px;border-radius:3px}
+.cat.alt{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.dots{font-family:var(--mono);font-size:.68rem;color:var(--gold);padding:3px 0;letter-spacing:.1em}
+.feedback{min-height:1.4em;font-family:var(--mono);font-size:.85rem}
+.feedback.good{color:var(--good)} .feedback.bad{color:var(--bad)} .feedback.close{color:var(--warn)}
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pad{appearance:none;border:1px solid var(--line);background:var(--stage);color:var(--cream);border-radius:6px;padding:14px 10px;min-height:66px;
+  font-family:var(--display);font-weight:700;font-size:1.22rem;line-height:1.1;cursor:pointer;transition:transform .08s,background .15s,border-color .15s;overflow-wrap:anywhere}
+.pad:active{transform:scale(.97)}
+.pad:hover:not(:disabled){border-color:var(--gold)}
+.pad:disabled{cursor:default}
+.pad.right{background:var(--good);border-color:var(--good);color:var(--ink)}
+.pad.wrong{background:var(--bad);border-color:var(--bad);color:var(--ink)}
+.pad.gone{opacity:.15}
+#answer{display:flex;flex-direction:column;gap:10px}
+.tiles{display:flex;flex-direction:column;gap:8px}
+.tile{appearance:none;display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--line);background:var(--stage);border-radius:6px;padding:12px;cursor:pointer;min-height:62px}
+.tile:hover:not(:disabled){border-color:var(--gold)}
+.tile .n{flex:none;width:34px;height:34px;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:1.2rem;color:var(--gold)}
+.tile.set .n{border:2px solid var(--gold);background:var(--gold);color:var(--ink)}
+.tile .tx{min-width:0;flex:1}
+.tile .tx b{display:block;font-family:var(--display);font-size:1.2rem;line-height:1.1}
+.tile .tx span{font-size:.85rem;color:var(--muted)}
+.tile .yr{font-family:var(--mono);font-size:.9rem;color:var(--muted)}
+.tile.right{border-color:var(--good)} .tile.right .yr{color:var(--good)}
+.tile.wrong{border-color:var(--bad)} .tile.wrong .yr{color:var(--bad)}
+.tile:disabled{cursor:default}
+.yearbox{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.yearread{font-family:var(--display);font-weight:900;font-size:4.2rem;line-height:.9;text-align:center;color:var(--gold);font-variant-numeric:tabular-nums}
+.yearread.right{color:var(--good)} .yearread.close{color:var(--warn)} .yearread.wrong{color:var(--bad)}
+.yearrow{display:flex;gap:10px;align-items:center}
+.yearrow input{flex:1;min-width:0;accent-color:var(--gold);height:36px}
+.step{appearance:none;width:52px;height:52px;flex:none;border:1px solid var(--line);background:var(--stage);border-radius:6px;font-family:var(--display);font-size:1.6rem;cursor:pointer}
+.ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.68rem;color:var(--muted);padding:0 62px}
+.note{background:var(--stage);border-left:3px solid var(--gold-dim);padding:10px 12px;font-size:.9rem;line-height:1.5;color:var(--muted)}
+.opp{display:flex;align-items:center;gap:10px;background:var(--stage);border:1px solid var(--line);border-radius:6px;padding:8px 8px 8px 12px}
+.opp .led{width:8px;height:8px;border-radius:50%;background:var(--good);flex:none}
+.opp.off .led{background:var(--bad)}
+.opp .tx{flex:1;min-width:0;font-size:.85rem}
+.opp .tx b{color:var(--cream)}
+.opp .bar{height:4px;background:var(--line);border-radius:2px;margin-top:5px;overflow:hidden}
+.opp .bar i{display:block;height:100%;background:var(--gold);width:0;transition:width .3s}
+.pip{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block;margin-left:4px;vertical-align:middle}
+.confirm{display:flex;gap:8px;align-items:center;background:var(--stage);border:1px solid var(--bad);border-radius:6px;padding:10px 12px;font-size:.9rem}
+.confirm span{flex:1}
+
+/* end */
+.grade{font-family:var(--display);font-weight:900;font-size:7rem;line-height:.8;color:var(--gold)}
+.reward{border:1px dashed var(--gold);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#211a10}
+.code{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--gold);letter-spacing:.08em;user-select:all}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;text-align:center}
+.vs .who{font-size:.85rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vs .pts{font-family:var(--display);font-weight:900;font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.vs .pts.win{color:var(--gold)}
+.vs .mid{font-family:var(--mono);color:var(--muted);padding-bottom:8px}
+.share{white-space:pre-wrap;font-family:var(--mono);font-size:.85rem;background:var(--sheet);border-radius:6px;padding:10px 12px;user-select:all;margin:0}
+.recap{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:.9rem;color:var(--muted)}
+.recap li{border-left:3px solid var(--line);padding:4px 0 4px 10px;line-height:1.4}
+.recap li.ok{border-color:var(--good)} .recap li.close{border-color:var(--warn)} .recap li.no{border-color:var(--bad)}
+.recap b{color:var(--cream)}
+
+/* online */
+.field{width:100%;background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:12px 14px;color:var(--cream);font:inherit;font-size:16px;outline:none}
+.field:focus{border-color:var(--gold)}
+.bigcode{font-family:var(--display);font-weight:900;font-size:4rem;letter-spacing:.12em;color:var(--gold);line-height:1}
+.err{color:var(--bad);font-size:.9rem;min-height:1.2em}
+.oppline{display:flex;gap:10px;align-items:center;color:var(--muted)}
+.oppline .led{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.oppline.in .led{background:var(--good)}
+.oppline.in{color:var(--cream)}
+
+.pop{animation:pop .35s ease-out}
+@keyframes pop{0%{transform:translateY(6px);opacity:.3}100%{transform:none;opacity:1}}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){.pop,.shake{animation:none}}
+@media (max-width:380px){.pad{font-size:1.08rem}.yearread{font-size:3.4rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/" id="brand">DARE <span>Crates</span></a>
+    <div class="topr">
+      <div class="stats" id="hud" hidden>
+        <div class="stat">score<b id="score">0</b></div>
+        <div class="stat">streak<b id="streak">0</b></div>
+      </div>
+      <button class="icon" id="sound" aria-pressed="true" aria-label="Sound"></button>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <section class="screen" id="home">
+    <div>
+      <div class="label">Hip hop trivia</div>
+      <h1>Crate <em>digger</em></h1>
+    </div>
+    <p class="lede">From the Bronx park jams to 2026. Albums, labels, producers, hometowns and the DFW scene. Streak right and the questions get harder.</p>
+
+    <div class="card daily" id="dailyCard">
+      <div class="cardhd"><h2>Daily Dig</h2><span class="label" id="dailyNum"></span></div>
+      <div id="dailyNew">
+        <p class="lede">Same 10 questions for everybody today. One shot. Post your grid.</p>
+      </div>
+      <div id="dailyDone" hidden>
+        <div class="grid10" id="dailyGrid"></div>
+        <p class="small" id="dailyLine"></p>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="dailyGo">Dig today's crate</button>
+        <button class="btn ghost" id="dailyShare" hidden>Share result</button>
+      </div>
+      <pre class="share" id="dailyShareBox" hidden></pre>
+    </div>
+
+    <div class="card">
+      <div class="cardhd"><h2>Classic round</h2><span class="label">10 questions</span></div>
+      <div class="label">Era</div>
+      <div class="chips" id="eras"></div>
+      <div class="label">Category</div>
+      <div class="chips" id="cats"></div>
+      <button class="btn primary" id="classicGo">Start digging</button>
+      <p class="small" id="seenLine"></p>
+    </div>
+
+    <div class="card">
+      <div class="cardhd"><h2>Head to head</h2><span class="label">online</span></div>
+      <p class="lede">Race a friend through the same 10 questions. Watch their score move while you play.</p>
+      <button class="btn ghost" id="onlineGo">Play online</button>
+    </div>
+
+    <div class="trio">
+      <div>best round<b id="hBest">0</b></div>
+      <div>rounds<b id="hRounds">0</b></div>
+      <div>daily streak<b id="hDaily">0</b></div>
+    </div>
+    <p class="small" id="rewardLine" hidden></p>
+  </section>
+
+  <!-- ONLINE -->
+  <section class="screen" id="online" hidden>
+    <div class="row" style="align-items:center"><button class="icon" id="olBack">‹ Back</button><span class="label" style="flex:1;text-align:right">Head to head</span></div>
+    <div class="card" id="olSetup">
+      <label class="label" for="olNick">Your name</label>
+      <input class="field" id="olNick" maxlength="12" placeholder="Player" autocomplete="nickname" enterkeyhint="done">
+      <button class="btn primary" id="olFind">Find an opponent</button>
+      <button class="btn ghost" id="olCreate">Create a private match</button>
+      <div id="olOpen" hidden></div>
+      <div class="label">Have a code?</div>
+      <div class="row">
+        <input class="field" id="olCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" aria-label="Match code" style="text-transform:uppercase;letter-spacing:.2em">
+        <button class="btn primary sm" id="olJoin">Join</button>
+      </div>
+      <div id="olAlerts"></div>
+    </div>
+    <div class="card" id="olLobby" hidden>
+      <div class="label">Match code</div>
+      <div class="row" style="align-items:center"><div class="bigcode" id="olCodeShow">----</div><button class="btn ghost sm" id="olCopy">Copy code</button></div>
+      <div class="oppline" id="olOpp"><span class="led"></span><span id="olOppTx">Waiting for your opponent to join</span></div>
+      <button class="btn primary" id="olStart" disabled>Start match</button>
+      <p class="small" id="olNote"></p>
+      <button class="btn ghost" id="olLeave">Leave match</button>
+    </div>
+    <div class="err" id="olStatus" aria-live="polite"></div>
+  </section>
+
+  <!-- GAME -->
+  <section class="screen" id="game" hidden>
+    <div class="meta"><span class="label" id="round">Question 1 / 10</span><span class="label" id="mult">x1</span></div>
+    <div class="timer" id="timer"><i id="fill"></i></div>
+    <div class="opp" id="oppBar" hidden>
+      <span class="led"></span>
+      <div class="tx"><div id="oppTx"></div><div class="bar"><i id="oppFill"></i></div></div>
+      <button class="icon" id="chatBtn">Chat<span class="pip" id="chatPip" hidden></span></button>
+    </div>
+    <div class="sheet" id="sheet">
+      <div class="tags"><span class="cat" id="cat"></span><span class="cat alt" id="kind"></span><span class="dots" id="diff"></span></div>
+      <p id="q"></p>
+    </div>
+    <div class="feedback" id="fb" aria-live="polite"></div>
+    <div id="answer"></div>
+    <div class="note" id="note" hidden></div>
+    <div class="row">
+      <button class="btn ghost" id="fifty">50/50</button>
+      <button class="btn primary" id="next" disabled>Next</button>
+    </div>
+    <div class="confirm" id="quitBox" hidden><span id="quitTx">Leave this round?</span><button class="btn ghost sm" id="quitNo">Stay</button><button class="btn primary sm" id="quitYes">Leave</button></div>
+    <button class="icon" id="quit" style="align-self:flex-start">‹ Quit</button>
+  </section>
+
+  <!-- END -->
+  <section class="screen" id="end" hidden>
+    <div class="card">
+      <div class="label" id="endLabel">Round complete</div>
+      <div class="grade" id="grade">A</div>
+      <p id="verdict"></p>
+      <div class="trio">
+        <div>points<b id="eScore">0</b></div>
+        <div>correct<b id="eRight">0</b></div>
+        <div>top streak<b id="eStreak">0</b></div>
+      </div>
+    </div>
+    <div class="card" id="vsCard" hidden>
+      <div class="label" id="vsLabel">Head to head</div>
+      <div class="vs">
+        <div><div class="pts" id="vsMe">0</div><div class="who">You</div></div>
+        <div class="mid">vs</div>
+        <div><div class="pts" id="vsOpp">0</div><div class="who" id="vsOppName">Opponent</div></div>
+      </div>
+      <p class="small" id="vsLine"></p>
+      <div class="row"><button class="btn primary" id="rematch">Rematch</button><button class="btn ghost sm" id="chatBtn2">Chat</button></div>
+    </div>
+    <div class="reward" id="reward" hidden>
+      <div class="label"><b>Perfect round</b> · DARE store reward</div>
+      <p>You went 10 for 10. Take <b id="rewardPct"></b> off at darewear.store with this code:</p>
+      <div class="row" style="align-items:center"><span class="code" id="rewardCode"></span><button class="btn ghost sm" id="rewardCopy">Copy</button></div>
+      <a class="btn primary" href="https://darewear.store" target="_blank" rel="noopener">Shop darewear.store</a>
+    </div>
+    <div class="card" id="shareCard" hidden>
+      <div class="label">Your Daily Dig</div>
+      <pre class="share" id="shareBox"></pre>
+      <button class="btn primary" id="shareCopy">Copy result</button>
+    </div>
+    <div class="row" id="endBtns">
+      <button class="btn primary" id="again">Dig again</button>
+      <button class="btn ghost" id="toHome">Home</button>
+    </div>
+    <div class="label">The answers</div>
+    <ul class="recap" id="recap"></ul>
+  </section>
+</div>
+
+<script src="/crate-digger/questions.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='questions.js';document.head.appendChild(s)"></script>
+<script src="/dare-play.js"></script>
+<script>
+(function boot(){ if(!window.CRATES){ return setTimeout(boot,30) } main() })();
+function main(){
+/* ======================= settings ======================= */
+const STORE_CODE='DIGGER10', STORE_PCT='10%';   // must match a promotion code in Stripe (Product catalog > Coupons)
+const ROUND=10, LAUNCH='2026-10-15', SITE='games.darewear.store';
+const TIMES={mc:15,origin:15,year:20,order:20};
+const KIND={mc:'Trivia',origin:"Who's from where",year:'Name the year',order:'Which came first'};
+const D=window.CRATES, CATS=[...new Set(D.mc.map(m=>m.c))];
+const $=id=>document.getElementById(id);
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>n.toLocaleString('en-US');
+
+/* ======================= random ======================= */
+function hashStr(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19}return h>>>0}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const shuffle=(a,r=Math.random)=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=r()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]]}return a};
+const pick=(a,r=Math.random)=>a[r()*a.length|0];
+
+/* ======================= dates ======================= */
+const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Chicago'}).format(new Date());
+const dayNum=d=>Math.round((Date.parse(d)-Date.parse(LAUNCH))/864e5)+1;
+const prevDay=d=>new Date(Date.parse(d)-864e5).toISOString().slice(0,10);
+
+/* ======================= sound (Web Audio, no files) ======================= */
+let AC=null, soundOn=ls.get('dcd-sound',true);
+function ac(){if(!soundOn)return null;try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function noise(a,dur){const b=a.createBuffer(1,a.sampleRate*dur|0,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const s=a.createBufferSource();s.buffer=b;return s}
+const SFX={
+  kick(level){const a=ac();if(!a)return;const t=a.currentTime;
+    const o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(42,t+.16);
+    g.gain.setValueAtTime(1,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o.connect(g).connect(a.destination);o.start(t);o.stop(t+.5);
+    // a little 808 tail that rises with the streak
+    const o2=a.createOscillator(),g2=a.createGain();o2.type='triangle';o2.frequency.value=[392,494,587,784][Math.min(3,level)];
+    g2.gain.setValueAtTime(.0001,t+.06);g2.gain.exponentialRampToValueAtTime(.18,t+.08);g2.gain.exponentialRampToValueAtTime(.0001,t+.35);
+    o2.connect(g2).connect(a.destination);o2.start(t+.06);o2.stop(t+.4)},
+  scratch(){const a=ac();if(!a)return;const t=a.currentTime,n=noise(a,.4),f=a.createBiquadFilter(),g=a.createGain();
+    f.type='bandpass';f.Q.value=6;f.frequency.setValueAtTime(400,t);f.frequency.exponentialRampToValueAtTime(2600,t+.09);f.frequency.exponentialRampToValueAtTime(300,t+.2);f.frequency.exponentialRampToValueAtTime(1800,t+.3);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.7,t+.02);g.gain.setValueAtTime(.7,t+.28);g.gain.exponentialRampToValueAtTime(.0001,t+.38);
+    n.connect(f).connect(g).connect(a.destination);n.start(t);n.stop(t+.4)},
+  hat(){const a=ac();if(!a)return;const t=a.currentTime,n=noise(a,.06),f=a.createBiquadFilter(),g=a.createGain();
+    f.type='highpass';f.frequency.value=7000;g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.001,t+.05);n.connect(f).connect(g).connect(a.destination);n.start(t)},
+  tap(){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.06);o.connect(g).connect(a.destination);o.start(t);o.stop(t+.07)}
+};
+const ICON_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const ICON_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+function renderSound(){$('sound').innerHTML=soundOn?ICON_ON:ICON_OFF;$('sound').setAttribute('aria-pressed',soundOn);$('sound').setAttribute('aria-label',soundOn?'Sound on':'Sound off')}
+$('sound').onclick=()=>{soundOn=!soundOn;ls.set('dcd-sound',soundOn);renderSound();if(soundOn)SFX.tap()};
+renderSound();
+
+/* ======================= question building ======================= */
+const NEW_YEAR=2020;
+const relEra=r=>r.y>=NEW_YEAR?'n':'c';
+const LA=['Compton','Long Beach','Los Angeles'];
+const CITIES=[...new Set(D.ori.map(o=>o.c))];
+const GROUPS=new Set(['Run-DMC','Wu-Tang Clan','OutKast','UGK','Three 6 Mafia','GS Boyz']);
+function filters(era,cat){
+  const okE=e=>era==='all'||e===era;
+  return {
+    mc: cat==='Timeline'||cat==='Hometowns'?[]:D.mc.filter(m=>okE(m.e)&&(cat==='all'||m.c===cat)),
+    ori:(cat==='all'||cat==='Hometowns')?D.ori.filter(o=>okE(o.e)):[],
+    rel:(cat==='all'||cat==='Timeline')?D.rel.filter(r=>okE(relEra(r))):[]
+  };
+}
+function makeMC(m,r){return{type:'mc',id:m.id,cat:m.c,d:m.d,prompt:m.q,answer:m.a,options:shuffle([m.a,...m.w],r),note:m.n}}
+function makeOrigin(o,r){
+  const bad=c=>c===o.c||(LA.includes(o.c)&&LA.includes(c));
+  const opts=shuffle(CITIES.filter(c=>!bad(c)),r).slice(0,3);
+  return{type:'origin',id:o.id,cat:'Hometowns',d:o.d,prompt:`Where ${GROUPS.has(o.a)?'are':'is'} ${o.a} from?`,answer:o.c,options:shuffle([o.c,...opts],r),note:`${o.a} ${GROUPS.has(o.a)?'rep':'reps'} ${o.c}.`}
+}
+const relName=x=>`${x.k==='single'?'the single':'the album'} "${x.t}"`;
+function makeYear(x){return{type:'year',id:x.id,cat:'Timeline',d:x.d,prompt:`What year did ${x.a} release ${relName(x)}?`,answer:x.y,rel:x,note:`"${x.t}" by ${x.a} came out in ${x.y}.`}}
+function makeOrder(pool,tier,r){
+  const gap=tier>=3?1:tier===2?3:6;
+  for(let tries=0;tries<200;tries++){
+    const s=shuffle(pool,r).slice(0,3);if(s.length<3)return null;
+    const ys=s.map(x=>x.y).sort((a,b)=>a-b);
+    if(ys[1]-ys[0]>=gap&&ys[2]-ys[1]>=gap)return{type:'order',id:'f'+s.map(x=>x.id).sort().join(''),cat:'Timeline',d:tier,prompt:'Which came first? Tap them in order, oldest first.',
+      items:s,answer:s.slice().sort((a,b)=>a.y-b.y).map(x=>x.id),note:s.slice().sort((a,b)=>a.y-b.y).map(x=>`${x.t} (${x.y})`).join(' → ')}
+  }
+  return null;
+}
+function orderOk(pool){return new Set(pool.map(x=>x.y)).size>=3}
+
+/* seen tracking: players see every question before repeats */
+let seen=new Set(ls.get('dcd-seen',[]));
+const saveSeen=()=>ls.set('dcd-seen',[...seen]);
+function choose(list,tier,used,r,useSeen){
+  let c=list.filter(x=>!used.has(x.id));
+  if(useSeen){let u=c.filter(x=>!seen.has(x.id));if(!u.length){c.forEach(x=>seen.delete(x.id));saveSeen();u=c}c=u}
+  if(!c.length)return null;
+  for(const span of [0,1,2]){const t=c.filter(x=>Math.abs(x.d-tier)<=span);if(t.length)return pick(t,r)}
+  return pick(c,r);
+}
+function build(type,pools,tier,used,r,useSeen){
+  if(type==='mc'){const m=choose(pools.mc,tier,used,r,useSeen);return m&&makeMC(m,r)}
+  if(type==='origin'){const o=choose(pools.ori,tier,used,r,useSeen);return o&&makeOrigin(o,r)}
+  if(type==='year'){const x=choose(pools.rel,tier,used,r,useSeen);return x&&makeYear(x)}
+  if(type==='order')return orderOk(pools.rel)?makeOrder(pools.rel,tier,r):null;
+}
+function typeWeights(p){
+  const w=[];if(p.mc.length)w.push(['mc',p.ori.length||p.rel.length?.6:1]);
+  if(p.ori.length)w.push(['origin',p.mc.length?.15:.5]);
+  if(p.rel.length){w.push(['year',p.mc.length?.12:.5]);if(orderOk(p.rel))w.push(['order',p.mc.length?.13:.5])}
+  return w;
+}
+function weighted(w,r){const t=w.reduce((s,x)=>s+x[1],0);let v=r()*t;for(const [k,n] of w){if((v-=n)<=0)return k}return w[0][0]}
+// fixed plan for the Daily Dig and online races, so every player gets the same 10
+const PLAN=[['mc',1],['origin',1],['mc',1],['year',2],['mc',2],['order',2],['mc',2],['origin',2],['mc',3],['mc',3]];
+function seededRound(seed){
+  const r=mulberry(hashStr(seed)),pools=filters('all','all'),used=new Set(),out=[];
+  // sort pools by id so the pick only depends on the seed, not on file order
+  const sorted={mc:pools.mc.slice().sort((a,b)=>a.id<b.id?-1:1),ori:pools.ori.slice().sort((a,b)=>a.id<b.id?-1:1),rel:pools.rel.slice().sort((a,b)=>a.id<b.id?-1:1)};
+  for(const [type,tier] of PLAN){const q=build(type,sorted,tier,used,r,false)||build('mc',sorted,tier,used,r,false);used.add(q.id);out.push(q)}
+  return out;
+}
+
+/* ======================= home ======================= */
+let era=ls.get('dcd-era','all'), cat=ls.get('dcd-cat','all');
+if(!['all','c','n'].includes(era))era='all';
+const CAT_LIST=['all',...CATS,'Hometowns','Timeline'];
+if(!CAT_LIST.includes(cat))cat='all';
+function chips(el,items,cur,onPick){
+  el.innerHTML='';
+  for(const [v,label] of items){const b=document.createElement('button');b.className='chip'+(v===cur?' on':'');b.textContent=label;b.type='button';b.setAttribute('aria-pressed',v===cur);b.onclick=()=>onPick(v);el.append(b)}
+}
+function poolSize(e,c){const p=filters(e,c);return p.mc.length+p.ori.length+p.rel.length}
+function renderHome(){
+  chips($('eras'),[['all','All eras'],['c','Classics'],['n','New era (2020+)']],era,v=>{era=v;ls.set('dcd-era',v);if(poolSize(era,cat)<6)cat='all';renderHome()});
+  chips($('cats'),CAT_LIST.filter(c=>c==='all'||poolSize(era,c)>=6).map(c=>[c,c==='all'?'Everything':c]),cat,v=>{cat=v;ls.set('dcd-cat',v);renderHome()});
+  const p=filters(era,cat),ids=[...p.mc,...p.ori,...p.rel].map(x=>x.id),n=ids.filter(id=>seen.has(id)).length;
+  $('seenLine').innerHTML=`You've seen ${n} of ${ids.length} questions in this mix. New ones come first.`+(n?' <button type="button" id="resetSeen">Reset</button>':'');
+  if(n)$('resetSeen').onclick=()=>{ids.forEach(id=>seen.delete(id));saveSeen();renderHome()};
+  const d=today(),rec=ls.get('dcd-daily-'+d,null);
+  $('dailyNum').textContent=`#${dayNum(d)} · ${new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+  $('dailyNew').hidden=!!rec;$('dailyDone').hidden=!rec;$('dailyGo').hidden=!!rec;$('dailyShare').hidden=!rec;$('dailyShareBox').hidden=true;
+  if(rec){$('dailyGrid').textContent=gridOf(rec.marks);$('dailyLine').textContent=`${rec.right}/10 · ${fmt(rec.score)} pts · next dig ${untilTomorrow()}`}
+  $('hBest').textContent=fmt(ls.get('dcd-best',0));$('hRounds').textContent=ls.get('dcd-rounds',0);
+  const ds=ls.get('dcd-dstreak',{last:'',n:0});$('hDaily').textContent=(ds.last===d||ds.last===prevDay(d))?ds.n:0;
+  const rw=ls.get('dcd-reward',false);$('rewardLine').hidden=!rw;if(rw)$('rewardLine').innerHTML=`Store reward unlocked: <b style="color:var(--gold)">${STORE_CODE}</b> for ${STORE_PCT} off at darewear.store`;
+}
+function untilTomorrow(){
+  const now=new Date(),parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'numeric',hour12:false}).formatToParts(now);
+  const h=+parts.find(p=>p.type==='hour').value%24,m=+parts.find(p=>p.type==='minute').value,left=24*60-(h*60+m);
+  return `in ${Math.floor(left/60)}h ${left%60}m`;
+}
+const gridOf=marks=>marks.map(m=>m==='g'?'🟩':m==='y'?'🟨':'⬛').join('');
+function shareText(rec,d){return `DARE Crate Digger · Daily Dig #${dayNum(d)}\n${gridOf(rec.marks)}\n${rec.right}/10 · ${fmt(rec.score)} pts\n${SITE}/crate-digger/`}
+function copyText(text,btn,box){
+  const done=()=>{const t=btn.textContent;btn.textContent='Copied';setTimeout(()=>btn.textContent=t,1400)};
+  const sel=()=>{if(box){box.hidden=false;const rg=document.createRange();rg.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(rg)}};
+  try{navigator.clipboard.writeText(text).then(done,sel)}catch(e){sel()}
+}
+$('dailyShare').onclick=()=>{const d=today(),rec=ls.get('dcd-daily-'+d,null);if(!rec)return;$('dailyShareBox').textContent=shareText(rec,d);copyText(shareText(rec,d),$('dailyShare'),$('dailyShareBox'))};
+
+/* ======================= round ======================= */
+let S=null, raf=0, lastHat=0, screen='home';
+function show(id){screen=id;for(const s of ['home','online','game','end'])$(s).hidden=s!==id;$('hud').hidden=id!=='game';window.scrollTo(0,0)}
+const mult=()=>S.streak>=6?3:S.streak>=3?2:1;
+const tierNow=()=>{const base=S.streak>=5?3:S.streak>=2?2:1;const r=Math.random();return r<.2?Math.max(1,base-1):r>.9?Math.min(3,base+1):base};
+function hud(){$('score').textContent=fmt(S.score);$('streak').textContent=S.streak;$('mult').textContent='x'+mult()+' streak bonus'}
+
+function newRound(mode,seed){
+  ac();
+  S={mode,seed,i:0,score:0,streak:0,top:0,right:0,fifty:true,log:[],marks:[],items:[],used:new Set(),count:{},locked:false};
+  if(mode==='classic'){S.pools=filters(era,cat);S.weights=typeWeights(S.pools)}
+  else S.items=seededRound(seed);
+  $('quitBox').hidden=true;
+  show('game');renderOpp();load();
+}
+function nextItem(){
+  if(S.mode!=='classic')return S.items[S.i];
+  const tier=tierNow();
+  const CAP={order:2,year:2,origin:3},w=S.weights.filter(([t])=>!CAP[t]||(S.count[t]||0)<CAP[t]||S.weights.length===1);
+  for(let k=0;k<6;k++){const q=build(weighted(w.length?w:S.weights,Math.random),S.pools,tier,S.used,Math.random,true);if(q){S.count[q.type]=(S.count[q.type]||0)+1;return q}}
+  return build('mc',filters('all','all'),tier,S.used,Math.random,true);
+}
+function load(){
+  const q=S.cur=nextItem();S.used.add(q.id);S.locked=false;S.pick=[];
+  $('round').textContent=(S.mode==='daily'?'Daily Dig · ':S.mode==='online'?'Race · ':'')+`Question ${S.i+1} / ${ROUND}`;
+  $('cat').textContent=q.cat;$('kind').textContent=KIND[q.type];$('diff').textContent='●'.repeat(q.d)+'○'.repeat(3-q.d);$('diff').title=['','Easy','Medium','Hard'][q.d];
+  $('q').textContent=q.prompt;
+  $('sheet').classList.remove('pop');void $('sheet').offsetWidth;$('sheet').classList.add('pop');
+  $('fb').textContent='';$('fb').className='feedback';$('note').hidden=true;
+  const A=$('answer');A.innerHTML='';
+  if(q.type==='mc'||q.type==='origin'){
+    const g=document.createElement('div');g.className='pads';
+    q.options.forEach((w,k)=>{const b=document.createElement('button');b.className='pad';b.type='button';b.textContent=w;b.dataset.w=w;b.onclick=()=>judge({pick:w,btn:b});g.append(b)});
+    A.append(g);
+  }else if(q.type==='year'){
+    A.innerHTML=`<div class="yearbox"><div class="yearread" id="yr">2003</div>
+      <div class="yearrow"><button class="step" type="button" id="yrDn" aria-label="One year earlier">−</button><input type="range" id="yrIn" min="1979" max="2026" value="2003" aria-label="Year"><button class="step" type="button" id="yrUp" aria-label="One year later">+</button></div>
+      <div class="ticks"><span>1979</span><span>2026</span></div>
+      <button class="btn primary" type="button" id="yrLock">Lock in 2003</button></div>`;
+    const sync=()=>{$('yr').textContent=$('yrIn').value;$('yrLock').textContent='Lock in '+$('yrIn').value};
+    $('yrIn').oninput=sync;
+    $('yrDn').onclick=()=>{$('yrIn').value=+$('yrIn').value-1;sync();SFX.tap()};
+    $('yrUp').onclick=()=>{$('yrIn').value=+$('yrIn').value+1;sync();SFX.tap()};
+    $('yrLock').onclick=()=>judge({year:+$('yrIn').value});
+  }else{
+    const box=document.createElement('div');box.className='tiles';
+    q.items.forEach(x=>{const b=document.createElement('button');b.type='button';b.className='tile';b.dataset.id=x.id;
+      b.innerHTML=`<span class="n"></span><span class="tx"><b>${esc(x.t)}</b><span>${esc(x.a)}</span></span><span class="yr"></span>`;
+      b.onclick=()=>{if(S.locked)return;const k=S.pick.indexOf(x.id);if(k>=0)S.pick.splice(k,1);else S.pick.push(x.id);SFX.tap();renderOrder()};box.append(b)});
+    const lock=document.createElement('button');lock.type='button';lock.className='btn primary';lock.id='ordLock';lock.textContent='Lock in order';lock.disabled=true;lock.onclick=()=>judge({order:S.pick.slice()});
+    A.append(box,lock);
+  }
+  $('fifty').disabled=!S.fifty||!(q.type==='mc'||q.type==='origin');
+  $('next').disabled=true;$('next').textContent=S.i===ROUND-1?'See results':'Next';
+  S.time=TIMES[q.type];S.t0=performance.now();lastHat=0;cancelAnimationFrame(raf);tick();hud();
+}
+function renderOrder(){
+  document.querySelectorAll('.tile').forEach(t=>{const k=S.pick.indexOf(t.dataset.id);t.classList.toggle('set',k>=0);t.querySelector('.n').textContent=k>=0?k+1:''});
+  $('ordLock').disabled=S.pick.length!==3;
+}
+function left(){return Math.max(0,S.time-(performance.now()-S.t0)/1000)}
+function tick(){
+  const l=left();$('fill').style.transform=`scaleX(${l/S.time})`;$('timer').classList.toggle('low',l<5);
+  if(l<5&&l>0&&Math.ceil(l)!==lastHat){lastHat=Math.ceil(l);SFX.hat()}
+  if(l<=0){judge({timeout:true});return}
+  raf=requestAnimationFrame(tick);
+}
+function judge(r){
+  if(S.locked)return;S.locked=true;cancelAnimationFrame(raf);
+  const q=S.cur,l=left();let ok=false,part=0,picked='',ansText='';
+  if(q.type==='mc'||q.type==='origin'){
+    ok=r.pick===q.answer;part=ok?1:0;picked=r.pick||'';ansText=q.answer;
+    document.querySelectorAll('.pad').forEach(p=>{p.disabled=true;if(p.dataset.w===q.answer)p.classList.add('right')});
+    if(!ok&&r.btn)r.btn.classList.add('wrong');
+  }else if(q.type==='year'){
+    const y=r.timeout?null:r.year,off=y==null?99:Math.abs(y-q.answer);
+    ok=off<=1;part=off===0?1:off===1?.6:off<=3?.25:0;picked=y==null?'':String(y);ansText=String(q.answer);
+    ['yrIn','yrDn','yrUp','yrLock'].forEach(id=>$(id).disabled=true);
+    $('yr').textContent=q.answer;$('yr').className='yearread '+(off===0?'right':off<=1?'close':'wrong');
+    $('yrLock').textContent=y==null?'Time':`You said ${y}`;
+  }else{
+    const ord=r.order||[];ok=ord.length===3&&ord.every((id,k)=>id===q.answer[k]);part=ok?1:0;
+    picked=ord.map(id=>q.items.find(x=>x.id===id).t).join(' → ');ansText=q.note;
+    document.querySelectorAll('.tile').forEach(t=>{const x=q.items.find(i=>i.id===t.dataset.id),k=q.answer.indexOf(x.id);t.disabled=true;
+      t.querySelector('.yr').textContent=x.y;t.querySelector('.n').textContent=k+1;t.classList.add('set',ord[k]===x.id?'right':'wrong')});
+    $('ordLock').disabled=true;
+  }
+  const pts=Math.round((100+l*8)*mult()*(1+.25*(q.d-1))*part);
+  if(ok){S.streak++;S.top=Math.max(S.top,S.streak);S.right++;SFX.kick(Math.min(3,Math.floor(S.streak/2)))}
+  else{S.streak=q.d>=3?Math.floor(S.streak/2):0;SFX.scratch();$('sheet').classList.remove('shake');void $('sheet').offsetWidth;$('sheet').classList.add('shake')}
+  S.score+=pts;
+  const close=ok&&part<1;
+  S.marks.push(ok&&!close?'g':close?'y':'r');
+  const fb=$('fb');
+  if(ok&&!close){fb.textContent=`Correct. +${pts}`;fb.className='feedback good'}
+  else if(close){fb.textContent=`One year off. Still counts. +${pts}`;fb.className='feedback close'}
+  else{fb.textContent=(r.timeout?'Time. ':'')+(q.type==='order'?'Not quite.':`Answer: ${ansText}`)+(pts?` +${pts} for close`:'')+(q.d>=3&&S.streak?` Hard one, streak kept at ${S.streak}.`:'');fb.className='feedback bad'}
+  $('note').textContent=q.note;$('note').hidden=false;
+  S.log.push({q:q.prompt,a:ansText,p:picked,ok,close,pts,type:q.type});
+  if(S.mode!=='daily'){seen.add(q.id);saveSeen()}
+  hud();$('fifty').disabled=true;$('next').disabled=false;
+  if(S.mode==='online')netScore();
+}
+function useFifty(){
+  if(!S.fifty||S.locked)return;const q=S.cur;if(!(q.type==='mc'||q.type==='origin'))return;S.fifty=false;$('fifty').disabled=true;
+  shuffle([...document.querySelectorAll('.pad')].filter(p=>p.dataset.w!==q.answer)).slice(0,2).forEach(p=>{p.disabled=true;p.classList.add('gone')});
+}
+function next(){if(!S||!S.locked)return;S.i++;if(S.i<ROUND)load();else finish()}
+
+function gradeOf(right){return right>=10?'S':right>=8?'A':right>=6?'B':right>=4?'C':'D'}
+const VERDICT={S:'Perfect round. You know the crates front to back.',A:'Deep knowledge. Only a couple got past you.',B:'Solid. You know the classics, keep digging.',C:'Half right. Run it back and the liner notes will stick.',D:'Rough round. Every answer comes with a note, so the next one goes better.'};
+function finish(){
+  show('end');
+  const g=gradeOf(S.right);
+  $('grade').textContent=g;$('verdict').textContent=VERDICT[g];
+  $('eScore').textContent=fmt(S.score);$('eRight').textContent=`${S.right}/${ROUND}`;$('eStreak').textContent=S.top;
+  $('endLabel').textContent=S.mode==='daily'?`Daily Dig #${dayNum(S.seed)}`:S.mode==='online'?'Race finished':'Round complete';
+  if(S.score>ls.get('dcd-best',0))ls.set('dcd-best',S.score);
+  ls.set('dcd-rounds',ls.get('dcd-rounds',0)+1);
+  $('reward').hidden=g!=='S';
+  if(g==='S'){ls.set('dcd-reward',true);$('rewardCode').textContent=STORE_CODE;$('rewardPct').textContent=STORE_PCT}
+  $('shareCard').hidden=S.mode!=='daily';
+  if(S.mode==='daily'){
+    const d=S.seed,rec={score:S.score,right:S.right,marks:S.marks};
+    if(!ls.get('dcd-daily-'+d,null)){ls.set('dcd-daily-'+d,rec);const ds=ls.get('dcd-dstreak',{last:'',n:0});ls.set('dcd-dstreak',{last:d,n:ds.last===prevDay(d)?ds.n+1:1})}
+    $('shareBox').textContent=shareText(rec,d);
+  }
+  $('again').textContent=S.mode==='daily'?'Play a classic round':'Dig again';
+  $('again').hidden=S.mode==='online';
+  $('vsCard').hidden=S.mode!=='online';
+  if(S.mode==='online'){NET.pres.fin=NET.game;netKick();renderVs()}
+  $('recap').innerHTML='';
+  S.log.forEach(r=>{const li=document.createElement('li');li.className=r.ok?(r.close?'close':'ok'):'no';
+    li.innerHTML=`${esc(r.q)} <b>${esc(r.a)}</b>${r.ok&&!r.close?'':` (you: ${esc(r.p||'no answer')})`}`;$('recap').append(li)});
+}
+
+/* ======================= wiring ======================= */
+$('dailyGo').onclick=()=>{const d=today();if(ls.get('dcd-daily-'+d,null))return renderHome();newRound('daily',d)};
+$('classicGo').onclick=()=>newRound('classic');
+$('next').onclick=next;$('fifty').onclick=useFifty;
+$('again').onclick=()=>newRound('classic');
+$('toHome').onclick=()=>{if(S&&S.mode==='online')netLeave();renderHome();show('home')};
+$('shareCopy').onclick=()=>copyText($('shareBox').textContent,$('shareCopy'),$('shareBox'));
+$('rewardCopy').onclick=()=>copyText(STORE_CODE,$('rewardCopy'),$('rewardCode'));
+$('quit').onclick=()=>{$('quitTx').textContent=S&&S.mode==='online'?'Leave the race? Your opponent wins.':S&&S.mode==='daily'?'Leave? Today\'s dig counts as played.':'Leave this round?';$('quitBox').hidden=false};
+$('quitNo').onclick=()=>{$('quitBox').hidden=true};
+$('quitYes').onclick=()=>{
+  cancelAnimationFrame(raf);$('quitBox').hidden=true;
+  if(S.mode==='daily'&&!ls.get('dcd-daily-'+S.seed,null)){while(S.marks.length<ROUND)S.marks.push('r');ls.set('dcd-daily-'+S.seed,{score:S.score,right:S.right,marks:S.marks})}
+  if(S.mode==='online')netLeave();
+  renderHome();show('home');
+};
+document.addEventListener('keydown',e=>{
+  if(screen!=='game'||e.target.closest('input,textarea,.dp')||!S)return;
+  if(!S.locked&&/^[1-4]$/.test(e.key)){const p=document.querySelectorAll('.pad')[+e.key-1];if(p&&!p.disabled)judge({pick:p.dataset.w,btn:p})}
+  else if(S.locked&&(e.key==='Enter'||e.key===' ')){e.preventDefault();next()}
+});
+
+/* ======================================================================
+   HEAD TO HEAD over /api/room (same match server as Buckets, Chess, Connect, Dice)
+   Rooms are "cd-<code>". Presence: {app,role,nick,opp,g,go,seed,p,fin,re,chat}.
+   The host starts game g with a random seed (go/seed); both phones build the same
+   10 questions from it and play at their own pace. p is the comma list of points per
+   question, fin=g once finished. Rematch: both set re=g, then the host starts g+1.
+   ====================================================================== */
+const DP=window.DAREPlay||null, ONLINE_OK=!!(DP&&DP.online);
+const CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const NET={me:DP?DP.peer:'local',alive:false,room:'',code:'',role:'',opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,
+  game:0,pres:{},timer:null,inflight:false,again:false,full:false,oppRe:false,oppP:[],oppFin:false,oppLeft:false,joinedAt:0,lfg:false,lfgT:0};
+const cleanNick=s=>String(s||'').replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().slice(0,12);
+const myNick=()=>cleanNick($('olNick').value)||'Player';
+const CHAT=DP&&DP.chat({accent:'#e8b53b',quick:['Good luck','Too easy','That was hard','No way','GG','Rematch?','😂','🔥'],
+  onSend(){NET.pres.chat=CHAT.outbox();netKick()},
+  onMessage(){if(!CHAT.isOpen())$('chatPip').hidden=false},
+  onOpen(on){if(on)$('chatPip').hidden=true}});
+if(CHAT)CHAT.showButton(false);
+$('chatBtn').onclick=$('chatBtn2').onclick=()=>{if(CHAT)CHAT.open()};
+
+async function roomPost(body,keep){
+  const r=await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:!!keep});
+  if(!r.ok){let msg='';try{msg=(await r.json()).error||''}catch(e){}const err=new Error(msg||'Couldn’t reach the match server.');err.status=r.status;throw err}
+  return r.json();
+}
+const newCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(4)),b=>CODE_ABC[b%CODE_ABC.length]).join('');
+function lfgStop(){if(NET.lfg){clearInterval(NET.lfgT);DP&&DP.cancel('crate-digger',NET.code);NET.lfg=false}}
+function openOnline(){
+  show('online');$('olSetup').hidden=false;$('olLobby').hidden=true;
+  $('olStatus').textContent=ONLINE_OK?'':'Head to head runs on the DARE Arcade site.';
+  $('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=!ONLINE_OK;
+  if(DP)DP.refresh();
+}
+function joinOpen(code){netLeave();openOnline();$('olCode').value=code;enterRoom(code,'g');return true}
+async function enterRoom(code,role,open){
+  ls.set('dcd-nick',myNick());if(DP)DP.setNick(myNick());
+  $('olStatus').textContent='';$('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=true;
+  netLeave();
+  Object.assign(NET,{room:'cd-'+code.toLowerCase(),code,role,opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,game:0,full:false,oppRe:false,
+    oppP:[],oppFin:false,oppLeft:false,pres:{app:'crates',role,nick:myNick()},alive:true,joinedAt:Date.now()});
+  let d=null;
+  try{d=await roomPost({room:NET.room,peer:NET.me,presence:NET.pres})}
+  catch(e){NET.alive=false;$('olStatus').textContent=e.message||'Couldn’t connect. Check your connection and try again.'}
+  $('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=false;
+  if(!d)return;
+  if(DP){DP.busy=true;CHAT.reset();CHAT.attach();$('chatPip').hidden=true}
+  if(open&&DP){
+    NET.lfg=true;
+    DP.post('crate-digger',code,myNick()).then(r=>{if(NET.code===code&&NET.lfg&&!NET.opp)$('olNote').textContent=r.alerted?`Your match is posted. ${r.alerted} player${r.alerted===1?' was':'s were'} alerted. You can also share the code.`:'Your match is posted for anyone to join. You can also share the code.'})
+      .catch(e=>{NET.lfg=false;if(NET.code===code)$('olNote').textContent='Couldn’t post the match ('+e.message+'). Share the code instead.'});
+    NET.lfgT=setInterval(()=>{if(NET.lfg&&!NET.opp)DP.keep('crate-digger',code)},45000);
+  }
+  $('olSetup').hidden=true;$('olLobby').hidden=false;$('olCodeShow').textContent=code;
+  $('olCopy').hidden=role!=='h';$('olStart').hidden=role!=='h';
+  $('olNote').textContent=role!=='h'?'The host starts the race. You both get the same 10 questions.':open?'Posting your match…':'Send the code to your opponent. They open Crate Digger, tap Play online, and enter it.';
+  netPeers(d.peers||[]);
+  NET.timer=setTimeout(netTick,1000);
+}
+function netKick(){if(!NET.alive)return;if(NET.inflight){NET.again=true;return}clearTimeout(NET.timer);netTick()}
+async function netTick(){
+  if(!NET.alive||NET.inflight)return;
+  NET.inflight=true;NET.again=false;
+  const room=NET.room;let d=null;
+  if(CHAT){const ob=CHAT.outbox();if(ob)NET.pres.chat=ob}
+  try{d=await roomPost({room,peer:NET.me,presence:NET.pres});NET.connected=true}catch(e){NET.connected=false}
+  NET.inflight=false;
+  if(!NET.alive||room!==NET.room)return;
+  if(d)netPeers(d.peers||[]);
+  if(!NET.alive)return;
+  NET.timer=setTimeout(netTick,NET.again?0:screen==='game'?1000:1500);
+}
+function netPeers(list){
+  const os=list.filter(p=>p&&p.peer!==NET.me&&p.presence&&p.presence.app==='crates');
+  const hadOpp=!!NET.opp;
+  let o=NET.opp?os.find(p=>p.peer===NET.opp):null;
+  if(!NET.opp){
+    const cand=os.find(p=>p.presence.role!==NET.role&&(NET.role==='h'||!p.presence.opp||p.presence.opp===NET.me));
+    if(cand){NET.opp=cand.peer;o=cand;NET.full=false;NET.pres.opp=cand.peer;lfgStop();
+      if(CHAT){CHAT.setOpp(cleanNick(cand.presence.nick)||'Opponent');CHAT.note((cleanNick(cand.presence.nick)||'Your opponent')+' joined the match')}
+      netKick()}
+    else NET.full=NET.role==='g'&&os.some(p=>p.presence.role==='h');
+  }
+  if(o&&NET.role==='g'&&o.presence.opp&&o.presence.opp!==NET.me){NET.opp=null;o=null;NET.full=true;delete NET.pres.opp}
+  const was=NET.oppOnline;NET.oppOnline=!!o;
+  if(o){NET.oppNick=cleanNick(o.presence.nick)||'Opponent';if(CHAT){CHAT.setOpp(NET.oppNick);CHAT.receive(o.peer,o.presence.chat)}}
+  if(CHAT&&hadOpp&&NET.opp&&was!==!!o)CHAT.note(o?NET.oppNick+' is back':(NET.oppNick||'Your opponent')+' disconnected');
+  const p=o&&o.presence;
+  if(p&&NET.role==='g'&&(p.go|0)>NET.game&&p.seed)return startOnline(p.go|0,String(p.seed));
+  if(NET.game===0||screen==='online'){updateLobby();return}
+  // ---- in a race (playing or on the results screen) ----
+  if(!o){if(!NET.offSince)NET.offSince=Date.now();if(NET.opp&&Date.now()-NET.offSince>45000)NET.oppLeft=true}
+  else{NET.offSince=0;NET.oppLeft=false;
+    if((p.g|0)===NET.game){NET.oppP=String(p.p||'').split(',').filter(Boolean).map(Number);NET.oppFin=(p.fin|0)===NET.game}
+    NET.oppRe=(p.re|0)===NET.game;
+    if(NET.role==='h'&&NET.oppRe&&(NET.pres.re|0)===NET.game&&screen==='end')return hostStart(NET.game+1);
+  }
+  renderOpp();if(screen==='end')renderVs();
+}
+function hostStart(g){const seed='race-'+newCode()+newCode();NET.pres.go=g;NET.pres.seed=seed;startOnline(g,seed)}
+function startOnline(g,seed){
+  NET.game=g;NET.pres.g=g;NET.pres.p='';delete NET.pres.fin;NET.oppP=[];NET.oppFin=false;NET.oppRe=false;NET.offSince=0;
+  newRound('online',seed);netKick();
+}
+function netScore(){NET.pres.p=S.log.map(x=>x.pts).join(',');netKick()}
+const sum=a=>a.reduce((s,x)=>s+x,0);
+function renderOpp(){
+  const on=S&&S.mode==='online';$('oppBar').hidden=!on;if(!on)return;
+  $('oppBar').classList.toggle('off',!NET.oppOnline);
+  $('oppTx').innerHTML=`<b>${esc(NET.oppNick||'Opponent')}</b> · `+(NET.oppLeft?'left the race':!NET.oppOnline?'reconnecting…':NET.oppFin?`finished · ${fmt(sum(NET.oppP))} pts`:`Q${Math.min(ROUND,NET.oppP.length+1)} · ${fmt(sum(NET.oppP))} pts`);
+  $('oppFill').style.width=(NET.oppP.length/ROUND*100)+'%';
+}
+function renderVs(){
+  const me=S.score,op=sum(NET.oppP),done=NET.oppFin||NET.oppLeft;
+  $('vsMe').textContent=fmt(me);$('vsOpp').textContent=fmt(op);$('vsOppName').textContent=NET.oppNick||'Opponent';
+  $('vsMe').classList.toggle('win',done&&me>=op);$('vsOpp').classList.toggle('win',done&&op>me&&!NET.oppLeft);
+  $('vsLabel').textContent=!done?'Waiting on your opponent':NET.oppLeft?'You win. Your opponent left.':me>op?'You win the race':me<op?(NET.oppNick||'Opponent')+' wins the race':'Dead even';
+  $('vsLine').textContent=!done?`${NET.oppNick||'Opponent'} is on question ${Math.min(ROUND,NET.oppP.length+1)} of ${ROUND}.`:`${NET.oppNick||'Opponent'} got ${NET.oppP.filter(x=>x>0).length} of ${ROUND} with points.`;
+  const mine=(NET.pres.re|0)===NET.game,b=$('rematch');
+  if(NET.oppLeft||!NET.oppOnline){b.disabled=true;b.textContent='Opponent offline'}
+  else{b.disabled=mine;b.textContent=mine?`Waiting for ${NET.oppNick}…`:NET.oppRe?'Accept rematch':'Rematch'}
+}
+$('rematch').onclick=()=>{NET.pres.re=NET.game;renderVs();netKick()};
+function updateLobby(){
+  const o=NET.opp&&NET.oppOnline;
+  $('olOpp').classList.toggle('in',!!o);
+  $('olOppTx').textContent=o?NET.oppNick+(NET.role==='h'?' is here':' (host) is here'):NET.full?'This match already has two players.':NET.opp?NET.oppNick+' is reconnecting…'
+    :NET.role==='h'?'Waiting for your opponent to join':Date.now()-NET.joinedAt>5000?'No host with that code yet. Check it, or wait for them to create it.':'Looking for the host…';
+  $('olStart').disabled=!o;
+}
+function netLeave(){
+  lfgStop();if(DP){DP.busy=false;CHAT.detach()}
+  if(!NET.alive&&!NET.room)return;
+  NET.alive=false;clearTimeout(NET.timer);
+  const room=NET.room;NET.room='';NET.game=0;
+  if(room)roomPost({room,peer:NET.me,leave:true},true).catch(()=>{});
+}
+window.addEventListener('pagehide',()=>{lfgStop();if(NET.room)roomPost({room:NET.room,peer:NET.me,leave:true},true).catch(()=>{})});
+setInterval(()=>{if(S&&S.mode==='online'&&(screen==='game'||screen==='end')&&!NET.oppOnline){if(NET.offSince&&Date.now()-NET.offSince>45000)NET.oppLeft=true;renderOpp();if(screen==='end')renderVs()}},1000);
+
+$('onlineGo').onclick=()=>{ac();openOnline()};
+$('olBack').onclick=()=>{netLeave();renderHome();show('home')};
+$('olCreate').onclick=()=>enterRoom(newCode(),'h');
+$('olFind').onclick=()=>enterRoom(newCode(),'h',true);
+$('olJoin').onclick=()=>{const c=$('olCode').value.trim().toUpperCase();if(c.length!==4){$('olStatus').textContent='Enter the 4-character code from your opponent.';return}enterRoom(c,'g')};
+$('olCode').addEventListener('keydown',e=>{if(e.key==='Enter')$('olJoin').click()});
+$('olLeave').onclick=()=>{netLeave();$('olSetup').hidden=false;$('olLobby').hidden=true};
+$('olCopy').onclick=()=>copyText(NET.code,$('olCopy'),$('olCodeShow'));
+$('olStart').onclick=()=>{if(NET.role!=='h'||!NET.opp||!NET.oppOnline)return;ac();hostStart(NET.game+1)};
+$('olNick').value=ls.get('dcd-nick','')||(DP?cleanNick(DP.nick()):'');
+$('olNick').addEventListener('change',()=>{const n=cleanNick($('olNick').value);ls.set('dcd-nick',n);if(DP)DP.setNick(n)});
+if(DP){
+  DP.openList($('olOpen'),'crate-digger',m=>joinOpen(m.code));
+  DP.feed({accent:'#e8b53b',onJoin:m=>m.game==='crate-digger'?joinOpen(m.code):false});
+  DP.alerts.toggle($('olAlerts'),['crate-digger'],{accent:'#e8b53b',label:'Get a notification when someone wants to race in Crate Digger.'});
+}
+
+/* ======================= boot ======================= */
+if(!/^https?:$/.test(location.protocol)||window.claude)$('brand').removeAttribute('href');
+renderHome();show('home');
+if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(ONLINE_OK)joinOpen(c)}
+}
+</script>
+</body>
+</html>
