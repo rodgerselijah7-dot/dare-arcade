@@ -176,6 +176,9 @@ input{-webkit-user-select:text;user-select:text}
 .bill.alt::before{display:none}
 .bill:disabled{opacity:.35}
 .wait{min-height:52px;display:grid;place-items:center;text-align:center;font-weight:800;color:var(--mute);border:1px dashed var(--line);border-radius:14px;padding:12px}
+.catchbtn{padding:22px 10px;font:400 30px/1 var(--marker);letter-spacing:.02em;text-transform:none;color:#fff;background:linear-gradient(180deg,#ff5b6f,#c8102e);
+  box-shadow:0 10px 30px rgba(208,16,44,.45);animation:grab .5s ease-in-out infinite alternate;touch-action:manipulation}
+@keyframes grab{to{transform:scale(1.04);box-shadow:0 12px 38px rgba(238,99,120,.6)}}
 .rollbtn{padding:20px 10px;font-size:15px;touch-action:none;position:relative;overflow:hidden;animation:glow 1.8s ease-in-out infinite}
 @keyframes glow{0%,100%{box-shadow:0 10px 28px rgba(214,164,58,.22)}50%{box-shadow:0 10px 34px rgba(246,212,126,.5)}}
 .rollbtn::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,255,255,.35);mix-blend-mode:soft-light}
@@ -295,6 +298,7 @@ input{-webkit-user-select:text;user-select:text}
       <button class="btn big" id="wGo">Shoot $20</button>
     </div>
     <div class="wait" id="waitMsg" hidden></div>
+    <button class="btn catchbtn" id="catchBtn" hidden>Catch!</button>
     <button class="btn big rollbtn" id="roll" hidden>Hold to shake · let go to roll</button>
     <div class="after" id="after" hidden>
       <button class="btn big" id="rematch">Run it back</button>
@@ -350,24 +354,36 @@ function apply(t){
   }else if(k==='c'){
     if(S.phase!=='bet'||!S.ask)return false;
     const b=Math.max(1,Math.min(v,S.ask,S.stack[fader()]));
-    S.bet=b;S.stack[S.shooter]-=b;S.stack[fader()]-=b;S.phase='roll';
+    S.bet=b;S.stack[S.shooter]-=b;S.stack[fader()]-=b;S.phase='roll';S.caught=false;
     S.call={t:'faded',who:fader(),amt:b,part:b<S.ask};
   }else if(k==='r'){
     if(S.phase!=='roll')return false;
-    const d1=+t[1],d2=+t[2],s=d1+d2;S.dice=[d1,d2];
-    S.hist.unshift(s);S.hist=S.hist.slice(0,12);
-    if(!S.point){
-      if(s===7||s===11)resolve(true,s===7?'seven':'yo');
-      else if(s===2||s===3||s===12)resolve(false,'craps',s);
-      else{S.point=s;S.call={t:'point',n:s}}
-    }else{
-      if(s===S.point)resolve(true,'made',s);
-      else if(s===7)resolve(false,'out');
-      else S.call={t:'roll',n:s,p:S.point};
-    }
+    const d1=+t[1],d2=+t[2];S.dice=[d1,d2];
+    // the fader still has their catch: the dice are in the air until the fader lets them land or catches them
+    if(!S.caught){S.phase='air';S.pending=[d1,d2];S.call=null}
+    else settle(d1,d2);
+  }else if(k==='l'){
+    if(S.phase!=='air')return false;
+    const [d1,d2]=S.pending;S.pending=null;S.phase='roll';settle(d1,d2);
+  }else if(k==='x'){
+    if(S.phase!=='air'||S.caught)return false;
+    S.pending=null;S.phase='roll';S.caught=true;S.call={t:'caught',who:fader()};
   }else return false;
   S.log.push(t);
   return true;
+}
+function settle(d1,d2){
+  const s=d1+d2;
+  S.hist.unshift(s);S.hist=S.hist.slice(0,12);
+  if(!S.point){
+    if(s===7||s===11)resolve(true,s===7?'seven':'yo');
+    else if(s===2||s===3||s===12)resolve(false,'craps',s);
+    else{S.point=s;S.call={t:'point',n:s}}
+  }else{
+    if(s===S.point)resolve(true,'made',s);
+    else if(s===7)resolve(false,'out');
+    else S.call={t:'roll',n:s,p:S.point};
+  }
 }
 function resolve(shooterWins,kind,n){
   const w=shooterWins?S.shooter:fader(),amt=S.bet,sh=S.shooter;
@@ -607,7 +623,14 @@ function frame(){
   const now=performance.now(),dt=Math.min(.05,(now-(R3.last||now))/1000);R3.last=now;
   R3.dice.forEach((d,i)=>{
     const m=d.mesh,a=d.anim;
-    if(a){
+    if(a&&a.kind==='tween'){
+      const p=Math.min(1,Math.max(0,(now-a.t0)/a.dur)),e=1-Math.pow(1-p,3);
+      m.position.lerpVectors(a.from,a.to,e);m.quaternion.copy(a.q0).slerp(a.q1,e);
+      if(p>=1){
+        if(a.next){const n=a.next;d.anim={kind:'tween',t0:now+(n.delay||0),dur:n.dur,from:m.position.clone(),to:n.to,q0:m.quaternion.clone(),q1:n.q1,rest:n.rest,yaw:n.yaw}}
+        else{d.anim=null;if(a.rest){d.rest.copy(a.to);d.yaw=a.yaw}}
+      }
+    }else if(a){
       const p=Math.min(1,Math.max(0,(now-a.t0)/a.dur));
       // first leg flies to the wall, second leg kicks back and settles
       let x,z,y;
@@ -654,7 +677,7 @@ function placeDice(){
   if(!R3)return;
   R3.rattle=false;
   R3.dice.forEach((d,i)=>{if(d.anim)return;const f=S&&S.dice?S.dice[i]:(i?6:5);d.mesh.position.copy(d.rest);d.mesh.quaternion.copy(faceQuat(f,d.yaw))});
-  setPot(S&&S.phase==='roll'?S.bet:0,true);
+  setPot(S&&(S.phase==='roll'||S.phase==='air')?S.bet:0,true);
 }
 function rollAnim(t,quiet){
   if(!R3)return sleep(300);
@@ -670,7 +693,22 @@ function rollAnim(t,quiet){
       qF:faceQuat(f,yaw),axis:V3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize(),spin:16+Math.random()*9};
   });
   if(!quiet&&navigator.vibrate)try{navigator.vibrate([20,60,25])}catch(e){}
-  return sleep(longest+80);
+  return new Promise(res=>{R3.animDone=res;setTimeout(res,longest+80)});
+}
+// the fader's hand snatches the dice out of the air, then sets them back down for the shooter
+function catchAnim(){
+  if(!R3)return sleep(300);
+  if(R3.animDone){R3.animDone();R3.animDone=null}
+  const now=performance.now();
+  R3.dice.forEach((d,i)=>{
+    const side=i?1:-1,from=d.mesh.position.clone(),q0=d.mesh.quaternion.clone();
+    const up=V3(side*.42,2.7,.1),rest=V3(side*.8,.5,.9),f=1+rnd(6),yaw=(Math.random()-.5)*.8;
+    d.anim={kind:'tween',t0:now,dur:260,from,to:up,q0,q1:q0.clone().multiply(new THREE.Quaternion().setFromAxisAngle(V3(1,0,0),1.2)),
+      next:{kind:'tween',dur:420,delay:520,to:rest,q1:faceQuat(f,yaw),rest:true,yaw}};
+  });
+  R3.shake=Math.max(R3.shake,.06);
+  if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
+  return sleep(1250);
 }
 
 /* ---------- shake to roll ---------- */
@@ -731,25 +769,53 @@ function postWager(){
   enqueue([(m==='ask'?'a':'c')+amt],false,true);
 }
 function enqueue(tokens,anim,local){for(const t of tokens)Q.push({t,anim,local});if(!pumping)pump()}
+let catchOpen=false,caughtNow=false,cpuCatchT=null;
+function afterSettle(before,hadBet){
+  if(hadBet&&!S.bet){clearPot(S.last.winner===S.me?1:-1);flashDelta(before);tableFx(S.last.winner===S.me)}
+  if(S.over)tally();
+}
 async function pump(){
   pumping=true;render();
   while(Q.length){
     const it=Q.shift();
     const t=it.t==='R'?'r'+(1+rnd(6))+(1+rnd(6)):it.t;
-    const g=S;current=t;
-    const before={1:S.stack[1],2:S.stack[2]},hadBet=S.bet;
-    if(t[0]==='r'&&S.phase==='roll'){S.call=null;render();await rollAnim(t)}
-    if(S!==g){current=null;break}
-    const ok=apply(t);current=null;
-    if(!ok)continue;
+    const g=S,before={1:S.stack[1],2:S.stack[2]},hadBet=S.bet;
+    current=t;
+    if(!apply(t)){current=null;continue}
+    if(online()&&it.local){NET.pres.mv=S.log.join('.');netKick()}
+    if(t[0]==='r'){
+      const air=S.phase==='air',iFade=air&&fader()===S.me,slimFades=air&&S.mode==='solo'&&fader()===2;
+      caughtNow=false;
+      if(iFade){catchOpen=true}
+      if(slimFades&&Math.random()<.2){ // Slim snatches a roll now and then
+        cpuCatchT=setTimeout(()=>{cpuCatchT=null;if(S===g&&S.phase==='air'&&!caughtNow){caughtNow=true;Q.unshift({t:'x',anim:true,local:false});if(R3&&R3.animDone)R3.animDone()}},350+Math.random()*550);
+      }
+      render();
+      await rollAnim(t);
+      catchOpen=false;clearTimeout(cpuCatchT);cpuCatchT=null;current=null;
+      if(S!==g)break;
+      if(S.phase==='air'){
+        // nobody caught it: the fader's phone lets the dice land
+        if(!caughtNow&&(iFade||slimFades))Q.unshift({t:'l',anim:false,local:iFade});
+        render();continue;
+      }
+      afterSettle(before,hadBet);render();await sleep(450);continue;
+    }
+    current=null;
     if(t[0]==='c')setPot(S.bet);
-    if(t[0]==='r'&&hadBet&&!S.bet){clearPot(S.last.winner===S.me?1:-1);flashDelta(before);tableFx(S.last.winner===S.me)}
+    if(t[0]==='x'){tableFx(S.call.who===S.me);render();await catchAnim();render();continue}
+    if(t[0]==='l'){afterSettle(before,hadBet);render();await sleep(450);continue}
     if(S.over)tally();
     render();
-    if(online()&&it.local){NET.pres.mv=S.log.join('.');netKick()}
-    if(t[0]==='r')await sleep(450);
   }
   pumping=false;render();save();maybeCpu();
+}
+function doCatch(){
+  if(!catchOpen||caughtNow||!S||S.phase!=='air'||S.caught||fader()!==S.me)return;
+  caughtNow=true;catchOpen=false;
+  Q.unshift({t:'x',anim:true,local:true});
+  if(R3&&R3.animDone)R3.animDone();
+  render();
 }
 let deltaT=0;
 function flashDelta(before){
@@ -775,6 +841,7 @@ function save(){if(S&&S.mode==='solo'&&!S.over)ls.set('dd-street',JSON.stringify
 let cpuT=null;
 function maybeCpu(){
   if(!S||S.mode!=='solo'||S.over||busy()||cpuT||screen!=='game')return;
+  if(S.phase==='air'){enqueue(['l'],false,false);return} // a resumed game left mid-throw
   const me=2;let act=null;
   if(S.phase==='bet'&&S.shooter===me&&!S.ask){
     const st=S.stack[me];
@@ -802,7 +869,8 @@ function callHTML(){
     return S.winner===S.me?'<span class="win">You broke '+on+'.</span><small>You walk with '+cash(S.stack[S.me])+'</small>'
       :'<span class="lose">'+on+' broke you.</span><small>Run it back?</small>';
   }
-  if(busy()&&S.phase==='roll'&&current&&current[0]==='r')return '';
+  if(current&&current[0]==='r')return '';
+  if(S.phase==='air')return '';
   if(!c)return S.shooter===S.me?'Your dice.<small>Call your shot</small>':on+'’s dice.<small>'+on+' is calling the shot</small>';
   const cls=w=>isMe(w)?'win':'lose';
   const pay=c.winner?(isMe(c.winner)?'<small class="win">You win '+cash(c.amt)+'</small>':'<small>'+on+' wins '+cash(c.amt)+'</small>'):'';
@@ -815,6 +883,7 @@ function callHTML(){
     case 'point':return 'Point is '+c.n+'.<small>'+(isMe(S.shooter)?'Hit '+c.n+' before a 7':on+' needs '+(c.n===8?'an ':'a ')+c.n+' before a 7')+'</small>';
     case 'roll':return c.n+'.<small>Point is '+c.p+'</small>';
     case 'made':return '<span class="big '+cls(c.winner)+'">'+c.n+'! Point!</span>'+pay;
+    case 'caught':return isMe(c.who)?'<span class="big win">Caught!</span><small>No roll · '+on+' throws again</small>':'<span class="big lose">'+on+' caught it!</span><small>No roll · throw again</small>';
     case 'out':return '<span class="big '+cls(c.winner)+'">Seven out!</span>'+pay.replace('</small>',' · '+(isMe(c.next)?'your dice':on+'’s dice')+'</small>');
   }
   return '';
@@ -831,7 +900,7 @@ function render(){
   if(!S||screen!=='game')return;
   const me=S.me,op=3-me;
   countTo('meCash',S.stack[me]);countTo('oppCash',S.stack[op]);
-  const actor=S.over?0:S.phase==='roll'?S.shooter:S.ask?3-S.shooter:S.shooter;
+  const actor=S.over?0:S.phase==='air'?3-S.shooter:S.phase==='roll'?S.shooter:S.ask?3-S.shooter:S.shooter;
   document.querySelector('.who.me').classList.toggle('active',actor===me);document.querySelector('.who.opp').classList.toggle('active',actor===op);
   $('hist').innerHTML=S.hist.slice(0,6).map(n=>'<span class="'+(n===7?'seven':'')+'">'+n+'</span>').join('');
   $('oppName').textContent=oppName();$('oppAv').textContent=(oppName()[0]||'?').toUpperCase();
@@ -841,16 +910,17 @@ function render(){
   if(online()&&!NET.oppOnline&&!S.over){orl.textContent='Offline';orl.className='role'}
   const ch=callHTML(),ce=$('call');
   if(ce.dataset.h!==ch){ce.dataset.h=ch;ce.innerHTML=ch;ce.classList.remove('pop');void ce.offsetWidth;ce.classList.add('pop')}
-  $('pot').hidden=S.phase!=='roll'||S.over;$('potAmt').textContent=cash(S.bet*2);
+  $('pot').hidden=(S.phase!=='roll'&&S.phase!=='air')||S.over;$('potAmt').textContent=cash(S.bet*2);
   $('point').hidden=!S.point||S.over;$('pointNum').textContent=S.point;
   // action area
   const m=myTurn();
-  ['wager','waitMsg','roll','after'].forEach(id=>$(id).hidden=true);
+  ['wager','waitMsg','roll','after','catchBtn'].forEach(id=>$(id).hidden=true);
   if(S.over){$('after').hidden=false;updateRematch();return}
   if(online()&&!NET.oppOnline){
     const left=Math.max(0,45-Math.floor((Date.now()-NET.offSince)/1000));
     $('waitMsg').hidden=false;$('waitMsg').textContent=oppName()+' disconnected · you win in '+left+'s if they don’t come back';return;
   }
+  if(catchOpen&&S.phase==='air'&&fader()===me&&!S.caught&&!caughtNow){$('catchBtn').hidden=false;return}
   if(m==='ask'||m==='cover'){
     const key=S.log.length+m;
     if(pickKey!==key){pickKey=key;pick=m==='cover'?Math.min(S.ask,S.stack[me]):Math.min(lastAsk||Math.max(5,Math.round((S.buyIn||START)*.02/5)*5),S.stack[me])}
@@ -867,10 +937,11 @@ function render(){
     $('roll').textContent=SHAKE.on&&SHAKE.want?'Shake it or hold here':'Hold to shake · let go';
   }else{
     const w=$('waitMsg');w.hidden=false;
-    w.textContent=busy()?'Dice are rolling…'
+    w.textContent=S.phase==='air'?(S.shooter===me?'Waiting on '+oppName()+'…':'Dice are rolling…')
+      :busy()?'Dice are rolling…'
       :S.phase==='bet'&&S.shooter===me?'Waiting on '+oppName()+' to fade '+cash(S.ask)+'…'
       :S.phase==='bet'?oppName()+' is calling the shot…'
-      :oppName()+' is shaking the dice for '+cash(S.bet*2)+'…';
+      :oppName()+' is shaking the dice for '+cash(S.bet*2)+'…'+(S.caught?' Your catch is used.':' Tap Catch while they fly to stop the roll.');
   }
 }
 
@@ -1115,6 +1186,8 @@ $('leaveYes').onclick=()=>{$('leaveBox').hidden=true;quitMatch()};
 $('tomenu').onclick=()=>{if(online())netLeave();menuMode=online()?'online':'solo';show('title')};
 $('rematch').onclick=()=>{if(online()){NET.pres.re=NET.game;updateRematch();netKick()}else startSolo(false)};
 $('chatBtn').onclick=()=>{if(CHAT)CHAT.open()};
+$('catchBtn').addEventListener('pointerdown',e=>{e.preventDefault();doCatch()});
+$('table').addEventListener('pointerdown',()=>{if(catchOpen)doCatch()}); // grab the dice right off the table
 
 $('olNick').value=ls.get('dd-nick')||(DP?cleanNick(DP.nick()):'');
 $('olNick').addEventListener('change',()=>{const n=cleanNick($('olNick').value);ls.set('dd-nick',n);if(DP)DP.setNick(n)});
@@ -1138,7 +1211,7 @@ if(DP){
 }
 
 /* ---------- boot ---------- */
-window.__dd={get S(){return S},setPick:v=>{pick=v},postWager,doRoll,myTurn};
+window.__dd={get catchOpen(){return catchOpen},doCatch,kick:()=>{render();maybeCpu()},get S(){return S},setPick:v=>{pick=v},postWager,doRoll,myTurn};
 show('title');
 if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(ONLINE_OK)joinOpen(c)}
 })();
