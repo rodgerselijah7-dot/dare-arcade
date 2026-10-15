@@ -230,7 +230,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>
         Play now
       </a>
-      <p class="pricing" data-game="the-last-don">District 1 is free to play. Full game $4.99.</p>
+      <p class="pricing" data-game="the-last-don">District 1 is free to play. Full game $5.99.</p>
       <span class="tip">Plays in your browser. On a phone, <button class="tip-btn" type="button" data-hs>add it to your Home Screen</button> to play full screen.</span>
     </section>
 
@@ -247,25 +247,25 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <h3>Cosmic Encounter</h3>
         <span class="status">Play</span>
         <p>A Galaga-style shooter. Pick a ship, clear the waves, make your choices in the encounters, and take down the bosses.</p>
-        <span class="price" data-game="cosmic-encounter">First boss free. Full game $2.99</span>
+        <span class="price" data-game="cosmic-encounter">First boss free. Full game $3.99</span>
       </a>
       <a class="row live" href="/rebel-elimination/">
         <h3>Rebel Elimination</h3>
         <span class="status">Play</span>
         <p>Fort Worth is under siege. Run, gun, and take down three bosses as Dontae Amare.</p>
-        <span class="price" data-game="rebel-elimination">Stage 1 free. Full game $3.99</span>
+        <span class="price" data-game="rebel-elimination">Stage 1 free. Full game $4.99</span>
       </a>
       <a class="row live" href="/ori/">
         <h3>ORI</h3>
         <span class="status">Play</span>
         <p>A new kind of tile game. Master 18 five-block shapes across 30 levels and six zones, from rising rows to a hidden next piece.</p>
-        <span class="price" data-game="ori">Zone 1 free. Full game $2.99</span>
+        <span class="price" data-game="ori">Zone 1 free. Full game $3.99</span>
       </a>
       <a class="row live" href="/break-the-block/">
         <h3>Break the Block</h3>
         <span class="status">Play</span>
         <p>A brick breaker across eight Fort Worth zones. Eighty levels of steel, ghost, regrowing and exploding bricks, with upgrades to earn along the way.</p>
-        <span class="price" data-game="break-the-block">Zones 1 and 2 free. Full game $2.99</span>
+        <span class="price" data-game="break-the-block">Zones 1 and 2 free. Full game $3.99</span>
       </a>
       <a class="row live" href="/buckets/">
         <h3>DARE Buckets</h3>
@@ -307,18 +307,18 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <h3>DARE Bubble Blaster</h3>
         <span class="status">Play</span>
         <p>Aim, bank off the walls and match three to pop. Knock out the bubbles holding a cluster up and watch the whole thing drop, before the ceiling comes down.</p>
-        <span class="price">Free to play</span>
+        <span class="price" data-game="bubble">Rounds 1 to 3 free. Full game $2.99</span>
       </a>
       <a class="row live" href="/dead-rise/">
         <h3>Dead Rise</h3>
         <span class="status">Play</span>
         <p>A 3D zombie survival shooter. Fight wave after wave across five areas, from the South Side streets to a snowed-in rail yard, with 15 weapons, 10 power-ups and a boss every fifth wave.</p>
-        <span class="price" data-game="dead-rise">First boss free. Full game $3.99</span>
+        <span class="price" data-game="dead-rise">First boss free. Full game $5.99</span>
       </a>
       <a class="row pass" id="passRow" href="/shop/?add=all-access">
         <h3>All-Access Pass</h3>
-        <span class="status">$12.99</span>
-        <p>All six paid games, fully unlocked, plus every paid game added later. Save $8.95 over buying them one by one.</p>
+        <span class="status">$19.99</span>
+        <p>All seven paid games, fully unlocked, plus every paid game added later. Save $11.94 over buying them one by one.</p>
       </a>
       <p class="pricing"><a href="/shop/" style="color:var(--black)">Shop the full games</a> · Bought one? <button class="unlock-link" id="unlockBtn" type="button">Enter your unlock code</button></p>
     </section>
@@ -444,7 +444,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 // Show what this device has unlocked
 (function(){
   if(!window.DARE)return;
-  const GAMES=['the-last-don','rebel-elimination','dead-rise','cosmic-encounter','ori','break-the-block'];
+  const GAMES=['the-last-don','rebel-elimination','dead-rise','cosmic-encounter','ori','break-the-block','bubble'];
   function paint(){
     document.querySelectorAll('[data-game]').forEach(el=>{
       const g=el.dataset.game;
@@ -455,7 +455,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
     });
     const all=DARE.owned('all-access')||GAMES.every(DARE.owned),row=document.getElementById('passRow');
     row.classList.toggle('owned',all);
-    row.querySelector('.status').textContent=all?'Owned':'$'+(DARE.PASS.price||12.99).toFixed(2);
+    row.querySelector('.status').textContent=all?'Owned':'$'+(DARE.PASS.price||19.99).toFixed(2);
     if(all)row.removeAttribute('href');else row.setAttribute('href','/shop/?add=all-access');
   }
   paint();DARE.onChange(paint);

@@ -76,11 +76,17 @@ Every push to `main` redeploys automatically.
 - Scoring: 1 point per square placed, plus 10, 30, 60, 100... for clearing 1, 2, 3, 4... lines at once, multiplied by the clear streak (up to x5) when you clear on back-to-back moves.
 - Home screen (best, total lines, games, Continue / New game) and a separate game screen. Game, best and stats are saved on the phone (localStorage keys `d1010-*`).
 
+## Pricing
+- Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
+- Paid (free tryout, then unlock): The Last Don $5.99, Dead Rise $5.99, Rebel Elimination $4.99, Cosmic Encounter $3.99, ORI $3.99, Break the Block $3.99, DARE Bubble Blaster $2.99. All-Access Pass $19.99 (saves $11.94).
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade).
+
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
 - Match 3 or more of a color to pop them: 10 points each. Bubbles left hanging fall: 20 each, doubled when 5 or more drop. Clearing the board pays 1,000 x the round and starts the next round with more rows and colors.
 - Every 6 misses the ceiling drops a new row (the gold bar at the top counts down). The game ends when a bubble crosses the dashed line.
 - Home screen (best, total popped, top round, Continue / New game) and a separate game screen. Saved on the phone (localStorage keys `dbub-*`).
+- Paid game ($2.99, also in the All-Access Pass): rounds 1 to 3 are the free tryout. Clearing round 3, or continuing a saved game past it, shows the unlock panel from `/dare-unlock.js`.
 
 ## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
 - `dare-play.js` is shared by all four games. It adds:

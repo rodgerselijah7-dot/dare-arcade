@@ -145,6 +145,7 @@ canvas{display:block;border-radius:22px;touch-action:none;box-shadow:inset 0 0 0
   <p class="hint">Drag to aim, let go to shoot. Tap the next bubble to swap.</p>
 </section>
 
+<script src="/dare-unlock.js"></script>
 <script>
 (function(){
 const $=id=>document.getElementById(id);
@@ -154,6 +155,15 @@ const COLS=10;              // bubbles in a full row
 const COLORS=['#ffc93c','#ff4f79','#35e08a','#38a8ff','#a96bff','#eef6ff','#ff8a3d'];
 const NAMES=['yellow','pink','green','blue','purple','pearl','orange'];
 const MISSES_PER_ROW=6;
+const FREE_ROUNDS=3; // rounds 1 to 3 are the free tryout; round 4 on needs the full game (see /dare-unlock.js)
+const OWN=()=>!window.DARE||DARE.owned('bubble');
+const locked=()=>G&&!G.over&&G.round>FREE_ROUNDS&&!OWN();
+function gateCheck(){
+  if(!locked())return true;
+  aim=null;
+  DARE.gate('bubble',()=>{drawHud()},{title:G.round===FREE_ROUNDS+1&&G.shots===0?'Round '+FREE_ROUNDS+' cleared':'Round '+G.round+' is in the full game',onExit:()=>show('home')});
+  return false;
+}
 
 /* ---------- state ---------- */
 let G=null,screen='home',best=+ls.get('dbub-best')||0;
@@ -237,7 +247,7 @@ function snap(x,y){
   return bestC;
 }
 function fire(a){
-  if(busy||G.over||shot||G.clearing)return;
+  if(busy||G.over||shot||G.clearing||locked())return;
   shot={x:SHOOT.x,y:SHOOT.y,dx:Math.cos(a),dy:-Math.sin(a),color:G.cur,speed:R*1.15};
   G.cur=G.next;G.next=pickColor();G.shots++;busy=true;sound('shoot');
 }
@@ -279,7 +289,7 @@ function landShot(){
     popups.push({x:W/2,y:H*.4,t:performance.now(),text:'Board cleared! +'+fmt(bonus),big:true});
     sound('clear');
     const nextRound=G.round+1;stats.round=Math.max(stats.round,nextRound);
-    G.clearing=true;setTimeout(()=>{newRound(nextRound,G.score);drawHud();save()},1200);
+    G.clearing=true;setTimeout(()=>{newRound(nextRound,G.score);drawHud();save();if(screen==='game')gateCheck()},1200);
   }else if(G.grid.length>DEATH){G.over=true;setTimeout(showOver,500)}
   busy=false;drawHud();save();
 }
@@ -416,7 +426,7 @@ requestAnimationFrame(frame);
 function local(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*(W/r.width),(e.clientY-r.top)*(H/r.height)]}
 let pressing=false;
 cv.addEventListener('pointerdown',e=>{
-  if(!G||G.over)return;e.preventDefault();
+  if(!G||G.over||locked())return;e.preventDefault();
   const [x,y]=local(e);
   if(Math.hypot(x-(SHOOT.x+R*3.3),y-(SHOOT.y+R*.35))<R*1.3){swap();return}
   if(y>SHOOT.y+R*.5)return;
@@ -478,7 +488,7 @@ function renderHome(){
 }
 function show(w){
   screen=w;$('home').hidden=w!=='home';$('game').hidden=w!=='game';
-  if(w==='game')requestAnimationFrame(()=>{layout();drawHud();if(G.over)showOver();else $('over').hidden=true});
+  if(w==='game')requestAnimationFrame(()=>{layout();drawHud();if(G.over)showOver();else{$('over').hidden=true;gateCheck()}});
   else renderHome();
 }
 // home decoration
@@ -511,7 +521,7 @@ try{new ResizeObserver(()=>{if(screen==='game')layout()}).observe($('stage'))}ca
 let saved=null;try{saved=JSON.parse(ls.get('dbub-game'))}catch(e){}
 if(saved&&Array.isArray(saved.grid)&&typeof saved.shift==='number')G=saved;else newRound(1,0);
 renderSound();show('home');
-window.__b={get G(){return G},fire,swap,trace,snap,newGame,show,get busy(){return busy||!!shot},layout,get geo(){return{W,H,R,SHOOT,DEATH}}};
+window.__b={get G(){return G},set G(v){G=v},gateCheck,fire,swap,trace,snap,newGame,show,get busy(){return busy||!!shot},layout,get geo(){return{W,H,R,SHOOT,DEATH}}};
 })();
 </script>
 </body>

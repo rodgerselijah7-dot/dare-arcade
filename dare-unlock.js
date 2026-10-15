@@ -10,14 +10,15 @@
   if (window.DARE) return;
   const API = (window.DARE_API || "").replace(/\/$/, ""); // same site
   const GAMES = {
-    "the-last-don": { name: "The Last Don", price: 4.99, rest: "Districts 2 to 5, levels 13 to 60" },
-    "rebel-elimination": { name: "Rebel Elimination", price: 3.99, rest: "Stages 2 and 3 and their bosses" },
-    "cosmic-encounter": { name: "Cosmic Encounter", price: 2.99, rest: "Every wave after the first boss" },
-    "ori": { name: "ORI", price: 2.99, rest: "Zones 2 to 6 and endless ORBIT" },
-    "dead-rise": { name: "Dead Rise", price: 3.99, rest: "Every wave after the Warden, across all five areas" },
-    "break-the-block": { name: "Break the Block", price: 2.99, rest: "Zones 3 to 8, levels 21 to 80" }
+    "the-last-don": { name: "The Last Don", price: 5.99, rest: "Districts 2 to 5, levels 13 to 60" },
+    "rebel-elimination": { name: "Rebel Elimination", price: 4.99, rest: "Stages 2 and 3 and their bosses" },
+    "cosmic-encounter": { name: "Cosmic Encounter", price: 3.99, rest: "Every wave after the first boss" },
+    "ori": { name: "ORI", price: 3.99, rest: "Zones 2 to 6 and endless ORBIT" },
+    "dead-rise": { name: "Dead Rise", price: 5.99, rest: "Every wave after the Warden, across all five areas" },
+    "break-the-block": { name: "Break the Block", price: 3.99, rest: "Zones 3 to 8, levels 21 to 80" },
+    "bubble": { name: "DARE Bubble Blaster", price: 2.99, rest: "Round 4 and every round after it" }
   };
-  const PASS = { id: "all-access", name: "All-Access Pass", price: 12.99 };
+  const PASS = { id: "all-access", name: "All-Access Pass", price: 19.99 };
   // prices live in /games.json (the same file checkout charges from); the numbers above are just a fallback
   fetch(API + "/games.json", { cache: "no-cache" }).then(r => r.json()).then(list => list.forEach(p => {
     if (p.pass) { PASS.price = p.price; PASS.name = p.name; } else { const g = GAMES[p.id] || (GAMES[p.id] = {}); g.name = p.name; g.price = p.price; g.rest = p.unlocks; g.tryout = p.tryout; }
