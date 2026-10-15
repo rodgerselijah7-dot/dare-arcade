@@ -78,7 +78,7 @@ Every push to `main` redeploys automatically.
 
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
-- Paid (free tryout, then unlock): The Last Don $5.99, Dead Rise $5.99, Rebel Elimination $4.99, Cosmic Encounter $3.99, ORI $3.99, Break the Block $3.99, DARE Bubble Blaster $2.99. All-Access Pass $19.99 (saves $11.94).
+- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $8.94).
 - Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade).
 
 ## DARE Bubble Blaster
