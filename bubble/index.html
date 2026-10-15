@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0d0b0c">
+<meta name="theme-color" content="#0a3550">
 <meta name="description" content="DARE Bubble Blaster by Dontae Amare. Aim, bank off the walls and pop three of a kind. Clear the board before the ceiling comes down.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,77 +14,91 @@
 <link rel="apple-touch-icon" href="/bubble/apple-touch-icon.png">
 <title>DARE Bubble Blaster</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Manrope:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;800;900&display=swap">
 <style>
-/* Layout: two screens. Home = floating-bubble logo, stats, Continue / New game. Game = Menu bar, score / round / best, and one canvas
-   that holds the bubble field, the danger line and the launcher at thumb level. Single dark theme by choice. */
+/* Theme: neon deep sea. Navy-to-teal water, light rays, rising bubbles, aqua + coral accents, chunky rounded type.
+   Two screens: Home (floating bubbles, title, stats, Continue / New game) and Game (Menu bar, score / round / best, canvas). */
 :root{
-  --ink:#0d0b0c; --plate:#181415; --line:#2c2527;
-  --ivory:#f2e9d8; --mute:#9a8f91; --gold:#d6a43a; --gold-hi:#f6d47e;
-  --slab:"Alfa Slab One", Rockwell, "Roboto Slab", Georgia, serif;
-  --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ink:#041021; --ink2:#072a3f; --plate:rgba(120,220,255,.07); --line:rgba(120,220,255,.2);
+  --ivory:#eafaff; --mute:#8fb4c8; --aqua:#2fe3d0; --aqua-hi:#a6fff4; --coral:#ff5d8a; --coral-hi:#ff9bb6;
+  --disp:"Fredoka", "Baloo 2", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --body:"Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--ink);color:var(--ivory);font-family:var(--body);font-size:14px;
-  background-image:radial-gradient(110% 60% at 50% -10%,#24182a 0%,transparent 62%);
+  background-image:radial-gradient(90% 55% at 50% -8%,rgba(47,227,208,.22) 0%,transparent 60%),linear-gradient(180deg,#0a3550 0%,var(--ink2) 38%,var(--ink) 100%);
+  background-attachment:fixed;
   padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
   overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 [hidden]{display:none!important}
+/* light rays + rising bubbles behind everything */
+.sea{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.sea .ray{position:absolute;top:-10%;width:22vw;max-width:160px;height:80%;background:linear-gradient(180deg,rgba(166,255,244,.13),transparent 85%);transform-origin:top center;filter:blur(6px);animation:sway 9s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(var(--r)) translateX(-10px)}to{transform:rotate(calc(var(--r) + 4deg)) translateX(10px)}}
+.sea .up{position:absolute;bottom:-30px;border-radius:50%;border:1.5px solid rgba(166,255,244,.45);background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.55) 0 12%,rgba(166,255,244,.08) 40%,transparent 70%);animation:rise linear infinite}
+@keyframes rise{to{transform:translate(var(--dx),-115vh)}}
+.app{position:relative;z-index:1}
 button,a{font-family:var(--body)}
-button:focus-visible,a:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+button:focus-visible,a:focus-visible{outline:2px solid var(--aqua-hi);outline-offset:2px}
 .app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-block:10px 14px}
 .top{display:flex;align-items:center;gap:8px}
 .grow{flex:1}
-.pill{height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ivory);
-  font:800 11.5px var(--body);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;flex:none}
-.btn{font:800 14px var(--body);letter-spacing:.12em;text-transform:uppercase;padding:16px 18px;border-radius:999px;cursor:pointer;border:1px solid var(--line);background:none;color:var(--ivory)}
-.btn.big{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#2b1c04;border:0;box-shadow:0 10px 26px rgba(214,164,58,.22)}
-.box{padding:8px 12px;border-radius:12px;background:var(--plate);border:1px solid var(--line);text-align:center;position:relative;min-width:74px}
-.box span{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
-.box b{display:block;font:400 20px/1.15 var(--slab);font-variant-numeric:tabular-nums}
-.box.best b{color:var(--gold-hi)}
-.hint{margin:0;text-align:center;font-size:12px;color:var(--mute)}
+.pill{height:38px;padding:0 15px;border-radius:999px;border:1px solid var(--line);background:rgba(4,16,33,.45);color:var(--ivory);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  font:900 11.5px var(--body);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;flex:none}
+.btn{font:600 19px var(--disp);letter-spacing:.04em;padding:14px 18px;border-radius:999px;cursor:pointer;border:1.5px solid var(--line);background:rgba(4,16,33,.45);color:var(--ivory)}
+.btn.big{background:linear-gradient(180deg,#5ff5e4,var(--aqua) 55%,#17b3a6);color:#03263a;border:0;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.55),inset 0 -4px 0 rgba(0,60,70,.35),0 10px 30px rgba(47,227,208,.35)}
+.btn:active{transform:translateY(1px)}
+.box{padding:8px 12px;border-radius:16px;background:var(--plate);border:1px solid var(--line);text-align:center;position:relative;min-width:74px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.box span{display:block;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.box b{display:block;font:600 22px/1.15 var(--disp);font-variant-numeric:tabular-nums}
+.box.best b{color:var(--coral-hi)}
+.hint{margin:0;text-align:center;font-size:12px;font-weight:700;color:var(--mute)}
 
 /* ---------- home ---------- */
 #home{justify-content:space-between;gap:18px;overflow-y:auto}
-.hero{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:clamp(8px,4vh,40px);text-align:center;position:relative}
-.hero .pre{font:400 14px var(--slab);letter-spacing:.5em;padding-left:.5em;color:var(--gold)}
-.hero h1{margin:0;font:400 clamp(48px,15vw,76px)/.9 var(--slab);letter-spacing:.01em}
-.hero h1 span{display:block;font-size:.62em;color:var(--gold-hi)}
-.hero .tag{margin:8px 0 0;font-size:13px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+.hero{display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:clamp(8px,4vh,40px);text-align:center;position:relative}
+.hero .pre{font:700 13px var(--body);letter-spacing:.55em;padding-left:.55em;color:var(--aqua);text-shadow:0 0 12px rgba(47,227,208,.6)}
+.hero h1{margin:0;font:700 clamp(58px,18vw,90px)/.86 var(--disp);letter-spacing:-.01em;
+  background:linear-gradient(180deg,#ffffff 15%,var(--aqua-hi) 60%,var(--aqua) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 #063a52) drop-shadow(0 0 22px rgba(47,227,208,.35))}
+.hero h1 span{display:block;font-size:.72em;background:linear-gradient(180deg,#ffd0dd 10%,var(--coral) 75%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .tag{margin:10px 0 0;font-size:12.5px;font-weight:900;letter-spacing:.26em;text-transform:uppercase;color:var(--mute)}
 .floaters{position:relative;height:clamp(90px,16vh,140px);width:100%}
-.fb{position:absolute;border-radius:50%;animation:bob 3.2s ease-in-out infinite alternate;animation-delay:var(--d)}
-@keyframes bob{to{transform:translateY(-12px)}}
+.fb{position:absolute;border-radius:50%;animation:bob 3.2s ease-in-out infinite alternate;animation-delay:var(--d);box-shadow:0 0 24px var(--g)}
+@keyframes bob{to{transform:translateY(-14px)}}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stats .box{text-align:left;padding:12px}
+.stats .box{text-align:left;padding:12px 14px}
 .how{display:grid;gap:10px;margin:0;padding:0;list-style:none}
-.how li{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--plate);border:1px solid var(--line);font-size:13px;color:var(--mute)}
-.how li b{color:var(--ivory)}
-.how .dot{width:22px;height:22px;border-radius:50%;flex:none}
+.how li{display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:16px;background:var(--plate);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--mute);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.how li b{color:var(--ivory);font-weight:900}
+.how .dot{width:24px;height:24px;border-radius:50%;flex:none}
 .cta{display:flex;flex-direction:column;gap:10px}
 
 /* ---------- game ---------- */
 #game{gap:10px}
 .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .mark{line-height:.9}
-.mark small{display:block;font:400 11px var(--slab);letter-spacing:.42em;color:var(--gold);margin-bottom:3px}
-.mark b{font:400 clamp(22px,6.6vw,30px)/.95 var(--slab)}
+.mark small{display:block;font:800 10px var(--body);letter-spacing:.45em;color:var(--aqua);margin-bottom:4px}
+.mark b{font:700 clamp(22px,6.8vw,30px)/.92 var(--disp);color:var(--aqua-hi)}
+.mark b i{font-style:normal;color:var(--coral-hi);display:block}
 .scores{display:flex;gap:6px}
 .stage{flex:1;min-height:0;display:grid;place-items:center;position:relative}
-canvas{display:block;border-radius:18px;touch-action:none;box-shadow:inset 0 0 0 1px #2e2629,0 18px 40px rgba(0,0,0,.45);cursor:crosshair}
+canvas{display:block;border-radius:22px;touch-action:none;box-shadow:inset 0 0 0 1px rgba(120,220,255,.25),0 0 0 1px rgba(120,220,255,.18),0 18px 50px rgba(0,0,0,.5),0 0 40px rgba(47,227,208,.12);cursor:crosshair}
 .over{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;z-index:5}
-.over .card{padding:22px;border-radius:18px;background:rgba(13,11,12,.9);border:1px solid var(--line);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fade .35s ease;max-width:320px}
-@keyframes fade{from{opacity:0;transform:scale(.95)}}
-.over h2{margin:0;font:400 30px/1 var(--slab)}
-.over p{margin:8px 0 16px;color:var(--mute);font-weight:700}
+.over .card{padding:24px;border-radius:24px;background:rgba(4,22,40,.82);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:fade .35s ease;max-width:320px;box-shadow:0 0 40px rgba(47,227,208,.15)}
+@keyframes fade{from{opacity:0;transform:scale(.92)}}
+.over h2{margin:0;font:700 32px/1 var(--disp);color:var(--aqua-hi)}
+.over p{margin:8px 0 16px;color:var(--mute);font-weight:800}
 .over .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-@media (prefers-reduced-motion:reduce){.fb{animation:none}}
+@media (prefers-reduced-motion:reduce){.fb,.sea .ray,.sea .up{animation:none}.sea .up{display:none}}
 </style>
 </head>
 <body>
+<div class="sea" id="sea" aria-hidden="true"></div>
 
 <section class="app" id="home">
   <div class="top">
@@ -117,7 +131,7 @@ canvas{display:block;border-radius:18px;touch-action:none;box-shadow:inset 0 0 0
     <button class="pill" id="newBtn">New game</button>
   </div>
   <div class="head">
-    <div class="mark"><small>DARE</small><b>Bubble Blaster</b></div>
+    <div class="mark"><small>DARE</small><b>Bubble<i>Blaster</i></b></div>
     <div class="scores">
       <div class="box"><span>Score</span><b id="score">0</b></div>
       <div class="box"><span>Round</span><b id="round">1</b></div>
@@ -137,8 +151,8 @@ const $=id=>document.getElementById(id);
 const fmt=n=>Number(n).toLocaleString('en-US');
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const COLS=10;              // bubbles in a full row
-const COLORS=['#e8b54a','#c0283f','#5fae7a','#4f86c9','#a2336f','#efe2c8','#e2783b'];
-const NAMES=['gold','crimson','green','blue','plum','ivory','amber'];
+const COLORS=['#ffc93c','#ff4f79','#35e08a','#38a8ff','#a96bff','#eef6ff','#ff8a3d'];
+const NAMES=['yellow','pink','green','blue','purple','pearl','orange'];
 const MISSES_PER_ROW=6;
 
 /* ---------- state ---------- */
@@ -185,7 +199,7 @@ function neighbors(r,c){
 const at=(r,c)=>G.grid[r]?G.grid[r][c]:null;
 
 /* ---------- shooting ---------- */
-let aim=null,shot=null,anims=[],parts=[],popups=[],busy=false;
+let aim=null,shot=null,anims=[],parts=[],popups=[],rings=[],busy=false;
 function aimAngle(px,py){
   let a=Math.atan2(SHOOT.y-py,px-SHOOT.x);
   return Math.max(.14,Math.min(Math.PI-.14,a));
@@ -285,21 +299,44 @@ function flood(r,c,pred){
     for(const [na,nb] of neighbors(a,b)){const k=na+','+nb;if(seen.has(k))continue;seen.add(k);const v=at(na,nb);if(v!=null&&pred(v))q.push([na,nb])}}
   return out;
 }
-function burst(x,y,col){for(let i=0;i<9;i++){const a=Math.random()*6.28,s=1+Math.random()*3;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,col})}}
+function burst(x,y,col){rings.push({x,y,col,life:1});for(let i=0;i<9;i++){const a=Math.random()*6.28,s=1+Math.random()*3;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,col})}}
 
 /* ---------- drawing ---------- */
 const grads={};
 function bubble(x,y,col,rad,alpha){
   rad=rad||R*.94;
   ctx.globalAlpha=alpha==null?1:alpha;
-  const g=ctx.createRadialGradient(x-rad*.35,y-rad*.4,rad*.1,x,y,rad);
-  g.addColorStop(0,'#fff');g.addColorStop(.18,COLORS[col]);g.addColorStop(1,shade(COLORS[col],-.45));
+  const c=COLORS[col];
+  // body: bright core fading to a deep rim
+  const g=ctx.createRadialGradient(x-rad*.3,y-rad*.35,rad*.05,x,y,rad);
+  g.addColorStop(0,shade(c,.55));g.addColorStop(.35,c);g.addColorStop(.85,shade(c,-.35));g.addColorStop(1,shade(c,-.55));
   ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,rad,0,6.283);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.ellipse(x-rad*.32,y-rad*.42,rad*.28,rad*.16,-.6,0,6.283);ctx.fill();
+  // glass rim light along the bottom
+  ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=Math.max(1,rad*.09);ctx.beginPath();ctx.arc(x,y,rad*.8,.35,2.8);ctx.stroke();
+  // specular
+  ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.ellipse(x-rad*.36,y-rad*.42,rad*.22,rad*.13,-.7,0,6.283);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(x+rad*.38,y+rad*.3,rad*.07,0,6.283);ctx.fill();
   ctx.globalAlpha=1;
 }
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=amt<0?0:255,p=Math.abs(amt);
   r=Math.round((f-r)*p+r);g=Math.round((f-g)*p+g);b=Math.round((f-b)*p+b);return 'rgb('+r+','+g+','+b+')'}
+let bgC=null,bgKey='';
+function bgCanvas(){
+  const key=W+'x'+H+'@'+DPR;if(bgC&&bgKey===key)return bgC;
+  bgC=document.createElement('canvas');bgC.width=(W+20)*DPR;bgC.height=(H+20)*DPR;bgKey=key;
+  const b=bgC.getContext('2d');b.scale(DPR,DPR);const w=W+20,h=H+20;
+  const g=b.createLinearGradient(0,0,0,h);g.addColorStop(0,'#0c4a63');g.addColorStop(.45,'#082c45');g.addColorStop(1,'#041325');b.fillStyle=g;b.fillRect(0,0,w,h);
+  // light rays from the surface
+  for(const [x0,wd,al] of [[.12,.16,.10],[.38,.10,.08],[.6,.2,.09],[.86,.12,.07]]){
+    const r=b.createLinearGradient(0,0,0,h*.8);r.addColorStop(0,'rgba(166,255,244,'+al+')');r.addColorStop(1,'rgba(166,255,244,0)');b.fillStyle=r;
+    b.beginPath();b.moveTo(w*x0,0);b.lineTo(w*(x0+wd),0);b.lineTo(w*(x0+wd*.4+.12),h*.8);b.lineTo(w*(x0+.05),h*.8);b.closePath();b.fill()}
+  // caustic shimmer at the top
+  const t=b.createLinearGradient(0,0,0,40);t.addColorStop(0,'rgba(166,255,244,.22)');t.addColorStop(1,'rgba(166,255,244,0)');b.fillStyle=t;b.fillRect(0,0,w,40);
+  // glow at the launcher
+  const f=b.createRadialGradient(w/2,h,0,w/2,h,h*.45);f.addColorStop(0,'rgba(47,227,208,.18)');f.addColorStop(1,'rgba(47,227,208,0)');b.fillStyle=f;b.fillRect(0,0,w,h);
+  return bgC;
+}
+const motes=Array.from({length:18},()=>({x:Math.random()*400,y:Math.random()*700,r:1+Math.random()*3,v:.2+Math.random()*.5,a:(.12+Math.random()*.25).toFixed(2),f:.5+Math.random(),p:Math.random()*6}));
 let shake=0,last=0;
 function frame(t){
   requestAnimationFrame(frame);
@@ -317,14 +354,16 @@ function frame(t){
   ctx.save();
   if(shake>.2){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}
   // background
-  const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#1d1520');bg.addColorStop(1,'#120e12');
-  ctx.fillStyle=bg;ctx.fillRect(-10,-10,W+20,H+20);
+  ctx.drawImage(bgCanvas(),-10,-10,W+20,H+20);
+  // drifting ambient bubbles
+  for(const m of motes){m.y-=m.v*dt;m.x+=Math.sin((t/1000)*m.f+m.p)*.25*dt;if(m.y<-10){m.y=H+10;m.x=Math.random()*W}
+    ctx.strokeStyle='rgba(166,255,244,'+m.a+')';ctx.lineWidth=1;ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,6.283);ctx.stroke()}
   // ceiling bar shows how close the next row is
   const left=MISSES_PER_ROW-G.misses;
-  for(let i=0;i<MISSES_PER_ROW;i++){ctx.fillStyle=i<left?'rgba(214,164,58,.75)':'rgba(255,255,255,.08)';ctx.fillRect(W/2-MISSES_PER_ROW*9+i*18+3,2,12,3)}
+  for(let i=0;i<MISSES_PER_ROW;i++){ctx.fillStyle=i<left?'rgba(47,227,208,.9)':'rgba(255,255,255,.1)';ctx.fillRect(W/2-MISSES_PER_ROW*9+i*18+3,2,12,3)}
   // danger line
   const dy=cy(DEATH)-R*.2;
-  ctx.strokeStyle='rgba(238,99,120,.35)';ctx.setLineDash([6,6]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(8,dy);ctx.lineTo(W-8,dy);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(255,93,138,.55)';ctx.setLineDash([4,8]);ctx.lineCap='round';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(8,dy);ctx.lineTo(W-8,dy);ctx.stroke();ctx.setLineDash([]);
   // field
   for(let r=0;r<G.grid.length;r++)for(let c=0;c<width(r);c++){const v=at(r,c);if(v!=null)bubble(cx(r,c),cy(r),v)}
   // aim guide
@@ -334,7 +373,7 @@ function frame(t){
     let acc=0;
     for(let i=1;i<tr.pts.length;i++){
       const [x0,y0]=tr.pts[i-1],[x1,y1]=tr.pts[i],seg=Math.hypot(x1-x0,y1-y0);
-      for(let d=(R*.9-acc%(R*.9));d<seg;d+=R*.9){const k=d/seg;ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(x0+(x1-x0)*k,y0+(y1-y0)*k,R*.14,0,6.283);ctx.fill()}
+      for(let d=(R*.9-acc%(R*.9));d<seg;d+=R*.9){const k=d/seg;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(x0+(x1-x0)*k,y0+(y1-y0)*k,R*.14,0,6.283);ctx.fill()}
       acc+=seg;
     }
     ctx.globalAlpha=1;
@@ -343,29 +382,32 @@ function frame(t){
   // launcher
   const a=aim||Math.PI/2;
   ctx.save();ctx.translate(SHOOT.x,SHOOT.y);ctx.rotate(-a+Math.PI/2);
-  ctx.fillStyle='#2a2226';ctx.beginPath();ctx.roundRect?ctx.roundRect(-R*.45,-R*2.3,R*.9,R*1.8,R*.3):ctx.rect(-R*.45,-R*2.3,R*.9,R*1.8);ctx.fill();
-  ctx.fillStyle='#d6a43a';ctx.fillRect(-R*.45,-R*2.3,R*.9,R*.25);
+  const bar=ctx.createLinearGradient(-R*.5,0,R*.5,0);bar.addColorStop(0,'#0b4a5e');bar.addColorStop(.5,'#2fe3d0');bar.addColorStop(1,'#0b4a5e');
+  ctx.fillStyle=bar;ctx.beginPath();ctx.roundRect?ctx.roundRect(-R*.42,-R*2.4,R*.84,R*1.9,R*.42):ctx.rect(-R*.42,-R*2.4,R*.84,R*1.9);ctx.fill();
+  ctx.fillStyle='#ff5d8a';ctx.beginPath();ctx.arc(0,-R*2.32,R*.3,0,6.283);ctx.fill();
   ctx.restore();
-  ctx.fillStyle='#231c20';ctx.beginPath();ctx.arc(SHOOT.x,SHOOT.y,R*1.35,0,6.283);ctx.fill();
-  ctx.strokeStyle='rgba(214,164,58,.6)';ctx.lineWidth=2;ctx.stroke();
+  const base=ctx.createRadialGradient(SHOOT.x,SHOOT.y-R*.4,R*.2,SHOOT.x,SHOOT.y,R*1.45);base.addColorStop(0,'#0f3d55');base.addColorStop(1,'#062033');
+  ctx.fillStyle=base;ctx.beginPath();ctx.arc(SHOOT.x,SHOOT.y,R*1.4,0,6.283);ctx.fill();
+  ctx.shadowColor='rgba(47,227,208,.8)';ctx.shadowBlur=12;ctx.strokeStyle='#2fe3d0';ctx.lineWidth=2.5;ctx.stroke();ctx.shadowBlur=0;
   if(!shot)bubble(SHOOT.x,SHOOT.y,G.cur);
   // next bubble (tap to swap)
   const nx=SHOOT.x+R*3.3,ny=SHOOT.y+R*.35;
-  ctx.fillStyle='rgba(255,255,255,.06)';ctx.beginPath();ctx.arc(nx,ny,R*.95,0,6.283);ctx.fill();
+  ctx.fillStyle='rgba(6,32,51,.8)';ctx.beginPath();ctx.arc(nx,ny,R*.98,0,6.283);ctx.fill();ctx.strokeStyle='rgba(120,220,255,.35)';ctx.lineWidth=1.5;ctx.stroke();
   bubble(nx,ny,G.next,R*.72);
-  ctx.fillStyle='rgba(242,233,216,.55)';ctx.font='800 '+Math.round(R*.5)+'px Manrope, system-ui, sans-serif';ctx.textAlign='center';ctx.fillText('NEXT',nx,ny+R*1.55);
+  ctx.fillStyle='rgba(166,255,244,.7)';ctx.font='900 '+Math.round(R*.5)+'px Nunito, system-ui, sans-serif';ctx.textAlign='center';ctx.fillText('NEXT',nx,ny+R*1.55);
   // the shot in flight
   if(shot)bubble(shot.x,shot.y,shot.color);
   // falling bubbles
   anims=anims.filter(b=>{b.vy+=.35*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;bubble(b.x,b.y,b.col,R*.9,Math.max(0,1-(b.y-H*.5)/(H*.6)));return b.y<H+R*2});
   // pop sparks
   parts=parts.filter(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.08*dt;p.life-=.035*dt;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=COLORS[p.col];ctx.beginPath();ctx.arc(p.x,p.y,R*.22*p.life+1,0,6.283);ctx.fill();ctx.globalAlpha=1;return p.life>0});
+  rings=rings.filter(q=>{q.life-=.06*dt;if(q.life<=0)return false;ctx.globalAlpha=q.life*.8;ctx.strokeStyle=COLORS[q.col];ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x,q.y,R*(1.6-q.life*.7),0,6.283);ctx.stroke();ctx.globalAlpha=1;return true});
   // score popups
   const now=performance.now();
   popups=popups.filter(p=>{const age=(now-p.t)/1000;if(age>1.3)return false;
-    ctx.globalAlpha=Math.max(0,1-age/1.3);ctx.fillStyle=p.big?'#f6d47e':'#f2e9d8';ctx.textAlign='center';
-    ctx.font=(p.big?'400 '+Math.round(R*1.3):'800 '+Math.round(R*.75))+'px '+(p.big?'"Alfa Slab One", Georgia, serif':'Manrope, system-ui, sans-serif');
-    ctx.fillText(p.text,Math.max(70,Math.min(W-70,p.x)),p.y-age*R*2);ctx.globalAlpha=1;return true});
+    ctx.globalAlpha=Math.max(0,1-age/1.3);ctx.fillStyle=p.big?'#a6fff4':'#ffffff';ctx.shadowColor=p.big?'rgba(47,227,208,.9)':'rgba(255,93,138,.8)';ctx.shadowBlur=10;ctx.textAlign='center';
+    ctx.font=(p.big?'700 '+Math.round(R*1.4):'600 '+Math.round(R*.85))+'px Fredoka, "Arial Rounded MT Bold", system-ui, sans-serif';
+    ctx.fillText(p.text,Math.max(70,Math.min(W-70,p.x)),p.y-age*R*2);ctx.shadowBlur=0;ctx.globalAlpha=1;return true});
   ctx.restore();
 }
 requestAnimationFrame(frame);
@@ -423,10 +465,10 @@ $('soundBtn').onclick=()=>{soundOn=!soundOn;ls.set('dbub-sound',soundOn?'1':'0')
 function drawHud(){$('score').textContent=fmt(G.score);$('round').textContent=G.round;$('best').textContent=fmt(best)}
 function showOver(){
   const o=$('over');o.hidden=false;const nb=G.score>=best&&G.score>0;
-  o.innerHTML='<div class="card"><h2>The ceiling came down</h2><p>'+fmt(G.score)+' points · round '+G.round+(nb?' · new best!':'')+'</p><div class="row"><button class="btn" id="oMenu">Menu</button><button class="btn big" id="oAgain">Play again</button></div></div>';
+  o.innerHTML='<div class="card"><h2>Bubbles hit the line</h2><p>'+fmt(G.score)+' points · round '+G.round+(nb?' · new best!':'')+'</p><div class="row"><button class="btn" id="oMenu">Menu</button><button class="btn big" id="oAgain">Play again</button></div></div>';
   $('oAgain').onclick=newGame;$('oMenu').onclick=()=>show('home');sound('over');save();
 }
-function newGame(){newRound(1,0);$('over').hidden=true;shot=null;anims=[];parts=[];popups=[];busy=false;drawHud();save()}
+function newGame(){newRound(1,0);$('over').hidden=true;shot=null;anims=[];parts=[];popups=[];rings=[];busy=false;drawHud();save()}
 const inProgress=()=>G&&!G.over&&(G.shots>0||G.round>1);
 function renderHome(){
   $('hBest').textContent=fmt(best);$('hPopped').textContent=fmt(stats.popped);$('hRound').textContent=stats.round;
@@ -441,12 +483,14 @@ function show(w){
 }
 // home decoration
 $('floaters').innerHTML=[[8,34,.62,1],[22,8,.42,0],[36,46,.5,3],[58,14,.7,4],[74,40,.46,2],[88,10,.56,5],[50,62,.34,6]].map(([x,y,s,c],i)=>
-  `<span class="fb" style="left:${x}%;top:${y}%;width:${s*64}px;height:${s*64}px;margin-left:${-s*32}px;--d:${-i*.5}s;background:radial-gradient(circle at 32% 28%,#fff 0 8%,${COLORS[c]} 22%,${shade(COLORS[c],-.45)} 100%)"></span>`).join('');
+  `<span class="fb" style="left:${x}%;top:${y}%;width:${s*64}px;height:${s*64}px;margin-left:${-s*32}px;--d:${-i*.5}s;--g:${COLORS[c]}66;background:radial-gradient(circle at 32% 28%,#fff 0 7%,${shade(COLORS[c],.4)} 16%,${COLORS[c]} 40%,${shade(COLORS[c],-.5)} 100%)"></span>`).join('');
+$('sea').innerHTML=[[8,-18],[34,-8],[62,-14],[86,-4]].map(([x,r],i)=>`<span class="ray" style="left:${x}%;--r:${r}deg;animation-delay:${-i*2}s"></span>`).join('')+
+  Array.from({length:14},(_,i)=>{const s=6+Math.random()*16;return `<span class="up" style="left:${Math.random()*100}%;width:${s}px;height:${s}px;--dx:${(Math.random()-.5)*60}px;animation-duration:${9+Math.random()*10}s;animation-delay:${-Math.random()*18}s"></span>`}).join('');
 $('how').innerHTML=[
   [0,'<b>Drag to aim</b>, let go to shoot. Bank shots off the walls.'],
   [1,'<b>Match three</b> of a color to pop them. Anything left hanging drops for bonus points.'],
   [3,'<b>Every 6 misses</b> the ceiling drops a row. Clear the board before it reaches the line.']
-].map(([c,t])=>`<li><span class="dot" style="background:radial-gradient(circle at 32% 28%,#fff 0 8%,${COLORS[c]} 24%,${shade(COLORS[c],-.45)} 100%)"></span><span>${t}</span></li>`).join('');
+].map(([c,t])=>`<li><span class="dot" style="background:radial-gradient(circle at 32% 28%,#fff 0 8%,${COLORS[c]} 30%,${shade(COLORS[c],-.5)} 100%);box-shadow:0 0 12px ${COLORS[c]}88"></span><span>${t}</span></li>`).join('');
 
 /* ---------- wiring ---------- */
 $('menuBtn').onclick=()=>{aim=null;show('home')};
