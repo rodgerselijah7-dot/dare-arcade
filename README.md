@@ -57,11 +57,11 @@ Every push to `main` redeploys automatically.
 
 ## DARE Dice (street craps)
 - Two 3D dice (three.js r128, red and gold) thrown off a brick wall onto night pavement. Play cash only; each player starts with $1,000.
-- The shooter calls a bet with cash buttons ($5, $20, $100, All in). The fader fades all of it or covers part; the bet is whatever the fader covers. Both stacks go on the ground as the pot.
+- The shooter calls a bet with cash buttons ($5, $20, $100, All in) or types any amount (tap the amount). The fader fades all of it or covers part; the bet is whatever the fader covers. Both stacks go on the ground as the pot.
 - Come-out: 7 or 11 wins, 2, 3 or 12 is craps and loses (the shooter keeps the dice). Anything else is the point: hit it again to win, a 7 first is a seven-out, the shooter loses and the dice pass. Whoever breaks the other player wins.
 - Rolling: hold the Roll button to shake the dice, let go to throw. On phones, shaking the phone throws them too (device motion; iPhones ask for motion access the first time a player taps Play, a bill or Roll). Players can turn it off with the Shake button.
 - Solo: play Slim, who calls his own shots when he has the dice and sometimes only covers part of a big bet. The game is saved on the phone (Resume).
-- Online: rooms are named `dd-<code>` on `/api/room`. Every move is a token in the acting player's presence: `a<amount>` (call), `c<amount>` (fade/cover), `r<die1><die2>` (roll). Only one player can act at a time, so the lists never fork, and each phone replays the other's new tokens. The host gets the dice first; first dice swap on every rematch.
+- Online: rooms are named `dd-<code>` on `/api/room`. Every move is a token in the acting player's presence: `a<amount>` (call), `c<amount>` (fade/cover), `r<die1><die2>` (roll). Only one player can act at a time, so the lists never fork, and each phone replays the other's new tokens. The host gets the dice first; first dice swap on every rematch. The host sets the buy-in in the lobby ($100, $500, $1K, $5K or any amount from $10 to $1,000,000); it rides in the host's presence as `bi`, and the guest's lobby shows it before the match starts.
 
 ## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
 - `dare-play.js` is shared by all four games. It adds:

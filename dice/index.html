@@ -152,7 +152,18 @@ input{-webkit-user-select:text;user-select:text}
 .wtop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .wtop .wl{font-size:13px;font-weight:700;color:var(--mute);min-width:0}
 .wtop .wl b{color:var(--ivory)}
-.wtop .amt{font:400 30px/1 var(--slab);color:var(--cash-hi);font-variant-numeric:tabular-nums}
+.wtop .amt{display:flex;align-items:baseline;gap:2px;font:400 30px/1 var(--slab);color:var(--cash-hi);font-variant-numeric:tabular-nums;
+  border-bottom:2px dashed rgba(127,182,133,.45);padding:0 2px 3px;cursor:text}
+.wtop .amt:focus-within{border-bottom-color:var(--cash-hi)}
+.amtin{width:5.2ch;background:none;border:0;outline:none;padding:0;margin:0;color:inherit;font:inherit;text-align:right;font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none}
+.amthint{font-size:11px;font-weight:700;color:var(--mute);margin-top:-6px;text-align:right}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg button{height:42px;border-radius:10px;border:1px solid var(--line);background:var(--plate);color:var(--ivory);font:400 15px var(--slab);cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--cash);background:rgba(127,182,133,.14);color:var(--cash-hi)}
+.buyrow{display:flex;align-items:center;gap:8px}
+.buyrow .field{flex:1;min-width:0;font:400 18px var(--slab)}
+.buynote{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid rgba(127,182,133,.35);border-radius:12px;background:rgba(127,182,133,.07);font-weight:700}
+.buynote b{font:400 20px var(--slab);color:var(--cash-hi)}
 .bills{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 .bill{height:46px;border-radius:5px;border:1px solid var(--cash-lo);cursor:pointer;position:relative;overflow:hidden;
   background:radial-gradient(ellipse 30% 55% at 50% 50%,#cfe8cc 0 60%,transparent 62%),repeating-linear-gradient(135deg,rgba(23,53,32,.06) 0 2px,transparent 2px 5px),linear-gradient(180deg,#b3dcaf,#7cb282);
@@ -234,6 +245,14 @@ input{-webkit-user-select:text;user-select:text}
       <button class="btn sm ghost" id="olCopy">Copy code</button>
     </div>
     <div class="oppline" id="olOpp"><span class="led"></span><span id="olOppTx">Waiting for your opponent to join</span></div>
+    <div id="olBuy">
+      <div class="label">Buy-in · cash each player starts with</div>
+      <div class="seg" id="olBuySeg" role="group" aria-label="Buy-in">
+        <button data-bi="100">$100</button><button data-bi="500">$500</button><button data-bi="1000">$1K</button><button data-bi="5000">$5K</button>
+      </div>
+      <div class="buyrow"><input class="field" id="olBuyIn" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="Or type an amount" autocomplete="off" aria-label="Custom buy-in"></div>
+    </div>
+    <div class="buynote" id="olBuyNote" hidden><span>Buy-in</span><b id="olBuyAmt">$1,000</b></div>
     <button class="btn big" id="olStart" disabled>Start match</button>
     <p class="hint" id="olNote">Send the code to your opponent. They open DARE Dice, tap Online, and enter it.</p>
     <button class="btn ghost" id="olLeave">Leave match</button>
@@ -264,7 +283,8 @@ input{-webkit-user-select:text;user-select:text}
   </div>
   <div class="act" id="act">
     <div id="wager" hidden>
-      <div class="wtop"><span class="wl" id="wLabel">Your bet</span><span class="amt" id="wAmt">$20</span></div>
+      <div class="wtop"><span class="wl" id="wLabel">Your bet</span><label class="amt" for="wAmt">$<input class="amtin" id="wAmt" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" maxlength="7" autocomplete="off" aria-label="Bet amount" value="20"></label></div>
+      <div class="amthint">Tap the amount to type your own</div>
       <div class="bills">
         <button class="bill" data-add="5">$5</button>
         <button class="bill" data-add="20">$20</button>
@@ -318,7 +338,7 @@ const faceHTML=(f,ink)=>'<svg viewBox="0 0 32 32">'+PIPS[f].map(([x,y])=>'<circl
    hit it again to win, a 7 first loses and the dice pass. Whoever runs the other one out of cash wins.
    Every change is a token, so replaying the tokens rebuilds the same game on both phones. */
 let S=null, menuMode='solo', screen='title';
-function fresh(mode,seat){return {mode,me:seat||1,shooter:1,point:0,stack:{1:START,2:START},ask:0,bet:0,phase:'bet',log:[],hist:[],dice:null,
+function fresh(mode,seat,bi){const st=bi||START;return {mode,me:seat||1,shooter:1,point:0,buyIn:st,stack:{1:st,2:st},ask:0,bet:0,phase:'bet',log:[],hist:[],dice:null,
   call:null,last:null,over:false,winner:0,end:'',tallied:false}}
 const fader=()=>3-S.shooter;
 function apply(t){
@@ -685,7 +705,7 @@ $('shakeBtn').onclick=()=>{
 renderShake();
 
 /* ---------- actions ---------- */
-let Q=[],pumping=false,current=null,pick=20,pickKey='',lastAsk=20;
+let Q=[],pumping=false,current=null,pick=20,pickKey='',lastAsk=0;
 const busy=()=>pumping||Q.length>0;
 function myTurn(){
   if(!S||S.over||busy())return '';
@@ -833,11 +853,11 @@ function render(){
   }
   if(m==='ask'||m==='cover'){
     const key=S.log.length+m;
-    if(pickKey!==key){pickKey=key;pick=m==='cover'?Math.min(S.ask,S.stack[me]):Math.min(lastAsk||20,S.stack[me])}
+    if(pickKey!==key){pickKey=key;pick=m==='cover'?Math.min(S.ask,S.stack[me]):Math.min(lastAsk||Math.max(5,Math.round((S.buyIn||START)*.02/5)*5),S.stack[me])}
     pick=Math.max(0,Math.min(pick,wMax()));
     $('wager').hidden=false;
     $('wLabel').innerHTML=m==='ask'?'Your bet':'<b>'+esc(oppName())+'</b> is shooting '+cash(S.ask);
-    $('wAmt').textContent=cash(pick);
+    if(document.activeElement!==$('wAmt'))$('wAmt').value=pick;
     const go=$('wGo');go.disabled=pick<1;
     go.textContent=m==='ask'?'Shoot '+cash(pick):(pick>=S.ask?'Fade '+cash(pick):'Cover '+cash(pick));
     $('wMax').textContent=m==='ask'?'All in':'Fade all';
@@ -894,7 +914,8 @@ function startSolo(resume){
    ====================================================================== */
 const CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const NET={me:DP?DP.peer:'local',alive:false,room:'',code:'',role:'',opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,
-  game:0,hostColor:1,pres:{},timer:null,inflight:false,again:false,full:false,oppRe:false,joinedAt:0,lfg:false,lfgT:0};
+  game:0,hostColor:1,pres:{},timer:null,inflight:false,again:false,full:false,oppRe:false,joinedAt:0,lfg:false,lfgT:0,
+  buyIn:Math.max(10,Math.min(1e6,parseInt(ls.get('dd-buyin'),10)||START)),oppBi:0};
 const cleanNick=s=>String(s||'').replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().slice(0,12);
 const myNick=()=>cleanNick($('olNick').value)||'Player';
 const CHAT=DP&&DP.chat({accent:'#7fb685',
@@ -922,7 +943,7 @@ async function enterRoom(code,role,open){
   $('olStatus').textContent='';$('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=true;
   netLeave();
   Object.assign(NET,{room:'dd-'+code.toLowerCase(),code,role,opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,game:0,full:false,oppRe:false,
-    hostColor:1,pres:{app:'dice',role,nick:myNick()},alive:true,joinedAt:Date.now()});
+    hostColor:1,pres:{app:'dice',role,nick:myNick(),bi:role==='h'?NET.buyIn:0},alive:true,joinedAt:Date.now(),oppBi:0});
   let d=null;
   try{d=await roomPost({room:NET.room,peer:NET.me,presence:NET.pres})}
   catch(e){NET.alive=false;$('olStatus').textContent=e.message||'Couldn’t connect. Check your connection and try again.'}
@@ -973,7 +994,7 @@ function netPeers(list){
   }
   if(o&&NET.role==='g'&&o.presence.opp&&o.presence.opp!==NET.me){NET.opp=null;o=null;NET.full=true;delete NET.pres.opp}
   const was=NET.oppOnline;NET.oppOnline=!!o;
-  if(o){NET.oppNick=cleanNick(o.presence.nick)||'Opponent';if(CHAT){CHAT.setOpp(NET.oppNick);CHAT.receive(o.peer,o.presence.chat)}}
+  if(o){NET.oppNick=cleanNick(o.presence.nick)||'Opponent';if(o.presence.bi>0)NET.oppBi=Math.min(1e6,Math.floor(o.presence.bi));if(CHAT){CHAT.setOpp(NET.oppNick);CHAT.receive(o.peer,o.presence.chat)}}
   if(CHAT&&hadOpp&&NET.opp&&was!==!!o)CHAT.note(o?NET.oppNick+' is back':(NET.oppNick||'Your opponent')+' disconnected');
   const inGame=online()&&screen==='game'&&NET.game>0;
   if(!inGame){
@@ -1006,13 +1027,13 @@ function applyRemote(mv){
   for(let i=0;i<mine.length;i++)if(rl[i]!==mine[i])return;
   enqueue(rl.slice(mine.length),true,false);
 }
-function hostStart(g,hc){NET.pres.go=g;NET.pres.hc=hc;startOnlineGame(g,hc)}
+function hostStart(g,hc){NET.pres.go=g;NET.pres.hc=hc;NET.pres.bi=NET.buyIn;startOnlineGame(g,hc)}
 function startOnlineGame(g,seat){
   NET.game=g;if(NET.role==='h')NET.hostColor=seat;
   Object.assign(NET.pres,{g,mv:''});delete NET.pres.res;delete NET.pres.re;
   Object.assign(NET,{oppRe:false,offSince:0});
   Q=[];stopCpu();
-  S=fresh('online',seat);
+  S=fresh('online',seat,NET.role==='h'?NET.buyIn:(NET.oppBi||START));lastAsk=0;
   show('game');netKick();
 }
 function updateLobby(){
@@ -1024,6 +1045,10 @@ function updateLobby(){
     :NET.role==='h'?'Waiting for your opponent to join'
     :Date.now()-NET.joinedAt>5000?'No host with that code yet. Check it, or wait for them to create it.':'Looking for the host…';
   $('olStart').disabled=!o;
+  $('olBuy').hidden=NET.role!=='h';
+  $('olBuyNote').hidden=NET.role==='h';
+  $('olBuyAmt').textContent=cash(NET.role==='h'?NET.buyIn:(NET.oppBi||START));
+  document.querySelectorAll('#olBuySeg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.bi===NET.buyIn));
 }
 function updateRematch(){
   const b=$('rematch');
@@ -1054,6 +1079,16 @@ setInterval(()=>{if(online()&&screen==='game'&&!S.over&&!NET.oppOnline)render()}
 /* ---------- wiring ---------- */
 document.querySelectorAll('.bill[data-add]').forEach(b=>b.addEventListener('click',()=>{startShake();pick=Math.min(wMax(),pick+(+b.dataset.add));render()}));
 $('wMax').onclick=()=>{pick=wMax();render()};
+$('wAmt').addEventListener('input',e=>{const v=e.target.value.replace(/[^0-9]/g,'');e.target.value=v;pick=Math.min(parseInt(v,10)||0,wMax());render()});
+$('wAmt').addEventListener('focus',e=>{startShake();setTimeout(()=>e.target.select(),0)});
+$('wAmt').addEventListener('blur',()=>render());
+$('wAmt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('wAmt').blur();postWager()}});
+function setBuyIn(v){
+  v=Math.max(10,Math.min(1e6,Math.floor(v)||0));NET.buyIn=v;ls.set('dd-buyin',String(v));
+  if(NET.role==='h'){NET.pres.bi=v;netKick()}updateLobby();
+}
+document.querySelectorAll('#olBuySeg button').forEach(b=>b.onclick=()=>{$('olBuyIn').value='';setBuyIn(+b.dataset.bi)});
+$('olBuyIn').addEventListener('input',e=>{const v=e.target.value.replace(/[^0-9]/g,'');e.target.value=v;if(+v>=10)setBuyIn(+v)});
 $('wClear').onclick=()=>{pick=0;render()};
 $('wGo').onclick=postWager;
 // hold to shake, let go to roll
