@@ -49,6 +49,7 @@ input{-webkit-user-select:text;user-select:text}
 .titlebg.dim::after{background:rgba(11,10,11,.86)}
 .screen{position:relative;z-index:1}
 #title{justify-content:flex-end;align-items:center;gap:clamp(14px,2.6vh,24px);padding-block:20px 28px;text-align:center}
+.icon.toarcade{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:0;z-index:3;text-decoration:none;background:rgba(14,12,14,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .brand{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:auto;padding-top:clamp(18px,6vh,60px)}
 .brand .pre{font:400 13px var(--slab);letter-spacing:.42em;padding-left:.42em;color:var(--ivory);opacity:.85}
 .wordmark{font:400 clamp(78px,25vw,136px)/.9 var(--marker);margin:0;color:var(--gold-hi);transform:rotate(-4deg);
@@ -187,6 +188,7 @@ input{-webkit-user-select:text;user-select:text}
 <div class="titlebg" id="titleBg" aria-hidden="true"></div>
 
 <section class="screen" id="title">
+  <a class="icon toarcade" href="/" id="toArcade">‹ DARE Arcade</a>
   <div class="brand">
     <span class="pre">DARE</span>
     <h1 class="wordmark">Dice</h1>
@@ -306,7 +308,7 @@ const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k
 /* ---------- dice faces ---------- */
 const PIPS={1:[[16,16]],2:[[8.5,8.5],[23.5,23.5]],3:[[8.5,8.5],[16,16],[23.5,23.5]],4:[[8.5,8.5],[23.5,8.5],[8.5,23.5],[23.5,23.5]],
   5:[[8.5,8.5],[23.5,8.5],[16,16],[8.5,23.5],[23.5,23.5]],6:[[8.5,8],[23.5,8],[8.5,16],[23.5,16],[8.5,24],[23.5,24]]};
-const COLORS=[['#d0102c','#fff6e6'],['#f2b705','#2a1a04']];
+const COLORS=[['#f6f3ec','#141113'],['#f6f3ec','#141113']]; // classic white dice, black pips
 const faceHTML=(f,ink)=>'<svg viewBox="0 0 32 32">'+PIPS[f].map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="'+(f==1?4.6:3.3)+'" fill="'+ink+'"/>').join('')+'</svg>';
 // (the title dice are the live 3D scene)
 
@@ -420,8 +422,8 @@ function brickTex(){
     g.shadowBlur=0;const tg=g.createLinearGradient(0,-45,0,45);tg.addColorStop(0,'#ffe59a');tg.addColorStop(.55,'#e2a72e');tg.addColorStop(1,'#a8671a');
     g.fillStyle=tg;g.fillText('DARE',0,0);
     g.fillStyle='#d99a26';
-    for(const [dx,len] of [[-96,38],[-58,22],[-12,46],[28,26],[76,40],[106,20]]){g.fillRect(dx,22,4,len);g.beginPath();g.arc(dx+2,22+len,3.5,0,7);g.fill()}
-    g.font='24px '+MARKER;g.fillStyle='rgba(241,232,214,.7)';g.fillText('SOUTH SIDE',96,62);
+    for(const [dx,len] of [[-96,26],[-58,16],[-12,30],[28,18],[76,28],[106,14]]){g.fillRect(dx,22,4,len);g.beginPath();g.arc(dx+2,22+len,3.5,0,7);g.fill()}
+    g.font='26px '+MARKER;g.fillStyle='rgba(241,232,214,.85)';g.fillText('Risk Takers always win.',0,78);
     g.restore();
     g.save();g.translate(w*.41,h*.7);g.rotate(.08);g.font='34px '+MARKER;g.fillStyle='rgba(208,16,44,.7)';g.fillText('7 · 11',0,0);g.restore();
     g.save();g.translate(w*.7,h*.24);g.rotate(-.1);g.font='28px '+MARKER;g.fillStyle='rgba(127,182,133,.65)';g.fillText('GET PAID',0,0);g.restore();
@@ -600,9 +602,12 @@ function frame(){
       m.quaternion.copy(a.qF).multiply(new THREE.Quaternion().setFromAxisAngle(a.axis,a.spin*(1-ee)));
       if(p>=1){d.anim=null;d.rest.copy(a.to);d.yaw=a.yaw}
     }else if(R3.rattle){
-      const t=now/1000;
-      m.position.set((i?.38:-.38)+Math.sin(t*37+i)*.12,2.1+Math.sin(t*41+i*2)*.15,2.6+Math.cos(t*33+i)*.1);
-      m.rotation.set(t*9+i,t*11,t*7+i*2);
+      // both dice move together like they're cupped in a hand, each in its own lane
+      const t=now/1000,jx=Math.sin(t*26)*.22,jy=Math.abs(Math.sin(t*31))*.28,jz=Math.cos(t*22)*.08;
+      m.position.set((i?.85:-.85)+jx*.8+Math.sin(t*19+i*2)*.05,2.0+jy,1.9+jz);
+      if(!d.spinAxis)d.spinAxis=V3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize();
+      if(Math.random()<.04)d.spinAxis.set(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize();
+      m.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(d.spinAxis,dt*9));
     }
   });
   for(const s of R3.pot.concat(R3.leaving)){
@@ -635,14 +640,13 @@ function rollAnim(t,quiet){
   if(!R3)return sleep(300);
   R3.rattle=false;
   const now=performance.now();let longest=0;
-  const flip=Math.random()<.5;
   R3.dice.forEach((d,i)=>{
-    const f=+t[1+i],side=(i===0)!==flip?-1:1;
-    const x=side*(.45+Math.random()*.7),z=-1.3+Math.random()*1.7,yaw=(Math.random()-.5)*1.4;
-    const from=d.mesh.position.y>1.2?d.mesh.position.clone():V3(side*.4,1.6,3.8);
-    const dur=1250+Math.random()*300,delay=i*60;longest=Math.max(longest,dur+delay);
+    const f=+t[1+i],side=i===0?-1:1;
+    const x=side*(.72+Math.random()*.6),z=-1.3+Math.random()*1.7,yaw=(Math.random()-.5)*1.4;
+    const from=d.mesh.position.y>1.2?d.mesh.position.clone():V3(side*.9,1.6,3.8);
+    const dur=1250+Math.random()*300,delay=i*110;longest=Math.max(longest,dur+delay);
     d.hit=false;d.landed=false;
-    d.anim={t0:now+delay,dur,from,wall:V3(x*.8+(Math.random()-.5)*.6,.7,WALLZ+.75),to:V3(x,.5,z),yaw,
+    d.anim={t0:now+delay,dur,from,wall:V3(x*.95,.7,WALLZ+.75),to:V3(x,.5,z),yaw,
       qF:faceQuat(f,yaw),axis:V3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize(),spin:16+Math.random()*9};
   });
   if(!quiet&&navigator.vibrate)try{navigator.vibrate([20,60,25])}catch(e){}
@@ -852,6 +856,7 @@ function render(){
 
 /* ---------- screens ---------- */
 function renderTitle(){
+  $('toArcade').hidden=!ONLINE_OK;
   for(const m of ['solo','online'])$('m-'+m).setAttribute('aria-pressed',menuMode===m);
   $('m-online').disabled=!ONLINE_OK;
   $('onlineSub').textContent=ONLINE_OK?'Shoot with a friend':'On the DARE Arcade';
