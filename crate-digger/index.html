@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#d6bf93">
-<meta name="description" content="Crate Digger by Dontae Amare. Hip hop trivia from the Bronx park jams to 2026: a Daily Dig and classic rounds that get harder as you streak.">
+<meta name="description" content="Crate Digger by Dontae Amare. Hip hop, R&amp;B, pop and neo soul trivia from the '70s to 2026: a Daily Dig and classic rounds that get harder as you streak.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Crate Digger">
@@ -163,10 +163,10 @@ p{margin:0}
   <!-- HOME -->
   <section class="screen" id="home">
     <div>
-      <div class="label">Hip hop trivia</div>
+      <div class="label">Music trivia</div>
       <h1>Crate <em>digger</em></h1>
     </div>
-    <p class="lede">From the Bronx park jams to 2026. Albums, labels, producers, hometowns and the DFW scene. Streak right and the questions get harder.</p>
+    <p class="lede">Hip hop, R&amp;B, pop and neo soul, from the '70s to 2026. Albums, labels, hometowns and the DFW scene. Streak right and the questions get harder.</p>
 
     <div class="card daily" id="dailyCard">
       <div class="cardhd"><h2>Daily Dig</h2><span class="label" id="dailyNum"></span></div>
@@ -186,6 +186,8 @@ p{margin:0}
 
     <div class="card">
       <div class="cardhd"><h2>Classic round</h2><span class="label">10 questions</span></div>
+      <div class="label">Genre</div>
+      <div class="chips" id="genres"></div>
       <div class="label">Era</div>
       <div class="chips" id="eras"></div>
       <div class="label">Category</div>
@@ -303,12 +305,12 @@ const relEra=r=>r.y>=NEW_YEAR?'n':'c';
 const LA=['Compton','Long Beach','Los Angeles'];
 const CITIES=[...new Set(D.ori.map(o=>o.c))];
 const GROUPS=new Set(['Run-DMC','Wu-Tang Clan','OutKast','UGK','Three 6 Mafia','GS Boyz']);
-function filters(era,cat){
-  const okE=e=>era==='all'||e===era;
+function filters(era,cat,genre='all'){
+  const okE=e=>era==='all'||e===era, okG=g=>genre==='all'||g===genre;
   return {
-    mc: cat==='Timeline'||cat==='Hometowns'?[]:D.mc.filter(m=>okE(m.e)&&(cat==='all'||m.c===cat)),
-    ori:(cat==='all'||cat==='Hometowns')?D.ori.filter(o=>okE(o.e)):[],
-    rel:(cat==='all'||cat==='Timeline')?D.rel.filter(r=>okE(relEra(r))):[]
+    mc: cat==='Timeline'||cat==='Hometowns'?[]:D.mc.filter(m=>okG(m.g)&&okE(m.e)&&(cat==='all'||m.c===cat)),
+    ori:(cat==='all'||cat==='Hometowns')?D.ori.filter(o=>okG(o.g)&&okE(o.e)):[],
+    rel:(cat==='all'||cat==='Timeline')?D.rel.filter(r=>okG(r.g)&&okE(relEra(r))):[]
   };
 }
 function makeMC(m,r){return{type:'mc',id:m.id,cat:m.c,d:m.d,prompt:m.q,answer:m.a,options:shuffle([m.a,...m.w],r),note:m.n}}
@@ -365,7 +367,9 @@ function seededRound(seed){
 }
 
 /* ======================= home ======================= */
-let era=ls.get('dcd-era','all'), cat=ls.get('dcd-cat','all');
+let era=ls.get('dcd-era','all'), cat=ls.get('dcd-cat','all'), genre=ls.get('dcd-genre','all');
+const GENRES=[['all','All genres'],['hh','Hip hop'],['rnb','R&B and soul'],['pop','Pop'],['neo','Neo soul']];
+if(!GENRES.some(x=>x[0]===genre))genre='all';
 if(!['all','c','n'].includes(era))era='all';
 const CAT_LIST=['all',...CATS,'Hometowns','Timeline'];
 if(!CAT_LIST.includes(cat))cat='all';
@@ -373,11 +377,12 @@ function chips(el,items,cur,onPick){
   el.innerHTML='';
   for(const [v,label] of items){const b=document.createElement('button');b.className='chip'+(v===cur?' on':'');b.textContent=label;b.type='button';b.setAttribute('aria-pressed',v===cur);b.onclick=()=>onPick(v);el.append(b)}
 }
-function poolSize(e,c){const p=filters(e,c);return p.mc.length+p.ori.length+p.rel.length}
+function poolSize(e,c){const p=filters(e,c,genre);return p.mc.length+p.ori.length+p.rel.length}
 function renderHome(){
+  chips($('genres'),GENRES,genre,v=>{genre=v;ls.set('dcd-genre',v);if(poolSize(era,cat)<6)cat='all';if(poolSize(era,cat)<10)era='all';renderHome()});
   chips($('eras'),[['all','All eras'],['c','Classics'],['n','New era (2020+)']],era,v=>{era=v;ls.set('dcd-era',v);if(poolSize(era,cat)<6)cat='all';renderHome()});
   chips($('cats'),CAT_LIST.filter(c=>c==='all'||poolSize(era,c)>=6).map(c=>[c,c==='all'?'Everything':c]),cat,v=>{cat=v;ls.set('dcd-cat',v);renderHome()});
-  const p=filters(era,cat),ids=[...p.mc,...p.ori,...p.rel].map(x=>x.id),n=ids.filter(id=>seen.has(id)).length;
+  const p=filters(era,cat,genre),ids=[...p.mc,...p.ori,...p.rel].map(x=>x.id),n=ids.filter(id=>seen.has(id)).length;
   $('seenLine').innerHTML=`You've seen ${n} of ${ids.length} questions in this mix. New ones come first.`+(n?' <button type="button" id="resetSeen">Reset</button>':'');
   if(n)$('resetSeen').onclick=()=>{ids.forEach(id=>seen.delete(id));saveSeen();renderHome()};
   const d=today(),rec=ls.get('dcd-daily-'+d,null);
@@ -411,7 +416,7 @@ function hud(){$('score').textContent=fmt(S.score);$('streak').textContent=S.str
 function newRound(mode,seed){
   ac();
   S={mode,seed,i:0,score:0,streak:0,top:0,right:0,fifty:true,log:[],marks:[],items:[],used:new Set(),count:{},locked:false};
-  if(mode==='classic'){S.pools=filters(era,cat);S.weights=typeWeights(S.pools)}
+  if(mode==='classic'){S.pools=filters(era,cat,genre);S.weights=typeWeights(S.pools)}
   else S.items=seededRound(seed);
   $('quitBox').hidden=true;
   show('game');load();
@@ -436,10 +441,10 @@ function load(){
     q.options.forEach((w,k)=>{const b=document.createElement('button');b.className='pad';b.type='button';b.textContent=w;b.dataset.w=w;b.onclick=()=>judge({pick:w,btn:b});g.append(b)});
     A.append(g);
   }else if(q.type==='year'){
-    A.innerHTML=`<div class="yearbox"><div class="yearread" id="yr">2003</div>
-      <div class="yearrow"><button class="step" type="button" id="yrDn" aria-label="One year earlier">−</button><input type="range" id="yrIn" min="1979" max="2026" value="2003" aria-label="Year"><button class="step" type="button" id="yrUp" aria-label="One year later">+</button></div>
-      <div class="ticks"><span>1979</span><span>2026</span></div>
-      <button class="btn primary" type="button" id="yrLock">Lock in 2003</button></div>`;
+    A.innerHTML=`<div class="yearbox"><div class="yearread" id="yr">1998</div>
+      <div class="yearrow"><button class="step" type="button" id="yrDn" aria-label="One year earlier">−</button><input type="range" id="yrIn" min="1970" max="2026" value="1998" aria-label="Year"><button class="step" type="button" id="yrUp" aria-label="One year later">+</button></div>
+      <div class="ticks"><span>1970</span><span>2026</span></div>
+      <button class="btn primary" type="button" id="yrLock">Lock in 1998</button></div>`;
     const sync=()=>{$('yr').textContent=$('yrIn').value;$('yrLock').textContent='Lock in '+$('yrIn').value};
     $('yrIn').oninput=sync;
     $('yrDn').onclick=()=>{$('yrIn').value=+$('yrIn').value-1;sync();SFX.tap()};

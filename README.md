@@ -18,7 +18,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /1010/                 DARE 1010 (single-file 10x10 block puzzle + icons + manifest)
 /bubble/               DARE Bubble Blaster (single-file canvas bubble shooter + icons + manifest)
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
-/crate-digger/         Crate Digger (hip hop trivia: index.html + questions.js + icons + manifest)
+/crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
 /icons/                Arcade icons
@@ -107,9 +107,9 @@ Every push to `main` redeploys automatically.
 - `/api/lfg` keys in Redis: `arc:lfg` (open matches), `arc:push` (alert subscriptions), `arc:pushthr:*` (one alert per phone per minute), `arc:vapid` (push signing keys, created on first use; set `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` env vars to use your own).
 
 ## Crate Digger
-- Hip hop trivia. Four question types: Trivia (four choices), Who's from where (hometowns), Name the year (slider, one year off still counts for 60% of the points) and Which came first (tap three releases oldest first).
-- Questions live in `crate-digger/questions.js`: `mc` (four-choice questions with category, era `c`/`n`, difficulty 1 to 3 and a liner note), `rel` (releases with years, used for Name the year and Which came first) and `ori` (artist hometowns). Add new questions by appending lines; keep each `id` unique.
-- Classic round: 10 questions filtered by era (All, Classics, New era 2020+) and category (13 categories plus Hometowns and Timeline). Difficulty follows the streak: easy at the start, medium from a 2-streak, hard from 5. A wrong answer on a hard question halves the streak instead of resetting it. At most 2 Name the year, 2 Which came first and 3 hometown questions per round.
+- Music trivia across hip hop, R&B and soul, pop and neo soul, 1970s to 2026. Players pick a genre (or all) on the home screen. Four question types: Trivia (four choices), Who's from where (hometowns), Name the year (slider from 1970 to 2026, one year off still counts for 60% of the points) and Which came first (tap three releases oldest first).
+- Questions live in `crate-digger/questions.js`: `mc` (four-choice questions with category, era `c`/`n`, difficulty 1 to 3 and a liner note), `rel` (releases with years, used for Name the year and Which came first) and `ori` (artist hometowns). Every item has a genre `g`: `hh` hip hop, `rnb` R&B and soul, `pop`, `neo` neo soul. Add new questions by appending lines; keep each `id` unique.
+- Classic round: 10 questions filtered by genre, era (All, Classics, New era 2020+) and category (13 categories plus Hometowns and Timeline). Difficulty follows the streak: easy at the start, medium from a 2-streak, hard from 5. A wrong answer on a hard question halves the streak instead of resetting it. At most 2 Name the year, 2 Which came first and 3 hometown questions per round.
 - No repeats: each phone remembers which questions it has seen (`dcd-seen`) and serves unseen ones first, then starts over once a mix is used up.
 - Daily Dig: the same 10 questions for everyone each day (seeded from the Central Time date, fixed easy-to-hard plan), one try, with a copyable result grid. Daily Dig #1 is October 15, 2026.
 - Sound is synthesized with Web Audio (808 kick on correct, record scratch on wrong, hi-hat ticks in the last 5 seconds). Saved on the phone: localStorage keys `dcd-*`.

@@ -1,7 +1,7 @@
 {
   "name": "Crate Digger",
   "short_name": "Crate Digger",
-  "description": "Hip hop trivia by Dontae Amare: a Daily Dig and classic rounds that get harder as you streak.",
+  "description": "Hip hop, R&B, pop and neo soul trivia by Dontae Amare: a Daily Dig and classic rounds that get harder as you streak.",
   "start_url": "/crate-digger/",
   "scope": "/crate-digger/",
   "display": "standalone",
