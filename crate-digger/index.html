@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#d6bf93">
 <meta name="description" content="Crate Digger by Dontae Amare. Hip hop, R&amp;B, pop and neo soul trivia from the '70s to 2026: a Daily Dig and classic rounds that get harder as you streak.">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,7 +30,9 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
+html,body{height:100%;margin:0;touch-action:manipulation}
+button,input,a,.pad,.tile,.chip{touch-action:manipulation}
+.step{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body{background:var(--kraft);color:var(--ink);font:15px/1.45 var(--body);-webkit-tap-highlight-color:transparent;
   background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.025) 0 2px,transparent 2px 7px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -533,8 +535,16 @@ function load(){
       <button class="btn primary" type="button" id="yrLock">Lock in 1998</button></div>`;
     const sync=()=>{$('yr').textContent=$('yrIn').value;$('yrLock').textContent='Lock in '+$('yrIn').value};
     $('yrIn').oninput=sync;
-    $('yrDn').onclick=()=>{$('yrIn').value=+$('yrIn').value-1;sync();SFX.tap()};
-    $('yrUp').onclick=()=>{$('yrIn').value=+$('yrIn').value+1;sync();SFX.tap()};
+    const stepper=(id,dir)=>{
+      const b=$(id);let t1=0,t2=0;
+      const step=()=>{const v=+$('yrIn').value+dir;if(v<1970||v>2026)return;$('yrIn').value=v;sync();SFX.tap()};
+      const stop=()=>{clearTimeout(t1);clearInterval(t2)};
+      b.addEventListener('pointerdown',e=>{if(b.disabled||S.locked)return;e.preventDefault();step();stop();t1=setTimeout(()=>{t2=setInterval(step,90)},380)});
+      ['pointerup','pointerleave','pointercancel','blur'].forEach(ev=>b.addEventListener(ev,stop));
+      b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();step()}});
+      b.addEventListener('contextmenu',e=>e.preventDefault());
+    };
+    stepper('yrDn',-1);stepper('yrUp',1);
     $('yrLock').onclick=()=>judge({year:+$('yrIn').value});
   }else{
     const box=document.createElement('div');box.className='tiles';
