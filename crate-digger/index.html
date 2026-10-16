@@ -185,7 +185,9 @@ p{margin:0}
     </div>
 
     <div class="card">
-      <div class="cardhd"><h2>Classic round</h2><span class="label">10 questions</span></div>
+      <div class="cardhd"><h2>Classic round</h2></div>
+      <div class="label">Questions</div>
+      <div class="chips" id="lens"></div>
       <div class="label">Genre</div>
       <div class="chips" id="genres"></div>
       <div class="label">Era</div>
@@ -336,6 +338,15 @@ function orderOk(pool){return new Set(pool.map(x=>x.y)).size>=3}
 /* seen tracking: players see every question before repeats */
 let seen=new Set(ls.get('dcd-seen',[]));
 const saveSeen=()=>ls.set('dcd-seen',[...seen]);
+// who each question is about, so one round doesn't keep circling the same artist
+const ARTISTS=[...new Set([...D.rel.map(x=>x.a),...D.ori.map(x=>x.a)])].filter(a=>a.length>=3).sort((a,b)=>b.length-a.length);
+const subjOf=new Map();
+for(const m of D.mc)subjOf.set(m.id,ARTISTS.filter(a=>m.q.includes(a)||m.a===a||m.n.includes(a)).map(a=>a.toLowerCase()));
+for(const o of D.ori)subjOf.set(o.id,[o.a.toLowerCase()]);
+for(const x of D.rel)subjOf.set(x.id,[x.a.toLowerCase()]);
+const subj=x=>subjOf.get(x.id)||[];
+
+// used by the Daily Dig (seeded, fixed plan)
 function choose(list,tier,used,r,useSeen){
   let c=list.filter(x=>!used.has(x.id));
   if(useSeen){let u=c.filter(x=>!seen.has(x.id));if(!u.length){c.forEach(x=>seen.delete(x.id));saveSeen();u=c}c=u}
@@ -349,10 +360,83 @@ function build(type,pools,tier,used,r,useSeen){
   if(type==='year'){const x=choose(pools.rel,tier,used,r,useSeen);return x&&makeYear(x)}
   if(type==='order')return orderOk(pools.rel)?makeOrder(pools.rel,tier,r):null;
 }
+
+/* Classic picker. Spreads each round across genres, categories, artists and question
+   types, prefers questions this phone hasn't seen, and leans toward the streak's difficulty
+   without locking to it. Constraints relax one at a time if a narrow mix runs dry. */
+function unseenOf(list){
+  const u=list.filter(x=>!seen.has(x.id));
+  if(u.length)return u;
+  list.forEach(x=>seen.delete(x.id));saveSeen();return list;
+}
+function weightedPick(c,w){const t=c.reduce((s,x)=>s+w(x),0);let v=Math.random()*t;for(const x of c){if((v-=w(x))<=0)return x}return c[c.length-1]}
+function pickItem(list,tier,strict){
+  const R=S.mix;
+  let c=list.filter(x=>!R.used.has(x.id));
+  c=unseenOf(c);
+  const rules=[
+    x=>!subj(x).some(a=>R.subjects.has(a)),
+    x=>!x.c||!R.recentCats.includes(x.c),
+    x=>!x.c||(R.catCount[x.c]||0)<R.catCap,
+    x=>!R.genre||x.g===R.genre
+  ];
+  // apply as many rules as the pool allows, dropping the loosest last
+  for(let k=strict?rules.length:0;k>=0;k--){
+    let t=c;for(const f of rules.slice(0,k).concat(rules.slice(3,4)))t=t.filter(f);
+    if(t.length){c=t;break}
+  }
+  if(!c.length)return null;
+  return weightedPick(c,x=>{const d=Math.abs(x.d-tier);return d===0?3:d===1?1.4:.5});
+}
+function mark(items,cat){
+  const R=S.mix;
+  for(const x of items){R.used.add(x.id);subj(x).forEach(a=>R.subjects.add(a));seen.add(x.id)}
+  if(cat){R.recentCats.push(cat);if(R.recentCats.length>2)R.recentCats.shift();R.catCount[cat]=(R.catCount[cat]||0)+1}
+  saveSeen();
+}
+function pickOrder(pool,tier){
+  const R=S.mix,gap=tier>=3?1:tier===2?3:6;
+  let c=unseenOf(pool.filter(x=>!R.used.has(x.id)&&!subj(x).some(a=>R.subjects.has(a))));
+  if(R.genre){const g=c.filter(x=>x.g===R.genre);if(g.length>=3)c=g}
+  for(let tries=0;tries<300;tries++){
+    const s=shuffle(c).slice(0,3);if(s.length<3)return null;
+    if(new Set(s.map(x=>x.a)).size<3)continue;
+    const ys=s.map(x=>x.y).sort((a,b)=>a-b);
+    if(ys[1]-ys[0]>=gap&&ys[2]-ys[1]>=gap){
+      mark(s,'Timeline');
+      return{type:'order',id:'f'+s.map(x=>x.id).sort().join(''),cat:'Timeline',d:tier,prompt:'Which came first? Tap them in order, oldest first.',
+        items:s,answer:s.slice().sort((a,b)=>a.y-b.y).map(x=>x.id),note:s.slice().sort((a,b)=>a.y-b.y).map(x=>`${x.t} (${x.y})`).join(' → ')}
+    }
+  }
+  return null;
+}
+function classicNext(tier){
+  const R=S.mix,P=S.pools;
+  // genre for this question: rotate through the genres in the mix so none crowds the round
+  if(R.genres.length>1){
+    const least=Math.min(...R.genres.map(g=>R.genreCount[g]||0));
+    R.genre=pick(R.genres.filter(g=>(R.genreCount[g]||0)===least));
+  }else R.genre=R.genres[0]||null;
+  // question type: weighted, capped per round, never three of a kind in a row
+  const caps={year:Math.ceil(S.n*.15),order:Math.ceil(S.n*.15),origin:Math.ceil(S.n*.2)};
+  const last2=S.log.slice(-2).map(x=>x.type);
+  let w=S.weights.filter(([t])=>(!caps[t]||(S.count[t]||0)<caps[t])&&!(last2.length===2&&last2[0]===t&&last2[1]===t));
+  if(!w.length)w=S.weights;
+  for(let k=0;k<8;k++){
+    const type=weighted(w,Math.random);let q=null;
+    if(type==='mc'){const m=pickItem(P.mc,tier,true);if(m){mark([m],m.c);q=makeMC(m,Math.random)}}
+    else if(type==='origin'){const o=pickItem(P.ori,tier,true);if(o){mark([o],'Hometowns');q=makeOrigin(o,Math.random)}}
+    else if(type==='year'){const x=pickItem(P.rel,tier,true);if(x){mark([x],'Timeline');q=makeYear(x)}}
+    else if(type==='order'&&orderOk(P.rel))q=pickOrder(P.rel,tier);
+    if(q){S.count[q.type]=(S.count[q.type]||0)+1;if(R.genre)R.genreCount[R.genre]=(R.genreCount[R.genre]||0)+1;return q}
+    w=w.filter(([t])=>t!==type);if(!w.length)w=S.weights;
+  }
+  const m=pickItem(P.mc.length?P.mc:D.mc,tier,false)||pick(D.mc);mark([m],m.c);return makeMC(m,Math.random);
+}
 function typeWeights(p){
-  const w=[];if(p.mc.length)w.push(['mc',p.ori.length||p.rel.length?.6:1]);
-  if(p.ori.length)w.push(['origin',p.mc.length?.15:.5]);
-  if(p.rel.length){w.push(['year',p.mc.length?.12:.5]);if(orderOk(p.rel))w.push(['order',p.mc.length?.13:.5])}
+  const w=[];if(p.mc.length)w.push(['mc',p.ori.length||p.rel.length?.58:1]);
+  if(p.ori.length)w.push(['origin',p.mc.length?.16:.5]);
+  if(p.rel.length){w.push(['year',p.mc.length?.13:.5]);if(orderOk(p.rel))w.push(['order',p.mc.length?.13:.5])}
   return w;
 }
 function weighted(w,r){const t=w.reduce((s,x)=>s+x[1],0);let v=r()*t;for(const [k,n] of w){if((v-=n)<=0)return k}return w[0][0]}
@@ -367,9 +451,10 @@ function seededRound(seed){
 }
 
 /* ======================= home ======================= */
-let era=ls.get('dcd-era','all'), cat=ls.get('dcd-cat','all'), genre=ls.get('dcd-genre','all');
+let roundLen=+ls.get('dcd-len',10)||10, era=ls.get('dcd-era','all'), cat=ls.get('dcd-cat','all'), genre=ls.get('dcd-genre','all');
 const GENRES=[['all','All genres'],['hh','Hip hop'],['rnb','R&B and soul'],['pop','Pop'],['neo','Neo soul']];
 if(!GENRES.some(x=>x[0]===genre))genre='all';
+const LENS=[10,20,30,50];if(!LENS.includes(roundLen))roundLen=10;
 if(!['all','c','n'].includes(era))era='all';
 const CAT_LIST=['all',...CATS,'Hometowns','Timeline'];
 if(!CAT_LIST.includes(cat))cat='all';
@@ -379,6 +464,7 @@ function chips(el,items,cur,onPick){
 }
 function poolSize(e,c){const p=filters(e,c,genre);return p.mc.length+p.ori.length+p.rel.length}
 function renderHome(){
+  chips($('lens'),LENS.map(n=>[n,String(n)]),roundLen,v=>{roundLen=v;ls.set('dcd-len',v);renderHome()});
   chips($('genres'),GENRES,genre,v=>{genre=v;ls.set('dcd-genre',v);if(poolSize(era,cat)<6)cat='all';if(poolSize(era,cat)<10)era='all';renderHome()});
   chips($('eras'),[['all','All eras'],['c','Classics'],['n','New era (2020+)']],era,v=>{era=v;ls.set('dcd-era',v);if(poolSize(era,cat)<6)cat='all';renderHome()});
   chips($('cats'),CAT_LIST.filter(c=>c==='all'||poolSize(era,c)>=6).map(c=>[c,c==='all'?'Everything':c]),cat,v=>{cat=v;ls.set('dcd-cat',v);renderHome()});
@@ -415,22 +501,22 @@ function hud(){$('score').textContent=fmt(S.score);$('streak').textContent=S.str
 
 function newRound(mode,seed){
   ac();
-  S={mode,seed,i:0,score:0,streak:0,top:0,right:0,fifty:true,log:[],marks:[],items:[],used:new Set(),count:{},locked:false};
-  if(mode==='classic'){S.pools=filters(era,cat,genre);S.weights=typeWeights(S.pools)}
+  const n=mode==='classic'?roundLen:ROUND;
+  S={mode,seed,n,i:0,score:0,streak:0,top:0,right:0,fifty:Math.max(1,Math.round(n/10)),log:[],marks:[],items:[],used:new Set(),count:{},locked:false};
+  if(mode==='classic'){S.pools=filters(era,cat,genre);S.weights=typeWeights(S.pools);
+    const gs=[...new Set([...S.pools.mc,...S.pools.ori,...S.pools.rel].map(x=>x.g))];
+    S.mix={used:new Set(),subjects:new Set(),recentCats:[],catCount:{},catCap:Math.max(2,Math.ceil(n*.2)),genres:gs,genreCount:{},genre:null}}
   else S.items=seededRound(seed);
   $('quitBox').hidden=true;
   show('game');load();
 }
 function nextItem(){
   if(S.mode!=='classic')return S.items[S.i];
-  const tier=tierNow();
-  const CAP={order:2,year:2,origin:3},w=S.weights.filter(([t])=>!CAP[t]||(S.count[t]||0)<CAP[t]||S.weights.length===1);
-  for(let k=0;k<6;k++){const q=build(weighted(w.length?w:S.weights,Math.random),S.pools,tier,S.used,Math.random,true);if(q){S.count[q.type]=(S.count[q.type]||0)+1;return q}}
-  return build('mc',filters('all','all'),tier,S.used,Math.random,true);
+  return classicNext(tierNow());
 }
 function load(){
   const q=S.cur=nextItem();S.used.add(q.id);S.locked=false;S.pick=[];
-  $('round').textContent=(S.mode==='daily'?'Daily Dig · ':'')+`Question ${S.i+1} / ${ROUND}`;
+  $('round').textContent=(S.mode==='daily'?'Daily Dig · ':'')+`Question ${S.i+1} / ${S.n}`;
   $('cat').textContent=q.cat;$('kind').textContent=KIND[q.type];$('diff').textContent='●'.repeat(q.d)+'○'.repeat(3-q.d);$('diff').title=['','Easy','Medium','Hard'][q.d];
   $('q').textContent=q.prompt;
   $('sheet').classList.remove('pop');void $('sheet').offsetWidth;$('sheet').classList.add('pop');
@@ -458,8 +544,8 @@ function load(){
     const lock=document.createElement('button');lock.type='button';lock.className='btn primary';lock.id='ordLock';lock.textContent='Lock in order';lock.disabled=true;lock.onclick=()=>judge({order:S.pick.slice()});
     A.append(box,lock);
   }
-  $('fifty').disabled=!S.fifty||!(q.type==='mc'||q.type==='origin');
-  $('next').disabled=true;$('next').textContent=S.i===ROUND-1?'See results':'Next';
+  $('fifty').disabled=!S.fifty||!(q.type==='mc'||q.type==='origin');$('fifty').textContent=S.fifty>1?`50/50 ×${S.fifty}`:'50/50';
+  $('next').disabled=true;$('next').textContent=S.i===S.n-1?'See results':'Next';
   S.time=TIMES[q.type];S.t0=performance.now();lastHat=0;cancelAnimationFrame(raf);tick();hud();
 }
 function renderOrder(){
@@ -509,18 +595,18 @@ function judge(r){
   hud();$('fifty').disabled=true;$('next').disabled=false;
 }
 function useFifty(){
-  if(!S.fifty||S.locked)return;const q=S.cur;if(!(q.type==='mc'||q.type==='origin'))return;S.fifty=false;$('fifty').disabled=true;
+  if(!S.fifty||S.locked)return;const q=S.cur;if(!(q.type==='mc'||q.type==='origin'))return;S.fifty--;$('fifty').disabled=true;$('fifty').textContent=S.fifty>1?`50/50 ×${S.fifty}`:'50/50';
   shuffle([...document.querySelectorAll('.pad')].filter(p=>p.dataset.w!==q.answer)).slice(0,2).forEach(p=>{p.disabled=true;p.classList.add('gone')});
 }
-function next(){if(!S||!S.locked)return;S.i++;if(S.i<ROUND)load();else finish()}
+function next(){if(!S||!S.locked)return;S.i++;if(S.i<S.n)load();else finish()}
 
-function gradeOf(right){return right>=10?'S':right>=8?'A':right>=6?'B':right>=4?'C':'D'}
+function gradeOf(right,n){const p=right/n;return p>=1?'S':p>=.8?'A':p>=.6?'B':p>=.4?'C':'D'}
 const VERDICT={S:'Perfect round. You know the crates front to back.',A:'Deep knowledge. Only a couple got past you.',B:'Solid. You know the classics, keep digging.',C:'Half right. Run it back and the liner notes will stick.',D:'Rough round. Every answer comes with a note, so the next one goes better.'};
 function finish(){
   show('end');
-  const g=gradeOf(S.right);
+  const g=gradeOf(S.right,S.n);
   $('grade').textContent=g;$('verdict').textContent=VERDICT[g];
-  $('eScore').textContent=fmt(S.score);$('eRight').textContent=`${S.right}/${ROUND}`;$('eStreak').textContent=S.top;
+  $('eScore').textContent=fmt(S.score);$('eRight').textContent=`${S.right}/${S.n}`;$('eStreak').textContent=S.top;
   $('endLabel').textContent=S.mode==='daily'?`Daily Dig #${dayNum(S.seed)}`:'Round complete';
   if(S.score>ls.get('dcd-best',0))ls.set('dcd-best',S.score);
   ls.set('dcd-rounds',ls.get('dcd-rounds',0)+1);
@@ -547,7 +633,7 @@ $('quit').onclick=()=>{$('quitTx').textContent=S&&S.mode==='daily'?'Leave? Today
 $('quitNo').onclick=()=>{$('quitBox').hidden=true};
 $('quitYes').onclick=()=>{
   cancelAnimationFrame(raf);$('quitBox').hidden=true;
-  if(S.mode==='daily'&&!ls.get('dcd-daily-'+S.seed,null)){while(S.marks.length<ROUND)S.marks.push('r');ls.set('dcd-daily-'+S.seed,{score:S.score,right:S.right,marks:S.marks})}
+  if(S.mode==='daily'&&!ls.get('dcd-daily-'+S.seed,null)){while(S.marks.length<S.n)S.marks.push('r');ls.set('dcd-daily-'+S.seed,{score:S.score,right:S.right,marks:S.marks})}
   renderHome();show('home');
 };
 document.addEventListener('keydown',e=>{
