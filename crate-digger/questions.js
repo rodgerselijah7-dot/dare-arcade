@@ -1,4 +1,4 @@
-/* DARE Crate Digger question bank.
+/* Crate Digger question bank.
    mc:  four-choice questions {c:category, q, a:answer, w:[3 wrong], n:liner note, e:'c' classic|'n' new era (2020+), d:1 easy|2|3 hard, id}
    rel: releases for "Which came first?" and "Name the year" {t:title, a:artist, y:year, d, k:album|single, id}
    ori: hometowns for "Who's from where?" {a:artist, c:city, d, e, id}

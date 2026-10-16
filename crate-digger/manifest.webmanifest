@@ -1,13 +1,13 @@
 {
-  "name": "DARE Crate Digger",
+  "name": "Crate Digger",
   "short_name": "Crate Digger",
   "description": "Hip hop trivia by Dontae Amare: a Daily Dig, classic rounds that get harder as you streak, and head-to-head races online.",
   "start_url": "/crate-digger/",
   "scope": "/crate-digger/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0d0b10",
-  "theme_color": "#0d0b10",
+  "background_color": "#d6bf93",
+  "theme_color": "#d6bf93",
   "icons": [
     { "src": "/crate-digger/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/crate-digger/icon-512.png", "sizes": "512x512", "type": "image/png" },
