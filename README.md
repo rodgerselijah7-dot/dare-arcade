@@ -20,7 +20,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /crate-digger/         Crate Digger (hip hop trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice and Crate Digger online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -98,7 +98,7 @@ Every push to `main` redeploys automatically.
 - Home screen (best, total popped, top round, Continue / New game) and a separate game screen. Saved on the phone (localStorage keys `dbub-*`).
 - Paid game ($2.99, also in the All-Access Pass): rounds 1 to 3 are the free tryout. Clearing round 3, or continuing a saved game past it, shows the unlock panel from `/dare-unlock.js`.
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crate Digger)
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
 - `dare-play.js` is shared by all four games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
@@ -112,5 +112,4 @@ Every push to `main` redeploys automatically.
 - Classic round: 10 questions filtered by era (All, Classics, New era 2020+) and category (13 categories plus Hometowns and Timeline). Difficulty follows the streak: easy at the start, medium from a 2-streak, hard from 5. A wrong answer on a hard question halves the streak instead of resetting it. At most 2 Name the year, 2 Which came first and 3 hometown questions per round.
 - No repeats: each phone remembers which questions it has seen (`dcd-seen`) and serves unseen ones first, then starts over once a mix is used up.
 - Daily Dig: the same 10 questions for everyone each day (seeded from the Central Time date, fixed easy-to-hard plan), one try, with a copyable result grid. Daily Dig #1 is October 15, 2026.
-- Head to head: rooms `cd-<code>` on `/api/room`. The host starts each race with a random seed; both phones build the same 10 questions and play at their own pace, each sending its points per question (`p`) so the other sees the score live. Rematches, chat, Find an opponent and match alerts work like the other online games (`crate-digger` in `dare-play.js` and `/api/lfg`).
 - Sound is synthesized with Web Audio (808 kick on correct, record scratch on wrong, hi-hat ticks in the last 5 seconds). Saved on the phone: localStorage keys `dcd-*`.

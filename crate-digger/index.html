@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#d6bf93">
-<meta name="description" content="Crate Digger by Dontae Amare. Hip hop trivia from the Bronx park jams to 2026: a Daily Dig, classic rounds that get harder as you streak, and head-to-head races online.">
+<meta name="description" content="Crate Digger by Dontae Amare. Hip hop trivia from the Bronx park jams to 2026: a Daily Dig and classic rounds that get harder as you streak.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Crate Digger">
@@ -18,7 +18,7 @@
 <style>
 /* Layout: one column, phone first. A record-store crate: kraft cardboard ground, black vinyl question sleeve,
    white sleeves for answers with hard ink shadows, fluorescent price stickers for state. Single light theme by choice.
-   Home = Daily Dig sticker card, Classic round, Head to head. Game = score strip, timer, question sleeve, answers at thumb level. */
+   Home = Daily Dig sticker card, Classic round. Game = score strip, timer, question sleeve, answers at thumb level. */
 :root{
   --kraft:#d6bf93; --kraft-lo:#c3a873; --sleeve:#fbf7ee; --vinyl:#141210; --groove:#2a2622;
   --ink:#141210; --muted:#5e4f37; --orange:#ff6b1a; --pink:#ff3d8d; --lime:#b6e61d;
@@ -126,39 +126,18 @@ p{margin:0}
 .step:active:not(:disabled){transform:translate(3px,3px);box-shadow:none}
 .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.68rem;color:var(--muted);padding:0 62px}
 .note{background:var(--sleeve);border:2px solid var(--ink);border-left-width:6px;padding:10px 12px;font-size:.9rem;line-height:1.5;color:var(--ink);border-radius:4px}
-.opp{display:flex;align-items:center;gap:10px;background:var(--sleeve);border:2px solid var(--ink);border-radius:4px;padding:8px 8px 8px 12px}
-.opp .led{width:10px;height:10px;border-radius:50%;background:var(--good);border:2px solid var(--ink);flex:none}
-.opp.off .led{background:var(--bad)}
-.opp .tx{flex:1;min-width:0;font-size:.85rem}
-.opp .bar{height:6px;background:var(--kraft);border-radius:3px;margin-top:5px;overflow:hidden}
-.opp .bar i{display:block;height:100%;background:var(--orange);width:0;transition:width .3s}
-.pip{width:8px;height:8px;border-radius:50%;background:var(--pink);display:inline-block;margin-left:4px;vertical-align:middle}
 .confirm{display:flex;gap:8px;align-items:center;background:var(--sleeve);border:2px solid var(--bad);border-radius:4px;padding:10px 12px;font-size:.9rem}
 .confirm span{flex:1}
 
 /* end */
 .grade{font-family:var(--display);font-size:5.2rem;line-height:1;width:128px;height:128px;border-radius:50%;background:var(--orange);border:3px solid var(--ink);
   display:grid;place-items:center;transform:rotate(-8deg);box-shadow:var(--shadow);padding-top:6px}
-.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;text-align:center}
-.vs .who{font-size:.85rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.vs .pts{font-family:var(--display);font-size:2.8rem;line-height:1;font-variant-numeric:tabular-nums}
-.vs .pts.win{background:var(--lime);border-radius:4px}
-.vs .mid{font-family:var(--mono);color:var(--muted);padding-bottom:8px}
 .share{white-space:pre-wrap;font-family:var(--mono);font-size:.85rem;background:var(--kraft);border:2px dashed var(--ink);border-radius:4px;padding:10px 12px;user-select:all;margin:0}
 .recap{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:.9rem;color:var(--muted)}
 .recap li{border-left:5px solid var(--ink);background:var(--sleeve);padding:6px 10px;line-height:1.4;border-radius:0 4px 4px 0}
 .recap li.ok{border-color:var(--good)} .recap li.close{border-color:var(--warn)} .recap li.no{border-color:var(--bad)}
 .recap b{color:var(--ink)}
 
-/* online */
-.field{width:100%;background:#fff;border:2px solid var(--ink);border-radius:4px;padding:12px 14px;color:var(--ink);font:inherit;font-size:16px;outline:none}
-.field:focus{box-shadow:3px 3px 0 var(--orange)}
-.bigcode{font-family:var(--display);font-size:4rem;letter-spacing:.12em;line-height:1}
-.err{color:var(--bad);font-size:.9rem;font-weight:600;min-height:1.2em}
-.oppline{display:flex;gap:10px;align-items:center;color:var(--muted)}
-.oppline .led{width:12px;height:12px;border-radius:50%;background:var(--kraft-lo);border:2px solid var(--ink)}
-.oppline.in .led{background:var(--good)}
-.oppline.in{color:var(--ink);font-weight:600}
 
 .pop{animation:pop .3s ease-out}
 @keyframes pop{0%{transform:translateY(8px) rotate(-.6deg);opacity:.4}100%{transform:none;opacity:1}}
@@ -215,12 +194,6 @@ p{margin:0}
       <p class="small" id="seenLine"></p>
     </div>
 
-    <div class="card">
-      <div class="cardhd"><h2>Head to head</h2><span class="label">online</span></div>
-      <p class="lede">Race a friend through the same 10 questions. Watch their score move while you play.</p>
-      <button class="btn ghost" id="onlineGo">Play online</button>
-    </div>
-
     <div class="trio">
       <div>best round<b id="hBest">0</b></div>
       <div>rounds<b id="hRounds">0</b></div>
@@ -228,42 +201,10 @@ p{margin:0}
     </div>
   </section>
 
-  <!-- ONLINE -->
-  <section class="screen" id="online" hidden>
-    <div class="row" style="align-items:center"><button class="icon" id="olBack">‹ Back</button><span class="label" style="flex:1;text-align:right">Head to head</span></div>
-    <div class="card" id="olSetup">
-      <label class="label" for="olNick">Your name</label>
-      <input class="field" id="olNick" maxlength="12" placeholder="Player" autocomplete="nickname" enterkeyhint="done">
-      <button class="btn primary" id="olFind">Find an opponent</button>
-      <button class="btn ghost" id="olCreate">Create a private match</button>
-      <div id="olOpen" hidden></div>
-      <div class="label">Have a code?</div>
-      <div class="row">
-        <input class="field" id="olCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" aria-label="Match code" style="text-transform:uppercase;letter-spacing:.2em">
-        <button class="btn primary sm" id="olJoin">Join</button>
-      </div>
-      <div id="olAlerts"></div>
-    </div>
-    <div class="card" id="olLobby" hidden>
-      <div class="label">Match code</div>
-      <div class="row" style="align-items:center"><div class="bigcode" id="olCodeShow">----</div><button class="btn ghost sm" id="olCopy">Copy code</button></div>
-      <div class="oppline" id="olOpp"><span class="led"></span><span id="olOppTx">Waiting for your opponent to join</span></div>
-      <button class="btn primary" id="olStart" disabled>Start match</button>
-      <p class="small" id="olNote"></p>
-      <button class="btn ghost" id="olLeave">Leave match</button>
-    </div>
-    <div class="err" id="olStatus" aria-live="polite"></div>
-  </section>
-
   <!-- GAME -->
   <section class="screen" id="game" hidden>
     <div class="meta"><span class="label" id="round">Question 1 / 10</span><span class="label" id="mult">x1</span></div>
     <div class="timer" id="timer"><i id="fill"></i></div>
-    <div class="opp" id="oppBar" hidden>
-      <span class="led"></span>
-      <div class="tx"><div id="oppTx"></div><div class="bar"><i id="oppFill"></i></div></div>
-      <button class="icon" id="chatBtn">Chat<span class="pip" id="chatPip" hidden></span></button>
-    </div>
     <div class="sheet" id="sheet">
       <div class="tags"><span class="cat" id="cat"></span><span class="cat alt" id="kind"></span><span class="dots" id="diff"></span></div>
       <p id="q"></p>
@@ -291,16 +232,6 @@ p{margin:0}
         <div>top streak<b id="eStreak">0</b></div>
       </div>
     </div>
-    <div class="card" id="vsCard" hidden>
-      <div class="label" id="vsLabel">Head to head</div>
-      <div class="vs">
-        <div><div class="pts" id="vsMe">0</div><div class="who">You</div></div>
-        <div class="mid">vs</div>
-        <div><div class="pts" id="vsOpp">0</div><div class="who" id="vsOppName">Opponent</div></div>
-      </div>
-      <p class="small" id="vsLine"></p>
-      <div class="row"><button class="btn primary" id="rematch">Rematch</button><button class="btn ghost sm" id="chatBtn2">Chat</button></div>
-    </div>
     <div class="card" id="shareCard" hidden>
       <div class="label">Your Daily Dig</div>
       <pre class="share" id="shareBox"></pre>
@@ -316,7 +247,6 @@ p{margin:0}
 </div>
 
 <script src="/crate-digger/questions.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='questions.js';document.head.appendChild(s)"></script>
-<script src="/dare-play.js"></script>
 <script>
 (function boot(){ if(!window.CRATES){ return setTimeout(boot,30) } main() })();
 function main(){
@@ -424,7 +354,7 @@ function typeWeights(p){
   return w;
 }
 function weighted(w,r){const t=w.reduce((s,x)=>s+x[1],0);let v=r()*t;for(const [k,n] of w){if((v-=n)<=0)return k}return w[0][0]}
-// fixed plan for the Daily Dig and online races, so every player gets the same 10
+// fixed plan for the Daily Dig, so every player gets the same 10
 const PLAN=[['mc',1],['origin',1],['mc',1],['year',2],['mc',2],['order',2],['mc',2],['origin',2],['mc',3],['mc',3]];
 function seededRound(seed){
   const r=mulberry(hashStr(seed)),pools=filters('all','all'),used=new Set(),out=[];
@@ -473,7 +403,7 @@ $('dailyShare').onclick=()=>{const d=today(),rec=ls.get('dcd-daily-'+d,null);if(
 
 /* ======================= round ======================= */
 let S=null, raf=0, lastHat=0, screen='home';
-function show(id){screen=id;for(const s of ['home','online','game','end'])$(s).hidden=s!==id;$('hud').hidden=id!=='game';window.scrollTo(0,0)}
+function show(id){screen=id;for(const s of ['home','game','end'])$(s).hidden=s!==id;$('hud').hidden=id!=='game';window.scrollTo(0,0)}
 const mult=()=>S.streak>=6?3:S.streak>=3?2:1;
 const tierNow=()=>{const base=S.streak>=5?3:S.streak>=2?2:1;const r=Math.random();return r<.2?Math.max(1,base-1):r>.9?Math.min(3,base+1):base};
 function hud(){$('score').textContent=fmt(S.score);$('streak').textContent=S.streak;$('mult').textContent='x'+mult()+' streak bonus'}
@@ -484,7 +414,7 @@ function newRound(mode,seed){
   if(mode==='classic'){S.pools=filters(era,cat);S.weights=typeWeights(S.pools)}
   else S.items=seededRound(seed);
   $('quitBox').hidden=true;
-  show('game');renderOpp();load();
+  show('game');load();
 }
 function nextItem(){
   if(S.mode!=='classic')return S.items[S.i];
@@ -495,7 +425,7 @@ function nextItem(){
 }
 function load(){
   const q=S.cur=nextItem();S.used.add(q.id);S.locked=false;S.pick=[];
-  $('round').textContent=(S.mode==='daily'?'Daily Dig · ':S.mode==='online'?'Race · ':'')+`Question ${S.i+1} / ${ROUND}`;
+  $('round').textContent=(S.mode==='daily'?'Daily Dig · ':'')+`Question ${S.i+1} / ${ROUND}`;
   $('cat').textContent=q.cat;$('kind').textContent=KIND[q.type];$('diff').textContent='●'.repeat(q.d)+'○'.repeat(3-q.d);$('diff').title=['','Easy','Medium','Hard'][q.d];
   $('q').textContent=q.prompt;
   $('sheet').classList.remove('pop');void $('sheet').offsetWidth;$('sheet').classList.add('pop');
@@ -572,7 +502,6 @@ function judge(r){
   S.log.push({q:q.prompt,a:ansText,p:picked,ok,close,pts,type:q.type});
   if(S.mode!=='daily'){seen.add(q.id);saveSeen()}
   hud();$('fifty').disabled=true;$('next').disabled=false;
-  if(S.mode==='online')netScore();
 }
 function useFifty(){
   if(!S.fifty||S.locked)return;const q=S.cur;if(!(q.type==='mc'||q.type==='origin'))return;S.fifty=false;$('fifty').disabled=true;
@@ -587,7 +516,7 @@ function finish(){
   const g=gradeOf(S.right);
   $('grade').textContent=g;$('verdict').textContent=VERDICT[g];
   $('eScore').textContent=fmt(S.score);$('eRight').textContent=`${S.right}/${ROUND}`;$('eStreak').textContent=S.top;
-  $('endLabel').textContent=S.mode==='daily'?`Daily Dig #${dayNum(S.seed)}`:S.mode==='online'?'Race finished':'Round complete';
+  $('endLabel').textContent=S.mode==='daily'?`Daily Dig #${dayNum(S.seed)}`:'Round complete';
   if(S.score>ls.get('dcd-best',0))ls.set('dcd-best',S.score);
   ls.set('dcd-rounds',ls.get('dcd-rounds',0)+1);
   $('shareCard').hidden=S.mode!=='daily';
@@ -597,9 +526,6 @@ function finish(){
     $('shareBox').textContent=shareText(rec,d);
   }
   $('again').textContent=S.mode==='daily'?'Play a classic round':'Dig again';
-  $('again').hidden=S.mode==='online';
-  $('vsCard').hidden=S.mode!=='online';
-  if(S.mode==='online'){NET.pres.fin=NET.game;netKick();renderVs()}
   $('recap').innerHTML='';
   S.log.forEach(r=>{const li=document.createElement('li');li.className=r.ok?(r.close?'close':'ok'):'no';
     li.innerHTML=`${esc(r.q)} <b>${esc(r.a)}</b>${r.ok&&!r.close?'':` (you: ${esc(r.p||'no answer')})`}`;$('recap').append(li)});
@@ -610,14 +536,13 @@ $('dailyGo').onclick=()=>{const d=today();if(ls.get('dcd-daily-'+d,null))return 
 $('classicGo').onclick=()=>newRound('classic');
 $('next').onclick=next;$('fifty').onclick=useFifty;
 $('again').onclick=()=>newRound('classic');
-$('toHome').onclick=()=>{if(S&&S.mode==='online')netLeave();renderHome();show('home')};
+$('toHome').onclick=()=>{renderHome();show('home')};
 $('shareCopy').onclick=()=>copyText($('shareBox').textContent,$('shareCopy'),$('shareBox'));
-$('quit').onclick=()=>{$('quitTx').textContent=S&&S.mode==='online'?'Leave the race? Your opponent wins.':S&&S.mode==='daily'?'Leave? Today\'s dig counts as played.':'Leave this round?';$('quitBox').hidden=false};
+$('quit').onclick=()=>{$('quitTx').textContent=S&&S.mode==='daily'?'Leave? Today\'s dig counts as played.':'Leave this round?';$('quitBox').hidden=false};
 $('quitNo').onclick=()=>{$('quitBox').hidden=true};
 $('quitYes').onclick=()=>{
   cancelAnimationFrame(raf);$('quitBox').hidden=true;
   if(S.mode==='daily'&&!ls.get('dcd-daily-'+S.seed,null)){while(S.marks.length<ROUND)S.marks.push('r');ls.set('dcd-daily-'+S.seed,{score:S.score,right:S.right,marks:S.marks})}
-  if(S.mode==='online')netLeave();
   renderHome();show('home');
 };
 document.addEventListener('keydown',e=>{
@@ -626,166 +551,9 @@ document.addEventListener('keydown',e=>{
   else if(S.locked&&(e.key==='Enter'||e.key===' ')){e.preventDefault();next()}
 });
 
-/* ======================================================================
-   HEAD TO HEAD over /api/room (same match server as Buckets, Chess, Connect, Dice)
-   Rooms are "cd-<code>". Presence: {app,role,nick,opp,g,go,seed,p,fin,re,chat}.
-   The host starts game g with a random seed (go/seed); both phones build the same
-   10 questions from it and play at their own pace. p is the comma list of points per
-   question, fin=g once finished. Rematch: both set re=g, then the host starts g+1.
-   ====================================================================== */
-const DP=window.DAREPlay||null, ONLINE_OK=!!(DP&&DP.online);
-const CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const NET={me:DP?DP.peer:'local',alive:false,room:'',code:'',role:'',opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,
-  game:0,pres:{},timer:null,inflight:false,again:false,full:false,oppRe:false,oppP:[],oppFin:false,oppLeft:false,joinedAt:0,lfg:false,lfgT:0};
-const cleanNick=s=>String(s||'').replace(/[^\p{L}\p{N} ._'-]/gu,'').trim().slice(0,12);
-const myNick=()=>cleanNick($('olNick').value)||'Player';
-const CHAT=DP&&DP.chat({accent:'#ff6b1a',quick:['Good luck','Too easy','That was hard','No way','GG','Rematch?','😂','🔥'],
-  onSend(){NET.pres.chat=CHAT.outbox();netKick()},
-  onMessage(){if(!CHAT.isOpen())$('chatPip').hidden=false},
-  onOpen(on){if(on)$('chatPip').hidden=true}});
-if(CHAT)CHAT.showButton(false);
-$('chatBtn').onclick=$('chatBtn2').onclick=()=>{if(CHAT)CHAT.open()};
-
-async function roomPost(body,keep){
-  const r=await fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:!!keep});
-  if(!r.ok){let msg='';try{msg=(await r.json()).error||''}catch(e){}const err=new Error(msg||'Couldn’t reach the match server.');err.status=r.status;throw err}
-  return r.json();
-}
-const newCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(4)),b=>CODE_ABC[b%CODE_ABC.length]).join('');
-function lfgStop(){if(NET.lfg){clearInterval(NET.lfgT);DP&&DP.cancel('crate-digger',NET.code);NET.lfg=false}}
-function openOnline(){
-  show('online');$('olSetup').hidden=false;$('olLobby').hidden=true;
-  $('olStatus').textContent=ONLINE_OK?'':'Head to head runs on the arcade site.';
-  $('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=!ONLINE_OK;
-  if(DP)DP.refresh();
-}
-function joinOpen(code){netLeave();openOnline();$('olCode').value=code;enterRoom(code,'g');return true}
-async function enterRoom(code,role,open){
-  ls.set('dcd-nick',myNick());if(DP)DP.setNick(myNick());
-  $('olStatus').textContent='';$('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=true;
-  netLeave();
-  Object.assign(NET,{room:'cd-'+code.toLowerCase(),code,role,opp:null,oppNick:'',oppOnline:true,offSince:0,connected:true,game:0,full:false,oppRe:false,
-    oppP:[],oppFin:false,oppLeft:false,pres:{app:'crates',role,nick:myNick()},alive:true,joinedAt:Date.now()});
-  let d=null;
-  try{d=await roomPost({room:NET.room,peer:NET.me,presence:NET.pres})}
-  catch(e){NET.alive=false;$('olStatus').textContent=e.message||'Couldn’t connect. Check your connection and try again.'}
-  $('olCreate').disabled=$('olJoin').disabled=$('olFind').disabled=false;
-  if(!d)return;
-  if(DP){DP.busy=true;CHAT.reset();CHAT.attach();$('chatPip').hidden=true}
-  if(open&&DP){
-    NET.lfg=true;
-    DP.post('crate-digger',code,myNick()).then(r=>{if(NET.code===code&&NET.lfg&&!NET.opp)$('olNote').textContent=r.alerted?`Your match is posted. ${r.alerted} player${r.alerted===1?' was':'s were'} alerted. You can also share the code.`:'Your match is posted for anyone to join. You can also share the code.'})
-      .catch(e=>{NET.lfg=false;if(NET.code===code)$('olNote').textContent='Couldn’t post the match ('+e.message+'). Share the code instead.'});
-    NET.lfgT=setInterval(()=>{if(NET.lfg&&!NET.opp)DP.keep('crate-digger',code)},45000);
-  }
-  $('olSetup').hidden=true;$('olLobby').hidden=false;$('olCodeShow').textContent=code;
-  $('olCopy').hidden=role!=='h';$('olStart').hidden=role!=='h';
-  $('olNote').textContent=role!=='h'?'The host starts the race. You both get the same 10 questions.':open?'Posting your match…':'Send the code to your opponent. They open Crate Digger, tap Play online, and enter it.';
-  netPeers(d.peers||[]);
-  NET.timer=setTimeout(netTick,1000);
-}
-function netKick(){if(!NET.alive)return;if(NET.inflight){NET.again=true;return}clearTimeout(NET.timer);netTick()}
-async function netTick(){
-  if(!NET.alive||NET.inflight)return;
-  NET.inflight=true;NET.again=false;
-  const room=NET.room;let d=null;
-  if(CHAT){const ob=CHAT.outbox();if(ob)NET.pres.chat=ob}
-  try{d=await roomPost({room,peer:NET.me,presence:NET.pres});NET.connected=true}catch(e){NET.connected=false}
-  NET.inflight=false;
-  if(!NET.alive||room!==NET.room)return;
-  if(d)netPeers(d.peers||[]);
-  if(!NET.alive)return;
-  NET.timer=setTimeout(netTick,NET.again?0:screen==='game'?1000:1500);
-}
-function netPeers(list){
-  const os=list.filter(p=>p&&p.peer!==NET.me&&p.presence&&p.presence.app==='crates');
-  const hadOpp=!!NET.opp;
-  let o=NET.opp?os.find(p=>p.peer===NET.opp):null;
-  if(!NET.opp){
-    const cand=os.find(p=>p.presence.role!==NET.role&&(NET.role==='h'||!p.presence.opp||p.presence.opp===NET.me));
-    if(cand){NET.opp=cand.peer;o=cand;NET.full=false;NET.pres.opp=cand.peer;lfgStop();
-      if(CHAT){CHAT.setOpp(cleanNick(cand.presence.nick)||'Opponent');CHAT.note((cleanNick(cand.presence.nick)||'Your opponent')+' joined the match')}
-      netKick()}
-    else NET.full=NET.role==='g'&&os.some(p=>p.presence.role==='h');
-  }
-  if(o&&NET.role==='g'&&o.presence.opp&&o.presence.opp!==NET.me){NET.opp=null;o=null;NET.full=true;delete NET.pres.opp}
-  const was=NET.oppOnline;NET.oppOnline=!!o;
-  if(o){NET.oppNick=cleanNick(o.presence.nick)||'Opponent';if(CHAT){CHAT.setOpp(NET.oppNick);CHAT.receive(o.peer,o.presence.chat)}}
-  if(CHAT&&hadOpp&&NET.opp&&was!==!!o)CHAT.note(o?NET.oppNick+' is back':(NET.oppNick||'Your opponent')+' disconnected');
-  const p=o&&o.presence;
-  if(p&&NET.role==='g'&&(p.go|0)>NET.game&&p.seed)return startOnline(p.go|0,String(p.seed));
-  if(NET.game===0||screen==='online'){updateLobby();return}
-  // ---- in a race (playing or on the results screen) ----
-  if(!o){if(!NET.offSince)NET.offSince=Date.now();if(NET.opp&&Date.now()-NET.offSince>45000)NET.oppLeft=true}
-  else{NET.offSince=0;NET.oppLeft=false;
-    if((p.g|0)===NET.game){NET.oppP=String(p.p||'').split(',').filter(Boolean).map(Number);NET.oppFin=(p.fin|0)===NET.game}
-    NET.oppRe=(p.re|0)===NET.game;
-    if(NET.role==='h'&&NET.oppRe&&(NET.pres.re|0)===NET.game&&screen==='end')return hostStart(NET.game+1);
-  }
-  renderOpp();if(screen==='end')renderVs();
-}
-function hostStart(g){const seed='race-'+newCode()+newCode();NET.pres.go=g;NET.pres.seed=seed;startOnline(g,seed)}
-function startOnline(g,seed){
-  NET.game=g;NET.pres.g=g;NET.pres.p='';delete NET.pres.fin;NET.oppP=[];NET.oppFin=false;NET.oppRe=false;NET.offSince=0;
-  newRound('online',seed);netKick();
-}
-function netScore(){NET.pres.p=S.log.map(x=>x.pts).join(',');netKick()}
-const sum=a=>a.reduce((s,x)=>s+x,0);
-function renderOpp(){
-  const on=S&&S.mode==='online';$('oppBar').hidden=!on;if(!on)return;
-  $('oppBar').classList.toggle('off',!NET.oppOnline);
-  $('oppTx').innerHTML=`<b>${esc(NET.oppNick||'Opponent')}</b> · `+(NET.oppLeft?'left the race':!NET.oppOnline?'reconnecting…':NET.oppFin?`finished · ${fmt(sum(NET.oppP))} pts`:`Q${Math.min(ROUND,NET.oppP.length+1)} · ${fmt(sum(NET.oppP))} pts`);
-  $('oppFill').style.width=(NET.oppP.length/ROUND*100)+'%';
-}
-function renderVs(){
-  const me=S.score,op=sum(NET.oppP),done=NET.oppFin||NET.oppLeft;
-  $('vsMe').textContent=fmt(me);$('vsOpp').textContent=fmt(op);$('vsOppName').textContent=NET.oppNick||'Opponent';
-  $('vsMe').classList.toggle('win',done&&me>=op);$('vsOpp').classList.toggle('win',done&&op>me&&!NET.oppLeft);
-  $('vsLabel').textContent=!done?'Waiting on your opponent':NET.oppLeft?'You win. Your opponent left.':me>op?'You win the race':me<op?(NET.oppNick||'Opponent')+' wins the race':'Dead even';
-  $('vsLine').textContent=!done?`${NET.oppNick||'Opponent'} is on question ${Math.min(ROUND,NET.oppP.length+1)} of ${ROUND}.`:`${NET.oppNick||'Opponent'} got ${NET.oppP.filter(x=>x>0).length} of ${ROUND} with points.`;
-  const mine=(NET.pres.re|0)===NET.game,b=$('rematch');
-  if(NET.oppLeft||!NET.oppOnline){b.disabled=true;b.textContent='Opponent offline'}
-  else{b.disabled=mine;b.textContent=mine?`Waiting for ${NET.oppNick}…`:NET.oppRe?'Accept rematch':'Rematch'}
-}
-$('rematch').onclick=()=>{NET.pres.re=NET.game;renderVs();netKick()};
-function updateLobby(){
-  const o=NET.opp&&NET.oppOnline;
-  $('olOpp').classList.toggle('in',!!o);
-  $('olOppTx').textContent=o?NET.oppNick+(NET.role==='h'?' is here':' (host) is here'):NET.full?'This match already has two players.':NET.opp?NET.oppNick+' is reconnecting…'
-    :NET.role==='h'?'Waiting for your opponent to join':Date.now()-NET.joinedAt>5000?'No host with that code yet. Check it, or wait for them to create it.':'Looking for the host…';
-  $('olStart').disabled=!o;
-}
-function netLeave(){
-  lfgStop();if(DP){DP.busy=false;CHAT.detach()}
-  if(!NET.alive&&!NET.room)return;
-  NET.alive=false;clearTimeout(NET.timer);
-  const room=NET.room;NET.room='';NET.game=0;
-  if(room)roomPost({room,peer:NET.me,leave:true},true).catch(()=>{});
-}
-window.addEventListener('pagehide',()=>{lfgStop();if(NET.room)roomPost({room:NET.room,peer:NET.me,leave:true},true).catch(()=>{})});
-setInterval(()=>{if(S&&S.mode==='online'&&(screen==='game'||screen==='end')&&!NET.oppOnline){if(NET.offSince&&Date.now()-NET.offSince>45000)NET.oppLeft=true;renderOpp();if(screen==='end')renderVs()}},1000);
-
-$('onlineGo').onclick=()=>{ac();openOnline()};
-$('olBack').onclick=()=>{netLeave();renderHome();show('home')};
-$('olCreate').onclick=()=>enterRoom(newCode(),'h');
-$('olFind').onclick=()=>enterRoom(newCode(),'h',true);
-$('olJoin').onclick=()=>{const c=$('olCode').value.trim().toUpperCase();if(c.length!==4){$('olStatus').textContent='Enter the 4-character code from your opponent.';return}enterRoom(c,'g')};
-$('olCode').addEventListener('keydown',e=>{if(e.key==='Enter')$('olJoin').click()});
-$('olLeave').onclick=()=>{netLeave();$('olSetup').hidden=false;$('olLobby').hidden=true};
-$('olCopy').onclick=()=>copyText(NET.code,$('olCopy'),$('olCodeShow'));
-$('olStart').onclick=()=>{if(NET.role!=='h'||!NET.opp||!NET.oppOnline)return;ac();hostStart(NET.game+1)};
-$('olNick').value=ls.get('dcd-nick','')||(DP?cleanNick(DP.nick()):'');
-$('olNick').addEventListener('change',()=>{const n=cleanNick($('olNick').value);ls.set('dcd-nick',n);if(DP)DP.setNick(n)});
-if(DP){
-  DP.openList($('olOpen'),'crate-digger',m=>joinOpen(m.code));
-  DP.feed({accent:'#ff6b1a',onJoin:m=>m.game==='crate-digger'?joinOpen(m.code):false});
-  DP.alerts.toggle($('olAlerts'),['crate-digger'],{accent:'#ff6b1a',label:'Get a notification when someone wants to race in Crate Digger.'});
-}
-
 /* ======================= boot ======================= */
 if(!/^https?:$/.test(location.protocol)||window.claude)$('brand').removeAttribute('href');
 renderHome();show('home');
-if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(ONLINE_OK)joinOpen(c)}
 }
 </script>
 </body>
