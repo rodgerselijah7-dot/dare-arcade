@@ -51,13 +51,12 @@ button:disabled{opacity:.4;cursor:default}
 #replayPill{position:absolute;right:12px;top:12px;z-index:5;background:rgba(14,12,8,.92);border:1px solid var(--gold);color:var(--gold2);border-radius:999px;padding:8px 14px;font-size:12px;font-weight:800;letter-spacing:1.5px;box-shadow:0 6px 18px rgba(0,0,0,.5);animation:pillIn .3s ease-out}
 #replayPill[hidden]{display:none}
 @keyframes pillIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-#replayBadge{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:4;display:none}
-#replayBadge.on{display:block}
-#replayBadge:before,#replayBadge:after{content:"";position:absolute;left:0;right:0;height:7%;background:#000}
-#replayBadge:before{top:0}#replayBadge:after{bottom:0}
-#replayBadge span{position:absolute;left:14px;top:calc(7% + 10px);font-family:'Bebas Neue',Impact,sans-serif;font-size:22px;letter-spacing:3px;color:var(--gold2);display:flex;align-items:center;gap:8px}
+#replayBadge{position:fixed;inset:0;z-index:4;display:none;pointer-events:none}
+#replayBadge.on{display:block;pointer-events:auto}
+#replayBadge span{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 10px);font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;letter-spacing:3px;color:var(--gold2);display:flex;align-items:center;gap:8px;background:rgba(10,9,6,.82);border:1px solid rgba(212,175,55,.6);border-radius:999px;padding:5px 16px 3px}
 #replayBadge span:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
-#replayBadge em{position:absolute;right:14px;bottom:calc(7% + 10px);font-style:normal;font-size:11px;letter-spacing:1.5px;color:#cfc6b4;font-weight:700}
+#replayBadge em{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 12px);font-style:normal;font-size:11px;letter-spacing:1.5px;color:#cfc6b4;font-weight:700;background:rgba(10,9,6,.82);border-radius:999px;padding:7px 14px;white-space:nowrap}
+#app.replaying #hud,#app.replaying #controls{display:none}
 @keyframes blink{50%{opacity:.2}}
 .ov{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(5,5,5,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));overflow-y:auto;touch-action:pan-y}
 .ov.show{display:flex}
@@ -762,7 +761,7 @@ function buildPX(){
     P.sh[i]=0.22+0.86*dif-0.18*rim;P.sp[i]=255*(Math.pow(nh,70)*1.05+Math.pow(nh,9)*0.07);
     const b=Math.max(0,y)*rim*0.9;P.b0[i]=b*bo[0];P.b1[i]=b*bo[1];P.b2[i]=b*bo[2];
   }
-  PX=P;for(const b of balls){b.cv=null;b.dirty=true}for(const t of tray){t.b.cv=null;t.b.dirty=true}
+  PX=P;for(const b of balls){b.cv=null;b.dirty=true}if(replay)replay.vb.forEach(b=>b.dirty=true);for(const t of tray){t.b.cv=null;t.b.dirty=true}
 }
 const TEX=[];for(let n=0;n<=15;n++)TEX[n]={c:rgbOf(colorOf(n)),stripe:n>8};
 const WHITE=[247,244,234],SPOTC=0.8916,SPOTS=0.4529,DOTS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
@@ -928,7 +927,7 @@ function hidePill(){$('replayPill').hidden=true;clearTimeout(pillT)}
 function startReplay(r){
   if(!r||r.frames.length<4||replay)return;hidePill();
   const vb=balls.map(b=>{const c=mk(b.n,b.x,b.y);c.m=b.m.slice();c.on=true;return c});
-  replay={r,t:0,prev:state,vb,pi:0};viewBalls=vb;state='replay';$('replayBadge').classList.add('on');
+  replay={r,t:0,prev:state,vb,pi:0};viewBalls=vb;state='replay';$('replayBadge').classList.add('on');$('app').classList.add('replaying');resize();
   applyFrame(0);vb.forEach(b=>{b.sink=0});
 }
 function applyFrame(fi){const f=replay.r.frames[fi];replay.vb.forEach((b,i)=>{b.x=f[i*3];b.y=f[i*3+1];b.on=!!f[i*3+2]||b.sink>0&&false;b.rx=b.x;b.ry=b.y})}
@@ -942,7 +941,7 @@ function updateReplay(dt){
   while(R_.pi<R_.r.pots.length&&R_.r.pots[R_.pi].f<=fi){const p=R_.r.pots[R_.pi++],bb=R_.vb.find(x=>x.n===p.n);if(bb){const pk=POCKETS[p.pk];bb.sink=1;bb.px=pk.x;bb.py=pk.y;bb.sx=bb.rx;bb.sy=bb.ry;sPocket()}}
   R_.vb.forEach(bb=>{if(bb.sink>0)bb.sink=Math.max(0,bb.sink-dt*speed*3.2)});
 }
-function endReplay(){if(!replay)return;const cb=replay.onEnd;state=replay.prev;replay=null;viewBalls=null;$('replayBadge').classList.remove('on');for(const b of balls)b.dirty=true;if(cb)cb()}
+function endReplay(){if(!replay)return;const cb=replay.onEnd;state=replay.prev;replay=null;viewBalls=null;$('replayBadge').classList.remove('on');$('app').classList.remove('replaying');resize();for(const b of balls)b.dirty=true;if(cb)cb()}
 
 /* =====================================================================
    HUD / UI
