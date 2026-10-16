@@ -99,7 +99,7 @@ Every push to `main` redeploys automatically.
 - Home screen (best, total popped, top round, Continue / New game) and a separate game screen. Saved on the phone (localStorage keys `dbub-*`).
 - Paid game ($2.99, also in the All-Access Pass): rounds 1 to 3 are the free tryout. Clearing round 3, or continuing a saved game past it, shows the unlock panel from `/dare-unlock.js`.
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool)
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger)
 - `dare-play.js` is shared by all five games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
@@ -114,6 +114,7 @@ Every push to `main` redeploys automatically.
 - Variety: each round rotates evenly through the genres in the mix, never repeats an artist, never puts the same category back to back, caps any one category at a fifth of the round, never runs the same question type three times in a row, and caps Name the year and Which came first at 15% and hometowns at 20% of the round. Difficulty leans toward the streak's level without locking to it. If a narrow mix runs out, these rules relax one at a time.
 - No repeats: each phone remembers which questions and releases it has seen (`dcd-seen`) and serves unseen ones first, including the three releases in each Which came first, then starts over once a mix is used up.
 - Daily Dig: the same 10 questions for everyone each day (seeded from the Central Time date, fixed easy-to-hard plan), one try, with a copyable result grid. Daily Dig #1 is October 15, 2026.
+- Head to head: rooms `cd-<code>` on `/api/room`. The host's question count and genre (from the home screen) set the race; the host starts each race with a random seed and both phones build the same questions from it, then play at their own pace, each sending its points per question (`p`) so the other sees the score live. Rematches, chat, Find an opponent and match alerts work like the other online games (`crate-digger` in `dare-play.js` and `/api/lfg`).
 - Sound is synthesized with Web Audio (808 kick on correct, record scratch on wrong, hi-hat ticks in the last 5 seconds). Saved on the phone: localStorage keys `dcd-*`.
 
 ## DARE Pool

@@ -14,7 +14,7 @@ const crypto = require("crypto");
 const { hasRedis, redis, readJson, clientIp, rateLimit } = require("./_lib");
 const { vapid, sendPush } = require("./_push");
 
-const GAMES = { buckets: "DARE Buckets", chess: "DARE Chess", connect: "DARE Connect", dice: "DARE Dice", pool: "DARE Pool" };
+const GAMES = { buckets: "DARE Buckets", chess: "DARE Chess", connect: "DARE Connect", dice: "DARE Dice", pool: "DARE Pool", "crate-digger": "Crate Digger" };
 const CODE = /^[A-HJ-NP-Z2-9]{4}$/;
 const PEER = /^[a-z0-9]{8,24}$/;
 const LIVE_MS = 150 * 1000;
