@@ -1,0 +1,16 @@
+{
+  "name": "DARE Pool",
+  "short_name": "DARE Pool",
+  "description": "8-ball, tournament 8-ball and 9-ball with real spin physics. Play the CPU, a friend on the same phone, or a friend online. By Dontae Amare.",
+  "start_url": "/pool/",
+  "scope": "/pool/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "/pool/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/pool/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/pool/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

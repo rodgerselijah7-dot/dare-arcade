@@ -20,7 +20,8 @@ Browser games by Dontae Amare. Static site — no build step.
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect and DARE Dice online play (Upstash Redis)
+/pool/                 DARE Pool (single-file canvas 8-ball / 9-ball + icons + manifest)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice and DARE Pool online play (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -88,7 +89,8 @@ Every push to `main` redeploys automatically.
 
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
-- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
+- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99, DARE Pool $2.99. All-Access Pass $14.99 (saves $12.93).
+- DARE Pool is an online game, so online play, pass & play and the Easy CPU stay free. The unlock covers the Pro and Legend CPU (one free game each first) and two full-game cosmetics.
 - Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix.
 
 ## DARE Bubble Blaster
@@ -98,8 +100,8 @@ Every push to `main` redeploys automatically.
 - Home screen (best, total popped, top round, Continue / New game) and a separate game screen. Saved on the phone (localStorage keys `dbub-*`).
 - Paid game ($2.99, also in the All-Access Pass): rounds 1 to 3 are the free tryout. Clearing round 3, or continuing a saved game past it, shows the unlock panel from `/dare-unlock.js`.
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice)
-- `dare-play.js` is shared by all four games. It adds:
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool)
+- `dare-play.js` is shared by all five games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
   - **Match alerts**: phone notifications when someone posts an open match (Web Push through `/sw.js`). Players turn them on with the switch on a game's online screen. iPhones need the arcade on the Home Screen first (iOS 16.4+).
@@ -114,3 +116,12 @@ Every push to `main` redeploys automatically.
 - No repeats: each phone remembers which questions and releases it has seen (`dcd-seen`) and serves unseen ones first, including the three releases in each Which came first, then starts over once a mix is used up.
 - Daily Dig: the same 10 questions for everyone each day (seeded from the Central Time date, fixed easy-to-hard plan), one try, with a copyable result grid. Daily Dig #1 is October 15, 2026.
 - Sound is synthesized with Web Audio (808 kick on correct, record scratch on wrong, hi-hat ticks in the last 5 seconds). Saved on the phone: localStorage keys `dcd-*`.
+
+## DARE Pool
+- Portrait canvas pool table, no libraries. Three games: **8-Ball** (bar rules, any pocket for the 8), **Tournament 8-Ball** (call the 8 by tapping a pocket; after contact a ball must sink or hit a rail) and **9-Ball** (lowest ball first, sink the 9 on any legal shot, the 9 respots if it drops on a foul). Fouls give ball in hand anywhere; the break is from behind the head string.
+- Physics run at 240 steps a second with interpolated drawing. Balls slide then roll, so follow, draw and stun come from real spin; side spin (english) changes rail rebounds. Pockets have jaw facings, so fast or badly angled balls rattle out. Balls are drawn as lit 3D spheres whose numbers and stripes roll with the spin. Sunk balls roll into a ball return in the right rail.
+- Controls: drag on the table to aim, the Fine wheel for small turns, drag the gold knob left to pull the cue (the phone buzzes harder as the pull builds), and the cue-ball button for follow, draw and english. The aim guide is long on Easy, shorter on Pro and barely there on Legend.
+- CPU: Easy aims by ghost-ball geometry. Pro and Legend simulate dozens of candidate shots (power and spin variants) on a copy of the table, pick the pot that leaves the best next shot, and play safeties when nothing good is on. Thinking runs a few milliseconds per frame so the game never freezes.
+- Online: rooms are named `dp-<code>` on `/api/room`, with chat, Find an opponent and match alerts from `dare-play.js`. The host picks the game in the lobby and breaks the first rack; the break swaps on every rematch. The shooting phone runs each shot and publishes it in its presence as `sh`: the stroke (angle, power, spin, cue spot, called pocket), the whole table afterwards and the rules state. The other phone replays the stroke on its own table and then snaps to the published table, so both phones always agree, and a phone that misses a shot jumps straight to the latest table. `am` streams the live aim so the opponent watches the cue move. A player disconnected for 45 seconds loses; leaving mid-game counts as a loss.
+- Replays: shots that sink two or more balls, banks, combos and game winners offer a slow-motion replay; the game-over screen can replay the winning shot.
+- Stats, 16 badges, and a Locker of cues and felts earned by winning and by badges are saved on the phone (localStorage keys `dpool-*`). Paid game ($2.99, also in the All-Access Pass): Easy, online and pass & play are free, Pro and Legend give one free game each, and the full game adds the Golden Child cue and Midnight Gold felt.
