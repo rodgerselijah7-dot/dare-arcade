@@ -16,8 +16,7 @@
     "ori": { name: "ORI", price: 2.99, rest: "Zones 2 to 6 and endless ORBIT" },
     "dead-rise": { name: "Dead Rise", price: 3.99, rest: "Every wave after the Warden, across all five areas" },
     "break-the-block": { name: "Break the Block", price: 2.99, rest: "Zones 3 to 8, levels 21 to 80" },
-    "bubble": { name: "DARE Bubble Blaster", price: 2.99, rest: "Round 4 and every round after it" },
-    "pool": { name: "DARE Pool", price: 2.99, rest: "Unlimited games against the Pro and Legend CPU, plus the Golden Child cue and Midnight Gold felt" }
+    "bubble": { name: "DARE Bubble Blaster", price: 2.99, rest: "Round 4 and every round after it" }
   };
   const PASS = { id: "all-access", name: "All-Access Pass", price: 14.99 };
   // prices live in /games.json (the same file checkout charges from); the numbers above are just a fallback

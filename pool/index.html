@@ -254,7 +254,6 @@ button:disabled{opacity:.4;cursor:default}
   <div class="row2" style="margin-top:6px"><button class="btn" id="bSpinReset">Center</button><button class="btn gold" id="bSpinDone">Done</button></div>
 </div></div>
 
-<script src="/dare-unlock.js"></script>
 <script src="/dare-play.js"></script>
 <script>
 (()=>{'use strict';
@@ -297,14 +296,14 @@ const CUES={
   southside:{name:'South Side',sh:['#a8834a','#f6e4ba','#e3c690','#9a7640'],bt:['#2a0303','#c0262c','#6a0e13','#1a0202'],rg:['#777','#fff','#777'],req:{wins:10},how:'Win 10 games'},
   emerald:{name:'Emerald Bank',sh:['#a8834a','#f6e4ba','#e3c690','#9a7640'],bt:['#02160f','#1aa774','#0b5a3d','#010c08'],rg:['#8a6a16','#fff0b0','#8a6a16'],req:{badge:'bank'},how:'Badge: Bank Shot'},
   ivory:{name:'Ivory Crown',sh:['#cfc8b6','#fffdf4','#ebe5d4','#bdb5a2'],bt:['#b8b09c','#fffaf0','#e2dac6','#a39b86'],rg:['#8a6a16','#fff0b0','#8a6a16'],req:{badge:'legend'},how:'Badge: Legend Slayer'},
-  golden:{name:'Golden Child',sh:['#8a6a16','#fff3c4','#e0bd4a','#7a5c10'],bt:['#000','#2e2e2e','#0a0a0a','#000'],rg:['#fff8dc','#ffffff','#d4af37'],req:{owned:1},how:'Full game: from the cradle to the crown'}
+  golden:{name:'Golden Child',sh:['#8a6a16','#fff3c4','#e0bd4a','#7a5c10'],bt:['#000','#2e2e2e','#0a0a0a','#000'],rg:['#fff8dc','#ffffff','#d4af37'],req:{wins:25},how:'Win 25 games: from the cradle to the crown'}
 };
 const FELTS={
   emerald:{name:'DARE Emerald',base:'#0d5e46',lt:'rgba(120,255,200,.22)',c1:'#127a5a',c2:'#073827',wm:.07,bo:[14,46,34],how:'Standard issue'},
   royal:{name:'Royal Blue',base:'#123e78',lt:'rgba(140,190,255,.22)',c1:'#1a5296',c2:'#0a2244',wm:.07,bo:[14,26,52],req:{badge:'streak3'},how:'Badge: Hot Streak'},
   burgundy:{name:'Burgundy',base:'#5a1420',lt:'rgba(255,150,150,.17)',c1:'#76202d',c2:'#330a10',wm:.08,bo:[44,12,16],req:{badge:'run5'},how:'Badge: Run of Five'},
   tour:{name:'Tour Gray',base:'#3a474f',lt:'rgba(200,225,240,.16)',c1:'#4b5b65',c2:'#1d2428',wm:.07,bo:[24,30,34],req:{badge:'online'},how:'Badge: Online Win'},
-  midnight:{name:'Midnight Gold',base:'#131313',lt:'rgba(255,220,140,.12)',c1:'#232323',c2:'#070707',wm:.13,bo:[18,16,10],req:{owned:1},how:'Full game exclusive'}
+  midnight:{name:'Midnight Gold',base:'#131313',lt:'rgba(255,220,140,.12)',c1:'#232323',c2:'#070707',wm:.13,bo:[18,16,10],req:{badge:'breakrun'},how:'Badge: Break & Run'}
 };
 
 /* =====================================================================
@@ -319,9 +318,8 @@ let E=null,cpuAnim=null,cpuGen=null,strike=null,follow=null,dragging=null,poweri
 let soundOn=ls.get('dpool-sound',true),skin=Object.assign({cue:'classic',felt:'emerald'},ls.get('dpool-skin',{}));
 let tray=[],rec=null,lastRec=null,replay=null,viewBalls=null,pillT=0,winRec=null;
 let stats=Object.assign({games:0,wins:0,losses:0,streak:0,best:0,potted:0,bestRun:0,banks:0,combos:0,cpu:[[0,0],[0,0],[0,0]],online:[0,0]},ls.get('dpool-stats',{}));
-let badges=ls.get('dpool-badges',{}),tryUsed=ls.get('dpool-try',{});
+let badges=ls.get('dpool-badges',{});
 
-const OWN=()=>!window.DARE||DARE.owned('pool');
 const isCPU=p=>mode==='cpu'&&p===1;
 const seat=()=>mode==='online'?(NET.role==='h'?0:1):0;
 const mine=p=>mode==='pvp'||(mode==='online'?p===seat():p===0);
@@ -994,27 +992,25 @@ function renderStats(){
   $('badgeGrid').innerHTML=BADGES.map(b=>`<div class="badge ${badges[b[0]]?'got':''}"><div class="ic">${b[1]}</div><div><b>${b[2]}</b><small>${b[3]}</small></div></div>`).join('');
 }
 /* ---------- locker ---------- */
-const unlocked=it=>{const r=it.req;if(!r)return true;if(r.badge)return!!badges[r.badge];if(r.wins)return stats.wins>=r.wins;if(r.owned)return OWN();return false};
+const unlocked=it=>{const r=it.req;if(!r)return true;if(r.badge)return!!badges[r.badge];if(r.wins)return stats.wins>=r.wins;return false};
 function renderLocker(){
   $('cueList').innerHTML=Object.entries(CUES).map(([k,c])=>`<button class="item ${skin.cue===k?'on':''} ${unlocked(c)?'':'locked'}" data-cue="${k}"><canvas width="240" height="52"></canvas><div class="tx"><b>${c.name}</b><small>${unlocked(c)?(skin.cue===k?'Equipped':'Tap to equip'):'🔒 '+c.how}</small></div></button>`).join('');
   $('cueList').querySelectorAll('[data-cue]').forEach(el=>cuePreview(el.querySelector('canvas'),el.dataset.cue));
   $('feltList').innerHTML=Object.entries(FELTS).map(([k,f])=>`<button class="item ${skin.felt===k?'on':''} ${unlocked(f)?'':'locked'}" data-felt="${k}"><div class="sw" style="background:radial-gradient(circle at 50% 40%,${f.c1},${f.base} 70%)"></div><div class="tx"><b>${f.name}</b><small>${unlocked(f)?(skin.felt===k?'Equipped':'Tap to equip'):'🔒 '+f.how}</small></div></button>`).join('');
 }
 $('cueList').onclick=e=>{const b=e.target.closest('[data-cue]');if(!b)return;const k=b.dataset.cue;
-  if(!unlocked(CUES[k])){if(CUES[k].req.owned&&window.DARE)DARE.gate('pool',()=>{renderLocker()},{title:'Full game exclusive'});else toast(CUES[k].how);return}
+  if(!unlocked(CUES[k])){toast(CUES[k].how);return}
   skin.cue=k;ls.set('dpool-skin',skin);renderLocker()};
 $('feltList').onclick=e=>{const b=e.target.closest('[data-felt]');if(!b)return;const k=b.dataset.felt;
-  if(!unlocked(FELTS[k])){if(FELTS[k].req.owned&&window.DARE)DARE.gate('pool',()=>{renderLocker()},{title:'Full game exclusive'});else toast(FELTS[k].how);return}
+  if(!unlocked(FELTS[k])){toast(FELTS[k].how);return}
   skin.felt=k;ls.set('dpool-skin',skin);buildTable();buildPX();renderLocker()};
 
 /* ---------- menu ---------- */
-const TRYOUT=d=>d>0&&!OWN();
 function renderMenu(){
   document.querySelectorAll('#rulesSeg button').forEach(b=>b.classList.toggle('on',b.dataset.r===rulesPick));
   document.querySelectorAll('#diffSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.d===diff));
   $('rulesNote').textContent={'8':'Classic bar rules: any pocket for the 8.','8t':'Call the 8, and a ball must hit a rail after contact.','9':'Hit the lowest ball first. Sink the 9 to win.'}[rulesPick];
-  $('tryNote').innerHTML=TRYOUT(diff)?(tryUsed[diff]?`Free game used. <b>Unlock the full game</b> to keep playing ${['','Pro','Legend'][diff]}.`:`<b>1 free game</b> against ${['','Pro','Legend'][diff]}. Easy, online and pass &amp; play are always free.`)
-    :`${['Easy','Pro','Legend'][diff]} CPU: ${stats.cpu[diff][0]}–${stats.cpu[diff][1]}`;
+  $('tryNote').textContent=`${['Easy','Pro','Legend'][diff]} CPU: ${stats.cpu[diff][0]}–${stats.cpu[diff][1]}`;
   $('rec').textContent=stats.games?`${stats.wins} wins · best streak ${stats.best}`:'';
 }
 document.querySelectorAll('#rulesSeg button').forEach(b=>b.onclick=()=>{rulesPick=b.dataset.r;ls.set('dpool-rules',rulesPick);renderMenu()});
@@ -1032,11 +1028,7 @@ function newGame(opts){
   state='idle';startTurn();
 }
 let cpuBreaker=0,pvpBreaker=0;
-function startCpu(){
-  const go=()=>{if(TRYOUT(diff)){tryUsed[diff]=1;ls.set('dpool-try',tryUsed)}newGame({mode:'cpu',breaker:cpuBreaker});cpuBreaker^=1};
-  if(TRYOUT(diff)&&tryUsed[diff]&&window.DARE){DARE.gate('pool',()=>{renderMenu();go()},{title:'Free game used',onExit:()=>renderMenu()});return}
-  go();
-}
+function startCpu(){newGame({mode:'cpu',breaker:cpuBreaker});cpuBreaker^=1}
 
 /* =====================================================================
    INPUT
@@ -1360,7 +1352,6 @@ buildGlyphs();buildShadow();G=newRules(rulesPick,0);rack(rulesPick,rackOrder(rul
 window.addEventListener('resize',resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe($('stage'));
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{buildGlyphs();buildTable();for(const b of balls)b.dirty=true});
-if(window.DARE)DARE.onChange(()=>renderMenu());
 if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(ONLINE_OK)joinOpen(c)}
 if(/[?&]debug/.test(location.search))window.__pool={get balls(){return balls},get state(){return state},get G(){return G},get cue(){return cue},get NET(){return NET},get mode(){return mode},
   set aim(v){aim=v},shoot:p=>startStrike(p),setSpin:(x,y)=>{spinX=x;spinY=y},sim:(a,p)=>simulate(balls,G,cue.x,cue.y,a,p,0,0,-1),replay:()=>startReplay(lastRec),get lastRec(){return lastRec},get tray(){return tray},

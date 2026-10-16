@@ -89,9 +89,8 @@ Every push to `main` redeploys automatically.
 
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
-- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99, DARE Pool $2.99. All-Access Pass $14.99 (saves $12.93).
-- DARE Pool is an online game, so online play, pass & play and the Easy CPU stay free. The unlock covers the Pro and Legend CPU (one free game each first) and two full-game cosmetics.
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix.
+- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -124,4 +123,4 @@ Every push to `main` redeploys automatically.
 - CPU: Easy aims by ghost-ball geometry. Pro and Legend simulate dozens of candidate shots (power and spin variants) on a copy of the table, pick the pot that leaves the best next shot, and play safeties when nothing good is on. Thinking runs a few milliseconds per frame so the game never freezes.
 - Online: rooms are named `dp-<code>` on `/api/room`, with chat, Find an opponent and match alerts from `dare-play.js`. The host picks the game in the lobby and breaks the first rack; the break swaps on every rematch. The shooting phone runs each shot and publishes it in its presence as `sh`: the stroke (angle, power, spin, cue spot, called pocket), the whole table afterwards and the rules state. The other phone replays the stroke on its own table and then snaps to the published table, so both phones always agree, and a phone that misses a shot jumps straight to the latest table. `am` streams the live aim so the opponent watches the cue move. A player disconnected for 45 seconds loses; leaving mid-game counts as a loss.
 - Replays: shots that sink two or more balls, banks, combos and game winners offer a slow-motion replay; the game-over screen can replay the winning shot.
-- Stats, 16 badges, and a Locker of cues and felts earned by winning and by badges are saved on the phone (localStorage keys `dpool-*`). Paid game ($2.99, also in the All-Access Pass): Easy, online and pass & play are free, Pro and Legend give one free game each, and the full game adds the Golden Child cue and Midnight Gold felt.
+- Stats, 16 badges, and a Locker of cues and felts earned by winning and by badges are saved on the phone (localStorage keys `dpool-*`). Free to play: every mode and CPU level is open.

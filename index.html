@@ -331,12 +331,12 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <h3>DARE Pool</h3>
         <span class="status">Play</span>
         <p>8-ball, tournament 8-ball and 9-ball on a black-and-gold table, with real spin, english and rattling pockets. Take on the CPU from Easy to Legend, a friend on the same phone, or a friend online.</p>
-        <span class="price" data-game="pool">Easy, online and pass &amp; play free. Full game $2.99</span>
+        <span class="price">Free to play</span>
       </a>
       <a class="row pass" id="passRow" href="/shop/?add=all-access">
         <h3>All-Access Pass</h3>
         <span class="status">$14.99</span>
-        <p>All eight paid games, fully unlocked, plus every paid game added later. Save $12.93 over buying them one by one.</p>
+        <p>All seven paid games, fully unlocked, plus every paid game added later. Save $9.94 over buying them one by one.</p>
       </a>
       <p class="pricing"><a href="/shop/" style="color:var(--black)">Shop the full games</a> · Bought one? <button class="unlock-link" id="unlockBtn" type="button">Enter your unlock code</button></p>
     </section>
@@ -462,7 +462,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 // Show what this device has unlocked
 (function(){
   if(!window.DARE)return;
-  const GAMES=['the-last-don','rebel-elimination','dead-rise','cosmic-encounter','ori','break-the-block','bubble','pool'];
+  const GAMES=['the-last-don','rebel-elimination','dead-rise','cosmic-encounter','ori','break-the-block','bubble'];
   function paint(){
     document.querySelectorAll('[data-game]').forEach(el=>{
       const g=el.dataset.game;
