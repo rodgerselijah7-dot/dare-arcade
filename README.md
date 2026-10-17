@@ -129,6 +129,7 @@ Every push to `main` redeploys automatically.
 - Stats, 16 badges, and a Locker of cues and felts earned by winning and by badges are saved on the phone (localStorage keys `dpool-*`). Free to play: every mode and CPU level is open.
 
 ## Crown Rush
+- Landscape game: on an upright phone the whole game turns sideways (Settings picks which way), and on Android it goes full screen and locks landscape when a race starts.
 - Side-scrolling rooftop racer on a 2D canvas, no libraries. 16 runners (each with a trait and a ★ special), six maps (Southside Rooftops, Stockyards Rails, Neon Freeway, Frostbite Docks, Magma Works, Jungle Ruins), 16 items with level II versions, slides, dashes, tricks, wall jumps and ground pounds.
 - Modes: Quick race and Crown Cup against three bots, Time trial against your best ghost, and Online. Upgrades, wardrobe, body mods, trails, daily challenges, ranks and replays are saved on the phone (localStorage key `crownrush.v2`).
 - Online: up to 4 racers per room on `/api/room` (rooms are named `cr-<name>`: `cr-quick` for Quick match, `cr-r-<code>` for private rooms, `cr-clan-<id>` for clan rooms). Each phone polls about 6 times a second while racing and every 0.6s in the lobby. A racer's presence carries their look, `s` (position, motion flags, item, finish time) and `ev` (the last 12 item/special uses), so each phone replays the others' items locally and each player's own phone decides whether they got hit. The host picks the track and starts the race with `go` (race id, track, racers). Upgrades are off online so races are fair.
