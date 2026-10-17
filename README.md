@@ -21,7 +21,9 @@ Browser games by Dontae Amare. Static site — no build step.
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /pool/                 DARE Pool (single-file canvas 8-ball / 9-ball + icons + manifest)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice and DARE Pool online play (Upstash Redis)
+/crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger and Crown Rush online play (Upstash Redis)
+/api/clans.js          Crown Rush clans (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -90,7 +92,7 @@ Every push to `main` redeploys automatically.
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool.
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -125,3 +127,11 @@ Every push to `main` redeploys automatically.
 - Online: rooms are named `dp-<code>` on `/api/room`, with chat, Find an opponent and match alerts from `dare-play.js`. The host picks the game in the lobby and breaks the first rack; the break swaps on every rematch. The shooting phone runs each shot and publishes it in its presence as `sh`: the stroke (angle, power, spin, cue spot, called pocket), the whole table afterwards and the rules state. The other phone replays the stroke on its own table and then snaps to the published table, so both phones always agree, and a phone that misses a shot jumps straight to the latest table. `am` streams the live aim so the opponent watches the cue move. A player disconnected for 45 seconds loses; leaving mid-game counts as a loss.
 - Replays: shots that sink two or more balls, banks, combos and game winners offer a slow-motion replay; the game-over screen can replay the winning shot.
 - Stats, 16 badges, and a Locker of cues and felts earned by winning and by badges are saved on the phone (localStorage keys `dpool-*`). Free to play: every mode and CPU level is open.
+
+## Crown Rush
+- Side-scrolling rooftop racer on a 2D canvas, no libraries. 16 runners (each with a trait and a ★ special), six maps (Southside Rooftops, Stockyards Rails, Neon Freeway, Frostbite Docks, Magma Works, Jungle Ruins), 16 items with level II versions, slides, dashes, tricks, wall jumps and ground pounds.
+- Modes: Quick race and Crown Cup against three bots, Time trial against your best ghost, and Online. Upgrades, wardrobe, body mods, trails, daily challenges, ranks and replays are saved on the phone (localStorage key `crownrush.v2`).
+- Online: up to 4 racers per room on `/api/room` (rooms are named `cr-<name>`: `cr-quick` for Quick match, `cr-r-<code>` for private rooms, `cr-clan-<id>` for clan rooms). Each phone polls about 6 times a second while racing and every 0.6s in the lobby. A racer's presence carries their look, `s` (position, motion flags, item, finish time) and `ev` (the last 12 item/special uses), so each phone replays the others' items locally and each player's own phone decides whether they got hit. The host picks the track and starts the race with `go` (race id, track, racers). Upgrades are off online so races are fair.
+- Private rooms post to Find an opponent and match alerts through `dare-play.js` (`crown-rush` in `/api/lfg`); joining from an alert opens `/crown-rush/?join=CODE`.
+- Clans (`/api/clans`): players have no accounts, so each phone makes a random player id and secret key (localStorage `crownrush.pid` / `crownrush.pkey`); the server keeps a hash of the key so only that phone can change its racer. Starting a clan costs 100 in-game coins. Every finished race adds the player's rank points to their clan (at most 80 per save). Redis keys: `arc:cr:clans`, `arc:cr:players`. Limits: 300 clans, 5,000 players.
+- The same file also runs as a Claude artifact, where online play uses Claude's live rooms and clans use the artifact's shared database.
