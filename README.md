@@ -20,10 +20,12 @@ Browser games by Dontae Amare. Static site — no build step.
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
+/live-fire-range/      Live Fire Range (3D shooting range: index.html + assets/ photo textures and HDRI skies + icons + manifest; loads three.js r160 from jsDelivr)
 /pool/                 DARE Pool (single-file canvas 8-ball / 9-ball + icons + manifest)
 /crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger and Crown Rush online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
+/api/scores.js         Live Fire Range leaderboards (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -91,7 +93,7 @@ Every push to `main` redeploys automatically.
 
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
-- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
+- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99, Live Fire Range $3.99. All-Access Pass $14.99 (saves $13.93).
 - Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool.
 
 ## DARE Bubble Blaster
@@ -137,3 +139,13 @@ Every push to `main` redeploys automatically.
 - Private rooms post to Find an opponent and match alerts through `dare-play.js` (`crown-rush` in `/api/lfg`); joining from an alert opens `/crown-rush/?join=CODE`.
 - Clans (`/api/clans`): players have no accounts, so each phone makes a random player id and secret key (localStorage `crownrush.pid` / `crownrush.pkey`); the server keeps a hash of the key so only that phone can change its racer. Starting a clan costs 100 in-game coins. Every finished race adds the player's rank points to their clan (at most 80 per save). Redis keys: `arc:cr:clans`, `arc:cr:players`. Limits: 300 clans, 5,000 players.
 - The same file also runs as a Claude artifact, where online play uses Claude's live rooms and clans use the artifact's shared database.
+
+## Live Fire Range
+- First-person 3D shooting range (three.js r160 from jsDelivr, with bloom from its addons). The sky, sunlight and ground come from real photographs: four Poly Haven HDRI skies (Afternoon, Golden hour, Midday, Hazy evening; CC0) and photo textures from the three.js and Babylon.js sample libraries, all in `live-fire-range/assets/`. Each HDRI ships as two lossless PNGs (RGB and exponent), and the sun's direction and strength were measured from each photo.
+- Five guns (P9 pistol, K45 SMG, AR16 carbine, M12 pump shotgun, B308 bolt rifle). Every bullet flies a real arc with drag, gravity and wind drift; each gun is zeroed (25 / 25 / 50 / 25 / 100 m). The B308 scope has a true mil reticle with elevation and windage clicks (mouse wheel and [ ], or the on-screen buttons on phones).
+- Armory: optic, suppressor, extended mag, grips, bipod and shotgun choke, saved on the phone (`lfr_load`). The K45 and AR16 climb in a fixed, learnable recoil pattern shown in the armory.
+- Positions: crouch, prone, lean (Q/E), and crouching at a bench rests the gun. Settings: sensitivity, field of view, graphics (Low/Medium/High), motion blur, aim depth of field, vibration and volume (`lfr_set`).
+- Drills with par times and gold/silver/bronze medals: Bill Drill, El Presidente, Plate Rack, Moving Target, Popper Sweep, Long-Range Ladder, Shoot House (pop-up threats and no-shoots, +5 s / +10 s penalties) and 60-Second Score. Medals unlock the guns (1, 2, 3 and 4 medals). Progress lives on the phone (`lfr_prog`).
+- Paid game ($3.99, also in the All-Access Pass): the free tryout is Free Range with the P9 and the Bill Drill. Other drills, the shoot house and the other guns open with the unlock (`DARE.gate("live-fire-range")`).
+- Leaderboards: `/api/scores` keeps each player's best per drill in Redis sorted sets `arc:lfr:<drill>` (500 kept per drill) and names in `arc:lfr:names`. Players pick a range name on the leaderboard screen; the phone keeps a random player id (`lfr_pid`). Challenge links open a drill directly: `/live-fire-range/#bill-2.31`.
+- The same game also runs as a Claude artifact, where the leaderboards use the artifact's shared database.

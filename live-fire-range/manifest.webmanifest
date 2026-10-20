@@ -1,0 +1,16 @@
+{
+  "name": "Live Fire Range",
+  "short_name": "Live Fire",
+  "description": "A 3D shooting range lit by real sky photos, with timed drills, a shoot house and five guns. By Dontae Amare.",
+  "start_url": "/live-fire-range/",
+  "scope": "/live-fire-range/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b0d0e",
+  "theme_color": "#0b0d0e",
+  "icons": [
+    { "src": "/live-fire-range/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/live-fire-range/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/live-fire-range/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
