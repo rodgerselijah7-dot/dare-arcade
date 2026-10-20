@@ -43,7 +43,9 @@ button:disabled{opacity:.4;cursor:default}
 #spinBtn{width:46px;height:46px;flex:none;border-radius:50%;background:#151515;border:1px solid var(--line);overflow:hidden}
 #spinBtn canvas{width:100%;height:100%;display:block}
 #fine{width:84px;height:46px;flex:none;border-radius:12px;border:1px solid var(--line);background-color:#121212;background-image:repeating-linear-gradient(90deg,transparent 0 6px,rgba(212,175,55,.28) 6px 7px);box-shadow:inset 10px 0 12px -4px #000,inset -10px 0 12px -4px #000;display:flex;align-items:center;justify-content:center;font-size:8px;letter-spacing:1.5px;color:var(--mut);font-weight:800}
-#fine span{background:rgba(18,18,18,.92);padding:2px 5px;border-radius:5px;pointer-events:none}
+#fine span{background:rgba(18,18,18,.92);padding:2px 5px;border-radius:5px;pointer-events:none;white-space:nowrap}
+#fine.on span{color:var(--gold2);font-size:11px;letter-spacing:.5px}
+#fine.on{border-color:var(--gold)}
 #power{flex:1;height:46px;border-radius:23px;background:#121212;border:1px solid var(--line);position:relative;overflow:hidden}
 #pfill{position:absolute;top:0;bottom:0;right:0;width:0;background:linear-gradient(90deg,#ff4d2e,#d4af37 55%,rgba(212,175,55,.25))}
 #plabel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;letter-spacing:2px;color:var(--mut);pointer-events:none;transition:opacity .15s;padding-right:30px}
@@ -141,7 +143,7 @@ button:disabled{opacity:.4;cursor:default}
   <div id="stage"><canvas id="cv"></canvas><button id="replayPill" hidden>▶ REPLAY</button><div id="replayBadge"><span>REPLAY</span><em>TAP TO SKIP</em></div></div>
   <div id="controls">
     <button id="spinBtn" aria-label="Spin"><canvas id="spinCv" width="104" height="104"></canvas></button>
-    <div id="fine"><span>◀ FINE ▶</span></div>
+    <div id="fine"><span id="fineTx">◀ FINE ▶</span></div>
     <div id="power"><div id="pfill"></div><div id="plabel">◀ PULL TO SHOOT</div><div id="pknob">◀</div></div>
   </div>
 </div>
@@ -159,7 +161,7 @@ button:disabled{opacity:.4;cursor:default}
   <div class="note" id="tryNote"></div>
   <button class="btn gold" id="bCpu">Play vs CPU</button>
   <div class="row2"><button class="btn" id="bPvp">Pass &amp; Play</button><button class="btn" id="bOnline">Online</button></div>
-  <div class="row2"><button class="btn sm ghost" id="bStats">Stats</button><button class="btn sm ghost" id="bLocker">Locker</button><button class="btn sm ghost" id="bHelp">How to</button></div>
+  <div class="row2"><button class="btn sm ghost" id="bStats">Stats</button><button class="btn sm ghost" id="bLocker">Locker</button><button class="btn sm ghost" id="bSet">Settings</button><button class="btn sm ghost" id="bHelp">How to</button></div>
   <div class="note" id="rec"></div>
 </div></div>
 
@@ -192,9 +194,21 @@ button:disabled{opacity:.4;cursor:default}
   <div class="big">Paused</div>
   <button class="btn gold" id="bResume">Resume</button>
   <button class="btn" id="bRestart">Restart Rack</button>
-  <button class="btn" id="bSound">Sound: On</button>
+  <button class="btn" id="bSet2">Settings</button>
   <button class="btn" id="bHelp2">How to Play</button>
   <button class="btn ghost" id="bQuit">Main Menu</button>
+</div></div>
+
+<div class="ov" id="setOv"><div class="card">
+  <div class="big md">Settings</div>
+  <div class="lbl">AIM SENSITIVITY</div>
+  <div class="seg" id="aimSeg"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button></div>
+  <div class="note" id="aimNote"></div>
+  <div class="lbl">POWER SENSITIVITY</div>
+  <div class="seg" id="powSeg"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button></div>
+  <div class="note" id="powNote"></div>
+  <div class="row2"><button class="btn" id="bSound">Sound: On</button><button class="btn" id="bBuzz">Vibration: On</button></div>
+  <button class="btn gold" id="bSetBack">Done</button>
 </div></div>
 
 <div class="ov" id="leaveBox"><div class="card">
@@ -315,6 +329,7 @@ let balls=[],cue=null,mode='cpu',diff=ls.get('dpool-diff',1),rulesPick=ls.get('d
 let G=null; // rules state
 let aim=-Math.PI/2,pull=0,spinX=0,spinY=0;
 let E=null,cpuAnim=null,cpuGen=null,strike=null,follow=null,dragging=null,powering=null,gameId=0,ctrlOff=null,acc=0,pendingCPU=false,lastHaptic=-1;
+let aimSens=ls.get('dpool-aim',4),powSens=ls.get('dpool-pow',4),buzzOn=ls.get('dpool-buzz',true);
 let soundOn=ls.get('dpool-sound',true),skin=Object.assign({cue:'classic',felt:'emerald'},ls.get('dpool-skin',{}));
 let tray=[],rec=null,lastRec=null,replay=null,viewBalls=null,pillT=0,winRec=null;
 let stats=Object.assign({games:0,wins:0,losses:0,streak:0,best:0,potted:0,bestRun:0,banks:0,combos:0,cpu:[[0,0],[0,0],[0,0]],online:[0,0]},ls.get('dpool-stats',{}));
@@ -363,7 +378,7 @@ const sTray=()=>{noise(0.12,0.12,600,1,'lowpass');tone(240,0.08,0.08,'sine',180)
 const sCue=p=>{noise(0.045,0.25+p*0.5,2300,1);tone(620,0.05,0.18,'triangle',300)};
 const fanfare=()=>[523,659,784,1047].forEach((f,i)=>tone(f,0.28,0.18,'triangle',null,i*0.12));
 const chime=()=>[784,1175].forEach((f,i)=>tone(f,0.3,0.14,'sine',null,i*0.1));
-const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+const buzz=ms=>{if(!buzzOn)return;try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 
 /* =====================================================================
    BALLS
@@ -965,7 +980,7 @@ function updateHUD(){
 let tt;function toast(m,ms=1900){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),ms)}
 let prevOv='menu';
 function show(id){document.querySelectorAll('.ov').forEach(o=>o.classList.toggle('show',o.id===id))}
-function setPowerUI(p){$('pfill').style.width=(p*100)+'%';$('pknob').style.transform=`translateX(${-p*($('power').clientWidth-44)}px)`;$('plabel').style.opacity=p>0?0:1}
+function setPowerUI(p){$('pfill').style.width=(p*100)+'%';$('pknob').style.transform=`translateX(${-p*($('power').clientWidth-44)}px)`;$('plabel').style.opacity=p>0?0:1;$('pknob').textContent=p>0?Math.round(p*100):'◀';$('pknob').style.fontSize=p>0?'12px':'14px'}
 function drawSpin(){const c=$('spinCv'),g=c.getContext('2d');g.clearRect(0,0,104,104);
   const gr=g.createRadialGradient(42,38,4,52,52,50);gr.addColorStop(0,'#fff');gr.addColorStop(.6,'#ece6d6');gr.addColorStop(1,'#a9a291');
   g.fillStyle=gr;g.beginPath();g.arc(52,52,46,0,7);g.fill();g.fillStyle='#d8262c';g.beginPath();g.arc(52+spinX*30,52-spinY*30,9,0,7);g.fill();
@@ -1034,7 +1049,7 @@ function startCpu(){newGame({mode:'cpu',breaker:cpuBreaker});cpuBreaker^=1}
    INPUT
    ===================================================================== */
 function toT(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left-ox)/s,y:(e.clientY-r.top-oy)/s}}
-function aimAt(p){if(hyp(p.x-cue.x,p.y-cue.y)>R*0.5)aim=Math.atan2(p.y-cue.y,p.x-cue.x)}
+function aimAt(p){if(hyp(p.x-cue.x,p.y-cue.y)>R*0.5){aim=Math.atan2(p.y-cue.y,p.x-cue.x);if(fine.classList.contains('on')||dragging)showAim()}}
 function tryPlace(x,y){x=clamp(x,R,W-R);y=clamp(y,G.kitchen?HEAD:R,H-R);if(isFree(balls,x,y,cue))setPos(cue,x,y)}
 cv.addEventListener('pointerdown',e=>{audio();
   if(state==='replay'){endReplay();return}
@@ -1044,22 +1059,41 @@ cv.addEventListener('pointerdown',e=>{audio();
     if(bi>=0){G.called=bi;tone(880,0.08,0.1,'triangle');toast('8-ball called');return}}
   if(G.bih&&hyp(p.x-cue.x,p.y-cue.y)<R*3.4)dragging={cue:true,dx:cue.x-p.x,dy:cue.y-p.y};else{dragging={cue:false};aimAt(p)}
   try{cv.setPointerCapture(e.pointerId)}catch(_){}});
-cv.addEventListener('pointermove',e=>{if(!dragging||!humanCanAct())return;const p=toT(e);if(dragging.cue)tryPlace(p.x+dragging.dx,p.y+dragging.dy);else aimAt(p)});
+cv.addEventListener('pointermove',e=>{if(!dragging||!humanCanAct())return;const cs=e.getCoalescedEvents?e.getCoalescedEvents():[];const p=toT(cs.length?cs[cs.length-1]:e);if(dragging.cue)tryPlace(p.x+dragging.dx,p.y+dragging.dy);else aimAt(p)});
 const endDrag=()=>{dragging=null};cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
 $('replayBadge').onclick=endReplay;
 $('replayPill').onclick=e=>{e.stopPropagation();if(lastRec&&(state==='aim'||state==='wait'||state==='cpu'&&!cpuAnim&&!cpuGen))startReplay(lastRec)};
 
-const fine=$('fine');let fineX=null,fineOff=0;
-fine.addEventListener('pointerdown',e=>{audio();if(!humanCanAct())return;fineX=e.clientX;try{fine.setPointerCapture(e.pointerId)}catch(_){}});
-fine.addEventListener('pointermove',e=>{if(fineX===null||!humanCanAct())return;const d=e.clientX-fineX;fineX=e.clientX;aim+=d*0.0018;fineOff+=d;fine.style.backgroundPosition=fineOff+'px 0'});
+// Fine wheel: base rate set by Aim sensitivity, with acceleration, so a slow drag nudges a
+// fraction of a degree and a quick flick swings the cue. The wheel shows the angle while you turn it.
+const AIM_RATE=[0,0.0007,0.0011,0.0016,0.0023,0.0032]; // radians per pixel at a steady drag
+const fine=$('fine');let fineX=null,fineT=0,fineOff=0,fineTxT=0,fineTick=0;
+const aimDeg=()=>{let d=(-aim*180/Math.PI)%360;if(d<0)d+=360;return d.toFixed(1)+'°'};
+function showAim(){$('fineTx').textContent=aimDeg();fine.classList.add('on');clearTimeout(fineTxT);fineTxT=setTimeout(()=>{fine.classList.remove('on');$('fineTx').textContent='◀ FINE ▶'},1100)}
+function nudgeAim(d,dtms){
+  const v=Math.abs(d)/Math.max(8,dtms);              // px per ms
+  const accel=0.45+Math.min(2.6,v*v*2.2);              // slow = precise, fast = big swings
+  aim+=d*AIM_RATE[aimSens]*accel;showAim();
+  fineTick+=Math.abs(d);if(fineTick>14){fineTick=0;tone(2400,0.012,0.04,'square');buzz(2)} // wheel clicks
+}
+fine.addEventListener('pointerdown',e=>{audio();if(!humanCanAct())return;fineX=e.clientX;fineT=e.timeStamp;try{fine.setPointerCapture(e.pointerId)}catch(_){}});
+fine.addEventListener('pointermove',e=>{if(fineX===null||!humanCanAct())return;
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[];const list=evs.length?evs:[e];
+  for(const ev of list){const d=ev.clientX-fineX;if(!d)continue;nudgeAim(d,ev.timeStamp-fineT);fineX=ev.clientX;fineT=ev.timeStamp;fineOff+=d}
+  fine.style.backgroundPosition=fineOff+'px 0'});
 ['pointerup','pointercancel'].forEach(t=>fine.addEventListener(t,()=>{fineX=null}));
+document.addEventListener('keydown',e=>{ // desktop: arrow keys nudge the aim, Shift for bigger steps
+  if(e.target.closest('input,textarea,.dp')||!humanCanAct())return;
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();aim+=(e.key==='ArrowLeft'?-1:1)*(e.shiftKey?0.02:0.0025)*(AIM_RATE[aimSens]/AIM_RATE[3]);showAim()}
+});
 
 const pw=$('power');
 const needCall=()=>G.rules==='8t'&&!G.isBreak&&onEight(balls,G,G.turn)&&G.called<0;
 pw.addEventListener('pointerdown',e=>{audio();if(!humanCanAct()||!cue.on)return;
   if(needCall()){toast('Call your pocket first: tap where the 8 is going',2400);return}
   powering={x:e.clientX,w:pw.getBoundingClientRect().width};lastHaptic=-1;try{pw.setPointerCapture(e.pointerId)}catch(_){}});
-pw.addEventListener('pointermove',e=>{if(!powering)return;pull=clamp((powering.x-e.clientX)/(powering.w*0.8),0,1);setPowerUI(pull);
+const POW_TRAVEL=[0,0.95,0.8,0.65,0.52,0.42]; // share of the bar to drag for full power
+pw.addEventListener('pointermove',e=>{if(!powering)return;pull=clamp((powering.x-e.clientX)/(powering.w*POW_TRAVEL[powSens]),0,1);setPowerUI(pull);
   const st=Math.floor(pull*10);if(st!==lastHaptic){if(st>lastHaptic&&st>0)buzz(3+st*1.6);lastHaptic=st}}); // tension builds as you pull
 pw.addEventListener('pointerup',()=>{if(!powering)return;const p=pull;powering=null;setPowerUI(0);if(p>0.02&&humanCanAct())startStrike(p);else pull=0});
 pw.addEventListener('pointercancel',()=>{powering=null;pull=0;setPowerUI(0)});
@@ -1086,7 +1120,21 @@ $('menuBtn').onclick=()=>{if(state==='menu'||state==='over')return;if(state==='r
   $('bRestart').hidden=mode==='online';$('bQuit').textContent=mode==='online'?'Leave match':'Main Menu';show('pause')};
 $('bResume').onclick=()=>{paused=false;show(null);if(pendingCPU&&state==='cpu'){pendingCPU=false;cpuStart()}};
 $('bRestart').onclick=()=>{if(mode==='cpu'){cpuBreaker^=1;startCpu()}else{pvpBreaker^=1;newGame({mode:'pvp',breaker:pvpBreaker});pvpBreaker^=1}};
-const soundLabel=()=>{$('bSound').textContent='Sound: '+(soundOn?'On':'Off')};
+const soundLabel=()=>{$('bSound').textContent='Sound: '+(soundOn?'On':'Off');$('bBuzz').textContent='Vibration: '+(buzzOn?'On':'Off')};
+const AIM_NOTES=['','Most precise. The Fine wheel creeps.','Precise.','Balanced.','Responsive (default).','Fastest. Small drags swing the cue.'];
+const POW_NOTES=['','Drag nearly the whole bar for full power.','Long pull.','Medium pull.','Short pull (default).','Shortest pull. Full power with a small drag.'];
+function renderSettings(){
+  document.querySelectorAll('#aimSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.v===aimSens));
+  document.querySelectorAll('#powSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.v===powSens));
+  $('aimNote').textContent=AIM_NOTES[aimSens];$('powNote').textContent=POW_NOTES[powSens];soundLabel();
+}
+let setBack='menu';
+document.querySelectorAll('#aimSeg button').forEach(b=>b.onclick=()=>{aimSens=+b.dataset.v;ls.set('dpool-aim',aimSens);renderSettings()});
+document.querySelectorAll('#powSeg button').forEach(b=>b.onclick=()=>{powSens=+b.dataset.v;ls.set('dpool-pow',powSens);renderSettings()});
+$('bSet').onclick=()=>{setBack='menu';renderSettings();show('setOv')};
+$('bSet2').onclick=()=>{setBack='pause';renderSettings();show('setOv')};
+$('bSetBack').onclick=()=>show(setBack);
+$('bBuzz').onclick=()=>{buzzOn=!buzzOn;ls.set('dpool-buzz',buzzOn);if(buzzOn)buzz(20);soundLabel()};
 $('bSound').onclick=()=>{soundOn=!soundOn;ls.set('dpool-sound',soundOn);soundLabel()};
 function toMenu(){gameId++;state='menu';paused=false;cpuAnim=null;cpuGen=null;strike=null;follow=null;endReplay();hidePill();$('chatBtn').hidden=true;renderMenu();show('menu')}
 $('bQuit').onclick=()=>{if(mode==='online'&&state!=='over'&&NET.alive&&NET.game){show('leaveBox');return}if(mode==='online')netLeave();toMenu()};
