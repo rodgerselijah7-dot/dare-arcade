@@ -1,5 +1,5 @@
 // Stripe webhook for arcade purchases: unlocks the games and emails the buyer their code.
-// Stripe Dashboard > Developers > Webhooks > Add endpoint: https://dare-arcade.vercel.app/api/stripe-webhook
+// Stripe Dashboard > Developers > Webhooks > Add endpoint: https://darearcade.vercel.app/api/stripe-webhook (old dare-arcade.vercel.app URL also still works)
 // Event: checkout.session.completed. Env: STRIPE_WEBHOOK_SECRET (this endpoint's signing secret).
 // Store (darewear.store) checkouts arrive here too, from the same Stripe account; they're ignored.
 const { verifyStripe, readRaw, readJson, stripe, SOURCE, PAID, gamesInSession, grantGames, hasRedis, redis, sendEmail, unlockEmail, nameOf, refOf, SITE } = require("./_lib");
