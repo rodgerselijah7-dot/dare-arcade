@@ -163,6 +163,64 @@ p{margin:0}
 .oppline.in .led{background:var(--good)}
 .oppline.in{color:var(--ink);font-weight:600}
 
+/* landing */
+.landing{gap:22px}
+.lnav{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hero{display:flex;flex-direction:column;gap:14px}
+.art{position:relative;height:clamp(250px,74vw,340px);max-width:100%;margin-top:6px}
+.sleeve{position:absolute;bottom:34%;width:42%;aspect-ratio:1;border:2px solid var(--ink);border-radius:3px;box-shadow:3px 3px 0 var(--ink)}
+.sleeve.s1{left:6%;background:var(--pink);transform:rotate(-9deg)}
+.sleeve.s2{right:6%;background:var(--lime);transform:rotate(8deg)}
+.sleeve.s3{right:22%;background:var(--sleeve);transform:rotate(3deg);bottom:30%}
+.sleeve.s3::after{content:"";position:absolute;inset:18% 18%;border-radius:50%;border:2px solid var(--ink)}
+.disc{position:absolute;left:50%;bottom:22%;width:min(58%,230px);aspect-ratio:1;margin-left:calc(min(58%,230px) / -2);border-radius:50%;
+  background:repeating-radial-gradient(circle,#1d1a17 0 2px,var(--vinyl) 2px 5px);box-shadow:0 0 0 2px var(--ink),6px 6px 0 rgba(20,18,16,.35);
+  animation:rise .9s cubic-bezier(.2,.8,.2,1) both,spin 5.5s linear .9s infinite}
+.disc::before{content:"";position:absolute;inset:0;border-radius:50%;background:linear-gradient(120deg,transparent 35%,rgba(255,255,255,.12) 48%,transparent 60%)}
+.lbl{position:absolute;inset:31%;border-radius:50%;background:var(--orange);border:2px solid var(--ink);display:grid;place-items:center;
+  font-family:var(--mono);font-size:clamp(.5rem,1.9vw,.68rem);font-weight:600;letter-spacing:.14em;text-align:center;line-height:1.3;color:var(--ink)}
+.lbl::after{content:"";position:absolute;width:9%;aspect-ratio:1;border-radius:50%;background:var(--ink)}
+.lbl span{transform:translateY(-62%)}
+.crate{position:absolute;left:3%;right:3%;bottom:0;height:40%;background:var(--kraft-lo);border:3px solid var(--ink);border-radius:3px;box-shadow:var(--shadow);
+  background-image:linear-gradient(var(--ink),var(--ink)),linear-gradient(var(--ink),var(--ink));background-size:100% 3px;background-repeat:no-repeat;background-position:0 34%,0 68%}
+.crate::after{content:"";position:absolute;left:50%;top:12%;width:26%;height:12%;margin-left:-13%;border-radius:20px;background:var(--ink)}
+.crate b{position:absolute;right:10px;bottom:8px;font-family:var(--mono);font-size:.7rem;font-weight:600;letter-spacing:.12em;background:var(--sleeve);border:2px solid var(--ink);padding:2px 6px;transform:rotate(-4deg)}
+@keyframes rise{from{transform:translateY(28%)}to{transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lfacts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lfacts div{background:var(--sleeve);border:2px solid var(--ink);border-radius:4px;padding:10px 8px;text-align:center;box-shadow:3px 3px 0 var(--ink)}
+.lfacts b{display:block;font-family:var(--display);font-size:1.9rem;line-height:1}
+.lfacts span{font-family:var(--mono);font-size:.66rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cta{display:flex;flex-direction:column;gap:10px}
+.cta .row .btn{min-width:0}
+.dailyline{font-family:var(--mono);font-size:.78rem;font-weight:600;color:var(--ink);text-align:center}
+.lsec{display:flex;flex-direction:column;gap:10px}
+.lsec h2{font-size:1.6rem}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mode{background:var(--sleeve);border:2px solid var(--ink);border-radius:4px;padding:12px;display:flex;flex-direction:column;gap:6px;box-shadow:3px 3px 0 var(--ink);min-width:0}
+.mode .tag{align-self:flex-start;font-family:var(--mono);font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border:2px solid var(--ink);border-radius:2px}
+.mode h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.35rem;line-height:1;text-transform:uppercase}
+.mode p{font-size:.86rem;color:var(--muted)}
+.ways{display:flex;flex-direction:column;gap:10px}
+.way{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;background:var(--vinyl);color:var(--sleeve);border-radius:4px;padding:12px 14px;box-shadow:var(--shadow)}
+.way .k{font-family:var(--display);font-size:1.6rem;line-height:1;color:var(--orange);min-width:1.2em}
+.way h3{margin:0 0 3px;font-family:var(--mono);font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--lime)}
+.way p{font-weight:600;line-height:1.35}
+.way .opts{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.way .opts span{font-size:.76rem;border:1px solid rgba(251,247,238,.35);border-radius:999px;padding:2px 8px;color:rgba(251,247,238,.8)}
+.dividers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.divider{appearance:none;text-align:left;cursor:pointer;color:var(--ink);background:var(--sleeve);border:2px solid var(--ink);border-radius:4px 14px 4px 4px;padding:12px;box-shadow:3px 3px 0 var(--ink);display:flex;flex-direction:column;gap:4px;min-width:0}
+.divider:nth-child(1){background:var(--orange)} .divider:nth-child(2){background:var(--pink)} .divider:nth-child(3){background:var(--lime)} .divider:nth-child(4){background:var(--sleeve)}
+.divider b{font-family:var(--display);font-weight:400;font-size:1.45rem;line-height:1;text-transform:uppercase}
+.divider span{font-size:.8rem;line-height:1.3}
+.divider small{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.divider:active{transform:translate(3px,3px);box-shadow:none}
+.divider:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.lfoot{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:.82rem;color:var(--muted);padding-top:6px}
+.lfoot a{color:var(--ink);font-weight:600}
+@media (max-width:460px){.modes{grid-template-columns:1fr}.mode{flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:10px}.mode p{flex-basis:100%}}
+@media (prefers-reduced-motion:reduce){.disc{animation:none}}
+
 .pop{animation:pop .3s ease-out}
 @keyframes pop{0%{transform:translateY(8px) rotate(-.6deg);opacity:.4}100%{transform:none;opacity:1}}
 .shake{animation:shake .3s}
@@ -173,8 +231,8 @@ p{margin:0}
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <a class="brand" href="/" id="brand">Crate <span>Digger</span></a>
+  <header class="top" id="topbar">
+    <a class="brand" href="./" id="brand" aria-label="Crate Digger home">Crate <span>Digger</span></a>
     <div class="topr">
       <div class="stats" id="hud" hidden>
         <div class="stat">score<b id="score">0</b></div>
@@ -183,6 +241,63 @@ p{margin:0}
       <button class="icon" id="sound" aria-pressed="true" aria-label="Sound"></button>
     </div>
   </header>
+
+  <!-- LANDING -->
+  <section class="screen landing" id="landing" hidden>
+    <nav class="lnav">
+      <a class="icon" href="/" id="toArcade">‹ DARE Arcade</a>
+      <button class="icon" id="sound2" aria-label="Sound"></button>
+    </nav>
+    <div class="hero">
+      <div class="art" aria-hidden="true">
+        <div class="sleeve s1"></div><div class="sleeve s2"></div><div class="sleeve s3"></div>
+        <div class="disc"><div class="lbl"><span>SIDE A<br>DIG IN</span></div></div>
+        <div class="crate"><b>$1 BIN</b></div>
+      </div>
+      <div>
+        <div class="label">Music trivia</div>
+        <h1>Crate <em>digger</em></h1>
+      </div>
+      <p class="lede" id="lLede">Hip hop, R&amp;B, pop and neo soul from the '70s to 2026. Flip through the crates, answer fast, and keep your streak alive.</p>
+    </div>
+    <div class="lfacts">
+      <div><b id="lfQ">428</b><span>questions</span></div>
+      <div><b>4</b><span>genres</span></div>
+      <div><b id="lfY">'70s</b><span>to 2026</span></div>
+    </div>
+    <div class="cta">
+      <button class="btn primary" id="lStart">Start digging</button>
+      <div class="row">
+        <button class="btn ghost" id="lDaily">Daily Dig</button>
+        <button class="btn ghost" id="lRace">Race a friend</button>
+      </div>
+      <p class="dailyline" id="lDailyLine"></p>
+    </div>
+
+    <section class="lsec" aria-labelledby="lModes">
+      <h2 id="lModes">Three ways in</h2>
+      <div class="modes">
+        <div class="mode"><span class="tag" style="background:var(--orange)">Every day</span><h3>Daily Dig</h3><p>Same 10 questions for everybody. One shot, then post your grid.</p></div>
+        <div class="mode"><span class="tag" style="background:var(--lime)">Your mix</span><h3>Classic round</h3><p>10 to 50 questions. Pick a genre, era or category. Streak right and it gets harder.</p></div>
+        <div class="mode"><span class="tag" style="background:var(--pink)">Online</span><h3>Head to head</h3><p>Race a friend through the same questions and watch their score move.</p></div>
+      </div>
+    </section>
+
+    <section class="lsec" aria-labelledby="lWays">
+      <h2 id="lWays">Four kinds of questions</h2>
+      <div class="ways" id="ways"></div>
+    </section>
+
+    <section class="lsec" aria-labelledby="lCrates">
+      <h2 id="lCrates">Pick a crate</h2>
+      <div class="dividers" id="dividers"></div>
+    </section>
+
+    <footer class="lfoot">
+      <span>Crate Digger by Dontae Amare</span>
+      <a href="/" id="toArcade2">Back to the DARE Arcade</a>
+    </footer>
+  </section>
 
   <!-- HOME -->
   <section class="screen" id="home">
@@ -581,7 +696,7 @@ $('dailyShare').onclick=()=>{const d=today(),rec=ls.get('dcd-daily-'+d,null);if(
 
 /* ======================= round ======================= */
 let S=null, raf=0, lastHat=0, screen='home';
-function show(id){screen=id;for(const s of ['home','online','game','end'])$(s).hidden=s!==id;$('hud').hidden=id!=='game';window.scrollTo(0,0)}
+function show(id){screen=id;for(const s of ['landing','home','online','game','end'])$(s).hidden=s!==id;$('hud').hidden=id!=='game';$('topbar').hidden=id==='landing';window.scrollTo(0,0)}
 const mult=()=>S.streak>=6?3:S.streak>=3?2:1;
 const tierNow=()=>{const base=S.streak>=5?3:S.streak>=2?2:1;const r=Math.random();return r<.2?Math.max(1,base-1):r>.9?Math.min(3,base+1):base};
 function hud(){$('score').textContent=fmt(S.score);$('streak').textContent=S.streak;$('mult').textContent='x'+mult()+' streak bonus'}
@@ -902,9 +1017,51 @@ if(DP){
   DP.alerts.toggle($('olAlerts'),['crate-digger'],{accent:'#ff6b1a',label:'Get a notification when someone wants to race in Crate Digger.'});
 }
 
+/* ======================= landing ======================= */
+const GENRE_BLURB={hh:'Bronx park jams to Texas trap. Labels, producers, crews.',rnb:'Motown, Philly soul, new jack swing, up to SZA.',pop:'ABBA and Madonna to Taylor, Sabrina and Bad Bunny.',neo:"D'Angelo, Erykah, Jill Scott and the new soul wave."};
+function renderLanding(){
+  const total=D.mc.length+D.rel.length+D.ori.length;
+  $('lfQ').textContent=fmt(total);
+  const y0=Math.min(...D.rel.map(r=>r.y));$('lfY').textContent=`'${String(Math.floor(y0/10)*10).slice(2)}s`;
+  const d=today(),rec=ls.get('dcd-daily-'+d,null);
+  $('lDaily').textContent=rec?"Today's result":'Daily Dig';
+  $('lDailyLine').textContent=rec?`Daily Dig #${dayNum(d)}: ${rec.right}/10 · ${fmt(rec.score)} pts · next dig ${untilTomorrow()}`:`Daily Dig #${dayNum(d)} is open for today.`;
+  $('lRace').hidden=!ONLINE_OK;
+  // one live sample of each question type
+  const easy=a=>{const e=a.filter(x=>x.d===1);return pick(e.length?e:a)};
+  const m=easy(D.mc),o=easy(D.ori),y=easy(D.rel);
+  let trio=[];for(let k=0;k<40&&trio.length<3;k++){const t=shuffle(D.rel).slice(0,3);if(new Set(t.map(x=>x.y)).size===3&&new Set(t.map(x=>x.a)).size===3)trio=t}
+  const chips=a=>`<div class="opts">${a.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
+  const W=[
+    ['Trivia',m.q,chips(shuffle([m.a,...m.w]))],
+    ["Who's from where",`Where ${GROUPS.has(o.a)?'are':'is'} ${o.a} from?`,''],
+    ['Name the year',`What year did ${y.a} release ${relName(y)}?`,'<div class="opts"><span>slide 1970 to 2026</span><span>one year off still counts</span></div>'],
+    ['Which came first',`Put them in order, oldest first.`,chips(trio.map(x=>x.t))]
+  ];
+  $('ways').innerHTML=W.map(([h,q,x],i)=>`<div class="way"><span class="k">${i+1}</span><div><h3>${h}</h3><p>${esc(q)}</p>${x}</div></div>`).join('');
+  const G=GENRES.filter(g=>g[0]!=='all');
+  $('dividers').innerHTML=G.map(([k,label])=>{const n=D.mc.filter(x=>x.g===k).length+D.rel.filter(x=>x.g===k).length+D.ori.filter(x=>x.g===k).length;
+    return `<button class="divider" type="button" data-g="${k}"><small>${n} questions</small><b>${esc(label)}</b><span>${esc(GENRE_BLURB[k])}</span></button>`}).join('');
+  document.querySelectorAll('.divider').forEach(b=>b.onclick=()=>{genre=b.dataset.g;ls.set('dcd-genre',genre);if(poolSize(era,cat)<6)cat='all';if(poolSize(era,cat)<10)era='all';SFX.tap();goHome('classicGo')});
+}
+function goHome(focusId){
+  renderHome();show('home');
+  if(focusId){const el=$(focusId);if(el){el.closest('.card').scrollIntoView({block:'start'});try{el.focus({preventScroll:true})}catch(e){}}}
+}
+function goLanding(){renderLanding();show('landing')}
+$('lStart').onclick=()=>{ac();SFX.tap();goHome()};
+$('lDaily').onclick=()=>{ac();const d=today();if(ls.get('dcd-daily-'+d,null))return goHome('dailyGo');newRound('daily',d)};
+$('lRace').onclick=()=>{ac();openOnline()};
+$('brand').addEventListener('click',e=>{if(screen==='game'){e.preventDefault();$('quit').click();return}if(screen==='online')netLeave();e.preventDefault();goLanding()});
+$('sound2').onclick=()=>$('sound').click();
+const syncSound2=()=>{$('sound2').innerHTML=$('sound').innerHTML;$('sound2').setAttribute('aria-label',$('sound').getAttribute('aria-label'))};
+new MutationObserver(syncSound2).observe($('sound'),{childList:true,attributes:true});syncSound2();
+const inArtifact=!/^https?:$/.test(location.protocol)||window.claude;
+if(inArtifact){$('toArcade').hidden=true;$('toArcade2').hidden=true}
+
 /* ======================= boot ======================= */
-if(!/^https?:$/.test(location.protocol)||window.claude)$('brand').removeAttribute('href');
-renderHome();show('home');
+renderHome();
+if(DP&&DP.joinCode()){show('home')}else goLanding();
 if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(ONLINE_OK)joinOpen(c)}
 }
 </script>
