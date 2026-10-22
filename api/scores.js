@@ -5,7 +5,8 @@
 // the 60-second drill). Names live in the hash arc:lfr:names. Players have no accounts: pid is a random id the phone makes.
 const { hasRedis, redis, readJson, clientIp, rateLimit } = require("./_lib");
 
-const DRILLS = { bill: "time", prez: "time", rack: "time", mover: "time", popper: "time", ladder: "time", house: "time", sixty: "score" };
+const DRILLS = { bill: "time", prez: "time", rack: "time", mover: "time", popper: "time", ladder: "time", house: "time", sixty: "score",
+  steel: "time", paper: "time", swing: "time", valley: "time", yard: "time", course: "time", threegun: "time" };
 const PID = /^p[a-z0-9]{6,16}$/;
 const KEEP = 500;
 const cleanName = s => String(s || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 18) || "Shooter";
