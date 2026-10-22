@@ -29,6 +29,7 @@
   --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 html,body{height:100%;margin:0}
+[hidden]{display:none!important}
 :root{padding:0}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
@@ -347,12 +348,16 @@ canvas.addEventListener('pointermove', e => {
     const p0 = new THREE.Vector3(p.x, p.y, p.z).project(camera);
     const p1 = new THREE.Vector3(p.x + ax.x, p.y, p.z + ax.z).project(camera);
     let sx = (p1.x - p0.x) * innerWidth / 2, sy = -(p1.y - p0.y) * innerHeight / 2;
-    // depth term so a block pointing at the camera can still be moved: finger up pushes it away
+    const len = Math.hypot(sx, sy);
+    // block follows the finger 1:1 on screen; when it points straight at the camera, swipe up to push, down to pull
     const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
-    sy -= fwd.dot(ax) * innerHeight * 0.08;
+    const k = Math.min(1, len / 24);
+    let ux = len ? sx / len : 0, uy = len ? sy / len : 0;
+    ux = ux * k; uy = uy * k + (fwd.dot(ax) > 0 ? -1 : 1) * (1 - k);
+    const ul = Math.hypot(ux, uy) || 1;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag.x = e.clientX; drag.y = e.clientY;
-    const d = (dx * sx + dy * sy) / Math.max(1, sx * sx + sy * sy);
+    const d = (dx * ux + dy * uy) / ul / Math.max(24, len);
     drag.target = Math.max(-L * 1.2, Math.min(L * 1.2, drag.target + d));
     return;
   }
