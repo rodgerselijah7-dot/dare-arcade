@@ -2625,7 +2625,8 @@ function drawHUD(T){
 function drawNet(){
  const o=match.online;if(!o)return;
  let ms=0;if(o.role==='guest')ms=NET.ping;else for(const f of fighters)if(f.peer&&f.png)ms=Math.max(ms,f.png);
- const x=14+SAFE_L,y=SAFE_TOP+12,t=ms?Math.round(ms)+' ms':'\u2014 ms';
+ const rm=o.rm,dir=NET.http&&rm&&rm.allDirect?(rm.allDirect()?' \u00b7 direct':' \u00b7 server'):'';
+ const x=14+SAFE_L,y=SAFE_TOP+12,t=(ms?Math.round(ms)+' ms':'\u2014 ms')+dir;
  ctx.font="700 11px 'Chakra Petch',system-ui,sans-serif";ctx.textAlign='left';const tw=ctx.measureText(t).width+28;
  rr(ctx,x,y,tw,22,11);ctx.fillStyle='rgba(11,8,32,.78)';ctx.fill();
  ctx.fillStyle=!ms?'#a49ac8':ms<90?'#3ddc97':ms<170?'#f2c14e':'#ff6a6a';ctx.beginPath();ctx.arc(x+11,y+11,4,0,7);ctx.fill();
@@ -2704,41 +2705,90 @@ function httpRoom(){
  const me=rid(12),rooms=new Set();
  const post=(body,keep)=>fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:!!keep});
  const inMatch=()=>!!(match&&match.online&&(mode==='fight'||mode==='netpause'));
+ // Direct links: once two phones share a match room they open a WebRTC data channel to each other, introduced
+ // through a tiny pair room on /api/room. Inputs and snapshots then go phone to phone. Polling keeps running
+ // underneath, so if a link never opens (some networks block it) or drops, the match carries on over the server.
+ const RTC=typeof RTCPeerConnection==='function';
+ const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun.cloudflare.com:3478']}];
+ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  function open(name,lobby){
   let pres={},alive=true,down=0,seq=0,snap=Object.freeze([]);
-  const subs=[],errs=[],cache=new Map(),seen=new Set(),handlers={},queue={},lastSeen={};
-  const KEEP={snap:1,start:2,end:1};
+  const subs=[],errs=[],cache=new Map(),seen=new Set(),handlers={},queue={},lastSeen={},links=new Map(),dcPres={};
+  const KEEP={snap:1,start:2,end:1},HOT=['inp'];
   const pub=()=>{const now=Date.now(),p=Object.assign({},pres),ev={};let any=false;
    for(const t in queue){queue[t]=queue[t].filter(x=>now-x[2]<6000);if(queue[t].length){ev[t]=queue[t].map(x=>[x[0],x[1]]);any=true;}}
    if(any)p._ev=ev;return p;};
   const selfPeer=()=>Object.freeze({peer:me,presence:Object.freeze(Object.assign({},pres)),sameTab:true,isMe:true,kind:'viewer',guest:false,by:null,updatedAt:Date.now()});
+  const peerObj=(pid,pr)=>Object.freeze({peer:pid,presence:Object.freeze(pr),sameTab:false,isMe:false,kind:'viewer',guest:false,by:null,updatedAt:Date.now()});
+  const deliver=(pid,topic,n,data)=>{const k=pid+'|'+topic;if(n<=(lastSeen[k]||0))return false;lastSeen[k]=n;
+   (handlers[topic]||[]).forEach(f=>{try{f({topic,data,peer:pid,sameTab:false,isMe:false,kind:'viewer',guest:false,by:null});}catch(e){}});return true;};
+  const merged=(pid,http)=>{const d=dcPres[pid];return d&&Date.now()-d.t<1500?Object.assign({},http,d.p):http;};
+  function onDc(pid,txt){
+   let m;try{m=JSON.parse(txt);}catch(e){return;}if(!m||typeof m!=='object')return;
+   if(m.t==='e'&&typeof m.topic==='string')deliver(pid,m.topic,+m.n||0,m.data);
+   else if(m.t==='p'&&m.p&&typeof m.p==='object'){const p={};for(const k of HOT)if(k in m.p)p[k]=m.p[k];dcPres[pid]={p,t:Date.now()};
+    const c=cache.get(pid),i=snap.findIndex(x=>x.peer===pid);if(i>0){const list=snap.slice();list[i]=peerObj(pid,merged(pid,c?c.http:{}));snap=Object.freeze(list);}}
+  }
+  function sendAll(msg){if(!links.size)return;const js=JSON.stringify(msg);for(const L of links.values())if(L.open&&L.dc&&L.dc.readyState==='open'&&L.dc.bufferedAmount<65536){try{L.dc.send(js);}catch(e){}}}
+  function linkTo(pid){
+   if(!RTC||lobby)return;const old=links.get(pid);
+   if(old&&!(old.dead&&Date.now()-old.t0>30000))return;
+   if(old)try{old.pc&&old.pc.close();}catch(e){}
+   const offer=me<pid,pair=(name+'.p.'+(offer?me+'.'+pid:pid+'.'+me)).slice(0,48),L={pc:null,dc:null,open:false,dead:false,t0:Date.now()};links.set(pid,L);
+   let pc;try{pc=new RTCPeerConnection({iceServers:ICE});}catch(e){L.dead=true;return;}L.pc=pc;
+   let sigOn=true;const stopSig=()=>{if(!sigOn)return;sigOn=false;post({room:pair,peer:me,leave:true}).catch(()=>{});};
+   const wire=dc=>{L.dc=dc;dc.onopen=()=>{L.open=true;stopSig();};dc.onclose=()=>{L.open=false;L.dead=true;};dc.onmessage=ev=>onDc(pid,ev.data);};
+   if(offer)wire(pc.createDataChannel('rr',{ordered:false,maxRetransmits:0}));else pc.ondatachannel=e=>wire(e.channel);
+   pc.onconnectionstatechange=()=>{if(pc.connectionState==='failed'||pc.connectionState==='closed'){L.open=false;L.dead=true;}};
+   const gathered=()=>new Promise(r=>{if(pc.iceGatheringState==='complete')return r();const t=setTimeout(r,2500);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);r();}});});
+   (async()=>{
+    let mine={};
+    try{
+     if(offer){await pc.setLocalDescription(await pc.createOffer());await gathered();mine={o:pc.localDescription.sdp};}
+     const until=Date.now()+20000;
+     while(sigOn&&alive&&!L.open&&Date.now()<until){
+      const r=await post({room:pair,peer:me,presence:mine});const d=r.ok?await r.json():{};
+      const o=((d.peers||[]).find(q=>q&&q.peer===pid)||{}).presence||{};
+      if(!offer&&o.o&&!pc.remoteDescription){await pc.setRemoteDescription({type:'offer',sdp:String(o.o)});await pc.setLocalDescription(await pc.createAnswer());await gathered();mine={a:pc.localDescription.sdp};continue;}
+      if(offer&&o.a&&!pc.remoteDescription)await pc.setRemoteDescription({type:'answer',sdp:String(o.a)});
+      await sleep(300);
+     }
+    }catch(e){}
+    if(!L.open){L.dead=true;stopSig();try{pc.close();}catch(e){}}
+   })();
+  }
+  const directCount=()=>{let n=0;for(const x of snap)if(!x.sameTab){const L=links.get(x.peer);if(L&&L.open)n++;}return n;};
+  const allDirect=()=>{const others=snap.filter(x=>!x.sameTab).length;return others>0&&directCount()===others;};
   async function once(){
    let presence=pub();
    while(JSON.stringify(presence).length>4000){const t=['start','end','snap'].find(k=>queue[k]&&queue[k].length>1)||(queue.snap&&queue.snap.length?'snap':null);if(!t)break;queue[t].shift();presence=pub();}
    const r=await post({room:name,peer:me,presence});
    if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;throw e;}
    const d=await r.json(),list=[selfPeer()],now=new Set(),msgs=[];
-   for(const q of(d.peers||[])){if(!q||q.peer===me)continue;now.add(q.peer);
-    const raw=q.presence||{},ev=raw._ev,pr=Object.assign({},raw);delete pr._ev;
-    const js=JSON.stringify(pr),c=cache.get(q.peer);let obj;
-    if(c&&c.js===js)obj=c.obj;else{obj=Object.freeze({peer:String(q.peer),presence:Object.freeze(pr),sameTab:false,isMe:false,kind:'viewer',guest:false,by:null,updatedAt:Date.now()});cache.set(q.peer,{js,obj});}
-    list.push(obj);
-    if(ev&&typeof ev==='object')for(const t in ev){if(!Array.isArray(ev[t]))continue;const k=q.peer+'|'+t;
-     for(const it of ev[t]){if(!Array.isArray(it))continue;const n=+it[0]||0;if(n>(lastSeen[k]||0)){lastSeen[k]=n;msgs.push({n,topic:t,data:it[1],peer:String(q.peer)});}}}}
-   const left=[...seen].filter(x=>!now.has(x)).map(x=>({peer:x,presence:{}}));left.forEach(x=>{seen.delete(x.peer);cache.delete(x.peer);});now.forEach(x=>seen.add(x));
+   for(const q of(d.peers||[])){if(!q||q.peer===me)continue;const pid=String(q.peer);now.add(pid);
+    const raw=q.presence||{},ev=raw._ev,http=Object.assign({},raw);delete http._ev;
+    const pr=merged(pid,http),js=JSON.stringify(pr),c=cache.get(pid);let obj;
+    if(c&&c.js===js)obj=c.obj;else{obj=peerObj(pid,pr);cache.set(pid,{js,obj,http});}
+    list.push(obj);linkTo(pid);
+    if(ev&&typeof ev==='object')for(const t in ev){if(!Array.isArray(ev[t]))continue;for(const it of ev[t])if(Array.isArray(it))msgs.push({n:+it[0]||0,topic:t,data:it[1],peer:pid});}}
+   const left=[...seen].filter(x=>!now.has(x)).map(x=>({peer:x,presence:{}}));
+   left.forEach(x=>{seen.delete(x.peer);cache.delete(x.peer);delete dcPres[x.peer];const L=links.get(x.peer);if(L){try{L.pc&&L.pc.close();}catch(e){}links.delete(x.peer);}});now.forEach(x=>seen.add(x));
    snap=Object.freeze(list);subs.forEach(f=>{try{f({peers:snap,joined:[],left,updated:[]});}catch(e){}});
-   msgs.sort((a,b)=>a.n-b.n).forEach(m=>(handlers[m.topic]||[]).forEach(f=>{try{f({topic:m.topic,data:m.data,peer:m.peer,sameTab:false,isMe:false,kind:'viewer',guest:false,by:null});}catch(e){}}));
+   msgs.sort((a,b)=>a.n-b.n).forEach(m=>deliver(m.peer,m.topic,m.n,m.data));
   }
   const wanted=()=>!lobby||curPage==='online'||(NET.role==='host'&&!inMatch());
-  (async function poll(){while(alive){const t0=performance.now(),gap=lobby?1500:inMatch()?100:600;
-    await new Promise(r=>setTimeout(r,Math.max(0,gap-(performance.now()-t0))));if(!alive)break;if(!wanted())continue;
-    try{await once();down=0;}catch(e){if(!down)down=Date.now();if(Date.now()-down>15000&&!lobby){alive=false;errs.forEach(f=>{try{f({code:'upstream_error'});}catch(_){}});}}}})();
-  const R={name,presence:async patch=>{for(const k in patch){if(patch[k]===null)delete pres[k];else pres[k]=patch[k];}},peers:()=>snap,
-   emit:async(topic,data)=>{seq++;(queue[topic]=queue[topic]||[]).push([seq,JSON.parse(JSON.stringify(data)),Date.now()]);const lim=KEEP[topic]||2;if(queue[topic].length>lim)queue[topic].splice(0,queue[topic].length-lim);},
+  (async function poll(){while(alive){const t0=performance.now(),gap=lobby?1500:inMatch()?(allDirect()?400:100):600;
+    await sleep(Math.max(0,gap-(performance.now()-t0)));if(!alive)break;if(!wanted())continue;
+    try{await once();down=0;}catch(e){if(!down)down=Date.now();if(Date.now()-down>15000&&!lobby&&!allDirect()){alive=false;errs.forEach(f=>{try{f({code:'upstream_error'});}catch(_){}});}}}})();
+  const R={name,
+   presence:async patch=>{const hot={};let any=false;for(const k in patch){if(patch[k]===null)delete pres[k];else pres[k]=patch[k];if(HOT.includes(k)){hot[k]=patch[k];any=true;}}if(any)sendAll({t:'p',p:hot});},
+   peers:()=>snap,
+   emit:async(topic,data)=>{seq++;const copy=JSON.parse(JSON.stringify(data));(queue[topic]=queue[topic]||[]).push([seq,copy,Date.now()]);const lim=KEEP[topic]||2;if(queue[topic].length>lim)queue[topic].splice(0,queue[topic].length-lim);sendAll({t:'e',topic,n:seq,data:copy});},
    on:(topic,fn)=>{(handlers[topic]=handlers[topic]||[]).push(fn);return()=>{const a=handlers[topic],i=a.indexOf(fn);if(i>=0)a.splice(i,1);};},
    onPeers:(f,onErr)=>{subs.push(f);if(onErr)errs.push(onErr);setTimeout(()=>f({peers:snap,joined:snap,left:[],updated:[]}),0);return()=>{const i=subs.indexOf(f);if(i>=0)subs.splice(i,1);};},
-   connected:()=>!down,onConnection:f=>{setTimeout(()=>f(true),0);return()=>{};},
-   leave:async()=>{alive=false;rooms.delete(R);try{await post({room:name,peer:me,leave:true},true);}catch(e){}},_first:once};
+   connected:()=>!down||allDirect(),onConnection:f=>{setTimeout(()=>f(true),0);return()=>{};},
+   allDirect,directCount,
+   leave:async()=>{alive=false;rooms.delete(R);for(const L of links.values())try{L.pc&&L.pc.close();}catch(e){}links.clear();try{await post({room:name,peer:me,leave:true},true);}catch(e){}},_first:once};
   rooms.add(R);return R;
  }
  const L=open('rr-lobby',true);
@@ -2849,7 +2899,8 @@ function netHostPeers(){
 function netHostTick(){
  const o=match.online;
  if(match.frame%30===0)netHostPeers();
- if(match.frame%(NET.http?6:3)!==0)return;
+ const slow=NET.http&&!(o.rm&&o.rm.allDirect&&o.rm.allDirect());
+ if(match.frame%(slow?6:3)!==0)return;
  for(const e of match.events.splice(0)){NET.evId++;NET.evBuf.push([NET.evId,...e]);}if(NET.evBuf.length>16)NET.evBuf.splice(0,NET.evBuf.length-16);
  const r1=v=>Math.round(v*10)/10;
  const hz=JSON.parse(JSON.stringify(st.hz,(k,v)=>{if(k==='cool'||k==='hitBy')return undefined;if(k==='owner'&&v&&v.def)return v.slot;return v;}));
@@ -2859,7 +2910,7 @@ function netHostTick(){
   p:projs.slice(0,12).map(p=>[PKEYS.indexOf(p.kind),p.owner.slot,p.x|0,p.y|0,r1(p.vx),r1(p.vy),r1(p.r),p.life,p.settled?1:0,p.fuse|0,p.itype?ITYPES.indexOf(p.itype):-1]),
   pr:st.props.map(q=>[q.hp,q.broken>0?1:0,q.cd,q.flash]),pg:st.plats.map(q=>[q.gone>0?1:0,q.stand|0]),
   i:items.map(it=>[ITYPES.indexOf(it.type),it.x|0,it.y|0,it.life]),hz,al:st.alert?[st.alert.text,st.alert.life]:null,ev:NET.evBuf.slice()};
- const lim=NET.http?2600:3900;let s=JSON.stringify(d);if(s.length>lim){d.p=d.p.slice(0,4);d.ev=d.ev.slice(-6);s=JSON.stringify(d);if(s.length>lim){d.hz={};d.ev=d.ev.slice(-2);}}
+ const lim=slow?2600:3900;let s=JSON.stringify(d);if(s.length>lim){d.p=d.p.slice(0,4);d.ev=d.ev.slice(-6);s=JSON.stringify(d);if(s.length>lim){d.hz={};d.ev=d.ev.slice(-2);}}
  o.rm.emit('snap',d).catch(()=>{});
 }
 function nearestLedge(f){let b=null,bd=1e9;for(const L of st.ledges){const d=Math.abs(L.x-f.x)+Math.abs(L.y-f.y);if(d<bd){bd=d;b=L;}}return b;}

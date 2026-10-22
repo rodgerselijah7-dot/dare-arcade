@@ -156,8 +156,9 @@ Every push to `main` redeploys automatically.
 
 ## Rare Rumble online play
 - Modes: Stock, Timed, Stamina, Team battle, Climb (six rounds to the Titan), Training and Online (up to four players with a 4-letter code, or Quick match).
+- Phones in a match open a direct WebRTC link to each other (data channel, STUN only, no TURN), introduced through a short-lived pair room `cb-<code>.p.<peer>.<peer>` on `/api/room`. Inputs and snapshots go phone to phone while it's open; the HUD shows `direct` or `server`. If a link can't open (some cellular networks block it) or drops, play continues over `/api/room` and the link is retried after 30 seconds.
 - The host's phone runs the match. Guests send their inputs in presence; the host sends the match state back as numbered snapshots, with hits and KOs numbered too so a guest that misses a snapshot still sees each one once. Each guest shows its own fighter's moves at once and eases toward the host's position.
-- Over `/api/room` the game polls about 10 times a second during a match, every 0.6s in a match lobby, and every 1.5s in the open-match list (room `rr-lobby`, only while the Online page is open). Match rooms are named `cb-<code>`.
+- Over `/api/room` the game polls about 10 times a second during a match (every 0.4s once every link is direct), every 0.6s in a match lobby, and every 1.5s in the open-match list (room `rr-lobby`, only while the Online page is open). Match rooms are named `cb-<code>`.
 - Messages that would be live events in a Claude artifact ride inside each player's presence as a short numbered queue (`_ev`), and the host trims snapshots to stay under the 4 KB presence limit.
 - A dropped player becomes a CPU after about 3 seconds; reopening the game and tapping Rejoin puts them back in their slot. Players who join mid-match watch until it ends.
 - The same `rare-rumble/index.html` source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
