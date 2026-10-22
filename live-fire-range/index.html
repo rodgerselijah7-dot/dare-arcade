@@ -12,7 +12,6 @@
 </head>
 <body>
 <script>window.LFR_ARCADE = true;</script>
-<script src="/dare-unlock.js"></script>
 <title>Live Fire Range</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1854,7 +1853,7 @@ function setStance(s) {
    Progression: medals unlock guns
    ========================================================= */
 const UNLOCK_AT = [0, 1, 2, 3, 4];
-const owned = () => !ARCADE || (window.DARE && DARE.owned(GAME_ID));
+const owned = () => true; // Live Fire Range is free: every drill and gun opens through medals alone
 function medalCount() { let n = 0; for (const k in PROG.drills) if (PROG.drills[k].medal) n++; return n; }
 function gunUnlocked(i) { if (i === 0) return true; if (ARCADE && !owned()) return false; return medalCount() >= UNLOCK_AT[i]; }
 function lockText(i) {
