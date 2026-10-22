@@ -24,7 +24,6 @@ Browser games by Dontae Amare. Static site — no build step.
 /pool/                 DARE Pool (single-file canvas 8-ball / 9-ball + icons + manifest)
 /crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
 /rare-rumble/          Rare Rumble (single-file canvas platform fighter + icons + manifest)
-/divine-axioms/        Divine Axioms (single-file word puzzle of the book Divine Axioms & Maxims + icons + manifest)
 /jenga/                Jenga (single-file 3D block tower + icons + manifest; loads three.js r128 and cannon.js 0.6.2 from cdnjs)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush and Rare Rumble online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
