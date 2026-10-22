@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#15110e">
+<meta name="description" content="Jenga by Dontae Amare. A 3D wooden block tower with real physics. Slide blocks out, stack them on top, and don't let it fall. Play solo or pass the phone with a friend.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jenga">
+<link rel="manifest" href="/jenga/manifest.webmanifest">
+<link rel="icon" href="/jenga/icon-192.png">
+<link rel="apple-touch-icon" href="/jenga/apple-touch-icon.png">
+<title>Jenga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Figtree:wght@400;600&display=swap">
+<style>
+/* Layout: full-bleed 3D table scene; slim HUD floats over it, game-over card centered. Single dark look (lamp-lit tabletop). */
+:root{
+  color-scheme:dark;
+  --bg:#15110e;
+  --panel:rgba(30,23,18,.82);
+  --line:rgba(243,230,214,.14);
+  --fg:#f3e6d6;
+  --muted:#b49f88;
+  --accent:#e9a54a;
+  --danger:#e3654c;
+  --display:'Unbounded','Arial Black',system-ui,sans-serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+html,body{height:100%;margin:0}
+:root{padding:0}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+#scene{position:fixed;inset:0;display:block;width:100%;height:100%}
+.hud{position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 14px)}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand h1{margin:0;font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:.06em;text-wrap:balance}
+.toarcade{pointer-events:auto;font:600 .78rem var(--body);color:var(--muted);text-decoration:none;margin-bottom:6px}
+.toarcade:hover{color:var(--fg)}
+.brand span{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
+.controls{display:flex;gap:8px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px;backdrop-filter:blur(8px)}
+.seg button,.btn{font:600 .8rem var(--body);color:var(--fg);background:transparent;border:0;border-radius:999px;padding:7px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.btn{background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.score{display:flex;align-items:baseline;gap:10px;margin-top:10px}
+.score b{font-family:var(--display);font-weight:500;font-size:2.4rem;font-variant-numeric:tabular-nums;line-height:1;color:var(--accent)}
+.score small{font-size:.75rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.bottom{display:flex;flex-direction:column;align-items:center;gap:8px}
+.turn{font-family:var(--display);font-weight:500;font-size:.85rem;letter-spacing:.08em;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line)}
+.turn[data-p="2"]{color:var(--accent)}
+.meter{width:min(220px,60vw);display:flex;flex-direction:column;gap:5px;align-items:center;opacity:0;transition:opacity .3s}
+.meter[data-on="1"]{opacity:1}
+.meter span{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.meter i{display:block;width:100%;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter i b{display:block;height:100%;transform-origin:left;transform:scaleX(0);background:var(--accent)}
+.hint{font-size:.82rem;color:var(--muted);text-align:center;max-width:36ch;line-height:1.45}
+.toast{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--danger);color:var(--fg);padding:9px 16px;border-radius:10px;font-weight:600;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.over{position:fixed;inset:0;display:grid;place-items:center;background:rgba(10,8,6,.45);pointer-events:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 24px;max-width:320px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(12px)}
+.card h2{margin:0;font-family:var(--display);font-weight:800;font-size:1.6rem;letter-spacing:.04em;color:var(--danger);text-wrap:balance}
+.card p{margin:0;color:var(--muted);line-height:1.5}
+.card .big{font-family:var(--display);font-size:2.6rem;color:var(--fg);font-variant-numeric:tabular-nums}
+.card .btn{background:var(--accent);color:#1b120a;border:0;padding:12px;font-size:.95rem;pointer-events:auto}
+</style>
+
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div class="hud">
+  <div>
+    <div class="top">
+      <div class="brand"><a class="toarcade" href="/" id="toArcade">‹ Arcade</a><h1>JENGA</h1><span id="levels">18 levels · 54 blocks</span></div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Players">
+          <button id="m1" aria-pressed="true">Solo</button>
+          <button id="m2" aria-pressed="false">2 Players</button>
+        </div>
+        <button class="btn" id="restart">Restart</button>
+      </div>
+    </div>
+    <div class="score"><b id="score">0</b><small id="scoreLbl">blocks moved · best <span id="best">0</span></small></div>
+  </div>
+  <div class="bottom">
+    <div class="meter" id="meter" data-on="0"><span>Tower wobble</span><i><b id="meterFill"></b></i></div>
+    <div class="turn" id="turn" hidden>Player 1</div>
+    <div class="hint" id="hint">Drag a block along its length to slide it out. Go slow on tight blocks. Drag empty space to orbit, pinch to zoom.</div>
+  </div>
+</div>
+<div class="toast" id="toast">Top levels are locked</div>
+<div class="over" id="over" hidden>
+  <div class="card">
+    <h2 id="overTitle">Tower down</h2>
+    <div class="big" id="overScore">0</div>
+    <p id="overText">blocks moved before the fall</p>
+    <button class="btn" id="again">Rebuild tower</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+<script>
+(() => {
+const L = 3, H = 0.6, W = 1, GAP = 0.03, LEVELS = 18;
+const $ = id => document.getElementById(id);
+const canvas = $('scene');
+
+// ---------- Renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x15110e);
+scene.fog = new THREE.Fog(0x15110e, 28, 70);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+
+scene.add(new THREE.HemisphereLight(0xffe6c8, 0x2a1c12, 0.55));
+const sun = new THREE.DirectionalLight(0xfff0dc, 1.15);
+sun.position.set(9, 22, 12);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 18, bottom: -6, near: 1, far: 60 });
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0xe9a54a, 0.35);
+rim.position.set(-10, 8, -8);
+scene.add(rim);
+
+// table
+function tableTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const g = c.getContext('2d');
+  g.fillStyle = '#2c1d13'; g.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 140; i++) {
+    g.strokeStyle = `rgba(${Math.random() < .5 ? '12,7,4' : '70,45,28'},${0.1 + Math.random() * 0.25})`;
+    g.lineWidth = 1 + Math.random() * 2;
+    g.beginPath();
+    const y0 = Math.random() * 512, ph = Math.random() * 6, a = 2 + Math.random() * 6;
+    for (let x = 0; x <= 512; x += 16) g.lineTo(x, y0 + Math.sin(x * 0.012 + ph) * a);
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 4); t.encoding = THREE.sRGBEncoding;
+  return t;
+}
+const table = new THREE.Mesh(new THREE.CircleGeometry(40, 64),
+  new THREE.MeshStandardMaterial({ map: tableTex(), roughness: 0.85 }));
+table.rotation.x = -Math.PI / 2; table.receiveShadow = true;
+scene.add(table);
+
+// wood for blocks
+function woodTex(seed) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+  const g = c.getContext('2d');
+  let s = seed * 9301 + 49297;
+  const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 512, 128);
+  for (let i = 0; i < 46; i++) {
+    g.strokeStyle = `rgba(120,70,30,${0.06 + rnd() * 0.18})`;
+    g.lineWidth = 0.6 + rnd() * 2.2;
+    g.beginPath();
+    const y0 = rnd() * 128, ph = rnd() * 6, a = 1 + rnd() * 4, f = 0.006 + rnd() * 0.01;
+    for (let x = 0; x <= 512; x += 8) g.lineTo(x, y0 + Math.sin(x * f + ph) * a);
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+const woods = [0, 1, 2, 3].map(woodTex);
+const blockGeo = new THREE.BoxGeometry(L, H, W);
+
+// ---------- Physics (only used once the tower falls) ----------
+const world = new CANNON.World();
+world.gravity.set(0, -20, 0);
+world.broadphase = new CANNON.NaiveBroadphase();
+world.solver.iterations = 20;
+const blockMat = new CANNON.Material('block'), groundMat = new CANNON.Material('ground');
+world.addContactMaterial(new CANNON.ContactMaterial(blockMat, blockMat, { friction: 0.4, restitution: 0.05 }));
+world.addContactMaterial(new CANNON.ContactMaterial(groundMat, blockMat, { friction: 0.6, restitution: 0.05 }));
+const ground = new CANNON.Body({ mass: 0, material: groundMat, shape: new CANNON.Plane() });
+ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+world.addBody(ground);
+const boxShape = new CANNON.Box(new CANNON.Vec3(L / 2, H / 2, W / 2));
+const Y_AXIS = new CANNON.Vec3(0, 1, 0);
+
+// Even levels: long axis along X, blocks side by side along Z.
+// Odd levels: long axis along Z, blocks side by side along X.
+const sideKey = lv => lv % 2 === 0 ? 'z' : 'x';
+const longKey = lv => lv % 2 === 0 ? 'x' : 'z';
+const levelY = lv => H / 2 + lv * H;
+
+// ---------- Game state ----------
+let blocks = [], state = 'play', busy = false, score = 0, mode = 1, player = 1, anim = null;
+let wobble = 0, best = 0, clock = 0;
+try { best = +localStorage.getItem('jenga-best') || 0; } catch (e) {}
+
+function tightness() {
+  const r = Math.random();
+  return r < 0.55 ? Math.random() * 0.06 : r < 0.88 ? 0.3 + Math.random() * 0.3 : 0.9 + Math.random() * 0.35;
+}
+function placeBody(body, level, slot, along) {
+  const p = { x: 0, z: 0 };
+  p[sideKey(level)] = (slot - 1) * (W + GAP);
+  p[longKey(level)] = along || 0;
+  body.position.set(p.x, levelY(level), p.z);
+  body.quaternion.setFromAxisAngle(Y_AXIS, level % 2 === 0 ? 0 : Math.PI / 2);
+}
+function makeBlock(level, slot) {
+  const body = new CANNON.Body({ mass: 0, material: blockMat, shape: boxShape });
+  body.type = CANNON.Body.STATIC;
+  placeBody(body, level, slot, (Math.random() - 0.5) * 0.08);
+  world.addBody(body);
+  const tint = new THREE.Color().setHSL(0.085 + (Math.random() - .5) * 0.02, 0.5 + Math.random() * 0.12, 0.62 + (Math.random() - .5) * 0.08);
+  const mat = new THREE.MeshStandardMaterial({ map: woods[(Math.random() * 4) | 0], color: tint, roughness: 0.72 });
+  const mesh = new THREE.Mesh(blockGeo, mat);
+  mesh.castShadow = mesh.receiveShadow = true;
+  scene.add(mesh);
+  const b = { body, mesh, level, slot, tight: tightness() };
+  mesh.userData.b = b;
+  return b;
+}
+function build() {
+  blocks.forEach(b => { world.removeBody(b.body); scene.remove(b.mesh); b.mesh.material.dispose(); });
+  blocks = [];
+  for (let i = 0; i < LEVELS; i++) for (let j = 0; j < 3; j++) blocks.push(makeBlock(i, j));
+  state = 'play'; busy = false; score = 0; player = 1; anim = null; drag = null; wobble = 0;
+  $('over').hidden = true;
+  updateHud();
+}
+
+const topLevel = ex => blocks.reduce((m, b) => b === ex ? m : Math.max(m, b.level), 0);
+const countLevel = (lv, ex) => blocks.filter(b => b.level === lv && b !== ex).length;
+function locked(b) {
+  const t = topLevel();
+  return b.level === t || (b.level === t - 1 && countLevel(t) < 3);
+}
+
+// Does every level hold up the weight above it? Returns the failing level or -1.
+function unstableLevel(ex) {
+  const live = blocks.filter(b => b !== ex);
+  const top = live.reduce((m, b) => Math.max(m, b.level), 0);
+  for (let k = 0; k < top; k++) {
+    const sup = live.filter(b => b.level === k);
+    const above = live.filter(b => b.level > k);
+    if (!above.length) break;
+    if (!sup.length) return { k, dir: 0 };
+    const key = sideKey(k);
+    const lo = Math.min(...sup.map(b => b.body.position[key])) - W / 2;
+    const hi = Math.max(...sup.map(b => b.body.position[key])) + W / 2;
+    const com = above.reduce((s, b) => s + b.body.position[key], 0) / above.length;
+    if (com < lo + 0.04) return { k, key, dir: -1 };
+    if (com > hi - 0.04) return { k, key, dir: 1 };
+  }
+  return null;
+}
+
+function updateHud() {
+  $('levels').textContent = `${topLevel() + 1} levels · 54 blocks`;
+  $('score').textContent = score;
+  $('best').textContent = best;
+  $('scoreLbl').firstChild.textContent = mode === 1 ? 'blocks moved · best ' : 'blocks moved';
+  $('best').hidden = mode !== 1;
+  const turn = $('turn');
+  turn.hidden = mode !== 2;
+  turn.textContent = `Player ${player}'s turn`;
+  turn.dataset.p = player;
+}
+let toastT;
+function toast(msg) {
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 1400);
+}
+
+// ---------- Camera ----------
+const cam = { yaw: 0.75, pitch: 0.38, dist: 22, ty: 4.5 };
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  if (!resize.done) { cam.dist = w / h < 0.75 ? 29 : 21; resize.done = true; }
+}
+addEventListener('resize', resize); resize();
+function placeCamera() {
+  const tgtY = Math.max(3, (topLevel() + 1) * H * 0.5);
+  cam.ty += (tgtY - cam.ty) * 0.05;
+  const cp = Math.cos(cam.pitch);
+  camera.position.set(Math.sin(cam.yaw) * cp * cam.dist, cam.ty + Math.sin(cam.pitch) * cam.dist, Math.cos(cam.yaw) * cp * cam.dist);
+  camera.lookAt(0, cam.ty, 0);
+}
+
+// ---------- Input ----------
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const pointers = new Map();
+let drag = null, orbit = null, pinch = null, hover = null;
+
+function pick(x, y) {
+  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(blocks.map(b => b.mesh))[0];
+  return hit ? hit.object.userData.b : null;
+}
+function setGlow(b, hex) { if (b) b.mesh.material.emissive.setHex(hex); }
+
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) {
+    endDrag(); orbit = null;
+    const [a, b] = [...pointers.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: cam.dist };
+    return;
+  }
+  const b = (state === 'play' && !busy) ? pick(e.clientX, e.clientY) : null;
+  if (b) {
+    if (locked(b)) {
+      setGlow(b, 0x5a1408); setTimeout(() => setGlow(b, 0), 350);
+      toast(countLevel(topLevel()) < 3 ? 'Top two levels are locked' : 'The top level is locked');
+      return;
+    }
+    const k = longKey(b.level);
+    drag = { b, key: k, base: b.body.position[k], cur: b.body.position[k], target: b.body.position[k], x: e.clientX, y: e.clientY };
+  } else {
+    orbit = { x: e.clientX, y: e.clientY, yaw: cam.yaw, pitch: cam.pitch };
+  }
+});
+canvas.addEventListener('pointermove', e => {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size >= 2) {
+    const [a, b] = [...pointers.values()];
+    cam.dist = Math.min(40, Math.max(9, pinch.dist * pinch.d / Math.max(10, Math.hypot(a.x - b.x, a.y - b.y))));
+    return;
+  }
+  if (drag) {
+    const p = drag.b.body.position;
+    const ax = drag.key === 'x' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
+    const p0 = new THREE.Vector3(p.x, p.y, p.z).project(camera);
+    const p1 = new THREE.Vector3(p.x + ax.x, p.y, p.z + ax.z).project(camera);
+    let sx = (p1.x - p0.x) * innerWidth / 2, sy = -(p1.y - p0.y) * innerHeight / 2;
+    // depth term so a block pointing at the camera can still be moved: finger up pushes it away
+    const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
+    sy -= fwd.dot(ax) * innerHeight * 0.08;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag.x = e.clientX; drag.y = e.clientY;
+    const d = (dx * sx + dy * sy) / Math.max(1, sx * sx + sy * sy);
+    drag.target = Math.max(-L * 1.2, Math.min(L * 1.2, drag.target + d));
+    return;
+  }
+  if (orbit) {
+    cam.yaw = orbit.yaw - (e.clientX - orbit.x) * 0.008;
+    cam.pitch = Math.min(1.35, Math.max(0.05, orbit.pitch + (e.clientY - orbit.y) * 0.006));
+    return;
+  }
+  if (e.pointerType === 'mouse' && state === 'play' && !busy) {
+    const b = pick(e.clientX, e.clientY);
+    if (b !== hover) { setGlow(hover, 0); hover = b; if (b && !locked(b)) setGlow(b, 0x2a1806); }
+  }
+});
+function endDrag() { if (drag) { setGlow(drag.b, 0); drag = null; } }
+function up(e) {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinch = null;
+  if (pointers.size === 0) { endDrag(); orbit = null; }
+}
+canvas.addEventListener('pointerup', up);
+canvas.addEventListener('pointercancel', up);
+canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = Math.min(40, Math.max(9, cam.dist * (1 + e.deltaY * 0.001))); }, { passive: false });
+
+// ---------- Moves ----------
+function stepDrag(dt) {
+  if (!drag) { wobble = Math.max(0, wobble - dt * 0.35); return; }
+  const prev = drag.cur;
+  const maxStep = 7 * dt;
+  drag.cur += Math.max(-maxStep, Math.min(maxStep, (drag.target - drag.cur) * Math.min(1, dt * 14)));
+  drag.b.body.position[drag.key] = drag.cur;
+  const speed = Math.abs(drag.cur - prev) / dt;
+  const load = 0.4 + (topLevel() - drag.b.level) / LEVELS;
+  wobble += drag.b.tight * load * speed * speed * dt * 0.17;
+  if (speed < 0.3) wobble = Math.max(0, wobble - dt * 0.2);
+  // glow shifts from warm to red as the tower strains
+  const w = Math.min(1, wobble);
+  drag.b.mesh.material.emissive.setRGB(0.28 + w * 0.3, 0.16 * (1 - w), 0.04 * (1 - w));
+  if (wobble >= 1) { const b = drag.b; endDrag(); collapse({ k: b.level, dir: 0 }); return; }
+  if (Math.abs(drag.cur) > L * 0.98) takeOut(drag.b);
+}
+
+function takeOut(b) {
+  endDrag();
+  busy = true;
+  const fail = unstableLevel(b);
+  // find destination slot on top
+  const t = topLevel(b), n = countLevel(t, b);
+  let level, slot;
+  if (n < 3) {
+    level = t;
+    const used = blocks.filter(o => o !== b && o.level === t).map(o => o.slot);
+    slot = [1, 0, 2].find(s => !used.includes(s));
+  } else { level = t + 1; slot = 1; }
+  const body = b.body;
+  const p0 = body.position.clone();
+  const dest = new CANNON.Body(); placeBody(dest, level, slot, 0);
+  const q0 = new THREE.Quaternion(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w);
+  let qT = new THREE.Quaternion(dest.quaternion.x, dest.quaternion.y, dest.quaternion.z, dest.quaternion.w);
+  const flip = qT.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI));
+  if (Math.abs(q0.dot(flip)) > Math.abs(q0.dot(qT))) qT = flip; // block is symmetric; take the short turn
+  anim = { b, t: 0, p0, dest: dest.position.clone(), hoverY: dest.position.y + 2.2, q0, qT, level, slot };
+  if (fail) { anim = null; b.level = -1; collapse(fail); }
+}
+
+function stepAnim(dt) {
+  if (!anim) return;
+  const a = anim, body = a.b.body;
+  a.t += dt;
+  const T1 = 0.35, T2 = 0.6, T3 = 0.35;
+  const ease = k => k < 0 ? 0 : k > 1 ? 1 : k * k * (3 - 2 * k);
+  let x, y, z, qk;
+  if (a.t < T1) { const k = ease(a.t / T1); x = a.p0.x; z = a.p0.z; y = a.p0.y + (a.hoverY - a.p0.y) * k; qk = 0; }
+  else if (a.t < T1 + T2) { const k = ease((a.t - T1) / T2); x = a.p0.x + (a.dest.x - a.p0.x) * k; z = a.p0.z + (a.dest.z - a.p0.z) * k; y = a.hoverY; qk = k; }
+  else { const k = ease((a.t - T1 - T2) / T3); x = a.dest.x; z = a.dest.z; y = a.hoverY + (a.dest.y - a.hoverY) * k; qk = 1; }
+  body.position.set(x, y, z);
+  const q = a.q0.clone().slerp(a.qT, qk);
+  body.quaternion.set(q.x, q.y, q.z, q.w);
+  if (a.t >= T1 + T2 + T3) {
+    a.b.level = a.level; a.b.slot = a.slot; a.b.tight = tightness();
+    body.position.copy(a.dest);
+    anim = null;
+    updateHud();
+    const fail = unstableLevel();
+    if (fail) { collapse(fail); return; }
+    setTimeout(() => {
+      if (state !== 'play') return;
+      score++;
+      if (mode === 1 && score > best) { best = score; try { localStorage.setItem('jenga-best', best); } catch (e) {} }
+      if (mode === 2) player = player === 1 ? 2 : 1;
+      busy = false;
+      updateHud();
+    }, 350);
+  }
+}
+
+function collapse(fail) {
+  if (state !== 'play') return;
+  state = 'over'; endDrag(); anim = null;
+  world.allowSleep = false;
+  // pick a tipping direction: the failing side, or a random one when the tower shook loose
+  let dx, dz;
+  if (fail.dir) { dx = fail.key === 'x' ? fail.dir : 0; dz = fail.key === 'z' ? fail.dir : 0; }
+  else { const a = Math.random() * Math.PI * 2; dx = Math.cos(a); dz = Math.sin(a); }
+  const pivotY = levelY(Math.max(0, fail.k));
+  for (const b of blocks) {
+    const body = b.body;
+    body.type = CANNON.Body.DYNAMIC; body.mass = 1; body.updateMassProperties();
+    body.linearDamping = 0.02; body.angularDamping = 0.05;
+    const h = Math.max(0, body.position.y - pivotY);
+    body.velocity.set(dx * h * 0.9 + (Math.random() - .5) * 0.4, 0, dz * h * 0.9 + (Math.random() - .5) * 0.4);
+    body.angularVelocity.set((Math.random() - .5), (Math.random() - .5), (Math.random() - .5));
+    body.wakeUp();
+  }
+  setTimeout(() => {
+    $('overScore').textContent = score;
+    if (mode === 2) {
+      $('overTitle').textContent = `Player ${player === 1 ? 2 : 1} wins`;
+      $('overText').textContent = `Player ${player} toppled the tower after ${score} moves`;
+    } else {
+      $('overTitle').textContent = 'Tower down';
+      $('overText').textContent = score >= best && score > 0 ? 'blocks moved · new best' : `blocks moved · best is ${best}`;
+    }
+    $('over').hidden = false;
+  }, 2200);
+}
+
+// ---------- Buttons ----------
+function setMode(m) {
+  mode = m;
+  $('m1').setAttribute('aria-pressed', m === 1); $('m2').setAttribute('aria-pressed', m === 2);
+  build();
+}
+$('m1').onclick = () => setMode(1);
+$('m2').onclick = () => setMode(2);
+$('restart').onclick = build;
+$('again').onclick = build;
+
+// ---------- Loop ----------
+const FIXED = 1 / 120;
+const meter = $('meterFill'), meterWrap = $('meter');
+let last = performance.now(), acc = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  clock += dt;
+  if (state === 'play') { stepDrag(dt); stepAnim(dt); }
+  else {
+    acc += dt; let n = 0;
+    while (acc >= FIXED && n < 6) { world.step(FIXED); acc -= FIXED; n++; }
+    if (n === 6) acc = 0;
+  }
+  const w = Math.min(1, wobble);
+  const dragLv = drag ? drag.b.level : 99;
+  for (const b of blocks) {
+    b.mesh.position.copy(b.body.position);
+    b.mesh.quaternion.copy(b.body.quaternion);
+    if (state === 'play' && w > 0.15 && b.level > dragLv) {
+      const amp = (w - 0.15) * 0.06 * (b.level - dragLv) / 6;
+      b.mesh.position.x += Math.sin(clock * 37 + b.level) * amp;
+      b.mesh.position.z += Math.cos(clock * 31 + b.level * 1.7) * amp;
+    }
+  }
+  meterWrap.dataset.on = w > 0.02 ? '1' : '0';
+  meter.style.transform = `scaleX(${w})`;
+  meter.style.background = w > 0.65 ? 'var(--danger)' : 'var(--accent)';
+  placeCamera();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+build();
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Jenga",
+  "short_name": "Jenga",
+  "description": "A 3D wooden block tower with real physics. Slide blocks out, stack them on top, and don't let it fall. By Dontae Amare.",
+  "start_url": "/jenga/",
+  "scope": "/jenga/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#15110e",
+  "theme_color": "#15110e",
+  "icons": [
+    { "src": "/jenga/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/jenga/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/jenga/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
