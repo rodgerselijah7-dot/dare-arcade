@@ -23,7 +23,8 @@ Browser games by Dontae Amare. Static site — no build step.
 /live-fire-range/      Live Fire Range (3D shooting range: index.html + assets/ photo textures and HDRI skies + icons + manifest; loads three.js r160 from jsDelivr)
 /pool/                 DARE Pool (single-file canvas 8-ball / 9-ball + icons + manifest)
 /crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger and Crown Rush online play (Upstash Redis)
+/rare-rumble/          Rare Rumble (single-file canvas platform fighter + icons + manifest)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush and Rare Rumble online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
 /api/scores.js         Live Fire Range leaderboards (Upstash Redis)
 /icons/                Arcade icons
@@ -152,3 +153,11 @@ Every push to `main` redeploys automatically.
 - Free to play.
 - Leaderboards: `/api/scores` keeps each player's best per drill in Redis sorted sets `arc:lfr:<drill>` (500 kept per drill) and names in `arc:lfr:names`. Players pick a range name on the leaderboard screen; the phone keeps a random player id (`lfr_pid`). Challenge links open a drill directly: `/live-fire-range/#bill-2.31`.
 - The same game also runs as a Claude artifact, where the leaderboards use the artifact's shared database.
+
+## Rare Rumble online play
+- Modes: Stock, Timed, Stamina, Team battle, Climb (six rounds to the Titan), Training and Online (up to four players with a 4-letter code, or Quick match).
+- The host's phone runs the match. Guests send their inputs in presence; the host sends the match state back as numbered snapshots, with hits and KOs numbered too so a guest that misses a snapshot still sees each one once. Each guest shows its own fighter's moves at once and eases toward the host's position.
+- Over `/api/room` the game polls about 10 times a second during a match, every 0.6s in a match lobby, and every 1.5s in the open-match list (room `rr-lobby`, only while the Online page is open). Match rooms are named `cb-<code>`.
+- Messages that would be live events in a Claude artifact ride inside each player's presence as a short numbered queue (`_ev`), and the host trims snapshots to stay under the 4 KB presence limit.
+- A dropped player becomes a CPU after about 3 seconds; reopening the game and tapping Rejoin puts them back in their slot. Players who join mid-match watch until it ends.
+- The same `rare-rumble/index.html` source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.

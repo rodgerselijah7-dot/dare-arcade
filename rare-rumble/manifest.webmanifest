@@ -1,0 +1,16 @@
+{
+  "name": "Rare Rumble",
+  "short_name": "Rare Rumble",
+  "description": "A platform fighter with 8 fighters and 8 hazard stages. Fight the CPU, climb to the Titan, or battle friends online. By Dontae Amare.",
+  "start_url": "/rare-rumble/",
+  "scope": "/rare-rumble/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0b0820",
+  "theme_color": "#0b0820",
+  "icons": [
+    { "src": "/rare-rumble/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/rare-rumble/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/rare-rumble/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
