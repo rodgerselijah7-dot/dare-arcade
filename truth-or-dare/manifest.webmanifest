@@ -1,0 +1,16 @@
+{
+  "name": "Truth or Dare",
+  "short_name": "Truth or Dare",
+  "description": "Pass the phone, pick truth or dare, and flip a card. Three heat levels, points, swaps and double dares. By Dontae Amare.",
+  "start_url": "/truth-or-dare/",
+  "scope": "/truth-or-dare/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0909",
+  "theme_color": "#0b0909",
+  "icons": [
+    { "src": "/truth-or-dare/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/truth-or-dare/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/truth-or-dare/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

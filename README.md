@@ -25,6 +25,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
 /rare-rumble/          Rare Rumble (single-file canvas platform fighter + icons + manifest)
 /jenga/                Jenga (single-file 3D block tower + icons + manifest; loads three.js r128 and cannon.js 0.6.2 from cdnjs)
+/truth-or-dare/        Truth or Dare (single-file pass-the-phone card game + icons + manifest)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush and Rare Rumble online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
 /api/scores.js         Live Fire Range leaderboards (Upstash Redis)
@@ -96,7 +97,7 @@ Every push to `main` redeploys automatically.
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range.
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -163,3 +164,11 @@ Every push to `main` redeploys automatically.
 - Messages that would be live events in a Claude artifact ride inside each player's presence as a short numbered queue (`_ev`), and the host trims snapshots to stay under the 4 KB presence limit.
 - A dropped player becomes a CPU after about 3 seconds; reopening the game and tapping Rejoin puts them back in their slot. Players who join mid-match watch until it ends.
 - The same `rare-rumble/index.html` source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
+
+## Truth or Dare
+- Pass-the-phone party game for 2 to 12 players on one phone. No server calls.
+- Three heat levels: **Chill** (anybody), **Party** (embarrassing; mixes in about 28% Chill cards) and **Spicy** (18+ flirty, never explicit; mixes in about 38% Party cards). Spicy asks once that everyone is 18+, and its cards that name another player show a reminder that it only happens if that player is up for it.
+- 240 built-in cards (40 truths and 40 dares per level) in `DECK` inside `truth-or-dare/index.html`. In a card, `{l}` is the next player, `{r}` the previous player and `{p}` a random other player; `|30` at the end adds a 30-second timer button.
+- Scoring: truth +1, dare +2, Double Dare (10% of dares) +4, chicken out -1. Two free swaps per player per game. Rounds: 3, 5, 10 or no limit; the end screen crowns the top score (ties share it) and gives Most daring, Open book, Double trouble and Biggest chicken awards.
+- Cards don't repeat until a deck runs out. Players' own cards (Your cards, with `{player}` for a random name) are shuffled into every deck.
+- Saved on the phone (localStorage keys `dtod-cfg`, `dtod-mine`, `dtod-game`), so a game survives closing the tab.
