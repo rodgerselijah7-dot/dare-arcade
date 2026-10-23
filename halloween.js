@@ -1,0 +1,372 @@
+/* DARE Arcade · Halloween enter page scene
+   Painted on one canvas at up to 2x pixel density. Static layers (sky, moon, clouds, fog, graveyard, pumpkins,
+   vignette, grain) are rendered once per screen size into offscreen canvases; each frame only composites them and
+   draws the moving parts (twinkling stars, drifting clouds and fog, bats, pumpkin flicker, embers).
+   Loaded by index.html only when the enter page is showing in Halloween season. Stops when the gate closes. */
+(function () {
+  const gate = document.getElementById("gate"), host = gate && gate.querySelector(".hw");
+  if (!host) return;
+  const cv = document.createElement("canvas");
+  cv.className = "hw-cv"; cv.setAttribute("aria-hidden", "true");
+  host.prepend(cv);
+  const ctx = cv.getContext("2d");
+  if (!ctx) return;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- seeded randomness + value noise ---------- */
+  let seed = 31102026;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  function noise2(P) { // value noise, periodic every P cells in both directions
+    const g = new Float32Array(P * P); for (let i = 0; i < g.length; i++) g[i] = rnd();
+    const w = n => ((n % P) + P) % P, sm = t => t * t * (3 - 2 * t);
+    return (x, y) => {
+      const xi = Math.floor(x), yi = Math.floor(y), u = sm(x - xi), v = sm(y - yi);
+      const x0 = w(xi), x1 = w(xi + 1), y0 = w(yi) * P, y1 = w(yi + 1) * P;
+      const a = g[y0 + x0], b = g[y0 + x1], c = g[y1 + x0], d = g[y1 + x1];
+      return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+    };
+  }
+  const fbm = (n, x, y, o) => { let s = 0, a = .5, f = 1, t = 0; for (let i = 0; i < o; i++) { s += a * n(x * f, y * f); t += a; a *= .5; f *= 2; } return s / t; };
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const mk = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+
+  /* ---------- textures that don't depend on screen size (built once) ---------- */
+  function cloudTex() { // soft cumulus band, tiles horizontally
+    const w = 768, h = 256, c = mk(w, h), g = c.getContext("2d"), im = g.createImageData(w, h), d = im.data, n = noise2(12);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const v = y / h, f = fbm(n, x / w * 12, v * 4, 6);
+      const a = ss(.46, .78, f) * Math.sin(Math.PI * v) ** 1.4;
+      const shade = .55 + .45 * (1 - v) * f;            // brighter tops, moonlit
+      const i = (y * w + x) * 4;
+      d[i] = 120 + 70 * shade; d[i + 1] = 108 + 62 * shade; d[i + 2] = 150 + 70 * shade; d[i + 3] = 255 * a;
+    }
+    g.putImageData(im, 0, 0); return c;
+  }
+  function fogTex() { // low ground fog, tiles horizontally
+    const w = 640, h = 160, c = mk(w, h), g = c.getContext("2d"), im = g.createImageData(w, h), d = im.data, n = noise2(8);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const v = y / h, f = fbm(n, x / w * 8, v * 2.5, 5);
+      const a = ss(.3, .82, f) * Math.sin(Math.PI * v) ** 1.2;
+      const i = (y * w + x) * 4;
+      d[i] = 176; d[i + 1] = 166; d[i + 2] = 206; d[i + 3] = 255 * a;
+    }
+    g.putImageData(im, 0, 0); return c;
+  }
+  function grainTex() {
+    const s = 192, c = mk(s, s), g = c.getContext("2d"), im = g.createImageData(s, s), d = im.data;
+    for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+    g.putImageData(im, 0, 0); return c;
+  }
+  function moonTex(R) { // a lit full moon: dark seas, craters with rims, limb darkening, anti-aliased edge
+    const s = Math.ceil(R * 2) + 2, c = mk(s, s), g = c.getContext("2d"), im = g.createImageData(s, s), d = im.data;
+    const big = noise2(16), fine = noise2(64), cr = [];
+    for (let i = 0; i < 34; i++) { const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * .96; cr.push([Math.cos(a) * r, Math.sin(a) * r, rnd() ** 2.6 * .15 + .016]); }
+    cr.push([-.18, .52, .1], [.38, -.22, .07], [-.45, -.4, .05]);   // a few named-looking ones
+    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+      const nx = (x + .5 - 1) / R - 1, ny = (y + .5 - 1) / R - 1, rr = nx * nx + ny * ny, i = (y * s + x) * 4;
+      if (rr >= 1) { d[i + 3] = 0; continue; }
+      const nz = Math.sqrt(1 - rr);
+      const m = fbm(big, nx * 2.1 + 4.3, ny * 2.1 + 1.7, 4);
+      let alb = 1.02 - ss(.48, .64, m) * .22 + (fbm(fine, nx * 9 + 2, ny * 9 + 5, 3) - .5) * .08;
+      for (const [cx, cy, r0] of cr) {
+        const dx = nx - cx, dy = ny - cy, q = Math.sqrt(dx * dx + dy * dy) / r0;
+        if (q < 1) alb += -.05 * (1 - q * q) + .08 * q ** 3 * Math.max(0, (dx + dy) / (r0 * 1.4)); // bowl + lit far rim
+        else if (q < 1.4) alb += .03 * (1.4 - q) / .4;                                            // ejecta ring
+      }
+      const lit = .62 + .38 * Math.pow(nz, .45);
+      const v = Math.max(0, Math.min(1.05, alb * lit));
+      const edge = Math.min(1, (1 - Math.sqrt(rr)) * R);
+      d[i] = Math.min(255, 255 * v); d[i + 1] = Math.min(255, 240 * v); d[i + 2] = Math.min(255, 200 * v); d[i + 3] = 255 * edge;
+    }
+    g.putImageData(im, 0, 0); return c;
+  }
+  function pumpkinTex(S) { // returns {body, face}: the carved pumpkin, and its glowing cutouts to draw with a flicker
+    const w = S * 1.25, h = S, body = mk(w, h * 1.12), g = body.getContext("2d"), cx = w / 2, cy = h * .62;
+    const lobes = [[-.38, .3], [.38, .3], [-.2, .38], [.2, .38], [0, .42]];
+    for (const [ox, rx] of lobes) {
+      const gr = g.createRadialGradient(cx + ox * S - rx * S * .25, cy - S * .18, S * .04, cx + ox * S, cy, rx * S * 1.15);
+      gr.addColorStop(0, "#ffb15a"); gr.addColorStop(.45, "#f07418"); gr.addColorStop(.85, "#a8420a"); gr.addColorStop(1, "#5a2004");
+      g.fillStyle = gr; g.beginPath(); g.ellipse(cx + ox * S, cy, rx * S, S * .4, 0, 0, Math.PI * 2); g.fill();
+    }
+    g.strokeStyle = "rgba(90,30,4,.55)"; g.lineWidth = S * .012;
+    for (const ox of [-.29, -.1, .1, .29]) { g.beginPath(); g.moveTo(cx + ox * S * .8, cy - S * .37); g.quadraticCurveTo(cx + ox * S * 1.25, cy, cx + ox * S * .8, cy + S * .37); g.stroke(); }
+    const st = g.createLinearGradient(cx, cy - S * .55, cx, cy - S * .33); st.addColorStop(0, "#6b8a35"); st.addColorStop(1, "#2f4416");
+    g.fillStyle = st; g.beginPath(); g.moveTo(cx - S * .05, cy - S * .36); g.quadraticCurveTo(cx - S * .02, cy - S * .5, cx + S * .1, cy - S * .58);
+    g.lineTo(cx + S * .13, cy - S * .53); g.quadraticCurveTo(cx + S * .05, cy - S * .46, cx + S * .05, cy - S * .36); g.closePath(); g.fill();
+    g.fillStyle = "rgba(255,230,190,.16)"; g.beginPath(); g.ellipse(cx - S * .18, cy - S * .2, S * .08, S * .14, -.4, 0, Math.PI * 2); g.fill();
+    const face = new Path2D();
+    face.moveTo(cx - S * .26, cy - S * .03); face.lineTo(cx - S * .12, cy - S * .2); face.lineTo(cx - S * .04, cy - S * .02); face.closePath();
+    face.moveTo(cx + S * .26, cy - S * .03); face.lineTo(cx + S * .12, cy - S * .2); face.lineTo(cx + S * .04, cy - S * .02); face.closePath();
+    face.moveTo(cx - S * .04, cy + S * .07); face.lineTo(cx, cy + S * .01); face.lineTo(cx + S * .04, cy + S * .07); face.closePath();
+    face.moveTo(cx - S * .3, cy + S * .1);
+    face.quadraticCurveTo(cx, cy + S * .36, cx + S * .3, cy + S * .1);
+    face.lineTo(cx + S * .22, cy + S * .2); face.lineTo(cx + S * .16, cy + S * .14); face.lineTo(cx + S * .1, cy + S * .23); face.lineTo(cx + S * .03, cy + S * .17);
+    face.lineTo(cx - S * .03, cy + S * .25); face.lineTo(cx - S * .1, cy + S * .17); face.lineTo(cx - S * .16, cy + S * .23); face.lineTo(cx - S * .22, cy + S * .14);
+    face.closePath();
+    g.fillStyle = "#1a0700"; g.fill(face);
+    const lit = mk(w, h * 1.12), l = lit.getContext("2d");
+    const fg = l.createRadialGradient(cx, cy + S * .05, S * .02, cx, cy + S * .05, S * .4); fg.addColorStop(0, "#fffbe0"); fg.addColorStop(.45, "#ffd660"); fg.addColorStop(1, "#ff8a1a");
+    l.shadowColor = "#ffb030"; l.shadowBlur = S * .12; l.fillStyle = fg; l.fill(face);
+    return { body, face: lit, w, h: h * 1.12 };
+  }
+
+  /* ---------- per-size layers ---------- */
+  let W = 0, H = 0, D = 1, L = null, stars = [], bats = [], embers = [], pumpkins = [];
+  const CLOUD = cloudTex(), FOG = fogTex(), GRAIN = grainTex();
+
+  function build() {
+    W = gate.clientWidth; H = gate.clientHeight; D = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(W * D); cv.height = Math.round(H * D);
+    seed = 31102026;
+    const yG = H - Math.min(150, Math.max(92, H * .15));          // ground line
+    const R = Math.min(96, Math.max(44, W * .13));
+    const moon = { x: W - Math.max(72, W * .19), y: Math.max(110, H * .16), R };
+    L = { yG, moon };
+
+    // sky
+    const sky = mk(W * D, H * D), s = sky.getContext("2d"); s.scale(D, D);
+    const sg = s.createLinearGradient(0, 0, 0, H);
+    sg.addColorStop(0, "#07040f"); sg.addColorStop(.35, "#150a27"); sg.addColorStop(.68, "#2a1338"); sg.addColorStop(.86, "#3d1a33"); sg.addColorStop(1, "#1a0a12");
+    s.fillStyle = sg; s.fillRect(0, 0, W, H);
+    const hz = s.createRadialGradient(W * .5, yG + 30, 10, W * .5, yG + 30, Math.max(W, H) * .6);
+    hz.addColorStop(0, "rgba(255,120,40,.30)"); hz.addColorStop(.35, "rgba(200,70,90,.12)"); hz.addColorStop(1, "rgba(0,0,0,0)");
+    s.fillStyle = hz; s.fillRect(0, 0, W, H);
+    const mg = s.createRadialGradient(moon.x, moon.y, R * .9, moon.x, moon.y, R * 6);
+    mg.addColorStop(0, "rgba(255,226,170,.30)"); mg.addColorStop(.25, "rgba(200,170,230,.10)"); mg.addColorStop(1, "rgba(0,0,0,0)");
+    s.fillStyle = mg; s.fillRect(0, 0, W, H);
+    L.sky = sky;
+    L.moonTex = moonTex(R * D);
+
+    // stars (none near the moon or below the treeline)
+    stars = [];
+    const ns = Math.round(W * H / 2600);
+    for (let i = 0; i < ns; i++) {
+      const x = rnd() * W, y = rnd() * (yG - 60);
+      if (Math.hypot(x - moon.x, y - moon.y) < R * 2.2) continue;
+      stars.push({ x, y, r: rnd() ** 3 * 1.3 + .35, a: .35 + rnd() * .6, f: .6 + rnd() * 2.2, p: rnd() * 6.3, warm: rnd() < .15 });
+    }
+
+    // far treeline + hills (lit purple, sits in the haze)
+    const far = mk(W * D, H * D), f = far.getContext("2d"); f.scale(D, D);
+    const tn = noise2(32);
+    f.fillStyle = "#1b0e26"; f.beginPath(); f.moveTo(0, H);
+    for (let x = 0; x <= W; x += 3) {
+      const base = yG - 22 - Math.sin(x / W * Math.PI * 1.3 + .6) * 16;
+      const tree = Math.pow(fbm(tn, x / 26, 3.3, 4), 2.2) * 48 + (fbm(tn, x / 6, 9.1, 2) - .5) * 9;
+      f.lineTo(x, base - tree);
+    }
+    f.lineTo(W, H); f.closePath(); f.fill();
+    // a far chapel on the hill
+    const chx = W * .7, chy = yG - 26;
+    f.fillStyle = "#170b21";
+    f.fillRect(chx, chy - 30, 34, 30); f.beginPath(); f.moveTo(chx - 3, chy - 30); f.lineTo(chx + 17, chy - 46); f.lineTo(chx + 37, chy - 30); f.fill();
+    f.fillRect(chx + 24, chy - 62, 9, 32); f.beginPath(); f.moveTo(chx + 22, chy - 62); f.lineTo(chx + 28.5, chy - 80); f.lineTo(chx + 35, chy - 62); f.fill();
+    f.fillStyle = "rgba(255,170,70,.75)"; f.fillRect(chx + 8, chy - 20, 4, 7); f.fillRect(chx + 18, chy - 20, 4, 7);
+    const haze = f.createLinearGradient(0, yG - 90, 0, yG + 10); haze.addColorStop(0, "rgba(120,80,160,0)"); haze.addColorStop(1, "rgba(120,80,160,.28)");
+    f.fillStyle = haze; f.fillRect(0, yG - 90, W, 100);
+    L.far = far;
+
+    // near graveyard: hill, gnarled tree, headstones, fence, grass (moon-rimmed silhouettes)
+    const near = mk(W * D, H * D), n = near.getContext("2d"); n.scale(D, D);
+    const ink = "#040207", rim = "rgba(196,170,235,.32)";
+    const hill = x => yG + 8 - Math.sin(x / W * Math.PI * 2 + .4) * 10 - Math.sin(x / W * Math.PI * 5.2) * 4;
+    n.fillStyle = ink; n.beginPath(); n.moveTo(0, H);
+    for (let x = 0; x <= W; x += 4) n.lineTo(x, hill(x)); n.lineTo(W, H); n.closePath(); n.fill();
+    n.strokeStyle = "rgba(170,140,220,.22)"; n.lineWidth = 1.2; n.beginPath();
+    for (let x = 0; x <= W; x += 4) x ? n.lineTo(x, hill(x)) : n.moveTo(x, hill(x)); n.stroke();
+
+    // tree
+    const tx = Math.max(22, W * .06), th = Math.min(H * .32, 300, W * .48);
+    n.strokeStyle = ink; n.lineCap = "round";
+    function branch(x, y, len, ang, wdt, depth) {
+      const segs = 4; let px = x, py = y, a = ang;
+      n.lineWidth = wdt; n.beginPath(); n.moveTo(px, py);
+      for (let i = 0; i < segs; i++) { a += (rnd() - .5) * .5; px += Math.cos(a) * len / segs; py += Math.sin(a) * len / segs; n.lineTo(px, py); }
+      n.stroke();
+      if (depth <= 0 || wdt < .7) return;
+      const kids = 2 + (rnd() < .45 ? 1 : 0);
+      for (let k = 0; k < kids; k++) branch(px, py, len * (.62 + rnd() * .18), a + (k - (kids - 1) / 2) * (.55 + rnd() * .35) + (rnd() - .5) * .3, wdt * .62, depth - 1);
+    }
+    const root = hill(tx);
+    n.fillStyle = ink; n.beginPath(); n.moveTo(tx - th * .09, root + 4); n.quadraticCurveTo(tx - th * .02, root - th * .1, tx - th * .02, root - th * .25);
+    n.lineTo(tx + th * .03, root - th * .25); n.quadraticCurveTo(tx + th * .04, root - th * .1, tx + th * .12, root + 4); n.fill();
+    branch(tx, root - th * .22, th * .34, -Math.PI / 2 + .12, th * .055, 6);
+    branch(tx, root - th * .3, th * .28, -Math.PI / 2 + .9, th * .035, 5);
+    branch(tx, root - th * .26, th * .22, -Math.PI / 2 - .7, th * .03, 4);
+
+    // headstones
+    const stones = [];
+    const count = Math.max(4, Math.round(W / 120));
+    for (let i = 0; i < count; i++) {
+      const x = W * (.2 + .62 * (i + rnd() * .6) / count);
+      if (Math.abs(x - W / 2) < Math.min(130, W * .2)) continue;              // keep the middle clear for the Enter button
+      stones.push({ x, kind: Math.floor(rnd() * 4), s: (.7 + rnd() * .5) * Math.min(1.25, Math.max(.8, W / 700)), tilt: (rnd() - .5) * .14 });
+    }
+    for (const st of stones) {
+      const y = hill(st.x) + 3, s2 = st.s;
+      n.save(); n.translate(st.x, y); n.rotate(st.tilt);
+      const p = new Path2D();
+      if (st.kind === 0) { p.moveTo(-11 * s2, 0); p.lineTo(-11 * s2, -22 * s2); p.arc(0, -22 * s2, 11 * s2, Math.PI, 0); p.lineTo(11 * s2, 0); p.closePath(); }
+      else if (st.kind === 1) { p.rect(-3 * s2, -40 * s2, 6 * s2, 40 * s2); p.rect(-12 * s2, -31 * s2, 24 * s2, 6 * s2); }
+      else if (st.kind === 2) { p.moveTo(-6 * s2, 0); p.lineTo(-4 * s2, -42 * s2); p.lineTo(0, -50 * s2); p.lineTo(4 * s2, -42 * s2); p.lineTo(6 * s2, 0); p.closePath(); }
+      else { p.moveTo(-13 * s2, 0); p.lineTo(-13 * s2, -20 * s2); p.quadraticCurveTo(-13 * s2, -30 * s2, -4 * s2, -31 * s2); p.lineTo(4 * s2, -31 * s2); p.quadraticCurveTo(13 * s2, -30 * s2, 13 * s2, -20 * s2); p.lineTo(13 * s2, 0); p.closePath(); }
+      n.fillStyle = "#0b0812"; n.fill(p);
+      n.save(); n.clip(p);
+      const lg = n.createLinearGradient(15 * s2, -40 * s2, -10 * s2, 0); lg.addColorStop(0, "rgba(150,135,185,.38)"); lg.addColorStop(.5, "rgba(60,50,80,.12)"); lg.addColorStop(1, "rgba(0,0,0,0)");
+      n.fillStyle = lg; n.fillRect(-20 * s2, -55 * s2, 40 * s2, 60 * s2);
+      n.strokeStyle = "rgba(0,0,0,.35)"; n.lineWidth = .8;
+      for (let k = 0; k < 3; k++) { n.beginPath(); n.moveTo(-6 * s2, (-16 + k * 5) * s2); n.lineTo(6 * s2, (-16 + k * 5) * s2); n.stroke(); }
+      n.restore();
+      n.strokeStyle = rim; n.lineWidth = 1; n.stroke(p);
+      n.restore();
+    }
+
+    // iron fence on the right
+    const fx0 = W * .74, fx1 = W * .98, fy = x => hill(x) + 2, fh = Math.min(46, H * .05);
+    n.strokeStyle = ink; n.fillStyle = ink; n.lineWidth = 2.2;
+    n.beginPath(); n.moveTo(fx0, fy(fx0) - fh * .78); n.lineTo(fx1, fy(fx1) - fh * .78); n.moveTo(fx0, fy(fx0) - fh * .22); n.lineTo(fx1, fy(fx1) - fh * .22); n.stroke();
+    for (let x = fx0; x <= fx1; x += 11) {
+      const y = fy(x); n.lineWidth = 2; n.beginPath(); n.moveTo(x, y); n.lineTo(x, y - fh); n.stroke();
+      n.beginPath(); n.moveTo(x - 3.5, y - fh); n.lineTo(x, y - fh - 8); n.lineTo(x + 3.5, y - fh); n.closePath(); n.fill();
+    }
+    // grass along the crest
+    n.strokeStyle = ink; n.lineWidth = 1.1;
+    for (let x = 0; x < W; x += 2.2) {
+      if (rnd() < .35) continue;
+      const y = hill(x) + 3, hgt = 3 + rnd() ** 2 * 11; n.beginPath(); n.moveTo(x, y); n.quadraticCurveTo(x + (rnd() - .5) * 4, y - hgt * .6, x + (rnd() - .5) * 6, y - hgt); n.stroke();
+    }
+    L.near = near; L.hill = hill;
+
+    // pumpkins
+    const PS = Math.min(110, Math.max(58, W * .15));
+    pumpkins = [
+      { x: Math.max(PS * .7, W * .14), s: PS, ph: 0 },
+      { x: W - Math.max(PS * .6, W * .12), s: PS * .76, ph: 2.1 }
+    ].map(p => Object.assign(p, { tex: pumpkinTex(p.s * D), y: hill(p.x) + p.s * .2 }));
+
+    // vignette
+    const vig = mk(W * D, H * D), v = vig.getContext("2d"); v.scale(D, D);
+    const vg = v.createRadialGradient(W / 2, H * .45, Math.min(W, H) * .35, W / 2, H * .5, Math.max(W, H) * .85);
+    vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.62)");
+    v.fillStyle = vg; v.fillRect(0, 0, W, H);
+    L.vig = vig;
+
+    // bats and embers
+    bats = Array.from({ length: W > 700 ? 9 : 6 }, (_, i) => ({ x: rnd() * W, y: H * (.08 + rnd() * .38), s: 10 + rnd() ** 2 * 18, v: 24 + rnd() * 40, f: 7 + rnd() * 6, p: rnd() * 6.3, wob: 10 + rnd() * 22, dir: rnd() < .8 ? 1 : -1 }));
+    embers = Array.from({ length: 26 }, () => newEmber(true));
+  }
+  function newEmber(anywhere) {
+    const p = pumpkins.length ? pumpkins[Math.floor(rnd() * pumpkins.length)] : { x: W / 2, y: H };
+    return { x: p.x + (rnd() - .5) * 40, y: anywhere ? p.y - rnd() * H * .5 : p.y - 10, vy: 8 + rnd() * 16, vx: (rnd() - .5) * 8, r: .6 + rnd() * 1.6, life: 0, max: 4 + rnd() * 5, p: rnd() * 6.3 };
+  }
+
+  function drawBat(b, t) {
+    const s = b.s, fl = Math.sin(t * b.f + b.p), tipY = -s * .25 + fl * s * .55, midY = -s * .05 + fl * s * .25;
+    ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.dir, 1);
+    ctx.fillStyle = "#050208";
+    ctx.beginPath(); ctx.ellipse(0, 0, s * .12, s * .2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-s * .06, -s * .2); ctx.lineTo(-s * .1, -s * .34); ctx.lineTo(-s * .01, -s * .24); ctx.lineTo(s * .01, -s * .24); ctx.lineTo(s * .1, -s * .34); ctx.lineTo(s * .06, -s * .2); ctx.fill();
+    for (const side of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(side * s * .08, -s * .08);
+      ctx.quadraticCurveTo(side * s * .45, midY - s * .25, side * s * 1.0, tipY);
+      ctx.quadraticCurveTo(side * s * .85, midY + s * .02, side * s * .74, midY + s * .12);
+      ctx.quadraticCurveTo(side * s * .62, midY + s * .02, side * s * .5, midY + s * .16);
+      ctx.quadraticCurveTo(side * s * .38, midY + s * .05, side * s * .26, midY + s * .18);
+      ctx.quadraticCurveTo(side * s * .16, s * .06, side * s * .06, s * .12);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  let last = 0, raf = 0, cloudX = 0, fogX = 0, fog2X = 0, grainF = 0;
+  function frame(now) {
+    if (!gate.isConnected) return;
+    const t = now / 1000, dt = Math.min(.05, last ? (now - last) / 1000 : 0); last = now;
+    ctx.setTransform(D, 0, 0, D, 0, 0);
+    ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+    ctx.drawImage(L.sky, 0, 0, W, H);
+
+    for (const s of stars) {
+      const a = s.a * (.65 + .35 * Math.sin(t * s.f + s.p));
+      ctx.globalAlpha = a; ctx.fillStyle = s.warm ? "#ffe2b0" : "#eef0ff";
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    const m = L.moon;
+    ctx.globalCompositeOperation = "lighter";
+    const halo = ctx.createRadialGradient(m.x, m.y, m.R * .95, m.x, m.y, m.R * 2.6);
+    halo.addColorStop(0, "rgba(255,225,160,.35)"); halo.addColorStop(.4, "rgba(255,200,140,.08)"); halo.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = halo; ctx.fillRect(m.x - m.R * 3, m.y - m.R * 3, m.R * 6, m.R * 6);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.drawImage(L.moonTex, m.x - m.R, m.y - m.R, m.R * 2 + 2 / D, m.R * 2 + 2 / D);
+
+    // clouds drift across the moon
+    cloudX = (cloudX + dt * 7) % (W * 1.8);
+    const cw = W * 1.8, ch = Math.max(140, H * .26);
+    for (const [off, y, a, k] of [[0, m.y - ch * .3, .55, 1], [W * .9, H * .04, .4, .6]]) {
+      const x = -((cloudX * k + off) % cw);
+      ctx.globalAlpha = a; ctx.drawImage(CLOUD, x, y, cw, ch); ctx.drawImage(CLOUD, x + cw, y, cw, ch);
+    }
+    ctx.globalAlpha = 1;
+
+    for (const b of bats) {
+      b.x += b.v * dt * b.dir; const y = b.y + Math.sin(t * .8 + b.p) * b.wob;
+      if (b.dir > 0 && b.x > W + 60) b.x = -60; if (b.dir < 0 && b.x < -60) b.x = W + 60;
+      drawBat({ ...b, y }, t);
+    }
+
+    ctx.drawImage(L.far, 0, 0, W, H);
+    fogX = (fogX + dt * 10) % (W * 1.6);
+    const fw = W * 1.6, fh = Math.max(110, H * .2);
+    ctx.globalAlpha = .55; ctx.drawImage(FOG, -fogX, L.yG - fh * .75, fw, fh); ctx.drawImage(FOG, -fogX + fw, L.yG - fh * .75, fw, fh);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(L.near, 0, 0, W, H);
+
+    // pumpkins: light on the ground, the carved body, then the flickering glow
+    for (const p of pumpkins) {
+      const fl = .78 + .14 * Math.sin(t * 7.3 + p.ph) + .08 * Math.sin(t * 17.1 + p.ph * 2) + (Math.random() < .03 ? -.25 : 0);
+      ctx.globalCompositeOperation = "lighter";
+      const gl = ctx.createRadialGradient(p.x, p.y - p.s * .3, 2, p.x, p.y - p.s * .3, p.s * 1.7);
+      gl.addColorStop(0, `rgba(255,140,40,${.32 * fl})`); gl.addColorStop(1, "rgba(255,90,10,0)");
+      ctx.fillStyle = gl; ctx.fillRect(p.x - p.s * 2, p.y - p.s * 2.2, p.s * 4, p.s * 3);
+      ctx.globalCompositeOperation = "source-over";
+      const w = p.tex.w / D, h = p.tex.h / D, x = p.x - w / 2, y = p.y - h;
+      ctx.drawImage(p.tex.body, x, y, w, h);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = Math.max(.35, Math.min(1, fl)); ctx.drawImage(p.tex.face, x, y, w, h); ctx.drawImage(p.tex.face, x, y, w, h);
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    }
+
+    // front fog
+    fog2X = (fog2X + dt * 16) % (W * 1.6);
+    ctx.globalAlpha = .32; ctx.drawImage(FOG, -fog2X, H - fh * .9, fw, fh); ctx.drawImage(FOG, -fog2X + fw, H - fh * .9, fw, fh);
+    ctx.globalAlpha = 1;
+
+    // embers
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < embers.length; i++) {
+      const e = embers[i]; e.life += dt; e.y -= e.vy * dt; e.x += (e.vx + Math.sin(t * 1.3 + e.p) * 6) * dt;
+      if (e.life > e.max || e.y < H * .3) { embers[i] = newEmber(false); continue; }
+      const a = Math.sin(Math.PI * e.life / e.max) * .9;
+      ctx.fillStyle = `rgba(255,${150 + 60 * Math.sin(e.p)},60,${a})`; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+
+    ctx.drawImage(L.vig, 0, 0, W, H);
+    // film grain
+    grainF++;
+    ctx.globalAlpha = .045;
+    const gp = ctx.createPattern(GRAIN, "repeat");
+    ctx.translate((grainF * 37) % 192, (grainF * 53) % 192); ctx.fillStyle = gp; ctx.fillRect(-192, -192, W + 192, H + 192);
+    ctx.setTransform(D, 0, 0, D, 0, 0); ctx.globalAlpha = 1;
+
+    if (!reduce) raf = requestAnimationFrame(frame);
+  }
+
+  function start() { cancelAnimationFrame(raf); build(); last = 0; raf = requestAnimationFrame(frame); }
+  let rt = 0;
+  addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (gate.isConnected) start(); }, 180); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && gate.isConnected && !reduce) { cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(frame); } });
+  start();
+  document.documentElement.classList.add("hw-painted");
+})();
