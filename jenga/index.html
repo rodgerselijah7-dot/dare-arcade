@@ -69,28 +69,67 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .card h2{margin:0;font-family:var(--display);font-weight:800;font-size:1.6rem;letter-spacing:.04em;color:var(--danger);text-wrap:balance}
 .card p{margin:0;color:var(--muted);line-height:1.5}
 .card .big{font-family:var(--display);font-size:2.6rem;color:var(--fg);font-variant-numeric:tabular-nums}
-.next{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:4px}
-.next span{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .card .btn{background:var(--accent);color:#1b120a;border:0;padding:12px;font-size:.95rem;pointer-events:auto}
+.card .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+/* play screen: one slim bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:auto}
+.chip{display:flex;align-items:baseline;gap:8px;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);font-variant-numeric:tabular-nums}
+.chip b{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--accent);line-height:1}
+.chip small{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.icon{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--fg);cursor:pointer;backdrop-filter:blur(8px);padding:0}
+.icon svg{width:18px;height:18px}
+.turn[data-p="1"]{color:var(--fg)}.turn[data-p="2"]{color:var(--accent)}.turn[data-p="3"]{color:#86cfae}.turn[data-p="4"]{color:#9dbbff}
+.hint{transition:opacity .6s}
+.hint.gone{opacity:0}
+/* home screen */
+.home{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;pointer-events:auto;
+  background:linear-gradient(180deg,rgba(21,17,14,.55),rgba(21,17,14,.25) 40%,rgba(21,17,14,.88) 78%);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 22px)}
+.home-top{display:flex;justify-content:space-between;align-items:center}
+.home-title{margin:6vh 0 0;text-align:center;display:flex;flex-direction:column;gap:6px}
+.home-title h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,13vw,4.2rem);letter-spacing:.08em;line-height:1}
+.home-title span{font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.home-panel{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:360px;margin-inline:auto}
+.label{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.players{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.players button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0 10px;border-radius:14px;background:var(--panel);border:1px solid var(--line);color:var(--fg);cursor:pointer;font:600 .72rem var(--body)}
+.players button b{font-family:var(--display);font-weight:500;font-size:1.4rem;line-height:1}
+.players button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.play-btn{width:100%;padding:15px;border-radius:999px;border:0;background:var(--accent);color:#1b120a;font:700 1rem var(--body);cursor:pointer}
+.home-note{font-size:.8rem;color:var(--muted);text-align:center;line-height:1.5;margin:0;max-width:34ch}
+.home-best{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
+.home-best b{color:var(--accent);font-weight:600}
 </style>
 
 </head>
 <body>
 <canvas id="scene"></canvas>
-<div class="hud">
-  <div>
-    <div class="top">
-      <div class="brand"><a class="toarcade" href="/" id="toArcade">‹ Arcade</a><h1>JENGA</h1><span id="levels">18 levels · 54 blocks</span></div>
-      <div class="controls">
-        <button class="btn" id="restart">Restart</button>
-      </div>
-    </div>
-    <div class="score"><b id="score">0</b><small id="scoreLbl">blocks moved · best <span id="best">0</span></small></div>
+<div class="hud" id="hud" hidden>
+  <div class="bar">
+    <button class="icon" id="toHome" type="button" aria-label="Home"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 10 4l7 5.5V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1z"/></svg></button>
+    <div class="chip"><b id="score">0</b><small id="scoreLbl">moved · best <span id="best">0</span></small></div>
+    <button class="icon" id="restart" type="button" aria-label="Restart"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a6 6 0 1 0 1.8-4.3"/><path d="M4 3.5v3.2h3.2"/></svg></button>
   </div>
   <div class="bottom">
     <div class="meter" id="meter" data-on="0"><span>Tower wobble</span><i><b id="meterFill"></b></i></div>
     <div class="turn" id="turn" hidden>Player 1</div>
-    <div class="hint" id="hint">Drag a block along its length to slide it out. Go slow on tight blocks. Drag empty space to orbit, pinch to zoom.</div>
+    <div class="hint" id="hint">Drag a block along its length to slide it out. Drag empty space to turn the tower.</div>
+  </div>
+</div>
+<div class="home" id="home">
+  <div class="home-top"><a class="toarcade" href="/" id="toArcade">‹ Arcade</a><span class="home-best" id="homeBest" hidden>Best <b id="homeBestN">0</b></span></div>
+  <div class="home-title"><h1>JENGA</h1><span>54 blocks · 18 levels</span></div>
+  <div class="home-panel">
+    <span class="label">Players</span>
+    <div class="players" role="group" aria-label="Number of players">
+      <button type="button" data-n="1" aria-pressed="true"><b>1</b>Solo</button>
+      <button type="button" data-n="2" aria-pressed="false"><b>2</b>Players</button>
+      <button type="button" data-n="3" aria-pressed="false"><b>3</b>Players</button>
+      <button type="button" data-n="4" aria-pressed="false"><b>4</b>Players</button>
+    </div>
+    <button class="play-btn" id="playBtn" type="button">Play</button>
+    <p class="home-note" id="homeNote">Slide blocks out and stack them on top. Go slow on tight blocks.</p>
   </div>
 </div>
 <div class="toast" id="toast">Top levels are locked</div>
@@ -99,12 +138,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     <h2 id="overTitle">Tower down</h2>
     <div class="big" id="overScore">0</div>
     <p id="overText">blocks moved before the fall</p>
-    <div class="next"><span>Next game</span>
-      <div class="seg" role="group" aria-label="Players">
-        <button id="m1" type="button" aria-pressed="true">Solo</button>
-        <button id="m2" type="button" aria-pressed="false">2 Players</button>
-      </div></div>
     <button class="btn" id="again">Rebuild tower</button>
+    <button class="btn ghost" id="overHome" type="button">Home</button>
   </div>
 </div>
 
@@ -204,7 +239,8 @@ const longKey = lv => lv % 2 === 0 ? 'x' : 'z';
 const levelY = lv => H / 2 + lv * H;
 
 // ---------- Game state ----------
-let blocks = [], state = 'play', busy = false, score = 0, mode = 1, player = 1, anim = null;
+let blocks = [], state = 'home', busy = false, score = 0, mode = 1, player = 1, anim = null, moved = false;
+try { mode = Math.min(4, Math.max(1, +localStorage.getItem('jenga-players') || 1)); } catch (e) {}
 let wobble = 0, best = 0, clock = 0;
 try { best = +localStorage.getItem('jenga-best') || 0; } catch (e) {}
 
@@ -237,7 +273,7 @@ function build() {
   blocks.forEach(b => { world.removeBody(b.body); scene.remove(b.mesh); b.mesh.material.dispose(); });
   blocks = [];
   for (let i = 0; i < LEVELS; i++) for (let j = 0; j < 3; j++) blocks.push(makeBlock(i, j));
-  state = 'play'; busy = false; score = 0; player = 1; anim = null; drag = null; wobble = 0;
+  state = $('home') && !$('home').hidden ? 'home' : 'play'; busy = false; score = 0; player = 1; anim = null; drag = null; wobble = 0;
   $('over').hidden = true;
   updateHud();
 }
@@ -269,13 +305,12 @@ function unstableLevel(ex) {
 }
 
 function updateHud() {
-  $('levels').textContent = `${topLevel() + 1} levels · 54 blocks`;
   $('score').textContent = score;
   $('best').textContent = best;
-  $('scoreLbl').firstChild.textContent = mode === 1 ? 'blocks moved · best ' : 'blocks moved';
+  $('scoreLbl').firstChild.textContent = mode === 1 ? 'moved · best ' : 'moved';
   $('best').hidden = mode !== 1;
   const turn = $('turn');
-  turn.hidden = mode !== 2;
+  turn.hidden = mode === 1;
   turn.textContent = `Player ${player}'s turn`;
   turn.dataset.p = player;
 }
@@ -448,8 +483,9 @@ function stepAnim(dt) {
     setTimeout(() => {
       if (state !== 'play') return;
       score++;
+      if (!moved) { moved = true; $('hint').classList.add('gone'); }
       if (mode === 1 && score > best) { best = score; try { localStorage.setItem('jenga-best', best); } catch (e) {} }
-      if (mode === 2) player = player === 1 ? 2 : 1;
+      if (mode > 1) player = player % mode + 1;
       busy = false;
       updateHud();
     }, 350);
@@ -476,9 +512,11 @@ function collapse(fail) {
   }
   setTimeout(() => {
     $('overScore').textContent = score;
-    if (mode === 2) {
-      $('overTitle').textContent = `Player ${player === 1 ? 2 : 1} wins`;
-      $('overText').textContent = `Player ${player} toppled the tower after ${score} moves`;
+    if (mode > 1) {
+      const others = Array.from({ length: mode }, (_, i) => i + 1).filter(n => n !== player);
+      const list = others.length === 1 ? `Player ${others[0]}` : 'Players ' + others.slice(0, -1).join(', ') + ' and ' + others[others.length - 1];
+      $('overTitle').textContent = `Player ${player} toppled it`;
+      $('overText').textContent = `${list} ${others.length === 1 ? 'wins' : 'win'} · ${score} moves`;
     } else {
       $('overTitle').textContent = 'Tower down';
       $('overText').textContent = score >= best && score > 0 ? 'blocks moved · new best' : `blocks moved · best is ${best}`;
@@ -487,16 +525,31 @@ function collapse(fail) {
   }, 2200);
 }
 
-// ---------- Buttons ----------
-// players are picked on the game-over card; the choice applies when the tower is rebuilt
-function setMode(m) {
-  mode = m;
-  $('m1').setAttribute('aria-pressed', m === 1); $('m2').setAttribute('aria-pressed', m === 2);
+// ---------- Home screen ----------
+function setPlayers(n) {
+  mode = n;
+  document.querySelectorAll('.players button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === n));
+  $('homeNote').textContent = n === 1 ? 'Slide blocks out and stack them on top. Go slow on tight blocks.'
+    : `Take turns passing the phone. Whoever topples the tower loses.`;
+  try { localStorage.setItem('jenga-players', n); } catch (e) {}
 }
-$('m1').onclick = () => setMode(1);
-$('m2').onclick = () => setMode(2);
-$('restart').onclick = build;
-$('again').onclick = build;
+function showHome() {
+  endDrag(); $('over').hidden = true; $('hud').hidden = true; $('home').hidden = false;
+  $('homeBest').hidden = !best; $('homeBestN').textContent = best;
+  build();
+}
+function startGame() {
+  $('home').hidden = true; $('hud').hidden = false;
+  build(); state = 'play';
+  $('hint').classList.toggle('gone', moved);
+}
+document.querySelectorAll('.players button').forEach(b => b.onclick = () => setPlayers(+b.dataset.n));
+$('playBtn').onclick = startGame;
+$('toHome').onclick = showHome;
+$('overHome').onclick = showHome;
+$('restart').onclick = startGame;
+$('again').onclick = startGame;
+setPlayers(mode);
 
 // ---------- Loop ----------
 const FIXED = 1 / 120;
@@ -525,11 +578,12 @@ function frame(now) {
   meterWrap.dataset.on = w > 0.02 ? '1' : '0';
   meter.style.transform = `scaleX(${w})`;
   meter.style.background = w > 0.65 ? 'var(--danger)' : 'var(--accent)';
+  if (state === 'home' && !orbit) cam.yaw += dt * 0.12;
   placeCamera();
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
-build();
+showHome();
 requestAnimationFrame(frame);
 })();
 </script>
