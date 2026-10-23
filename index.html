@@ -41,7 +41,9 @@ if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)docume
 (function(){var d=document.documentElement,q=location.search,ok=false;
   try{ok=sessionStorage.getItem('dare-entered')==='1'}catch(e){}
   if(ok||/[?&]enter=0/.test(q)||/^\/[a-z-]+\//.test((document.referrer&&new URL(document.referrer).origin===location.origin)?new URL(document.referrer).pathname:''))d.classList.add('entered');
-  else d.classList.add('gated');
+  else{d.classList.add('gated');
+    // the enter page is black: match the phone's status bar and app chrome to it until the lobby opens
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{m.dataset.orig=m.content;m.content='#000000'});}
 })();
 </script>
 <style>
@@ -153,6 +155,8 @@ html.gated.leaving .wrap{visibility:visible}
   transition:transform .7s cubic-bezier(.7,0,.2,1)}
 html.leaving .gate{transform:translateY(-100%)}
 .gate>*{position:relative}
+.gate .g-top,.gate .g-mid,.gate .g-foot{transition:opacity .5s ease}
+html.gated:not(.fonts-ok) .gate .g-top,html.gated:not(.fonts-ok) .gate .g-mid,html.gated:not(.fonts-ok) .gate .g-foot{opacity:0}
 .g-top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);letter-spacing:.14em;font-size:15px;color:#9A9A9A}
 .g-top b{font-weight:400;color:#fff}
 .g-top b::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#EF3B2F;margin-right:8px;vertical-align:2px}
@@ -183,6 +187,9 @@ html.halloween .gate{background:radial-gradient(120% 70% at 70% 8%,#2a1440 0%,#1
   --hw-orange:#FF7A1A;--hw-glow:#FFB347}
 .gate>.hw{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .hw-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+html.halloween .hw::after{content:"";position:absolute;inset:-60px;background:var(--hw-grain) repeat;opacity:.05;pointer-events:none;will-change:transform}
+@media (prefers-reduced-motion:no-preference){html.halloween .hw::after{animation:grain .6s steps(5) infinite}}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-23px,17px)}40%{transform:translate(31px,-9px)}60%{transform:translate(-13px,-29px)}80%{transform:translate(19px,27px)}}
 html.halloween .g-top{color:#b9a6cf}
 html.halloween .g-top b::before{background:var(--hw-orange);box-shadow:0 0 10px var(--hw-orange)}
 html.halloween .g-top i{font-style:normal;color:var(--hw-glow)}
@@ -197,11 +204,12 @@ html.halloween .g-title>span+span{color:inherit;text-shadow:none}
 html.halloween .g-title>span+span .ch{background-image:linear-gradient(180deg,#fff1b8 0%,#ffc35a 26%,#ff7a1a 58%,#d9480b 100%);
   filter:drop-shadow(0 0 10px rgba(255,120,30,.55)) drop-shadow(0 0 30px rgba(255,90,0,.35))}
 @media (prefers-reduced-motion:no-preference){
-  html.halloween .g-title .ch{opacity:0;animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.55s + var(--i) * 70ms)}
-  html.halloween .g-title>span+span .ch{animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards,ignite 4.2s ease-in-out infinite;animation-delay:calc(.55s + var(--i) * 70ms),calc(1.8s + var(--i) * 140ms)}
-  html.halloween .g-pre,html.halloween .g-sub,html.halloween .enter,html.halloween .g-hint,html.halloween .fs-link,html.halloween .g-top,html.halloween .g-foot{animation:fadeup 1s cubic-bezier(.2,.8,.2,1) backwards}
-  html.halloween .g-top{animation-delay:.2s}html.halloween .g-pre{animation-delay:.35s}html.halloween .g-sub{animation-delay:1.3s}
-  html.halloween .enter{animation-delay:1.5s}html.halloween .g-hint{animation-delay:1.8s}html.halloween .fs-link{animation-delay:1.9s}html.halloween .g-foot{animation-delay:2s}
+  html.halloween .g-title .ch{opacity:0}
+  html.halloween.fonts-ok .g-title .ch{animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.25s + var(--i) * 70ms)}
+  html.halloween.fonts-ok .g-title>span+span .ch{animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards,ignite 4.2s ease-in-out infinite;animation-delay:calc(.25s + var(--i) * 70ms),calc(1.5s + var(--i) * 140ms)}
+  html.halloween.fonts-ok .g-pre,html.halloween.fonts-ok .g-sub,html.halloween.fonts-ok .enter,html.halloween.fonts-ok .g-hint,html.halloween.fonts-ok .fs-link,html.halloween.fonts-ok .g-top,html.halloween.fonts-ok .g-foot{animation:fadeup 1s cubic-bezier(.2,.8,.2,1) backwards}
+  html.halloween.fonts-ok .g-top{animation-delay:0s}html.halloween.fonts-ok .g-pre{animation-delay:.1s}html.halloween.fonts-ok .g-sub{animation-delay:1s}
+  html.halloween.fonts-ok .enter{animation-delay:1.2s}html.halloween.fonts-ok .g-hint{animation-delay:1.45s}html.halloween.fonts-ok .fs-link{animation-delay:1.55s}html.halloween.fonts-ok .g-foot{animation-delay:1.65s}
 }
 @keyframes rise{from{opacity:0;transform:translateY(.28em) scale(.96);filter:blur(10px)}to{opacity:1;transform:none}}
 @keyframes ignite{0%,100%{filter:drop-shadow(0 0 10px rgba(255,120,30,.55)) drop-shadow(0 0 30px rgba(255,90,0,.35))}46%{filter:drop-shadow(0 0 14px rgba(255,150,50,.75)) drop-shadow(0 0 44px rgba(255,100,10,.5))}50%{filter:drop-shadow(0 0 6px rgba(255,110,30,.35)) drop-shadow(0 0 18px rgba(255,90,0,.2))}54%{filter:drop-shadow(0 0 12px rgba(255,140,40,.7)) drop-shadow(0 0 38px rgba(255,90,0,.45))}}
@@ -230,6 +238,8 @@ html.halloween .enter{position:relative}
 html.halloween .hw-bug{display:block;position:absolute;top:-17px;right:22px;width:36px;height:30px;pointer-events:none;animation:crawl 9s ease-in-out infinite}
 .hw-bug i{display:block;width:100%;height:100%;filter:drop-shadow(0 0 2px rgba(220,190,255,.7)) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
 .hw-bug svg{display:block;width:100%;height:100%;animation:skitter .5s steps(2) infinite}
+html.halloween .hw-bug.live{animation:none;left:0;right:auto;top:-37px;width:88px;height:74px;filter:drop-shadow(0 0 1.5px rgba(220,190,255,.55))}
+.hw-spider-cv{display:block;width:88px;height:74px}
 @keyframes crawl{0%,14%{transform:translateX(0)}38%,52%{transform:translateX(calc(-1 * var(--crawl,120px)))}76%,100%{transform:translateX(0)}}
 @keyframes skitter{50%{transform:rotate(7deg) translateY(-1px)}}
 html.halloween .enter{color:#1a0800;border-radius:3px;overflow:visible;isolation:isolate;
@@ -497,13 +507,17 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   const html=document.documentElement;
   if(!html.classList.contains('gated')){dropMosaic();return;}
 
+  // Show the enter page's text only once its fonts are in (at most 1s), so nothing jumps while the app opens
+  {const ok=()=>html.classList.add('fonts-ok');
+    if(document.fonts&&document.fonts.load){Promise.race([Promise.all([document.fonts.load('400 1em "Bebas Neue"'),document.fonts.load('italic 400 1em "Crimson Pro"')]),new Promise(r=>setTimeout(r,1000))]).then(ok,ok)}else ok();}
   // Halloween countdown on the enter page
   if(html.classList.contains('halloween')){const n=+html.dataset.hwLeft||0,c=document.getElementById('hwCount');
     if(c)c.textContent=n===0?'HAPPY HALLOWEEN':n===1?'1 NIGHT TO HALLOWEEN':n+' NIGHTS TO HALLOWEEN';
     // split the title into letters for the reveal
     document.querySelectorAll('.g-title>span').forEach((w,wi)=>{const t=w.textContent;w.setAttribute('aria-label',t);w.textContent='';
       [...t].forEach((ch,i)=>{const l=document.createElement('span');l.className='ch';l.setAttribute('aria-hidden','true');l.textContent=ch;l.style.setProperty('--i',i+wi*4);w.appendChild(l)})});
-    const sc=document.createElement('script');sc.src='/halloween.js?v=5';document.body.appendChild(sc);}
+    const sc=document.createElement('script');sc.src='/halloween.js?v=10';document.body.appendChild(sc);
+    const sp=document.createElement('script');sp.src='/halloween-spider.js?v=2';document.body.appendChild(sp);}
   // Enter gate
   const gate=document.getElementById('gate'),btn=document.getElementById('enterBtn');
 
@@ -520,6 +534,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
     lobby.inert=false;window.scrollTo(0,0);
     html.classList.add('leaving');dropMosaic();
     const fin=()=>{html.classList.remove('gated','leaving');html.classList.add('entered');gate.remove();
+      document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{if(m.dataset.orig)m.content=m.dataset.orig});
       const a=document.querySelector('.play');a&&a.focus({preventScroll:true});};
     matchMedia('(prefers-reduced-motion: reduce)').matches?setTimeout(fin,300):gate.addEventListener('transitionend',function h(e){if(e.target!==gate)return;gate.removeEventListener('transitionend',h);fin()});
     setTimeout(()=>{if(gate.isConnected)fin()},1200);

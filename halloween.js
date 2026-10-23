@@ -31,53 +31,83 @@
   const mk = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
 
   /* ---------- textures that don't depend on screen size (built once) ---------- */
-  function cloudTex() { // soft cumulus band, tiles horizontally
-    const w = 768, h = 256, c = mk(w, h), g = c.getContext("2d"), im = g.createImageData(w, h), d = im.data, n = noise2(12);
+  /* ---------- noise textures, made off the main thread so the page never freezes while it opens ----------
+     TEX_SRC runs inside a Web Worker (or, if workers fail, on the main thread a moment after the first frame).
+     Each function returns raw RGBA pixels. */
+  const TEX_SRC = `
+  let seed = 7770031;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  function noise2(P) {
+    const g = new Float32Array(P * P); for (let i = 0; i < g.length; i++) g[i] = rnd();
+    const w = n => ((n % P) + P) % P, sm = t => t * t * (3 - 2 * t);
+    return (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), u = sm(x - xi), v = sm(y - yi);
+      const x0 = w(xi), x1 = w(xi + 1), y0 = w(yi) * P, y1 = w(yi + 1) * P;
+      const a = g[y0 + x0], b = g[y0 + x1], c = g[y1 + x0], d = g[y1 + x1];
+      return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
+  }
+  const fbm = (n, x, y, o) => { let s = 0, a = .5, f = 1, t = 0; for (let i = 0; i < o; i++) { s += a * n(x * f, y * f); t += a; a *= .5; f *= 2; } return s / t; };
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  function cloudPx(w, h) { // soft cumulus band, tiles horizontally
+    const d = new Uint8ClampedArray(w * h * 4), n = noise2(12);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const v = y / h, f = fbm(n, x / w * 12, v * 4, 6);
-      const a = ss(.46, .78, f) * Math.sin(Math.PI * v) ** 1.4;
-      const shade = .55 + .45 * (1 - v) * f;            // brighter tops, moonlit
-      const i = (y * w + x) * 4;
+      const v = y / h, f = fbm(n, x / w * 12, v * 4, 6), a = ss(.46, .78, f) * Math.sin(Math.PI * v) ** 1.4, shade = .55 + .45 * (1 - v) * f, i = (y * w + x) * 4;
       d[i] = 120 + 70 * shade; d[i + 1] = 108 + 62 * shade; d[i + 2] = 150 + 70 * shade; d[i + 3] = 255 * a;
     }
-    g.putImageData(im, 0, 0); return c;
+    return d;
   }
-  function fogTex() { // low ground fog, tiles horizontally
-    const w = 640, h = 160, c = mk(w, h), g = c.getContext("2d"), im = g.createImageData(w, h), d = im.data, n = noise2(8);
+  function fogPx(w, h) { // low ground fog, tiles horizontally
+    const d = new Uint8ClampedArray(w * h * 4), n = noise2(8);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const v = y / h, f = fbm(n, x / w * 8, v * 2.5, 5);
-      const a = ss(.3, .82, f) * Math.sin(Math.PI * v) ** 1.2;
-      const i = (y * w + x) * 4;
+      const v = y / h, f = fbm(n, x / w * 8, v * 2.5, 5), a = ss(.3, .82, f) * Math.sin(Math.PI * v) ** 1.2, i = (y * w + x) * 4;
       d[i] = 176; d[i + 1] = 166; d[i + 2] = 206; d[i + 3] = 255 * a;
     }
-    g.putImageData(im, 0, 0); return c;
+    return d;
+  }
+  function moonPx(R) { // a lit full moon: dark seas, craters with rims, limb darkening, anti-aliased edge
+    seed = 4242; const s = Math.ceil(R * 2) + 2, d = new Uint8ClampedArray(s * s * 4), big = noise2(16), fine = noise2(64), cr = [];
+    for (let i = 0; i < 34; i++) { const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * .96; cr.push([Math.cos(a) * r, Math.sin(a) * r, rnd() ** 2.6 * .15 + .016]); }
+    cr.push([-.18, .52, .1], [.38, -.22, .07], [-.45, -.4, .05]);
+    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+      const nx = (x + .5 - 1) / R - 1, ny = (y + .5 - 1) / R - 1, rr = nx * nx + ny * ny, i = (y * s + x) * 4;
+      if (rr >= 1) continue;
+      const nz = Math.sqrt(1 - rr), m = fbm(big, nx * 2.1 + 4.3, ny * 2.1 + 1.7, 4);
+      let alb = 1.02 - ss(.48, .64, m) * .22 + (fbm(fine, nx * 9 + 2, ny * 9 + 5, 3) - .5) * .08;
+      for (const [cx, cy, r0] of cr) {
+        const dx = nx - cx, dy = ny - cy, q = Math.sqrt(dx * dx + dy * dy) / r0;
+        if (q < 1) alb += -.05 * (1 - q * q) + .08 * q ** 3 * Math.max(0, (dx + dy) / (r0 * 1.4));
+        else if (q < 1.4) alb += .03 * (1.4 - q) / .4;
+      }
+      const lit = .62 + .38 * Math.pow(nz, .45), v = Math.max(0, Math.min(1.05, alb * lit)), edge = Math.min(1, (1 - Math.sqrt(rr)) * R);
+      d[i] = 255 * v; d[i + 1] = 240 * v; d[i + 2] = 200 * v; d[i + 3] = 255 * edge;
+    }
+    return { d, s };
+  }`;
+  const toCanvas = (d, w, h) => { const c = mk(w, h); c.getContext("2d").putImageData(new ImageData(d, w, h), 0, 0); return c; };
+  let CLOUD = null, FOG = null;
+  const TEX = { worker: null, local: null, wait: {} , id: 0 };
+  function texJob(kind, args, done) {
+    const id = ++TEX.id; TEX.wait[id] = done;
+    try {
+      if (!TEX.worker && TEX.worker !== false) {
+        const url = URL.createObjectURL(new Blob([TEX_SRC + `
+          onmessage = e => { const { id, kind, args } = e.data;
+            if (kind === "moon") { const r = moonPx(args[0]); postMessage({ id, d: r.d, w: r.s, h: r.s }, [r.d.buffer]); }
+            else { const d = (kind === "cloud" ? cloudPx : fogPx)(args[0], args[1]); postMessage({ id, d, w: args[0], h: args[1] }, [d.buffer]); } };`], { type: "text/javascript" }));
+        TEX.worker = new Worker(url);
+        TEX.worker.onmessage = e => { const f = TEX.wait[e.data.id]; delete TEX.wait[e.data.id]; if (f) f(toCanvas(e.data.d, e.data.w, e.data.h)); };
+        TEX.worker.onerror = () => { TEX.worker = false; };
+      }
+      if (TEX.worker) { TEX.worker.postMessage({ id, kind, args }); return; }
+    } catch (e) { TEX.worker = false; }
+    setTimeout(() => { // no worker: make it here, after the first frames are on screen
+      TEX.local = TEX.local || new Function(TEX_SRC + "; return { cloudPx, fogPx, moonPx };")();
+      if (kind === "moon") { const r = TEX.local.moonPx(args[0]); done(toCanvas(r.d, r.s, r.s)); }
+      else done(toCanvas((kind === "cloud" ? TEX.local.cloudPx : TEX.local.fogPx)(args[0], args[1]), args[0], args[1]));
+    }, 400);
   }
   function grainTex() {
     const s = 192, c = mk(s, s), g = c.getContext("2d"), im = g.createImageData(s, s), d = im.data;
     for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
-    g.putImageData(im, 0, 0); return c;
-  }
-  function moonTex(R) { // a lit full moon: dark seas, craters with rims, limb darkening, anti-aliased edge
-    const s = Math.ceil(R * 2) + 2, c = mk(s, s), g = c.getContext("2d"), im = g.createImageData(s, s), d = im.data;
-    const big = noise2(16), fine = noise2(64), cr = [];
-    for (let i = 0; i < 34; i++) { const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * .96; cr.push([Math.cos(a) * r, Math.sin(a) * r, rnd() ** 2.6 * .15 + .016]); }
-    cr.push([-.18, .52, .1], [.38, -.22, .07], [-.45, -.4, .05]);   // a few named-looking ones
-    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
-      const nx = (x + .5 - 1) / R - 1, ny = (y + .5 - 1) / R - 1, rr = nx * nx + ny * ny, i = (y * s + x) * 4;
-      if (rr >= 1) { d[i + 3] = 0; continue; }
-      const nz = Math.sqrt(1 - rr);
-      const m = fbm(big, nx * 2.1 + 4.3, ny * 2.1 + 1.7, 4);
-      let alb = 1.02 - ss(.48, .64, m) * .22 + (fbm(fine, nx * 9 + 2, ny * 9 + 5, 3) - .5) * .08;
-      for (const [cx, cy, r0] of cr) {
-        const dx = nx - cx, dy = ny - cy, q = Math.sqrt(dx * dx + dy * dy) / r0;
-        if (q < 1) alb += -.05 * (1 - q * q) + .08 * q ** 3 * Math.max(0, (dx + dy) / (r0 * 1.4)); // bowl + lit far rim
-        else if (q < 1.4) alb += .03 * (1.4 - q) / .4;                                            // ejecta ring
-      }
-      const lit = .62 + .38 * Math.pow(nz, .45);
-      const v = Math.max(0, Math.min(1.05, alb * lit));
-      const edge = Math.min(1, (1 - Math.sqrt(rr)) * R);
-      d[i] = Math.min(255, 255 * v); d[i + 1] = Math.min(255, 240 * v); d[i + 2] = Math.min(255, 200 * v); d[i + 3] = 255 * edge;
-    }
     g.putImageData(im, 0, 0); return c;
   }
   function pumpkinTex(S) { // returns {body, face}: the carved pumpkin, and its glowing cutouts to draw with a flicker
@@ -111,11 +141,15 @@
   }
 
   /* ---------- per-size layers ---------- */
+  let QMAX = 2;                      // resolution cap; lowered on the fly if a phone can't keep the scene smooth
   let W = 0, H = 0, D = 1, L = null, stars = [], bats = [], embers = [], pumpkins = [];
-  const CLOUD = cloudTex(), FOG = fogTex(), GRAIN = grainTex();
+  host.style.setProperty("--hw-grain", `url(${grainTex().toDataURL()})`);   // film grain runs as a GPU-composited CSS layer
+  texJob("cloud", [768, 256], c => { CLOUD = c; });
+  texJob("fog", [640, 160], c => { FOG = c; });
 
   function build() {
-    W = gate.clientWidth; H = gate.clientHeight; D = Math.min(2, window.devicePixelRatio || 1);
+    const prevMoon = L && L.moonTex;
+    W = gate.clientWidth; H = gate.clientHeight; D = Math.min(QMAX, window.devicePixelRatio || 1);
     cv.width = Math.round(W * D); cv.height = Math.round(H * D);
     seed = 31102026;
     const yG = H - Math.min(150, Math.max(92, H * .15));          // ground line
@@ -135,7 +169,7 @@
     mg.addColorStop(0, "rgba(255,226,170,.30)"); mg.addColorStop(.25, "rgba(200,170,230,.10)"); mg.addColorStop(1, "rgba(0,0,0,0)");
     s.fillStyle = mg; s.fillRect(0, 0, W, H);
     L.sky = sky;
-    L.moonTex = moonTex(R * D);
+    L.moonTex = prevMoon; { const mine = L; texJob("moon", [R * D], c => { mine.moonTex = c; }); }   // keep the old moon on screen until the new one is ready
 
     // stars (none near the moon or below the treeline)
     stars = [];
@@ -249,7 +283,16 @@
     const vg = v.createRadialGradient(W / 2, H * .45, Math.min(W, H) * .35, W / 2, H * .5, Math.max(W, H) * .85);
     vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.62)");
     v.fillStyle = vg; v.fillRect(0, 0, W, H);
+    const tg = v.createRadialGradient(W / 2, H * .45, 10, W / 2, H * .45, Math.min(W, H) * .62);   // soft shade behind the title
+    tg.addColorStop(0, "rgba(6,2,12,.38)"); tg.addColorStop(1, "rgba(6,2,12,0)");
+    v.fillStyle = tg; v.fillRect(0, 0, W, H);
     L.vig = vig;
+    // moon halo, drawn once
+    const hs = R * 6, halo = mk(hs * D, hs * D), hg = halo.getContext("2d"); hg.scale(D, D);
+    const hgr = hg.createRadialGradient(hs / 2, hs / 2, R * .95, hs / 2, hs / 2, R * 2.6);
+    hgr.addColorStop(0, "rgba(255,225,160,.35)"); hgr.addColorStop(.4, "rgba(255,200,140,.08)"); hgr.addColorStop(1, "rgba(0,0,0,0)");
+    hg.fillStyle = hgr; hg.fillRect(0, 0, hs, hs);
+    L.halo = halo;
 
     // bats and embers
     bats = Array.from({ length: W > 700 ? 9 : 6 }, (_, i) => ({ x: rnd() * W, y: H * (.08 + rnd() * .38), s: 10 + rnd() ** 2 * 18, v: 24 + rnd() * 40, f: 7 + rnd() * 6, p: rnd() * 6.3, wob: 10 + rnd() * 22, dir: rnd() < .8 ? 1 : -1 }));
@@ -360,17 +403,17 @@
     ctx.globalAlpha = 1;
     const m = L.moon, [mx, my] = shift(7), MX = m.x + mx, MY = m.y + my;
     ctx.globalCompositeOperation = "lighter";
-    const halo = ctx.createRadialGradient(MX, MY, m.R * .95, MX, MY, m.R * 2.6);
-    halo.addColorStop(0, "rgba(255,225,160,.35)"); halo.addColorStop(.4, "rgba(255,200,140,.08)"); halo.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = halo; ctx.fillRect(MX - m.R * 3, MY - m.R * 3, m.R * 6, m.R * 6);
+    ctx.drawImage(L.halo, MX - m.R * 3, MY - m.R * 3, m.R * 6, m.R * 6);
     ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(L.moonTex, MX - m.R, MY - m.R, m.R * 2 + 2 / D, m.R * 2 + 2 / D);
+    if (L.moonTex) ctx.drawImage(L.moonTex, MX - m.R, MY - m.R, m.R * 2 + 2 / D, m.R * 2 + 2 / D);
+    else { const mg2 = ctx.createRadialGradient(MX - m.R * .3, MY - m.R * .3, 1, MX, MY, m.R); mg2.addColorStop(0, "#fff6dc"); mg2.addColorStop(1, "#e8cf96"); ctx.fillStyle = mg2; ctx.beginPath(); ctx.arc(MX, MY, m.R, 0, Math.PI * 2); ctx.fill(); }
 
     // clouds drift across the moon (they light up with the lightning)
     cloudX = (cloudX + dt * 7) % (W * 1.8);
     const cw = W * 1.8, ch = Math.max(140, H * .26), [cxs, cys] = shift(11);
     for (const [off, y, a, k] of [[0, m.y - ch * .3, .55, 1], [W * .9, H * .04, .4, .6]]) {
       const x = -((cloudX * k + off) % cw) + cxs;
+      if (!CLOUD) continue;
       ctx.globalAlpha = Math.min(1, a + flash * .45); ctx.drawImage(CLOUD, x, y + cys, cw, ch); ctx.drawImage(CLOUD, x + cw, y + cys, cw, ch);
     }
     ctx.globalAlpha = 1;
@@ -395,7 +438,7 @@
     ctx.drawImage(L.far, -W * .02 + fxs, -H * .02 + fys, W * sc, H * sc);
     fogX = (fogX + dt * 10) % (W * 1.6);
     const fw = W * 1.6, fh = Math.max(110, H * .2);
-    ctx.globalAlpha = .55; ctx.drawImage(FOG, -fogX + fxs, L.yG - fh * .75 + fys, fw, fh); ctx.drawImage(FOG, -fogX + fw + fxs, L.yG - fh * .75 + fys, fw, fh);
+    if (FOG) { ctx.globalAlpha = .55; ctx.drawImage(FOG, -fogX + fxs, L.yG - fh * .75 + fys, fw, fh); ctx.drawImage(FOG, -fogX + fw + fxs, L.yG - fh * .75 + fys, fw, fh); }
     ctx.globalAlpha = 1;
     ctx.drawImage(L.near, -W * .02 + nxs, -H * .02 + nys, W * sc, H * sc);
 
@@ -418,7 +461,7 @@
     // front fog
     fog2X = (fog2X + dt * 16) % (W * 1.6);
     const [ffx] = shift(40);
-    ctx.globalAlpha = .32; ctx.drawImage(FOG, -fog2X + ffx, H - fh * .9, fw, fh); ctx.drawImage(FOG, -fog2X + fw + ffx, H - fh * .9, fw, fh);
+    if (FOG) { ctx.globalAlpha = .32; ctx.drawImage(FOG, -fog2X + ffx, H - fh * .9, fw, fh); ctx.drawImage(FOG, -fog2X + fw + ffx, H - fh * .9, fw, fh); }
     ctx.globalAlpha = 1;
 
     // embers + tap sparks
@@ -437,27 +480,26 @@
     }
     ctx.globalCompositeOperation = "source-over";
 
-    // a soft shade behind the title so it always reads
-    const tg = ctx.createRadialGradient(W / 2, H * .45, 10, W / 2, H * .45, Math.min(W, H) * .62);
-    tg.addColorStop(0, "rgba(6,2,12,.38)"); tg.addColorStop(1, "rgba(6,2,12,0)");
-    ctx.fillStyle = tg; ctx.fillRect(0, 0, W, H);
 
     if (flash > 0) { ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = `rgba(150,130,230,${.16 * flash})`; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = "source-over"; }
 
     ctx.drawImage(L.vig, 0, 0, W, H);
-    // film grain
-    grainF++;
-    ctx.globalAlpha = .045;
-    const gp = ctx.createPattern(GRAIN, "repeat");
-    ctx.translate((grainF * 37) % 192, (grainF * 53) % 192); ctx.fillStyle = gp; ctx.fillRect(-192, -192, W + 192, H + 192);
-    ctx.setTransform(D, 0, 0, D, 0, 0); ctx.globalAlpha = 1;
 
     // cinematic open: fade up from black
     const intro = reduce ? 1 : Math.min(1, (now - born) / 1600);
     if (intro < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - intro * intro * (3 - 2 * intro)})`; ctx.fillRect(0, 0, W, H); }
 
+    // keep it smooth: if frames run long, step the resolution down once or twice and redraw the layers
+    if (now - born > 1200 && dt > 0) {
+      perf.push(dt * 1000);                                  // time between frames, which includes the actual drawing
+      if (perf.length >= 30) {
+        const med = perf.sort((a, b) => a - b)[15]; perf = [];
+        if (med > 22 && D > 1) { QMAX = Math.max(1, D - .5); build(); }
+      }
+    }
     if (!reduce || sparks.length) raf = requestAnimationFrame(frame);
   }
+  let perf = [];
 
   function start() { cancelAnimationFrame(raf); build(); last = 0; raf = requestAnimationFrame(frame); }
   let rt = 0;
