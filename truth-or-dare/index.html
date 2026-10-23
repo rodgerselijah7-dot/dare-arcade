@@ -357,7 +357,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
     </div>
 
     <ul class="facts" aria-label="What's in the deck">
-      <li><b>240</b><span>cards</span></li>
+      <li><b id="factCards">360</b><span>cards</span></li>
       <li><b>3</b><span>heat levels</span></li>
       <li><b>2–12</b><span>players</span></li>
     </ul>
@@ -397,7 +397,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
       <div class="seg heat" id="heatSeg">
         <button data-heat="chill"><span class="pips"><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Chill</b><small>Anybody</small></button>
         <button data-heat="party"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Party</b><small>Embarrassing</small></button>
-        <button data-heat="spicy"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg></span><b>Spicy</b><small>18+ flirty</small></button>
+        <button data-heat="spicy"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg></span><b>Spicy</b><small>18+ bold</small></button>
       </div>
     </div>
 
@@ -537,7 +537,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
         <div class="seg heat" id="olHeat">
           <button data-heat="chill"><span class="pips"><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Chill</b><small>Anybody</small></button>
           <button data-heat="party"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Party</b><small>Embarrassing</small></button>
-          <button data-heat="spicy"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg></span><b>Spicy</b><small>18+ flirty</small></button>
+          <button data-heat="spicy"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg></span><b>Spicy</b><small>18+ bold</small></button>
         </div>
         <div class="label" style="margin-top:16px">Rounds</div>
         <div class="rounds" id="olRounds">
@@ -598,7 +598,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 
 <div class="sheet" id="ageSheet" hidden><div class="box">
   <h3>Spicy is 18+</h3>
-  <p>Spicy cards are flirty: dates, crushes, kisses on the cheek and slow dances. Everyone playing should be 18 or older, and anything with another player is always their call.</p>
+  <p>Spicy cards are about dating, crushes, confidence and romance. Bold, never sexual. Everyone playing should be 18 or older, and anything with another player is always their call.</p>
   <div class="row2">
     <button class="ghost" data-close>Not us</button>
     <button class="cta" id="ageOk" style="font-size:1.15rem;padding:13px">We're all 18+</button>
@@ -656,7 +656,27 @@ truth: [
 "What's the most embarrassing thing your family has caught you doing?",
 "What would your autobiography be called?",
 "What's a hill you'll die on, even though it doesn't matter?",
-"Who here has the best laugh?"
+"Who here has the best laugh?",
+"What's the most useless skill you're proud of?",
+"What's a trend you secretly wanted to try but never did?",
+"What's the funniest thing you've ever seen happen in public?",
+"Which cartoon character are you most like?",
+"What's the last thing that made you laugh so hard you cried?",
+"What's a smell that instantly takes you back to childhood?",
+"What's the weirdest thing you've ever eaten?",
+"If you were a snack, what would you be and why?",
+"What's the worst job you've ever had?",
+"What would you do with a free day and no phone?",
+"What's a word or phrase you say way too much?",
+"Who's the most famous person you've ever met?",
+"What's the most embarrassing thing you've worn in a photo?",
+"What's a rule you followed as a kid that makes no sense now?",
+"If you had to eat one meal forever, what would it be?",
+"Which player here would you want on your trivia team?",
+"What's the longest you've ever stayed awake?",
+"What's a small thing that instantly ruins your mood?",
+"What's something everyone loves that you just don't get?",
+"What's the best prank you've ever pulled or fallen for?"
 ],
 dare: [
 "Talk in an accent the group picks until your next turn.",
@@ -698,7 +718,27 @@ dare: [
 "Swap a jacket, hat or socks with {p} for the rest of the game.",
 "Talk without closing your mouth for 30 seconds.|30",
 "Do your best robot dance for 15 seconds.|15",
-"Let {r} pick a pose. Hold it until your next turn starts."
+"Let {r} pick a pose. Hold it until your next turn starts.",
+"Report on this game like a news anchor breaking a big story.|30",
+"Say a tongue twister three times fast. The group picks it.",
+"Walk across the room like you're on the moon.",
+"Let {p} give you a movie-villain name. Introduce yourself with it.",
+"Act out a slow-motion action scene.|15",
+"Make the group laugh using only facial expressions. No sounds.|30",
+"Teach the group a dance move. Everyone has to do it with you.",
+"Name 10 fruits.|15",
+"Give a tour of this room like it's a famous museum.|30",
+"Do an impression of {l} ordering at a drive-thru.",
+"Draw a self-portrait with your eyes closed and show everyone.",
+"Stand on one foot.|30",
+"Talk like a pirate until your next turn.",
+"Invent a secret handshake with {r} and teach it to the group.",
+"Describe your day today like an action movie trailer.",
+"Give every player a one-word compliment.",
+"Act out your favorite animal until someone guesses it.",
+"Do your best superhero landing.",
+"Make up a 4-line poem about the snack closest to you.",
+"Be a robot vacuum and clean the room with sound effects.|20"
 ]},
 party: {
 truth: [
@@ -741,7 +781,27 @@ truth: [
 "What's something you've never admitted to {p}?",
 "What's the most embarrassing song in your recently played?",
 "What's the worst outfit you've ever left the house in, on purpose?",
-"Who in your phone would you never let this group text?"
+"Who in your phone would you never let this group text?",
+"What's the most embarrassing thing you've done in front of a crush?",
+"What's the last thing you exaggerated on social media?",
+"Who in this room would you trust with your unlocked phone for an hour?",
+"What's the worst advice you've ever given someone?",
+"What's a secret talent you hide because it's embarrassing?",
+"What's the wildest thing you've done at 2 a.m.?",
+"What's the boldest thing you've ever said to a teacher or boss?",
+"Who's the last person you unfollowed, and why?",
+"What's your most chaotic group chat habit?",
+"What's something you did as a teen that your family still doesn't know?",
+"Who here would last the longest on a reality show?",
+"What's the most embarrassing autocorrect you've ever sent?",
+"Have you ever pretended to know someone famous? Who?",
+"What's one thing you'd never want this group to find in your camera roll?",
+"What's the most dramatic exit you've ever made?",
+"What's a fake excuse you've used more than once?",
+"Who here would you want as your getaway driver?",
+"What's the most you've ever embarrassed yourself trying to look cool?",
+"Which player here would you swap closets with?",
+"What's a hot take you'd defend to everyone in this room?"
 ],
 dare: [
 "Let the group write a text. Send it to the fifth person in your messages.",
@@ -783,97 +843,157 @@ dare: [
 "Do your best impression of your mom or dad catching you sneaking in.",
 "Let {r} pick a celebrity. Stay in character as them until your next turn.",
 "Sing the chorus of any song as loud as you can. Right now.",
-"Call the last person you texted and tell them a fun fact, then hang up."
+"Call the last person you texted and tell them a fun fact, then hang up.",
+"Let the group choose an emoji. Post it as your story or status with no caption.",
+"Do your best impression of {p} telling a story.",
+"Speak in slow motion until your next turn.",
+"Let {l} pick a song. Dance to it like nobody's watching.|20",
+"Call a friend and ask for directions to the moon. Keep a straight face.",
+"Show the group your most-used emoji and act it out.",
+"Read your last voice note or message out loud like a movie trailer.",
+"Text a friend \"Guess what happened today\" and don't explain until the game ends.",
+"Do a runway walk to a song {p} picks.|30",
+"Freestyle a rap about what everyone is wearing.|30",
+"Let {p} change your ringtone or alarm sound. It stays until tomorrow.",
+"Give an award speech for winning Best Player Tonight.|30",
+"Film a pretend get-ready-with-me like a famous influencer.|30",
+"Let the group pick a word. Sneak it into a text to your group chat.",
+"Do 10 squats while saying everyone's name.",
+"Be {l}'s hype person while they walk across the room.",
+"Read your last 3 notifications out loud.",
+"Let {p} draw something on your hand with a pen.",
+"Be a voice assistant and answer the group's questions.|30",
+"Tell the story of your most awkward moment like a sports announcer."
 ]},
 spicy: {
 truth: [
 "Who in this room would you go on a date with?",
 "What's the first thing you notice about someone you're into?",
-"What's your biggest turn-on that isn't physical?",
+"What's the most attractive thing about a person that has nothing to do with looks?",
 "What's the most romantic thing you've ever done for someone?",
-"Have you ever had a crush on a friend?",
+"Have you ever had a crush on a friend? Did they know?",
 "What's the boldest move you've ever made on someone?",
 "Rate your flirting game from 1 to 10. Then {p} rates it.",
 "What's the cheesiest pickup line that has actually worked on you?",
-"What's your biggest turn-off?",
-"Who here do you think is the best kisser? Why?",
-"What's your love language?",
+"What's your biggest dating dealbreaker?",
+"What's your love language, and how do you show it?",
 "Have you ever slid into someone's DMs? How'd it go?",
-"Tell us about your first kiss.",
+"Tell the story of your first crush.",
 "What instantly makes you lose interest in someone?",
-"Have you ever had feelings for two people at once?",
 "Describe your perfect date night, start to finish.",
-"What's the most attractive thing about {p}?",
-"Have you ever kissed someone and regretted it right away?",
+"What's the most attractive personality trait {p} has?",
 "Who here would you trust to set you up on a blind date?",
-"What's a secret about your love life nobody here knows?",
 "What's the most jealous you've ever been?",
-"What do you find attractive that most people don't?",
-"Read the last flirty text you sent.",
-"Have you ever kept a relationship secret?",
+"What's the sweetest text you've ever gotten from someone you liked?",
+"Have you ever kept a relationship secret? Why?",
 "Who's the one that got away?",
 "What's the most spontaneous romantic thing you've done?",
-"If you had to kiss someone in this room, who would it be?",
 "What's a compliment you'd love to hear from someone you like?",
-"Have you ever had a crush on a teacher or a boss?",
 "What's your most embarrassing moment on a date?",
-"What song sets the mood for you?",
 "What's one thing you want a partner to do more often?",
-"Have you ever lied about your age or job to impress someone?",
-"Who here would you want to be stuck on an island with?",
-"What's your favorite feature on yourself?",
+"Have you ever exaggerated something to impress someone you liked? What?",
 "Who was the last person who gave you butterflies?",
-"What would your ex say is your worst habit?",
-"What's the longest you've waited before texting back someone you liked?",
-"What's the most attractive voice or accent to you?",
-"Who here do you think flirts the most?"
+"What would your ex say is your best quality and your worst?",
+"What's the longest you've waited to text back someone you liked, on purpose?",
+"What's a green flag that makes you fall for someone fast?",
+"What's the biggest red flag you've ignored because they were cute?",
+"Who in this room has the best smile? Be honest.",
+"What's the worst pickup line someone has used on you?",
+"Have you ever been friend-zoned? Tell the story.",
+"What's a dating profile line that makes you swipe left instantly?",
+"Would you rather be swept off your feet or do the sweeping?",
+"What's the most effort you've ever put into a first date?",
+"What's the most awkward way a crush found out you liked them?",
+"If you planned {l}'s dream date, where would you send them?",
+"What's a song that reminds you of someone you used to like?",
+"Who here is the biggest hopeless romantic?",
+"What's something you pretend not to care about in dating but really do?",
+"What's the best date you've ever been on?",
+"Who's a celebrity you had an embarrassingly big crush on?",
+"What's something people only learn about you once they date you?",
+"Who here would make the best partner, and why?",
+"What's the most unexpected place you've met someone you liked?",
+"Have you ever written someone a love letter or poem? What did it say?",
+"What's the bravest thing you've done for love?",
+"What's the fastest you've ever caught feelings?",
+"What's your go-to move when you want someone to notice you?",
+"Who here would you ask for dating advice? Who would you never ask?",
+"What's the biggest lesson a past relationship taught you?",
+"What's your most unpopular opinion about dating?",
+"Have you ever had a secret admirer, or been one?",
+"What's the cutest way someone has asked you out?",
+"If you could go on one date with any celebrity, who would it be and where?",
+"Who here gives off the most main-character energy?",
+"Describe your type. Does anyone in this room fit it?",
+"What's a promise you made to someone you liked that you didn't keep?",
+"What's a text you sent a crush that you wish you could unsend?"
 ],
 dare: [
-"Give {p} your most convincing pickup line.",
-"Kiss {p} on the cheek.",
-"Whisper something flirty in {l}'s ear.",
-"Give {p} a shoulder massage for 30 seconds.|30",
-"Hold eye contact with {p} for 30 seconds without laughing.|30",
-"Slow dance with {p} for 30 seconds. No music needed.|30",
-"Write {p}'s dating profile out loud.",
-"Send the flirtiest emoji you know to your most recent chat. No explanation.",
-"Serenade {p} with a love song. Make one up if you have to.",
-"Do your most confident walk across the room.",
-"Recreate a romantic movie scene with {p}.",
-"Sit next to {p} with your arm around them until your next turn.",
-"Give everyone a one-word compliment about how they look tonight.",
-"Show the last selfie you took. No deleting first.",
-"Hold hands with {p} until your next turn.",
+"Give {p} your most convincing pickup line. Make it an original.",
+"Tell {p} the most attractive thing about their personality.",
+"Whisper a compliment to {l} you've never said out loud.",
+"Hold eye contact with {p} without laughing.|30",
+"Slow dance with an invisible partner while {p} narrates.|30",
+"Write {p}'s dating profile bio out loud. Make it irresistible.",
+"Send the most romantic emoji combo you can to your most recent chat. No explanation.",
+"Serenade {p} with a love song you make up on the spot.|30",
+"Do your most confident runway walk while {l} hypes you up.",
+"Recreate a famous romantic movie scene with {p}. They pick the movie.",
+"Give every player a one-line compliment that would make them blush.",
+"Show the group the last selfie you took. No deleting first.",
 "Write a three-line love poem for {p} and read it out loud.",
-"Flirt with {p} using only food puns for 30 seconds.|30",
-"Feed {p} a bite of something, romantic-movie style.",
-"The group picks someone here. Give them a 10-second hug.|10",
-"Read the ingredients of something nearby in your most seductive voice.",
-"Act out how you'd ask {p} on a date.",
-"Kiss {l}'s hand like royalty.",
-"Let {p} style your date-night outfit with whatever's in the room.",
-"Rate everyone's outfit tonight from 1 to 10, out loud.",
-"Let the group read your last DM conversation and judge your game.",
-"Trace a heart on {p}'s hand and say something sweet.",
+"Flirt with {p} using only food puns.|30",
+"Act out asking {p} on a first date, from hello to the plan.",
+"Rate everyone's outfit tonight from 1 to 10, with a reason.",
+"Let the group read your last DM conversation and rate your texting game.",
 "Give {p} a pet name. Use it until the game ends.",
-"Do your best body roll for 10 seconds.|10",
-"Show us exactly how you flirt at a party. {p} is your target.",
-"Let {l} write a flirty text. You choose who gets it.",
-"Tell {p} the most attractive thing about them.",
+"Show us exactly how you flirt at a party. A chair is your target.",
+"Let {l} write a sweet text for you. You choose who gets it.",
 "Whisper your celebrity crush to {p}. They announce it like breaking news.",
-"Introduce {p} to the room like they're your date.",
-"Take your best kissy-face selfie and make it your profile picture for an hour.",
-"Wink at every player, one at a time, and keep a straight face.",
-"Let {p} ask you anything. You can't lie.",
-"Describe your dream date with {p} like a movie trailer.",
-"Give {r} a compliment so smooth they blush. If they don't, try again.",
-"Text someone you used to talk to \"thought about you today.\"",
-"Pick the person here with the best smile and tell them why."
+"Introduce {p} to the room like they're your date at a fancy dinner.",
+"Take your most charming selfie and make it your profile picture for an hour.",
+"Wink at every player, one at a time, with a straight face.",
+"Let {p} ask you anything about your love life. You can't lie.",
+"Describe your dream date with {p} like a movie trailer.|30",
+"Give {r} a compliment so smooth they blush. Keep going until they do.|30",
+"Text someone you haven't talked to in a while: \"thought about you today.\"",
+"Pick the person here with the best smile and tell them why.",
+"Make a dramatic love confession to the nearest lamp, plant or chair.|30",
+"Pitch {p} to the room like a contestant on a dating show.|30",
+"Read your most recent chat in a romantic movie narrator voice.",
+"The group picks your celebrity soulmate. Leave them a heartfelt pretend voicemail.|30",
+"Play matchmaker: pick two players who'd make a great duo and make your case.",
+"Make up a pickup line using {l}'s name and deliver it to them.",
+"Act out the worst first date ever with {p} as your date.|30",
+"Narrate everything you do like a romance novel until your next turn.",
+"Tell {p} three green flags you see in them.",
+"Plan the perfect date for {r} on a $20 budget.|30",
+"The group picks a love song. Lip sync it to {p} like you mean it.",
+"Describe your type using only objects in this room.",
+"Give a toast to the person here you'd want as your wingman.",
+"Let {p} scroll your music and pick your official crush song.",
+"Act out meeting your celebrity crush for the first time.|20",
+"Give every player your smoothest \"Hey, how you doin'?\"",
+"Write a compliment on a scrap of paper and give it to {l}.",
+"Pretend {p} just proposed. React like it's the movie finale.|20",
+"Text a friend: \"I need dating advice. Call me.\" Take the call if they do.",
+"Rate your own profile photo out loud, then let the group rate it.",
+"Tell your most embarrassing crush story like a fairy tale.",
+"Ask {p} on a pretend date. They accept or turn you down dramatically.",
+"Name the last romantic movie or show you watched and defend it.",
+"Swap a jacket, hat or socks with {p} for the next round.",
+"Give {r} your best dating advice.|30",
+"Let {l} pick an accent. Flirt with an imaginary crush in it.|20",
+"Name three things you find attractive in a person that aren't about looks.",
+"Review {p}'s style like a fashion critic who's a little in love with it.|20",
+"Act out a dramatic \"we need to talk\" scene with {p}.|30",
+"Bow and ask {p} for a dance. They decide if it's a yes.",
+"Tell {l} what you think their love language is, and why."
 ]}};
 const MIX = {chill:{chill:1}, party:{party:.72, chill:.28}, spicy:{spicy:.62, party:.38}};
 const HEAT_NAME = {chill:'Chill', party:'Party', spicy:'Spicy'};
 const PTS = {truth:1, dare:2, double:4, chicken:-1};
-const SWAPS = 2, DOUBLE_CHANCE = .1;
+const SWAPS = 2, DOUBLE_CHANCE = .1, MIN_PLAYERS = 2;
 
 /* ================= STORAGE ================= */
 const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
@@ -945,10 +1065,10 @@ function renderHome(){
   $('nameIn').disabled = cfg.players.length >= 12;
   document.querySelectorAll('#heatSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.heat === cfg.heat));
   document.querySelectorAll('#roundSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === cfg.rounds));
-  const ok = cfg.players.length >= 2;
+  const ok = cfg.players.length >= MIN_PLAYERS;
   $('startBtn').disabled = !ok;
   $('startNote').textContent = ok ? (cfg.players.length + ' players · ' + HEAT_NAME[cfg.heat] + ' deck · ' + (cfg.rounds ? cfg.rounds + ' rounds' : 'no round limit'))
-                                  : (cfg.players.length ? 'Seat one more player.' : 'Seat at least 2 players.');
+                                  : (cfg.players.length ? 'Seat ' + (MIN_PLAYERS - cfg.players.length) + ' more player' + (MIN_PLAYERS - cfg.players.length === 1 ? '' : 's') + '.' : 'Seat at least ' + MIN_PLAYERS + ' players.');
   $('mineCount').textContent = mine.length;
   $('resumePanel').hidden = !G;
   $('stats').hidden = !(cfg.games || cfg.flips);
@@ -1376,8 +1496,8 @@ function renderLobby(force){
   if (h){
     document.querySelectorAll('#olHeat button').forEach(b => b.setAttribute('aria-pressed', b.dataset.heat === cfg.heat));
     document.querySelectorAll('#olRounds button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === cfg.rounds));
-    $('olStart').disabled = rows.length < 2;
-    $('olStart').textContent = rows.length < 2 ? 'Waiting for players' : 'Deal everyone in';
+    $('olStart').disabled = rows.length < MIN_PLAYERS;
+    $('olStart').textContent = rows.length < MIN_PLAYERS ? 'Need ' + (MIN_PLAYERS - rows.length) + ' more to start' : 'Deal everyone in';
     $('olWait').hidden = true;
   } else {
     const lob = host && host.presence.lob || {};
@@ -1406,7 +1526,7 @@ function uniq(name, taken){
 function hostStart(){
   if (!NET.me){ toast('Still connecting. Try again in a second.'); return; }
   const os = others().filter(p => p.presence.role !== 'h');
-  if (!os.length){ toast('Wait for at least one more player.'); return; }
+  if (os.length + 1 < MIN_PLAYERS){ toast('You need at least ' + MIN_PLAYERS + ' players to start.'); return; }
   const taken = new Set(), players = [newPlayer(NET.me, uniq(cfg.nick || 'Host', taken))];
   for (const p of os.slice(0, MAX_ONLINE - 1)) players.push(newPlayer(p.peer, uniq(nickOf(p), taken)));
   lfgStop(); $('olNote').textContent = '';
@@ -1582,6 +1702,7 @@ if (DP && ON_SITE){
   DP.alerts.toggle($('olAlerts'), [GAME_ID], {accent:'#e3121b', label:'Get a notification when someone opens a Truth or Dare room.'});
 }
 
+$('factCards').textContent = Object.values(DECK).reduce((n, d) => n + d.truth.length + d.dare.length, 0);
 renderHome(); show('title');
 if (DP && DP.joinCode()){
   const c = DP.joinCode(); DP.clearJoin(); openOnline(); $('olCode').value = c;
