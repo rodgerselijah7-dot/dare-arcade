@@ -159,8 +159,8 @@ html.leaving .gate{transform:translateY(-100%)}
 .g-mid{text-align:center}
 .g-pre{font-family:var(--display);letter-spacing:.32em;font-size:16px;color:#9A9A9A;margin-bottom:10px}
 .g-title{font-family:var(--display);font-weight:400;color:#fff;margin:0;line-height:.8;font-size:clamp(96px,30vw,220px);letter-spacing:.02em}
-.g-title span{display:block}
-.g-title span+span{color:#EF3B2F;font-size:.62em;letter-spacing:.12em;margin-top:.12em}
+.g-title>span{display:block;white-space:nowrap}
+.g-title>span+span{color:#EF3B2F;font-size:.62em;letter-spacing:.12em;margin-top:.12em}
 .g-sub{font-style:italic;color:#BDBDBD;font-size:18px;margin:22px auto 0;max-width:24em;text-wrap:balance}
 .enter{display:inline-flex;align-items:center;gap:14px;margin-top:34px;cursor:pointer;
   font-family:var(--display);font-size:34px;letter-spacing:.2em;color:#000;background:#fff;border:0;border-radius:0;
@@ -188,8 +188,42 @@ html.halloween .g-top b::before{background:var(--hw-orange);box-shadow:0 0 10px 
 html.halloween .g-top i{font-style:normal;color:var(--hw-glow)}
 html.halloween .g-pre{color:#b9a6cf}
 html.halloween .hw-ed{display:block;color:var(--hw-glow);margin-top:6px}
-html.halloween .g-title{text-shadow:0 0 30px rgba(140,80,220,.35)}
-html.halloween .g-title span+span{color:var(--hw-orange);text-shadow:0 0 18px rgba(255,122,26,.55),0 0 46px rgba(255,90,0,.35);animation:glow 3.2s ease-in-out infinite}
+/* premium title: carved bone DARE, ember ARCADE, letters rise in one by one */
+html.halloween .g-title{text-shadow:none}
+html.halloween .g-title .ch{display:inline-block;color:transparent;-webkit-background-clip:text;background-clip:text}
+html.halloween .g-title>span:first-child .ch{background-image:linear-gradient(176deg,#ffffff 0%,#f1ebf8 34%,#c9bedb 58%,#efe9f6 74%,#a597bd 100%);
+  filter:drop-shadow(0 2px 0 rgba(40,20,60,.9)) drop-shadow(0 10px 22px rgba(0,0,0,.65)) drop-shadow(0 0 26px rgba(150,110,230,.28))}
+html.halloween .g-title>span+span{color:inherit;text-shadow:none}
+html.halloween .g-title>span+span .ch{background-image:linear-gradient(180deg,#fff1b8 0%,#ffc35a 26%,#ff7a1a 58%,#d9480b 100%);
+  filter:drop-shadow(0 0 10px rgba(255,120,30,.55)) drop-shadow(0 0 30px rgba(255,90,0,.35))}
+@media (prefers-reduced-motion:no-preference){
+  html.halloween .g-title .ch{opacity:0;animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.55s + var(--i) * 70ms)}
+  html.halloween .g-title>span+span .ch{animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards,ignite 4.2s ease-in-out infinite;animation-delay:calc(.55s + var(--i) * 70ms),calc(1.8s + var(--i) * 140ms)}
+  html.halloween .g-pre,html.halloween .g-sub,html.halloween .enter,html.halloween .g-hint,html.halloween .fs-link,html.halloween .g-top,html.halloween .g-foot{animation:fadeup 1s cubic-bezier(.2,.8,.2,1) backwards}
+  html.halloween .g-top{animation-delay:.2s}html.halloween .g-pre{animation-delay:.35s}html.halloween .g-sub{animation-delay:1.3s}
+  html.halloween .enter{animation-delay:1.5s}html.halloween .g-hint{animation-delay:1.8s}html.halloween .fs-link{animation-delay:1.9s}html.halloween .g-foot{animation-delay:2s}
+}
+@keyframes rise{from{opacity:0;transform:translateY(.28em) scale(.96);filter:blur(10px)}to{opacity:1;transform:none}}
+@keyframes ignite{0%,100%{filter:drop-shadow(0 0 10px rgba(255,120,30,.55)) drop-shadow(0 0 30px rgba(255,90,0,.35))}46%{filter:drop-shadow(0 0 14px rgba(255,150,50,.75)) drop-shadow(0 0 44px rgba(255,100,10,.5))}50%{filter:drop-shadow(0 0 6px rgba(255,110,30,.35)) drop-shadow(0 0 18px rgba(255,90,0,.2))}54%{filter:drop-shadow(0 0 12px rgba(255,140,40,.7)) drop-shadow(0 0 38px rgba(255,90,0,.45))}}
+@keyframes fadeup{from{opacity:0;transform:translateY(14px)}}
+html.halloween .hw-right{display:inline-flex;align-items:center;gap:12px}
+html.halloween .g-top i{font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:420px){html.halloween .g-top{font-size:13px;letter-spacing:.1em}html.halloween .hw-right{gap:10px}}
+.hw-snd{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:#f3e9ff;background:rgba(20,10,32,.55);
+  border:1px solid rgba(220,190,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:border-color .2s,box-shadow .2s}
+.hw-snd svg{width:18px;height:18px}
+.hw-snd .on{display:none}.hw-snd[aria-pressed="true"] .on{display:inline}.hw-snd[aria-pressed="true"] .off{display:none}
+.hw-snd[aria-pressed="true"]{border-color:rgba(255,160,80,.7);box-shadow:0 0 14px rgba(255,122,26,.4)}
+.hw-snd:focus-visible{outline:2px solid #fff;outline-offset:3px}
+html.halloween .g-sub{letter-spacing:.01em}
+html.halloween .g-foot::before,html.halloween .g-foot::after{content:"";display:inline-block;width:28px;height:1px;background:linear-gradient(90deg,transparent,#9d8ab3);vertical-align:middle;margin:0 12px}
+html.halloween .g-foot::after{transform:scaleX(-1)}
+/* exit: push into the scene and fade, instead of sliding up */
+html.halloween .gate{transition:opacity .85s cubic-bezier(.4,0,.2,1)}
+html.halloween .hw-cv{transition:transform 1s cubic-bezier(.4,0,.2,1),filter 1s}
+html.halloween.leaving .gate{transform:none;opacity:0}
+html.halloween.leaving .hw-cv{transform:scale(1.14);filter:brightness(1.4)}
+html.halloween.igniting .g-mid{transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s;transform:scale(1.04);opacity:.0}
 @keyframes glow{50%{text-shadow:0 0 26px rgba(255,140,40,.8),0 0 70px rgba(255,90,0,.45)}}
 html.halloween .g-sub{color:#d6c9e6}
 html.halloween .enter{position:relative}
@@ -198,12 +232,21 @@ html.halloween .hw-bug{display:block;position:absolute;top:-17px;right:22px;widt
 .hw-bug svg{display:block;width:100%;height:100%;animation:skitter .5s steps(2) infinite}
 @keyframes crawl{0%,14%{transform:translateX(0)}38%,52%{transform:translateX(calc(-1 * var(--crawl,120px)))}76%,100%{transform:translateX(0)}}
 @keyframes skitter{50%{transform:rotate(7deg) translateY(-1px)}}
-html.halloween .enter{background:var(--hw-orange);color:#120700;box-shadow:0 0 30px rgba(255,122,26,.45)}
-html.halloween .enter:hover,html.halloween .enter:focus-visible{background:#fff;color:#000}
+html.halloween .enter{color:#1a0800;border-radius:3px;overflow:visible;isolation:isolate;
+  background:linear-gradient(180deg,#ffc070 0%,#ff8a22 42%,#ef6410 70%,#c84808 100%);
+  box-shadow:inset 0 1px 0 rgba(255,240,210,.85),inset 0 0 0 1px rgba(255,220,160,.55),inset 0 -4px 10px rgba(120,30,0,.45),0 12px 34px rgba(255,100,20,.42),0 0 70px rgba(255,120,30,.22);
+  text-shadow:0 1px 0 rgba(255,220,170,.55);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,background .2s}
+html.halloween .enter::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,250,230,.75) 50%,transparent 62%) -160% 0/60% 100% no-repeat}
+@media (prefers-reduced-motion:no-preference){html.halloween .enter::before{animation:sheen 4.8s ease-in-out 2.6s infinite}}
+@keyframes sheen{0%,70%{background-position:-160% 0}100%{background-position:260% 0}}
+html.halloween .enter:hover,html.halloween .enter:focus-visible{background:linear-gradient(180deg,#ffd38f 0%,#ff9a33 42%,#f47318 70%,#d4520a 100%);color:#1a0800;transform:translateY(-2px);
+  box-shadow:inset 0 1px 0 rgba(255,245,220,.9),inset 0 0 0 1px rgba(255,230,180,.7),inset 0 -4px 10px rgba(120,30,0,.4),0 18px 44px rgba(255,110,20,.55),0 0 90px rgba(255,130,40,.32)}
+html.halloween .enter:active{transform:translateY(1px) scale(.98)}
 html.halloween .g-hint{color:var(--hw-glow)}
 html.halloween .fs-link{color:#b9a6cf}
 html.halloween .g-foot{color:#9d8ab3;z-index:1}
-@media (prefers-reduced-motion:reduce){.hw-bug,.hw-bug svg,html.halloween .g-title span+span{animation:none}}
+@media (prefers-reduced-motion:reduce){.hw-bug,.hw-bug svg,html.halloween .g-title span+span{animation:none}html.halloween .gate{transition:opacity .3s}}
 
 /* ===== Home Screen guide ===== */
 .fs-link{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:none;border:0;cursor:pointer;
@@ -245,7 +288,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
   <div class="hw" aria-hidden="true">
   </div>
-    <div class="g-top"><b>DARE</b><i class="hw-only" id="hwCount"></i></div>
+    <div class="g-top"><b>DARE</b><span class="hw-only hw-right"><i id="hwCount"></i><button class="hw-snd" id="hwSound" type="button" aria-pressed="false" aria-label="Turn on sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off" d="M16 9l5 6M21 9l-5 6"/></svg></button></span></div>
   <div class="g-mid">
     <p class="g-pre">DONTAE AMARE PRESENTS<span class="hw-only hw-ed">HALLOWEEN EDITION</span></p>
     <h1 class="g-title" id="gateTitle"><span>DARE</span><span>ARCADE</span></h1>
@@ -457,7 +500,10 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   // Halloween countdown on the enter page
   if(html.classList.contains('halloween')){const n=+html.dataset.hwLeft||0,c=document.getElementById('hwCount');
     if(c)c.textContent=n===0?'HAPPY HALLOWEEN':n===1?'1 NIGHT TO HALLOWEEN':n+' NIGHTS TO HALLOWEEN';
-    const sc=document.createElement('script');sc.src='/halloween.js?v=2';document.body.appendChild(sc);}
+    // split the title into letters for the reveal
+    document.querySelectorAll('.g-title>span').forEach((w,wi)=>{const t=w.textContent;w.setAttribute('aria-label',t);w.textContent='';
+      [...t].forEach((ch,i)=>{const l=document.createElement('span');l.className='ch';l.setAttribute('aria-hidden','true');l.textContent=ch;l.style.setProperty('--i',i+wi*4);w.appendChild(l)})});
+    const sc=document.createElement('script');sc.src='/halloween.js?v=5';document.body.appendChild(sc);}
   // Enter gate
   const gate=document.getElementById('gate'),btn=document.getElementById('enterBtn');
 
@@ -466,16 +512,21 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   function enter(){
     if(done)return;done=true;
     try{sessionStorage.setItem('dare-entered','1')}catch(e){}
+    const hw=html.classList.contains('halloween')&&window.DAREHW;
+    if(hw){window.DAREHW.burst(btn);html.classList.add('igniting')}
+    setTimeout(leave,hw?320:0);
+  }
+  function leave(){
     lobby.inert=false;window.scrollTo(0,0);
     html.classList.add('leaving');dropMosaic();
     const fin=()=>{html.classList.remove('gated','leaving');html.classList.add('entered');gate.remove();
       const a=document.querySelector('.play');a&&a.focus({preventScroll:true});};
-    matchMedia('(prefers-reduced-motion: reduce)').matches?setTimeout(fin,300):gate.addEventListener('transitionend',fin,{once:true});
+    matchMedia('(prefers-reduced-motion: reduce)').matches?setTimeout(fin,300):gate.addEventListener('transitionend',function h(e){if(e.target!==gate)return;gate.removeEventListener('transitionend',h);fin()});
     setTimeout(()=>{if(gate.isConnected)fin()},1200);
   }
   btn.addEventListener('click',enter);
   gate.addEventListener('click',e=>{if(e.target===gate||e.target.closest('.g-title,.g-hint'))enter()});
-  addEventListener('keydown',e=>{if(!done&&!document.getElementById('hs').classList.contains('open')&&(e.key==='Enter'||e.key===' '||e.key==='Escape')){e.preventDefault();enter()}});
+  addEventListener('keydown',e=>{if(!done&&!document.getElementById('hs').classList.contains('open')&&(e.key==='Enter'||e.key===' '||e.key==='Escape')){if(e.target&&e.target.closest&&e.target.closest('.hw-snd,.fs-link'))return;e.preventDefault();enter()}});
 })();
 </script>
 <div class="hs" id="hs" aria-hidden="true">

@@ -120,7 +120,7 @@
     seed = 31102026;
     const yG = H - Math.min(150, Math.max(92, H * .15));          // ground line
     const R = Math.min(96, Math.max(44, W * .13));
-    const moon = { x: W - Math.max(72, W * .19), y: Math.max(110, H * .16), R };
+    const moon = { x: W - Math.max(72, W * .19), y: W > 700 ? Math.max(150, H * .21) : Math.max(110, H * .16), R };
     L = { yG, moon };
 
     // sky
@@ -278,52 +278,130 @@
     ctx.restore();
   }
 
-  let last = 0, raf = 0, cloudX = 0, fogX = 0, fog2X = 0, grainF = 0;
+  /* ---------- parallax (mouse on desktop, tilt on phones that allow it) ---------- */
+  const par = { x: 0, y: 0, tx: 0, ty: 0 };
+  addEventListener("pointermove", e => { if (e.pointerType === "mouse") { par.tx = e.clientX / innerWidth * 2 - 1; par.ty = e.clientY / innerHeight * 2 - 1; } }, { passive: true });
+  addEventListener("deviceorientation", e => { if (e.gamma == null) return; par.tx = Math.max(-1, Math.min(1, e.gamma / 25)); par.ty = Math.max(-1, Math.min(1, (e.beta - 45) / 30)); }, { passive: true });
+  const shift = k => [par.x * k, par.y * k * .5];
+
+  /* ---------- lightning ---------- */
+  const bolt = { at: 0, next: 7, path: null, x: 0 };
+  function makeBolt() {
+    const x0 = W * (rnd() < .5 ? .06 + rnd() * .16 : .74 + rnd() * .14), y0 = H * .1, y1 = L.yG - 30, pts = [[x0, y0]];
+    let x = x0; for (let y = y0; y < y1; y += 14 + rnd() * 16) { x += (rnd() - .5) * 34; pts.push([x, y]); }
+    const forks = []; for (let k = 0; k < 2; k++) { const i = 2 + Math.floor(rnd() * (pts.length - 4)); let [fx, fy] = pts[i]; const f = [[fx, fy]]; const dir = rnd() < .5 ? -1 : 1;
+      for (let j = 0; j < 4; j++) { fx += dir * (10 + rnd() * 20); fy += 12 + rnd() * 14; f.push([fx, fy]); } forks.push(f); }
+    return [pts, ...forks];
+  }
+  function lightning(now) { bolt.at = now; bolt.path = makeBolt(); bolt.next = now / 1000 + 14 + Math.random() * 14; if (SND.on) SND.thunder(.4 + Math.random() * .9); }
+
+  /* ---------- tap/enter ember burst ---------- */
+  const sparks = [];
+  function burst(x, y) {
+    for (let i = 0; i < 70; i++) { const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 260;
+      sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0, max: .6 + Math.random() * .9, r: .8 + Math.random() * 2.2 }); }
+    if (SND.on) SND.whoosh();
+  }
+
+  /* ---------- sound (synthesized, off until the viewer turns it on) ---------- */
+  const SND = { on: false, ac: null, wind: null,
+    ctx() { if (!this.ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; this.ac = new A(); } if (this.ac.state === "suspended") this.ac.resume(); return this.ac; },
+    noise(sec) { const ac = this.ac, b = ac.createBuffer(1, ac.sampleRate * sec, ac.sampleRate), d = b.getChannelData(0); let last = 0;
+      for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; last = (last + .02 * w) / 1.02; d[i] = last * 3.5; } return b; },   // brown noise
+    start() { const ac = this.ctx(); if (!ac) return; this.on = true;
+      if (!this.wind) {
+        const src = ac.createBufferSource(); src.buffer = this.noise(6); src.loop = true;
+        const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 500; bp.Q.value = .7;
+        const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = .07; lg.gain.value = 260; lfo.connect(lg).connect(bp.frequency); lfo.start();
+        const g = ac.createGain(); g.gain.value = 0; src.connect(bp).connect(g).connect(ac.destination); src.start();
+        this.wind = g; this.owlT = setInterval(() => { if (this.on && Math.random() < .55) this.owl(); }, 22000);
+      }
+      this.wind.gain.setTargetAtTime(.16, ac.currentTime, 1.2);
+    },
+    stop() { this.on = false; if (this.wind) this.wind.gain.setTargetAtTime(0, this.ac.currentTime, .3); },
+    thunder(delay) { const ac = this.ac; if (!ac) return; const t = ac.currentTime + delay;
+      const src = ac.createBufferSource(); src.buffer = this.noise(4); const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(90, t + 3);
+      const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.9, t + .08); g.gain.exponentialRampToValueAtTime(.001, t + 3.6);
+      src.connect(lp).connect(g).connect(ac.destination); src.start(t); src.stop(t + 4); },
+    owl() { const ac = this.ac; if (!ac) return; const t0 = ac.currentTime + .1;
+      [[0, .32], [.45, .7]].forEach(([o, len]) => { const t = t0 + o, osc = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter();
+        osc.type = "sine"; osc.frequency.setValueAtTime(390, t); osc.frequency.linearRampToValueAtTime(330, t + len); lp.type = "lowpass"; lp.frequency.value = 900;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.07, t + .06); g.gain.linearRampToValueAtTime(0, t + len);
+        osc.connect(lp).connect(g).connect(ac.destination); osc.start(t); osc.stop(t + len + .05); }); },
+    whoosh() { const ac = this.ac; if (!ac) return; const t = ac.currentTime;
+      const src = ac.createBufferSource(); src.buffer = this.noise(1.2); const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2;
+      bp.frequency.setValueAtTime(220, t); bp.frequency.exponentialRampToValueAtTime(2600, t + .5);
+      const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.5, t + .12); g.gain.exponentialRampToValueAtTime(.001, t + .9);
+      src.connect(bp).connect(g).connect(ac.destination); src.start(t); src.stop(t + 1.2);
+      const o = ac.createOscillator(), og = ac.createGain(); o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(40, t + .6);
+      og.gain.setValueAtTime(.35, t); og.gain.exponentialRampToValueAtTime(.001, t + .7); o.connect(og).connect(ac.destination); o.start(t); o.stop(t + .75); }
+  };
+
+  let last = 0, raf = 0, cloudX = 0, fogX = 0, fog2X = 0, grainF = 0, born = 0;
   function frame(now) {
-    if (!gate.isConnected) return;
+    if (!gate.isConnected) { SND.stop(); return; }
+    if (!born) born = now;
     const t = now / 1000, dt = Math.min(.05, last ? (now - last) / 1000 : 0); last = now;
+    par.x += (par.tx - par.x) * Math.min(1, dt * 3); par.y += (par.ty - par.y) * Math.min(1, dt * 3);
     ctx.setTransform(D, 0, 0, D, 0, 0);
     ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
     ctx.drawImage(L.sky, 0, 0, W, H);
 
+    // lightning: flash timing (the bolt itself is drawn behind the hills)
+    if (!reduce && t > bolt.next && now - born > 3000) lightning(now);
+    const since = (now - bolt.at) / 1000, flash = bolt.at && since < 1.1 ? Math.max(0, (since < .08 ? 1 : since < .16 ? .25 : since < .26 ? .85 : 1 - (since - .26) / .84)) : 0;
+
+    const [sx, sy] = shift(4);
     for (const s of stars) {
       const a = s.a * (.65 + .35 * Math.sin(t * s.f + s.p));
       ctx.globalAlpha = a; ctx.fillStyle = s.warm ? "#ffe2b0" : "#eef0ff";
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(s.x + sx, s.y + sy, s.r, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
-    const m = L.moon;
+    const m = L.moon, [mx, my] = shift(7), MX = m.x + mx, MY = m.y + my;
     ctx.globalCompositeOperation = "lighter";
-    const halo = ctx.createRadialGradient(m.x, m.y, m.R * .95, m.x, m.y, m.R * 2.6);
+    const halo = ctx.createRadialGradient(MX, MY, m.R * .95, MX, MY, m.R * 2.6);
     halo.addColorStop(0, "rgba(255,225,160,.35)"); halo.addColorStop(.4, "rgba(255,200,140,.08)"); halo.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = halo; ctx.fillRect(m.x - m.R * 3, m.y - m.R * 3, m.R * 6, m.R * 6);
+    ctx.fillStyle = halo; ctx.fillRect(MX - m.R * 3, MY - m.R * 3, m.R * 6, m.R * 6);
     ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(L.moonTex, m.x - m.R, m.y - m.R, m.R * 2 + 2 / D, m.R * 2 + 2 / D);
+    ctx.drawImage(L.moonTex, MX - m.R, MY - m.R, m.R * 2 + 2 / D, m.R * 2 + 2 / D);
 
-    // clouds drift across the moon
+    // clouds drift across the moon (they light up with the lightning)
     cloudX = (cloudX + dt * 7) % (W * 1.8);
-    const cw = W * 1.8, ch = Math.max(140, H * .26);
+    const cw = W * 1.8, ch = Math.max(140, H * .26), [cxs, cys] = shift(11);
     for (const [off, y, a, k] of [[0, m.y - ch * .3, .55, 1], [W * .9, H * .04, .4, .6]]) {
-      const x = -((cloudX * k + off) % cw);
-      ctx.globalAlpha = a; ctx.drawImage(CLOUD, x, y, cw, ch); ctx.drawImage(CLOUD, x + cw, y, cw, ch);
+      const x = -((cloudX * k + off) % cw) + cxs;
+      ctx.globalAlpha = Math.min(1, a + flash * .45); ctx.drawImage(CLOUD, x, y + cys, cw, ch); ctx.drawImage(CLOUD, x + cw, y + cys, cw, ch);
     }
     ctx.globalAlpha = 1;
 
     for (const b of bats) {
       b.x += b.v * dt * b.dir; const y = b.y + Math.sin(t * .8 + b.p) * b.wob;
       if (b.dir > 0 && b.x > W + 60) b.x = -60; if (b.dir < 0 && b.x < -60) b.x = W + 60;
-      drawBat({ ...b, y }, t);
+      drawBat({ ...b, x: b.x + sx * 2, y: y + sy * 2 }, t);
     }
 
-    ctx.drawImage(L.far, 0, 0, W, H);
+    if (flash > 0 && bolt.path) {
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineJoin = "round"; ctx.lineCap = "round";
+      bolt.path.forEach((pts, i) => {
+        for (const [w, c] of [[9, `rgba(170,140,255,${.18 * flash})`], [3, `rgba(220,210,255,${.6 * flash})`], [1.2, `rgba(255,255,255,${flash})`]]) {
+          ctx.lineWidth = i ? w * .55 : w; ctx.strokeStyle = c; ctx.beginPath(); pts.forEach(([x, y], j) => j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
+        }
+      });
+      ctx.restore();
+    }
+
+    const [fxs, fys] = shift(16), [nxs, nys] = shift(28), sc = 1.04;
+    ctx.drawImage(L.far, -W * .02 + fxs, -H * .02 + fys, W * sc, H * sc);
     fogX = (fogX + dt * 10) % (W * 1.6);
     const fw = W * 1.6, fh = Math.max(110, H * .2);
-    ctx.globalAlpha = .55; ctx.drawImage(FOG, -fogX, L.yG - fh * .75, fw, fh); ctx.drawImage(FOG, -fogX + fw, L.yG - fh * .75, fw, fh);
+    ctx.globalAlpha = .55; ctx.drawImage(FOG, -fogX + fxs, L.yG - fh * .75 + fys, fw, fh); ctx.drawImage(FOG, -fogX + fw + fxs, L.yG - fh * .75 + fys, fw, fh);
     ctx.globalAlpha = 1;
-    ctx.drawImage(L.near, 0, 0, W, H);
+    ctx.drawImage(L.near, -W * .02 + nxs, -H * .02 + nys, W * sc, H * sc);
 
     // pumpkins: light on the ground, the carved body, then the flickering glow
-    for (const p of pumpkins) {
+    for (const p0 of pumpkins) {
+      const p = { ...p0, x: (p0.x - W / 2) * sc + W / 2 + nxs, y: (p0.y - H / 2) * sc + H / 2 + nys };
       const fl = .78 + .14 * Math.sin(t * 7.3 + p.ph) + .08 * Math.sin(t * 17.1 + p.ph * 2) + (Math.random() < .03 ? -.25 : 0);
       ctx.globalCompositeOperation = "lighter";
       const gl = ctx.createRadialGradient(p.x, p.y - p.s * .3, 2, p.x, p.y - p.s * .3, p.s * 1.7);
@@ -339,18 +417,32 @@
 
     // front fog
     fog2X = (fog2X + dt * 16) % (W * 1.6);
-    ctx.globalAlpha = .32; ctx.drawImage(FOG, -fog2X, H - fh * .9, fw, fh); ctx.drawImage(FOG, -fog2X + fw, H - fh * .9, fw, fh);
+    const [ffx] = shift(40);
+    ctx.globalAlpha = .32; ctx.drawImage(FOG, -fog2X + ffx, H - fh * .9, fw, fh); ctx.drawImage(FOG, -fog2X + fw + ffx, H - fh * .9, fw, fh);
     ctx.globalAlpha = 1;
 
-    // embers
+    // embers + tap sparks
     ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < embers.length; i++) {
       const e = embers[i]; e.life += dt; e.y -= e.vy * dt; e.x += (e.vx + Math.sin(t * 1.3 + e.p) * 6) * dt;
       if (e.life > e.max || e.y < H * .3) { embers[i] = newEmber(false); continue; }
       const a = Math.sin(Math.PI * e.life / e.max) * .9;
-      ctx.fillStyle = `rgba(255,${150 + 60 * Math.sin(e.p)},60,${a})`; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = `rgba(255,${150 + 60 * Math.sin(e.p)},60,${a})`; ctx.beginPath(); ctx.arc(e.x + nxs, e.y + nys, e.r, 0, Math.PI * 2); ctx.fill();
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const k = sparks[i]; k.life += dt; if (k.life > k.max) { sparks.splice(i, 1); continue; }
+      k.vx *= 1 - dt * 1.8; k.vy = k.vy * (1 - dt * 1.8) + 140 * dt; k.x += k.vx * dt; k.y += k.vy * dt;
+      const a = 1 - k.life / k.max; ctx.fillStyle = `rgba(255,${170 + 70 * a},${60 + 120 * a},${a})`;
+      ctx.beginPath(); ctx.arc(k.x, k.y, k.r * (.5 + a), 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalCompositeOperation = "source-over";
+
+    // a soft shade behind the title so it always reads
+    const tg = ctx.createRadialGradient(W / 2, H * .45, 10, W / 2, H * .45, Math.min(W, H) * .62);
+    tg.addColorStop(0, "rgba(6,2,12,.38)"); tg.addColorStop(1, "rgba(6,2,12,0)");
+    ctx.fillStyle = tg; ctx.fillRect(0, 0, W, H);
+
+    if (flash > 0) { ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = `rgba(150,130,230,${.16 * flash})`; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = "source-over"; }
 
     ctx.drawImage(L.vig, 0, 0, W, H);
     // film grain
@@ -360,13 +452,38 @@
     ctx.translate((grainF * 37) % 192, (grainF * 53) % 192); ctx.fillStyle = gp; ctx.fillRect(-192, -192, W + 192, H + 192);
     ctx.setTransform(D, 0, 0, D, 0, 0); ctx.globalAlpha = 1;
 
-    if (!reduce) raf = requestAnimationFrame(frame);
+    // cinematic open: fade up from black
+    const intro = reduce ? 1 : Math.min(1, (now - born) / 1600);
+    if (intro < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - intro * intro * (3 - 2 * intro)})`; ctx.fillRect(0, 0, W, H); }
+
+    if (!reduce || sparks.length) raf = requestAnimationFrame(frame);
   }
 
   function start() { cancelAnimationFrame(raf); build(); last = 0; raf = requestAnimationFrame(frame); }
   let rt = 0;
   addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (gate.isConnected) start(); }, 180); });
-  document.addEventListener("visibilitychange", () => { if (!document.hidden && gate.isConnected && !reduce) { cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(frame); } });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { if (SND.ac && SND.on) SND.ac.suspend(); return; }
+    if (SND.ac && SND.on) SND.ac.resume();
+    if (gate.isConnected && !reduce) { cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(frame); }
+  });
   start();
   document.documentElement.classList.add("hw-painted");
+
+  /* ---------- hooks for the page ---------- */
+  const SKEY = "dare-hw-sound";
+  const btn = document.getElementById("hwSound");
+  const paintBtn = () => { if (btn) { btn.setAttribute("aria-pressed", SND.on); btn.setAttribute("aria-label", SND.on ? "Sound on. Tap to mute." : "Turn on sound"); } };
+  function setSound(on) { on ? SND.start() : SND.stop(); try { localStorage.setItem(SKEY, on ? "1" : "0"); } catch (e) {} paintBtn(); }
+  if (btn) btn.addEventListener("click", e => { e.stopPropagation(); setSound(!SND.on); });
+  let wanted = false; try { wanted = localStorage.getItem(SKEY) === "1"; } catch (e) {}
+  if (wanted) { // browsers only allow sound after a tap, so pick it back up on the first one
+    const first = () => { removeEventListener("pointerdown", first, true); if (gate.isConnected) setSound(true); };
+    addEventListener("pointerdown", first, true);
+  }
+  paintBtn();
+  window.DAREHW = {
+    burst(el) { const r = el.getBoundingClientRect(), g = gate.getBoundingClientRect(); burst(r.left + r.width / 2 - g.left, r.top + r.height / 2 - g.top); if (reduce) { cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); } },
+    lightning() { lightning(performance.now()); }
+  };
 })();
