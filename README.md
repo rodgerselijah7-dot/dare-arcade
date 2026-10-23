@@ -176,3 +176,7 @@ Every push to `main` redeploys automatically.
 - Polling: the host every 0.6s, guests every 0.9s (0.4s while their move is on its way), 1.2s in the lobby. A 20-minute game with 8 phones is roughly 15,000 `/api/room` calls. All phones on one Wi-Fi share the room API's 1,500-per-minute per-IP limit; 8 phones use about 800.
 - Group chat, Find players (`truth-or-dare` in `/api/lfg`), match alerts and `?join=CODE` invite links come from `dare-play.js`, whose chat now labels each message with the sender's name when a game passes one (`receive(peer, list, name)`).
 - The same game also runs as a Claude artifact, where online rooms use Claude's live rooms (people the artifact is shared with), without chat, Find players or alerts.
+
+## Seasonal enter page
+- All of October (Central time) the enter page turns into a Halloween night: moon and stars, bats, a dangling spider, fog, a graveyard skyline, flickering jack-o'-lanterns, a glowing orange "ARCADE", "Enter if you dare" and a countdown to Halloween. It switches back on November 1 by itself.
+- Preview it any time with `/?season=halloween`; `/?season=off` shows the normal page. Styles are under `html.halloween` in `index.html`.
