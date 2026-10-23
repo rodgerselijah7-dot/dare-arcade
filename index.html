@@ -183,10 +183,6 @@ html.halloween .gate{background:radial-gradient(120% 70% at 70% 8%,#2a1440 0%,#1
   --hw-orange:#FF7A1A;--hw-glow:#FFB347}
 .gate>.hw{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .hw-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hw-spider{z-index:2;filter:drop-shadow(0 0 2px rgba(200,170,255,.5))}
-.hw-spider{position:absolute;left:12%;top:0;width:2px;height:calc(env(safe-area-inset-top,0px) + 120px);background:linear-gradient(#ffffff00,#ffffff55);transform-origin:top center;animation:dangle 4.5s ease-in-out infinite}
-.hw-spider svg{position:absolute;bottom:-14px;left:-11px;width:24px}
-@keyframes dangle{0%,100%{transform:rotate(4deg) scaleY(1)}50%{transform:rotate(-4deg) scaleY(1.18)}}
 html.halloween .g-top{color:#b9a6cf}
 html.halloween .g-top b::before{background:var(--hw-orange);box-shadow:0 0 10px var(--hw-orange)}
 html.halloween .g-top i{font-style:normal;color:var(--hw-glow)}
@@ -196,12 +192,18 @@ html.halloween .g-title{text-shadow:0 0 30px rgba(140,80,220,.35)}
 html.halloween .g-title span+span{color:var(--hw-orange);text-shadow:0 0 18px rgba(255,122,26,.55),0 0 46px rgba(255,90,0,.35);animation:glow 3.2s ease-in-out infinite}
 @keyframes glow{50%{text-shadow:0 0 26px rgba(255,140,40,.8),0 0 70px rgba(255,90,0,.45)}}
 html.halloween .g-sub{color:#d6c9e6}
+html.halloween .enter{position:relative}
+html.halloween .hw-bug{display:block;position:absolute;top:-17px;right:22px;width:36px;height:30px;pointer-events:none;animation:crawl 9s ease-in-out infinite}
+.hw-bug i{display:block;width:100%;height:100%;filter:drop-shadow(0 0 2px rgba(220,190,255,.7)) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+.hw-bug svg{display:block;width:100%;height:100%;animation:skitter .5s steps(2) infinite}
+@keyframes crawl{0%,14%{transform:translateX(0)}38%,52%{transform:translateX(calc(-1 * var(--crawl,120px)))}76%,100%{transform:translateX(0)}}
+@keyframes skitter{50%{transform:rotate(7deg) translateY(-1px)}}
 html.halloween .enter{background:var(--hw-orange);color:#120700;box-shadow:0 0 30px rgba(255,122,26,.45)}
 html.halloween .enter:hover,html.halloween .enter:focus-visible{background:#fff;color:#000}
 html.halloween .g-hint{color:var(--hw-glow)}
 html.halloween .fs-link{color:#b9a6cf}
 html.halloween .g-foot{color:#9d8ab3;z-index:1}
-@media (prefers-reduced-motion:reduce){.hw-spider,html.halloween .g-title span+span{animation:none}}
+@media (prefers-reduced-motion:reduce){.hw-bug,.hw-bug svg,html.halloween .g-title span+span{animation:none}}
 
 /* ===== Home Screen guide ===== */
 .fs-link{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:none;border:0;cursor:pointer;
@@ -242,14 +244,13 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 <body>
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
   <div class="hw" aria-hidden="true">
-    <div class="hw-spider"><svg viewBox="0 0 24 24"><g stroke="#0b0610" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M9 11 3 7M9 13 2 13M9 15 3 19M10 16 6 22M15 11 21 7M15 13 22 13M15 15 21 19M14 16 18 22"/></g><ellipse cx="12" cy="13" rx="4" ry="5" fill="#0b0610"/><circle cx="12" cy="8" r="2.6" fill="#0b0610"/><circle cx="11" cy="7.6" r=".55" fill="#ff7a1a"/><circle cx="13" cy="7.6" r=".55" fill="#ff7a1a"/></svg></div>
   </div>
     <div class="g-top"><b>DARE</b><i class="hw-only" id="hwCount"></i></div>
   <div class="g-mid">
     <p class="g-pre">DONTAE AMARE PRESENTS<span class="hw-only hw-ed">HALLOWEEN EDITION</span></p>
     <h1 class="g-title" id="gateTitle"><span>DARE</span><span>ARCADE</span></h1>
     <p class="g-sub"><span class="hw-off">Every game is free to start. More are on the way.</span><span class="hw-only">Every game is free to start. Enter if you dare.</span></p>
-    <button class="enter" id="enterBtn" type="button">ENTER
+    <button class="enter" id="enterBtn" type="button"><span class="hw-only hw-bug" aria-hidden="true"><i><svg viewBox="0 0 24 24"><g stroke="#0b0610" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M9 11 3 7M9 13 2 13M9 15 3 19M10 16 6 22M15 11 21 7M15 13 22 13M15 15 21 19M14 16 18 22"/></g><ellipse cx="12" cy="13" rx="4" ry="5" fill="#0b0610"/><circle cx="12" cy="8" r="2.6" fill="#0b0610"/><circle cx="11" cy="7.6" r=".55" fill="#ff7a1a"/><circle cx="13" cy="7.6" r=".55" fill="#ff7a1a"/></svg></i></span>ENTER
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg></button>
     <span class="g-hint" aria-hidden="true"><span class="hw-off">PRESS START</span><span class="hw-only">IF YOU DARE</span></span>
     <div><button class="fs-link" type="button" data-hs><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="1.5" width="10" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 15.5h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>PLAY FULL SCREEN</button></div>
