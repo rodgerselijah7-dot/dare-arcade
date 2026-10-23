@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<meta name="description" content="Truth or Dare by Dontae Amare. Pass one phone around, or play online with everyone on their own phone. Three heat levels, points, swaps and double dares.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Truth or Dare">
+<link rel="manifest" href="/truth-or-dare/manifest.webmanifest">
+<link rel="icon" href="/truth-or-dare/icon-192.png">
+<link rel="apple-touch-icon" href="/truth-or-dare/apple-touch-icon.png">
+<title>Truth or Dare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800;900&family=Archivo:ital,wght@0,500;0,600;0,700;0,800;1,500&display=swap">
+<style>
+/* Layout: a black lacquer table under one spotlight. Type and trim are polished chrome, cards are bright white,
+   red is saved for Dare and the moves that matter. Single dark look by design. */
+:root{
+  color-scheme:dark;
+  --bg:#050505; --bg-hi:#18181a; --panel:#0e0e10; --panel2:#17171a;
+  --fg:#f5f5f6; --muted:#8d8f95; --hair:rgba(255,255,255,.1);
+  --white:#ffffff; --ink:#0a0a0b;
+  --red:#e3121b; --red-hi:#ff3b3b; --red-dk:#8e0a10;
+  --chrome:linear-gradient(180deg,#ffffff 0%,#e4e7eb 16%,#9aa1aa 40%,#5c636c 49%,#eef1f4 53%,#b9bec5 72%,#6c737c 88%,#d9dde2 100%);
+  --chrome-x:linear-gradient(115deg,#5c636c 0%,#f4f6f8 22%,#9aa1aa 42%,#ffffff 55%,#7d848d 75%,#e4e7eb 100%);
+  --redchrome:linear-gradient(180deg,#ff8a85 0%,#ff3b3b 22%,#c60e16 48%,#7a070c 52%,#e3121b 74%,#ff5a55 100%);
+  --chrome-soft:linear-gradient(180deg,#ffffff 0%,#eceef1 40%,#c3c8ce 58%,#e9ebee 80%,#ffffff 100%);
+  --gold:#d9dde2; --gold-lt:#ffffff;   /* names the game script still uses */
+  --display:'Unbounded','Arial Black',Impact,sans-serif;
+  --body:'Archivo','Helvetica Neue',Arial,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(70% 45% at 50% 0%,rgba(255,255,255,.09),transparent 70%),
+             radial-gradient(60% 40% at 50% 105%,rgba(227,18,27,.16),transparent 70%),
+             linear-gradient(180deg,var(--bg-hi),var(--bg) 55%)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--red-hi);outline-offset:3px}
+.screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 18px)}
+.wrap{width:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;flex:1;gap:18px;min-height:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px}
+/* chrome rim: black fill, gradient border */
+.rim{border:1.5px solid transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,var(--chrome-x) border-box}
+.icon{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;color:var(--fg);
+  border:1.5px solid transparent;background:linear-gradient(#141416,#060607) padding-box,var(--chrome-x) border-box;box-shadow:0 4px 14px rgba(0,0,0,.6)}
+.icon svg{width:18px;height:18px}
+.chips{display:flex;gap:6px;align-items:center;min-width:0;flex:1;justify-content:center}
+.tright{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex:none}
+.chatbtn{position:relative}
+.chatbtn .dot{position:absolute;top:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--bg)}
+.chip{max-width:38vw}
+.chip{font:600 .66rem var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--fg);padding:8px 12px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw;
+  border:1px solid transparent;background:linear-gradient(#111113,#111113) padding-box,var(--chrome-x) border-box}
+.eyebrow{font:600 .66rem var(--display);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.chromeText{background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- card backs ---------- */
+.cardback{position:relative;border-radius:var(--r,20px);overflow:hidden;
+  background:
+    repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 1px,transparent 1px 7px),
+    radial-gradient(120% 80% at 30% 0%,#2a2a2e,#0b0b0c 60%);
+  border:2px solid transparent;background-clip:padding-box;box-shadow:0 0 0 2px #0000,0 18px 40px rgba(0,0,0,.7)}
+.cardback{border:2px solid transparent;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 1px,transparent 1px 7px) padding-box,
+             radial-gradient(120% 80% at 30% 0%,var(--c1,#2a2a2e),var(--c2,#0b0b0c) 60%) padding-box,
+             var(--chrome-x) border-box}
+.cardback::before{content:"";position:absolute;inset:7%;border-radius:calc(var(--r,20px)*.55);border:1px solid rgba(255,255,255,.22)}
+.cardback .medal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:56%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;
+  border:2px solid transparent;background:radial-gradient(circle at 50% 35%,#1d1d20,#050506) padding-box,var(--chrome) border-box;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+.cardback .medal span{font:800 var(--ms,2rem)/1 var(--display);background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap;letter-spacing:-.02em}
+.cardback .medal.duo{display:flex;align-items:center;justify-content:center;gap:.04em}
+.cardback .medal span i{font:italic 500 .42em var(--body);vertical-align:.45em;margin:0 .1em}
+.cardback .medal span b,.cardback .medal span.dd{background:var(--redchrome);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+
+/* ---------- home ---------- */
+.hero{position:relative;display:flex;flex-direction:column;align-items:center;padding-top:6px}
+.fan{position:relative;width:min(72vw,260px);height:min(40vw,150px);margin-bottom:-30px}
+.fan .cardback{position:absolute;bottom:0;width:42%;aspect-ratio:5/7;--r:14px;--ms:1.1rem}
+.fan .a{left:3%;transform:rotate(-16deg);transform-origin:bottom center}
+.fan .b{left:29%;transform:translateY(-12px) rotate(1deg);z-index:2;--c1:#e9ecef;--c2:#8e949c}
+.fan .b{--ms:.78rem}
+
+.fan .c{right:3%;transform:rotate(15deg);transform-origin:bottom center;--c1:#ff3b3b;--c2:#6e060b}
+@media (prefers-reduced-motion:no-preference){
+  .fan .a{animation:fanA 1s cubic-bezier(.2,.8,.2,1) both}.fan .c{animation:fanC 1s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes fanA{from{transform:rotate(0) translateX(40%)}}@keyframes fanC{from{transform:rotate(0) translateX(-40%)}}
+}
+.logo{position:relative;z-index:3;text-align:center;display:flex;flex-direction:column;align-items:center}
+.logo h1{display:flex;flex-direction:column;align-items:center;font:900 clamp(48px,15vw,76px)/.9 var(--display);letter-spacing:-.03em;text-wrap:balance;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.8))}
+.logo h1 .t{background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo h1 .d{background:var(--redchrome);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo h1 .or{font:500 .24em/1 var(--body);font-style:italic;letter-spacing:.3em;color:var(--muted);margin:.35em 0 .3em;text-transform:lowercase;padding-left:.3em}
+.logo p{margin-top:14px;font:500 .95rem var(--body);letter-spacing:.02em;color:var(--muted)}
+.panel{border-radius:20px;padding:16px;border:1px solid transparent;
+  background:linear-gradient(180deg,#121214,#0a0a0b) padding-box,linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06) 40%,rgba(255,255,255,.14)) border-box}
+.label{font:700 .68rem var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--fg);margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.label b{color:var(--muted);font:500 .8rem var(--body);letter-spacing:0;text-transform:none}
+.players{display:flex;flex-wrap:wrap;gap:8px}
+.prow{display:flex;align-items:center;gap:7px;border-radius:999px;padding:4px 4px 4px 4px;max-width:100%;min-width:0;background:#1a1a1d;border:1px solid var(--hair)}
+.prow .n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--chrome-soft);color:var(--ink);font:800 .72rem/1 var(--display)}
+.prow span.name{font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.prow button{width:26px;height:26px;border-radius:50%;color:var(--muted);display:grid;place-items:center;flex:none}
+.addp{display:flex;gap:8px;margin-top:12px}
+.addp input{flex:1;min-width:0;background:#000;border:1px solid var(--hair);border-radius:14px;color:var(--fg);font:500 1rem var(--body);padding:12px 14px;-webkit-user-select:text;user-select:text}
+.addp input::placeholder{color:#5f6167}
+.addp button{padding:0 18px;border-radius:14px;background:var(--chrome-soft);color:var(--ink);font:800 .78rem var(--display);letter-spacing:.08em;text-transform:uppercase}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.heat button{aspect-ratio:5/6;border-radius:16px;padding:12px 6px 10px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;position:relative;
+  color:var(--fg);border:1.5px solid var(--hair);background:#141416;transition:transform .2s,background .2s,border-color .2s}
+.heat button b{font:800 .95rem/1 var(--display);letter-spacing:-.01em}
+.heat button small{font:500 .7rem var(--body);color:var(--muted)}
+.heat .pips{display:flex;gap:2px;color:var(--red)}
+.heat .pips svg{width:14px;height:14px}
+.heat .pips svg.off{color:rgba(255,255,255,.14)}
+.heat button[aria-pressed="true"]{transform:translateY(-3px);border:1.5px solid transparent;
+  background:linear-gradient(180deg,#f7f8f9,#c9cdd3) padding-box,var(--chrome-x) border-box;color:var(--ink);box-shadow:0 10px 24px rgba(0,0,0,.6)}
+.heat button[aria-pressed="true"] small{color:#4a4e55}
+.heat button[data-heat="spicy"][aria-pressed="true"]{background:linear-gradient(180deg,#ff3b3b,#a80c13) padding-box,var(--redchrome) border-box;color:var(--white)}
+.heat button[data-heat="spicy"][aria-pressed="true"] small,.heat button[data-heat="spicy"][aria-pressed="true"] .pips{color:#ffd9d9}
+.rounds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rounds button{border:1.5px solid var(--hair);border-radius:14px;padding:11px 4px;background:#141416;font:800 1.15rem/1 var(--display);color:var(--fg)}
+.rounds button[aria-pressed="true"]{border-color:transparent;background:var(--chrome-soft);color:var(--ink)}
+.cta{position:relative;display:block;width:100%;padding:17px 16px;border-radius:16px;color:var(--white);overflow:hidden;
+  font:800 1.05rem/1 var(--display);letter-spacing:.12em;text-transform:uppercase;
+  border:1.5px solid transparent;background:linear-gradient(180deg,#ff2a32,#b30c13) padding-box,var(--chrome-x) border-box;
+  box-shadow:0 12px 30px rgba(227,18,27,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+.cta::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.4) 50%,transparent 62%);transform:translateX(-120%)}
+@media (prefers-reduced-motion:no-preference){.cta:not([disabled])::after{animation:sheen 4s ease-in-out 1s infinite}}
+@keyframes sheen{0%,72%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.cta:active{transform:translateY(1px)}
+.cta[disabled]{background:linear-gradient(#1c1c1f,#1c1c1f) padding-box,linear-gradient(#333,#333) border-box;color:#5f6167;box-shadow:none}
+.ghost{display:block;width:100%;padding:14px;border-radius:16px;font-weight:600;color:var(--fg);border:1px solid transparent;
+  background:linear-gradient(#111113,#111113) padding-box,var(--chrome-x) border-box}
+.links{display:flex;justify-content:center;gap:20px;font-size:.88rem}
+.links button{color:var(--muted);text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:4px}
+.note{font:500 .88rem var(--body);color:var(--muted);text-align:center;margin-top:-6px}
+
+/* ---------- turn ---------- */
+.who{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:auto}
+.who h2{font:900 clamp(44px,13.5vw,70px)/.95 var(--display);letter-spacing:-.03em;overflow-wrap:anywhere;text-wrap:balance;
+  background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 14px rgba(0,0,0,.8))}
+.who p{font:italic 500 1rem var(--body);color:var(--muted)}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;padding:0 4px}
+.pick button{position:relative;aspect-ratio:5/7;--r:18px;--ms:2.4rem;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.pick .tr{transform:rotate(-4deg);--c1:#f7f8f9;--c2:#9aa1aa}
+.pick .tr::before{border-color:rgba(0,0,0,.25)}
+.pick .dr{transform:rotate(4deg);--c1:#ff3b3b;--c2:#6e060b}
+.pick button:hover,.pick button:focus-visible{transform:translateY(-8px) rotate(0)}
+.pick button:active{transform:scale(.96)}
+.pick .medal{top:41%}
+.pick .cap{position:absolute;inset:auto 0 9%;display:flex;flex-direction:column;align-items:center;gap:3px;z-index:2}
+.pick .cap b{font:900 clamp(17px,5.2vw,24px)/1 var(--display);letter-spacing:.04em}
+.pick .tr .cap b{color:var(--ink)}
+.pick .dr .cap b{color:var(--white)}
+.pick .cap small{font:600 .74rem var(--body)}
+.pick .tr .cap small{color:#2c2f34}.pick .dr .cap small{color:#ffd9d9}
+.random{margin:4px auto 0;font:600 .9rem var(--body);color:var(--fg);padding:9px 16px;border-radius:999px;border:1px solid transparent;background:linear-gradient(#0e0e10,#0e0e10) padding-box,var(--chrome-x) border-box}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:2px 0;margin-top:auto;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.strip div{flex:none;display:flex;align-items:center;gap:7px;padding:4px 12px 4px 4px;border-radius:999px;background:#121214;border:1px solid var(--hair);font-size:.84rem;font-weight:600}
+.strip div b{min-width:26px;height:26px;padding:0 6px;border-radius:999px;display:grid;place-items:center;font:800 .78rem/1 var(--display);background:#26262a;color:var(--fg)}
+.strip div.me{border-color:var(--red)}
+.strip div.me b{background:var(--red);color:var(--white)}
+
+/* ---------- the card ---------- */
+.stage{flex:1;min-height:0;display:grid;place-items:center;perspective:1600px;container-type:size;padding:4px 0}
+.card{height:min(100cqh,calc(100cqw * 1.4));aspect-ratio:5/7;max-width:100%;position:relative;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.2,.8,.2,1)}
+.card.flip{transform:rotateY(180deg)}
+.card.deal{animation:deal .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes deal{from{transform:translateY(70px) rotate(-7deg) scale(.88);opacity:0}to{transform:none;opacity:1}}
+.face{position:absolute;inset:0;border-radius:24px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.card .cardback{position:absolute;inset:0;--r:24px;--ms:clamp(2.2rem,12cqw,3.4rem)}
+.front{transform:rotateY(180deg);color:var(--ink);overflow:hidden;
+  border:3px solid transparent;background:linear-gradient(180deg,#ffffff,#f1f2f4) padding-box,var(--chrome-x) border-box;
+  box-shadow:0 26px 60px rgba(0,0,0,.75);--acc:var(--ink);--band:linear-gradient(180deg,#1b1b1e,#050506);--bandtxt:var(--chrome)}
+.front[data-kind="dare"]{--acc:var(--red);--band:linear-gradient(180deg,#f0161f,#a60b12);--bandtxt:linear-gradient(180deg,#fff,#fff)}
+.front::before{content:"";position:absolute;inset:0 0 auto;height:20%;background:repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 1px,transparent 1px 7px),var(--band)}
+.front::after{content:"";position:absolute;left:0;right:0;top:20%;height:3px;background:var(--chrome-x)}
+.frame{display:none}
+.idx{position:absolute;top:3.6%;left:5.2%;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;z-index:1;color:var(--white)}
+.idx b{font:900 clamp(1.1rem,6.4cqw,1.8rem)/1 var(--display);background:var(--bandtxt);-webkit-background-clip:text;background-clip:text;color:transparent}
+.idx svg{width:clamp(10px,3.8cqw,15px);height:auto;color:#fff;opacity:.85}
+.idx.br{top:auto;left:auto;bottom:4%;right:5.2%;transform:rotate(180deg);color:var(--acc)}
+.idx.br b{background:none;color:var(--acc)}
+.idx.br svg{color:var(--acc)}
+.front[data-kind="truth"] .idx b::before{content:"T"}
+.front[data-kind="dare"] .idx b::before{content:"D"}
+.fbody{position:absolute;inset:5% 9% 5%;display:flex;flex-direction:column;align-items:center;text-align:center}
+.kindrow{display:flex;align-items:center;justify-content:center;min-height:14%;z-index:1}
+.kind{font:900 clamp(1.4rem,8.6cqw,2.3rem)/1 var(--display);letter-spacing:.06em;padding-left:.06em;background:var(--bandtxt);-webkit-background-clip:text;background-clip:text;color:transparent}
+.badge{position:relative;z-index:2;margin-top:16px;font:800 .62rem/1 var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--white);background:var(--ink);border-radius:999px;padding:7px 12px;
+  border:1.5px solid transparent;background:linear-gradient(#0a0a0b,#0a0a0b) padding-box,var(--redchrome) border-box}
+.prompt{flex:1;width:100%;display:flex;align-items:center;justify-content:center;font:600 clamp(1.2rem,6.8cqw,1.85rem)/1.22 var(--body);text-wrap:balance;padding:12px 2px;letter-spacing:-.01em}
+.prompt mark{background:none;color:var(--red);font-weight:800}
+.fbot{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:1%}
+.seal{position:relative;width:clamp(48px,16cqw,62px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;
+  background:var(--chrome);box-shadow:0 4px 10px rgba(0,0,0,.3),inset 0 0 0 3px rgba(255,255,255,.4)}
+.seal::before{content:"";position:absolute;inset:5px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#2a2a2e,#060607)}
+.front[data-kind="dare"] .seal{background:var(--redchrome)}
+.front[data-kind="dare"] .seal::before{background:radial-gradient(circle at 50% 30%,#ff2a32,#9a0a10)}
+.seal span{position:relative;z-index:1;font:900 clamp(.85rem,4.4cqw,1.1rem)/1 var(--display);color:var(--white)}
+.deck{font:700 .62rem var(--display);letter-spacing:.16em;text-transform:uppercase;color:#80848b}
+.front.double{background:linear-gradient(180deg,#ffffff,#ffeeee) padding-box,var(--redchrome) border-box}
+.timer{display:flex;align-items:center;gap:8px;padding:4px 13px 4px 4px;border-radius:999px;background:var(--ink);color:var(--white);font:700 .85rem var(--body);font-variant-numeric:tabular-nums;position:relative;z-index:2}
+.timer svg{width:24px;height:24px}
+.timer.done{background:var(--red)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions .done{grid-column:1 / -1;padding:17px 16px;border-radius:16px;color:var(--ink);font:900 1.05rem/1 var(--display);letter-spacing:.12em;text-transform:uppercase;
+  background:var(--chrome-soft);box-shadow:0 10px 26px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.8)}
+.actions .done:active{transform:translateY(1px)}
+.actions .sm{padding:12px 8px;border-radius:14px;font-weight:700;font-size:.92rem;color:var(--fg);border:1px solid var(--hair);background:#111113}
+.actions .sm small{display:block;font-weight:500;font-size:.72rem;color:var(--muted);margin-top:2px}
+.actions .sm[disabled]{opacity:.35}
+.actions .chicken{color:var(--red-hi);border-color:rgba(227,18,27,.45)}
+.consent{font:500 .82rem/1.4 var(--body);color:var(--muted);text-align:center}
+
+/* ---------- end ---------- */
+.crown{text-align:center;margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.crown svg{width:70px;height:70px;filter:drop-shadow(0 6px 16px rgba(227,18,27,.35))}
+.crown h2{font:900 clamp(44px,13.5vw,70px)/.95 var(--display);letter-spacing:-.03em;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent;overflow-wrap:anywhere;text-wrap:balance}
+.crown p{font:italic 500 1rem var(--body);color:var(--muted)}
+.table{display:flex;flex-direction:column}
+.trow{display:grid;grid-template-columns:30px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--hair)}
+.trow:last-child{border:0}
+.trow .r{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:800 .72rem/1 var(--display);background:#222226;color:var(--fg)}
+.trow:first-child .r{background:var(--chrome-soft);color:var(--ink)}
+.trow .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .st{font-size:.74rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.trow .sc{font:900 1.25rem/1 var(--display);color:var(--fg);min-width:34px;text-align:right}
+.trow:first-child .sc{color:var(--red-hi)}
+.awards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.award{border-radius:16px;padding:12px 13px;min-width:0;background:#111113;border:1px solid var(--hair)}
+.award small{font:700 .58rem var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--red-hi)}
+.award b{display:block;font:800 .95rem/1.25 var(--display);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.award span{font-size:.75rem;color:var(--muted)}
+
+/* ---------- sheets ---------- */
+.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+.sheet .box{width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-radius:24px 24px 0 0;border:1px solid transparent;border-bottom:0;
+  background:linear-gradient(180deg,#151517,#0a0a0b) padding-box,var(--chrome-x) border-box;
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));
+  padding-block:20px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:14px;animation:up .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sheet h3{font:900 1.5rem/1 var(--display);letter-spacing:-.02em;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent;align-self:flex-start}
+.sheet p,.sheet li{font-size:.94rem;line-height:1.55;color:#c7c9ce}
+.sheet ul{padding-left:18px;display:flex;flex-direction:column;gap:7px}
+.sheet li::marker{color:var(--red)}
+.sheet .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet textarea{width:100%;min-height:90px;resize:vertical;background:var(--white);border:0;border-radius:14px;color:var(--ink);font:600 1.05rem/1.3 var(--body);padding:12px 14px;-webkit-user-select:text;user-select:text}
+.sheet .tbtn{background:var(--chrome-soft);color:var(--ink);border:0}
+.sheet .dbtn{background:linear-gradient(180deg,#ff2a32,#b30c13);color:var(--white);border:0}
+.tword{color:var(--white)}.dword{color:var(--red-hi)}
+.mine{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow-y:auto}
+.mine div{display:flex;gap:10px;align-items:flex-start;background:#111113;border:1px solid var(--hair);border-radius:12px;padding:10px 8px 10px 10px;font:500 .98rem/1.3 var(--body)}
+.mine div i{font:800 .55rem var(--display);letter-spacing:.12em;text-transform:uppercase;font-style:normal;padding:5px 7px;border-radius:999px;flex:none}
+.mine div span{flex:1;min-width:0}
+.mine div button{color:var(--muted);flex:none;width:26px}
+.mine .t i{background:var(--chrome-soft);color:var(--ink)} .mine .d i{background:var(--red);color:var(--white)}
+.empty{font:500 .9rem var(--body);color:var(--muted);text-align:center;padding:10px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 26px);transform:translate(-50%,20px);background:var(--chrome-soft);color:var(--ink);font-weight:700;font-size:.9rem;padding:10px 18px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:40;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.burst{position:fixed;left:50%;top:40%;font:900 3rem/1 var(--display);letter-spacing:-.02em;pointer-events:none;z-index:30;opacity:0;transform:translate(-50%,-50%);white-space:nowrap;filter:drop-shadow(0 6px 18px rgba(0,0,0,.8))}
+.burst.go{animation:burst .9s ease-out}
+@keyframes burst{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}100%{opacity:0;transform:translate(-50%,-110%) scale(1)}}
+/* ---------- title screen ---------- */
+.title-wrap{gap:22px}
+.hero.big{margin-top:auto}
+.hero.big .fan{width:min(74vw,300px);height:min(46vw,190px);margin-bottom:-36px}
+.title-wrap{overflow-x:clip}
+.hero.big .fan .cardback{--ms:1.5rem}
+.hero.big .fan .b{--ms:1.1rem}
+.hero.big .logo h1{font-size:clamp(56px,18vw,92px)}
+@media (prefers-reduced-motion:no-preference){
+  .hero.big .fan .b{animation:float 5s ease-in-out 1s infinite}
+  @keyframes float{0%,100%{transform:translateY(-12px) rotate(1deg)}50%{transform:translateY(-20px) rotate(-1deg)}}
+}
+.facts{list-style:none;display:flex;justify-content:center;gap:0}
+.facts li{display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 18px}
+.facts li + li{border-left:1px solid var(--hair)}
+.facts b{font:900 1.25rem/1 var(--display);background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
+.facts span{font:600 .62rem var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.menu{display:flex;flex-direction:column;gap:12px;margin-top:auto}
+.resume{display:flex;flex-direction:column;gap:8px}
+.resume .note{margin:0}
+.resume + .cta{background:linear-gradient(#111113,#111113) padding-box,var(--chrome-x) border-box;box-shadow:none}
+.resume[hidden] + .cta{background:linear-gradient(180deg,#ff2a32,#b30c13) padding-box,var(--chrome-x) border-box;box-shadow:0 12px 30px rgba(227,18,27,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+.menu .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu .ghost{font-size:.9rem}
+.stats{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 16px;font-size:.78rem;color:var(--muted)}
+.stats i{font-style:normal}
+.stats b{color:var(--fg);font-weight:700;font-variant-numeric:tabular-nums}
+.setup-head{display:flex;flex-direction:column;gap:6px;padding:4px 2px 0}
+.setup-head h2{font:900 clamp(30px,9vw,42px)/1 var(--display);letter-spacing:-.03em;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent;align-self:flex-start}
+.setup-head p{color:var(--muted);font-size:.95rem}
+@media (max-height:700px){.hero.big .fan{height:min(40vw,150px);width:min(72vw,260px);margin-bottom:-30px}}
+/* ---------- online ---------- */
+.online-btn{display:flex;align-items:center;justify-content:center;gap:10px}
+.online-btn svg{width:20px;height:20px;flex:none}
+.online-btn span{font-weight:500;color:var(--muted);font-size:.82rem}
+.olstack{display:flex;flex-direction:column;gap:14px}
+.field{width:100%;min-width:0;background:#000;border:1px solid var(--hair);border-radius:14px;color:var(--fg);font:600 1.05rem var(--body);padding:13px 14px;-webkit-user-select:text;user-select:text}
+.field::placeholder{color:#5f6167;font-weight:500}
+.joinrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.field.code{font:800 1.25rem var(--display);letter-spacing:.3em;text-transform:uppercase;text-align:center}
+.field.code::placeholder{letter-spacing:.3em}
+.joinrow .ghost{width:auto;padding:0 22px}
+.codebox{display:flex;flex-direction:column;align-items:center;text-align:center}
+.codebox .label{align-self:stretch}
+.bigcode{font:900 clamp(46px,15vw,64px)/1 var(--display);letter-spacing:.14em;padding-left:.14em;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent;margin:4px 0 14px;font-variant-numeric:tabular-nums}
+.prow .tag{font:800 .55rem var(--display);letter-spacing:.12em;text-transform:uppercase;padding:4px 7px;border-radius:999px;background:#2a2a2e;color:var(--muted);flex:none}
+.prow .tag.host{background:var(--red);color:var(--white)}
+.prow.me{border-color:rgba(255,255,255,.35)}
+.prow.away{opacity:.45}
+.waitline{text-align:center;font:600 .92rem/1.45 var(--body);color:var(--fg);padding:10px 14px;border-radius:14px;background:#111113;border:1px solid var(--hair)}
+.waitline b{color:var(--red-hi)}
+.pick.locked button{opacity:.38;filter:saturate(.4);pointer-events:none;transform:none}
+.actions.locked{opacity:.4;pointer-events:none}
+.netbanner{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);z-index:35;font:700 .82rem var(--body);color:var(--white);background:var(--red-dk);border:1px solid var(--red);padding:8px 14px;border-radius:999px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+#olOpen,#olAlerts{border-radius:16px}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.card.deal,.burst.go,.sheet .box,.fan .cardback,.cta::after{animation:none}}
+@media (max-height:640px){.hero:not(.big) .fan{display:none}.pick{margin-top:12px}.wrap{gap:14px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="flame" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3-1-4 1-7 1-9.5z"/></symbol>
+  <symbol id="star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.5 14.6 9.4 22.5 12l-7.9 2.6L12 22.5 9.4 14.6 1.5 12l7.9-2.6z"/></symbol>
+</svg>
+
+<!-- TITLE -->
+<section class="screen" id="title">
+  <div class="wrap title-wrap">
+    <div class="topbar">
+      <span class="chip">A DARE party game</span>
+      <button class="icon" id="soundBtn" aria-label="Sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path id="sndWave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+    </div>
+    <div class="hero big">
+      <div class="fan" aria-hidden="true">
+        <div class="cardback a"><div class="medal"><span>T</span></div></div>
+        <div class="cardback c"><div class="medal"><span class="dd">D</span></div></div>
+        <div class="cardback b"><div class="medal duo"><span>T</span><span class="dd">D</span></div></div>
+      </div>
+      <div class="logo">
+        <h1><span class="t">TRUTH</span><span class="or">or</span><span class="d">DARE</span></h1>
+        <p>Pass the phone. Flip a card. No lying.</p>
+      </div>
+    </div>
+
+    <ul class="facts" aria-label="What's in the deck">
+      <li><b>240</b><span>cards</span></li>
+      <li><b>3</b><span>heat levels</span></li>
+      <li><b>2–12</b><span>players</span></li>
+    </ul>
+    <div class="menu">
+      <div class="resume" id="resumePanel" hidden>
+        <button class="cta" id="resumeBtn">Continue</button>
+        <p class="note" id="resumeInfo"></p>
+      </div>
+      <button class="cta" id="newBtn">New game</button>
+      <button class="ghost online-btn" id="onlineBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="8" height="14" rx="2"/><rect x="14" y="5" width="8" height="14" rx="2"/><path d="M10 12h4"/></svg>Play online <span>each on your own phone</span></button>
+      <div class="row2"><button class="ghost" id="rulesBtn">How to play</button><button class="ghost" id="mineBtn">House cards (<span id="mineCount">0</span>)</button></div>
+    </div>
+    <div class="stats" id="stats" hidden><span><b id="stGames">0</b> <i id="stGamesW">games</i></span><span><b id="stCards">0</b> <i id="stCardsW">cards flipped</i></span><span><b id="stDares">0</b> <i id="stDaresW">dares done</i></span></div>
+  </div>
+</section>
+
+<!-- SETUP -->
+<section class="screen" id="home" hidden>
+  <div class="wrap">
+    <div class="topbar">
+      <button class="icon" id="backBtn" aria-label="Back to the title screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="chip">New game</span>
+      <span style="width:42px"></span>
+    </div>
+    <div class="setup-head"><h2>Set the table</h2><p>Who's playing, how hot, and how long.</p></div>
+    <div class="panel">
+      <div class="label">At the table <b id="pCount">0 / 12</b></div>
+      <div class="players" id="players"></div>
+      <form class="addp" id="addForm" autocomplete="off">
+        <input id="nameIn" maxlength="16" placeholder="Add a player" enterkeyhint="done" aria-label="Player name">
+        <button type="submit">Seat</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="label">Heat <b>pick a deck</b></div>
+      <div class="seg heat" id="heatSeg">
+        <button data-heat="chill"><span class="pips"><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Chill</b><small>Anybody</small></button>
+        <button data-heat="party"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Party</b><small>Embarrassing</small></button>
+        <button data-heat="spicy"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg></span><b>Spicy</b><small>18+ flirty</small></button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="label">Rounds <b>everyone goes once a round</b></div>
+      <div class="rounds" id="roundSeg">
+        <button data-r="3">3</button>
+        <button data-r="5">5</button>
+        <button data-r="10">10</button>
+        <button data-r="0">∞</button>
+      </div>
+    </div>
+
+    <button class="cta" id="startBtn">Deal me in</button>
+    <p class="note" id="startNote">Seat at least 2 players.</p>
+  </div>
+</section>
+
+<!-- TURN -->
+<section class="screen" id="turn" hidden>
+  <div class="wrap">
+    <div class="topbar">
+      <button class="icon" id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="chips"><span class="chip" id="roundChip">Round 1</span><span class="chip" id="heatChip">Party</span></div>
+      <div class="tright"><button class="icon chatbtn" id="chatT" aria-label="Chat with the table" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><i class="dot" hidden></i></button><button class="icon" id="boardBtn" aria-label="Scores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7"/></svg></button></div>
+    </div>
+    <div class="who">
+      <span class="eyebrow" id="turnEyebrow">Pass the phone to</span>
+      <h2 id="whoName">—</h2>
+      <p id="whoLine">Truth or dare?</p>
+    </div>
+    <div class="pick">
+      <button class="tr cardback" id="pickT" aria-label="Truth, plus 1 point"><div class="medal"><span>T</span></div><span class="cap"><b>TRUTH</b><small>+1 point</small></span></button>
+      <button class="dr cardback" id="pickD" aria-label="Dare, plus 2 points"><div class="medal"><span class="dd">D</span></div><span class="cap"><b>DARE</b><small>+2 points</small></span></button>
+    </div>
+    <button class="random" id="pickR">or let fate pick ↻</button>
+    <div class="strip" id="strip"></div>
+  </div>
+</section>
+
+<!-- CARD -->
+<section class="screen" id="cardScr" hidden>
+  <div class="wrap" style="gap:14px">
+    <div class="topbar">
+      <button class="icon" id="menuBtn2" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="chips"><span class="chip" id="cardWho">—</span></div>
+      <div class="tright"><button class="icon chatbtn" id="chatC" aria-label="Chat with the table" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><i class="dot" hidden></i></button><button class="icon" id="boardBtn2" aria-label="Scores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7"/></svg></button></div>
+    </div>
+    <div class="stage">
+      <div class="card" id="card">
+        <div class="face cardback"><div class="medal duo"><span>T</span><span class="dd">D</span></div></div>
+        <div class="face front" id="front" data-kind="truth">
+          <div class="frame"></div><div class="frame in"></div>
+          <div class="idx"><b></b><svg viewBox="0 0 24 24"><use href="#star"/></svg></div>
+          <div class="idx br"><b></b><svg viewBox="0 0 24 24"><use href="#star"/></svg></div>
+          <div class="fbody">
+            <div class="kindrow"><span class="kind" id="kind">TRUTH</span></div>
+            <span class="badge" id="badge" hidden>Double dare</span>
+            <div class="prompt" id="prompt"></div>
+            <div class="fbot">
+              <button class="timer" id="timer" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="rgba(247,240,227,.25)" stroke-width="3"/><circle class="p" cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="56.55" stroke-dashoffset="0" transform="rotate(-90 12 12)"/></svg><span id="timerTxt">30s</span></button>
+              <div class="seal"><span id="pts">+1</span></div>
+              <span class="deck" id="deckTag">Party deck</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="done" id="doneBtn">Done it</button>
+      <button class="sm" id="swapBtn">Swap card<small id="swapLeft">2 left</small></button>
+      <button class="sm chicken" id="chickenBtn">Chicken out<small>−1 point</small></button>
+    </div>
+    <p class="waitline" id="cardWait" hidden></p>
+    <p class="consent" id="consent" hidden>Anything with another player only happens if they're up for it. If they pass, you still get the points.</p>
+  </div>
+</section>
+
+<!-- END -->
+<section class="screen" id="end" hidden>
+  <div class="wrap">
+    <div class="topbar"><span class="chip">Game over</span><span class="tright"><button class="icon chatbtn" id="chatE" aria-label="Chat with the table" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><i class="dot" hidden></i></button></span></div>
+    <div class="crown">
+      <svg viewBox="0 0 24 24"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#9aa1aa"/><stop offset=".5" stop-color="#5c636c"/><stop offset=".55" stop-color="#eef1f4"/><stop offset="1" stop-color="#8a9099"/></linearGradient></defs><path fill="url(#cg)" d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>
+      <span class="eyebrow">Takes the crown</span>
+      <h2 id="winner">—</h2>
+      <p id="winLine"></p>
+    </div>
+    <div class="panel"><div class="label">Final scores</div><div class="table" id="finalTable"></div></div>
+    <div class="awards" id="awards"></div>
+    <p class="note" id="endNote" hidden></p>
+    <button class="cta" id="againBtn">Run it back</button>
+    <button class="ghost" id="homeBtn">Change players</button>
+  </div>
+</section>
+
+<!-- ONLINE -->
+<section class="screen" id="online" hidden>
+  <div class="wrap">
+    <div class="topbar">
+      <button class="icon" id="olBack" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="chip">Play online</span>
+      <span class="tright" style="min-width:42px"><button class="icon chatbtn" id="chatO" aria-label="Chat with the table" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><i class="dot" hidden></i></button></span>
+    </div>
+    <div class="setup-head"><h2>Play online</h2><p>Everyone on their own phone. Up to 8 players.</p></div>
+
+    <div id="olSetup" class="olstack">
+      <div class="panel">
+        <div class="label">Your name</div>
+        <input class="field" id="olNick" maxlength="16" placeholder="What should we call you?" autocomplete="nickname" enterkeyhint="done" aria-label="Your name">
+      </div>
+      <div class="panel olstack">
+        <button class="cta" id="olCreate">Create a room</button>
+        <div class="joinrow">
+          <input class="field code" id="olCode" maxlength="4" placeholder="CODE" autocapitalize="characters" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="Room code">
+          <button class="ghost" id="olJoin">Join</button>
+        </div>
+        <button class="ghost" id="olFind" hidden>Find players</button>
+        <p class="note" id="olStatus" role="status"></p>
+      </div>
+      <div id="olOpen" hidden></div>
+      <div id="olAlerts" hidden></div>
+    </div>
+
+    <div id="olLobby" class="olstack" hidden>
+      <div class="panel codebox">
+        <div class="label">Room code <b id="olRole">You're the host</b></div>
+        <div class="bigcode" id="olCodeShow">----</div>
+        <button class="ghost" id="olCopy">Copy invite</button>
+      </div>
+      <div class="panel">
+        <div class="label">At the table <b id="olCount">1 / 8</b></div>
+        <div class="players" id="olPlayers"></div>
+      </div>
+      <div class="panel" id="olHostSet">
+        <div class="label">Heat <b>you pick for the table</b></div>
+        <div class="seg heat" id="olHeat">
+          <button data-heat="chill"><span class="pips"><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Chill</b><small>Anybody</small></button>
+          <button data-heat="party"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg class="off"><use href="#flame"/></svg></span><b>Party</b><small>Embarrassing</small></button>
+          <button data-heat="spicy"><span class="pips"><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg><svg><use href="#flame"/></svg></span><b>Spicy</b><small>18+ flirty</small></button>
+        </div>
+        <div class="label" style="margin-top:16px">Rounds</div>
+        <div class="rounds" id="olRounds">
+          <button data-r="3">3</button><button data-r="5">5</button><button data-r="10">10</button><button data-r="0">∞</button>
+        </div>
+      </div>
+      <p class="waitline" id="olWait" hidden></p>
+      <button class="cta" id="olStart">Deal everyone in</button>
+      <p class="note" id="olNote"></p>
+      <button class="ghost" id="olLeave">Leave room</button>
+    </div>
+  </div>
+</section>
+
+<div class="netbanner" id="netBanner" role="status" hidden></div>
+
+<!-- SHEETS -->
+<div class="sheet" id="menuSheet" hidden><div class="box">
+  <h3>Paused</h3>
+  <button class="ghost" id="mResume">Back to the game</button>
+  <button class="ghost" id="mSkip">Skip this player</button>
+  <button class="ghost" id="mEnd">End game and crown a winner</button>
+  <button class="ghost" id="mHome">Home (game is saved)</button>
+  <button class="ghost" id="mLeave" hidden>Leave the room</button>
+</div></div>
+
+<div class="sheet" id="boardSheet" hidden><div class="box">
+  <h3>Scoreboard</h3>
+  <div class="table" id="boardTable"></div>
+  <button class="ghost" data-close>Close</button>
+</div></div>
+
+<div class="sheet" id="rulesSheet" hidden><div class="box">
+  <h3>How to play</h3>
+  <ul>
+    <li>Pass the phone. On your turn pick <b class="tword">Truth</b> or <b class="dword">Dare</b>, or let fate pick.</li>
+    <li>Answer honestly or do the dare, then tap <b>Done it</b>. Truth is +1, dare is +2, and a rare <b class="dword">Double Dare</b> is +4.</li>
+    <li>Everyone gets 2 free <b>swaps</b> a game to trade a card for a new one of the same kind.</li>
+    <li>Won't do it? <b>Chicken out</b> for −1.</li>
+    <li>After the last round, the highest score takes the crown. Ties share it.</li>
+    <li>Names on cards are other players. Anything involving someone else only happens if they're up for it.</li>
+    <li>Add your own cards under <b>House cards</b>. They get shuffled into every deck.</li>
+  </ul>
+  <button class="ghost" data-close>Got it</button>
+</div></div>
+
+<div class="sheet" id="mineSheet" hidden><div class="box">
+  <h3>House cards</h3>
+  <p>Write your own. Use <b>{player}</b> to drop in a random player's name.</p>
+  <textarea id="mineText" maxlength="180" placeholder="What's the wildest thing {player} has seen you do?"></textarea>
+  <div class="row2">
+    <button class="ghost tbtn" id="addT">Add as truth</button>
+    <button class="ghost dbtn" id="addD">Add as dare</button>
+  </div>
+  <div class="mine" id="mineList"></div>
+  <button class="ghost" data-close>Done</button>
+</div></div>
+
+<div class="sheet" id="ageSheet" hidden><div class="box">
+  <h3>Spicy is 18+</h3>
+  <p>Spicy cards are flirty: dates, crushes, kisses on the cheek and slow dances. Everyone playing should be 18 or older, and anything with another player is always their call.</p>
+  <div class="row2">
+    <button class="ghost" data-close>Not us</button>
+    <button class="cta" id="ageOk" style="font-size:1.15rem;padding:13px">We're all 18+</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<div class="burst" id="burst"></div>
+
+<script src="/dare-play.js"></script>
+<script>
+'use strict';
+/* ================= CARDS =================
+   {l} = next player, {r} = previous player, {p} = a random other player.
+   "|30" at the end adds a 30-second timer. */
+const DECK = {
+chill: {
+truth: [
+"What's the most embarrassing thing that happened to you in school?",
+"What's a song you secretly know every word to?",
+"What's the weirdest food combo you actually like?",
+"Who here would you call first in an emergency, and why?",
+"What's the last lie you told?",
+"What's a habit you have that nobody knows about?",
+"What's the worst gift you ever got, and did you pretend to like it?",
+"If you could switch lives with anyone here for a day, who would it be?",
+"What's the most childish thing you still do?",
+"What's your most irrational fear?",
+"What's the dumbest way you've ever hurt yourself?",
+"What did you want to be when you grew up?",
+"What's a movie that made you cry?",
+"What's your go-to excuse for getting out of plans?",
+"What's the most money you've wasted on something useless?",
+"Who was your first celebrity crush?",
+"What's something you pretend to understand but don't?",
+"What's the pettiest thing you've ever done?",
+"What's the worst haircut you've ever had?",
+"What's the best compliment you've ever gotten?",
+"What app do you waste the most time on? Show your screen time.",
+"What's the most trouble you got into as a kid?",
+"Who here would survive longest in a zombie apocalypse? Who goes first?",
+"What's the strangest dream you can remember?",
+"What's your guilty pleasure show?",
+"What's something you're secretly proud of?",
+"What's your worst cooking disaster?",
+"What's the last thing you searched on your phone?",
+"Who here would you trust to plan your birthday?",
+"What's a talent nobody here knows you have?",
+"You can keep three apps. Everything else gets deleted. Which three?",
+"What's the most awkward phone call you've ever had?",
+"What's a food you refuse to eat?",
+"What's the best advice you've ever ignored?",
+"What's one thing {p} does that makes you laugh every time?",
+"When was the last time you said \"on my way\" before you'd even left?",
+"What's the most embarrassing thing your family has caught you doing?",
+"What would your autobiography be called?",
+"What's a hill you'll die on, even though it doesn't matter?",
+"Who here has the best laugh?"
+],
+dare: [
+"Talk in an accent the group picks until your next turn.",
+"Do an impression of someone in this room. Everyone guesses who.",
+"Freestyle four bars about {p}.",
+"Let {l} style your hair however they want.",
+"Do 15 jumping jacks while singing the alphabet.",
+"Speak only in questions until your next turn.",
+"Show everyone the last photo in your camera roll.",
+"Do your best runway walk across the room and back.",
+"Hold a plank for 30 seconds.|30",
+"Balance something on your head for 30 seconds.|30",
+"Have {l} whisper an emoji to you. Act it out until someone guesses it.",
+"Narrate everything {r} does like a nature documentary for a full minute.|60",
+"Call play-by-play on the room like a sports announcer for 30 seconds.|30",
+"Dance with no music for 20 seconds.|20",
+"Say the alphabet backwards. Three tries.",
+"Give a 30-second TED Talk about whatever object {l} hands you.|30",
+"Let {p} pick a word. Use it in every sentence until your next turn.",
+"Try to lick your elbow. Commit to it.",
+"Do your best evil villain laugh.",
+"Be a waiter and take everyone's order, with attitude.",
+"Tell a joke. If nobody laughs, tell another.",
+"Give every player one genuine compliment.",
+"Do an impression of a famous person until someone guesses who.",
+"Give {p} a motivational speech like it's the last game of the season.",
+"Send a friend a voice note that just says \"It's done.\" Don't explain.",
+"Answer everything in rhyme until your next turn.",
+"Make up a commercial for the thing closest to your left hand.",
+"Moonwalk across the room.",
+"Do 10 push-ups.",
+"Spin around 10 times, then walk in a straight line.",
+"Mime getting ready in the morning, start to finish. No words.",
+"Hum a song until someone guesses it. Three tries.",
+"Let {l} give you a nickname. Everyone uses it for the rest of the game.",
+"Keep a straight face for 30 seconds while everyone tries to crack you.|30",
+"Act like a cat until your next turn.",
+"Read the last text you sent out loud, in your most dramatic voice.",
+"Swap a jacket, hat or socks with {p} for the rest of the game.",
+"Talk without closing your mouth for 30 seconds.|30",
+"Do your best robot dance for 15 seconds.|15",
+"Let {r} pick a pose. Hold it until your next turn starts."
+]},
+party: {
+truth: [
+"Have you ever ghosted someone? What happened?",
+"What's the most embarrassing thing you've done to impress someone?",
+"Who was the last person you looked up on social media?",
+"What's the worst date you've ever been on?",
+"What's a secret you've never told your parents?",
+"What's the biggest lie you've told to get out of trouble?",
+"Have you ever re-gifted something? Who got it?",
+"What's the most embarrassing thing you've posted online?",
+"What's your biggest red flag?",
+"Have you ever sent a text to the wrong person? What did it say?",
+"Who's the last person you left on read, and why?",
+"Rank everyone here from most to least likely to be famous.",
+"Who here would be the worst roommate?",
+"What's a lie you told on a first date?",
+"Who was your most embarrassing crush?",
+"What's something you've done that you'd never want your boss to see?",
+"What have you faked being sick to get out of?",
+"What's the cringiest thing you did in middle school?",
+"Who here gives the best advice? Who gives the worst?",
+"What's the pettiest reason you've stopped talking to someone?",
+"What's one opinion you have that would start an argument in this room?",
+"Have you ever gone through someone else's phone?",
+"What's the most you've ever spent in one night out?",
+"What's your most embarrassing nickname, and where did it come from?",
+"Who here would you call at 3 a.m. for a ride, no questions asked?",
+"What's something you've lied about in this game already?",
+"What's the most awkward thing you've ever walked in on?",
+"What's the worst thing you've said while half asleep?",
+"What's a dealbreaker most people would call petty?",
+"What's the most childish argument you've had as an adult?",
+"Who was the last person you cried in front of?",
+"What's the worst thing you've done that you never got caught for?",
+"Describe your type in three words.",
+"Who here is most likely to end up on reality TV? Why?",
+"What's one thing {p} does that low-key annoys you?",
+"Read your last three searches out loud.",
+"What's something you've never admitted to {p}?",
+"What's the most embarrassing song in your recently played?",
+"What's the worst outfit you've ever left the house in, on purpose?",
+"Who in your phone would you never let this group text?"
+],
+dare: [
+"Let the group write a text. Send it to the fifth person in your messages.",
+"Call someone in your contacts and sing them happy birthday. It can't be their birthday.",
+"Show everyone the last five photos in your camera roll. No skipping.",
+"Let {p} scroll your camera roll for 20 seconds.|20",
+"Do your best twerk for 15 seconds.|15",
+"Let the group pick your phone wallpaper. It stays until tomorrow.",
+"Let {r} do your makeup or style your face in 60 seconds.|60",
+"Read your most recent DM out loud.",
+"Do your best impression of {p} on a night out.",
+"Everyone gets to ask you one question. Answer every one honestly.",
+"Flirt with an object in the room in a British accent for 30 seconds.|30",
+"Post a selfie right now with a caption the group chooses.",
+"Freestyle eight bars about everyone in the room.",
+"Call a friend and tell them you just won the lottery. Keep it going for 30 seconds.|30",
+"Do a dramatic reading of the last text from whoever texts you most.",
+"Show your screen time and let everyone roast your top app.",
+"Act out your morning routine like it's a music video.",
+"End every sentence with a hashtag until your next turn.",
+"Hand your phone to {l}. They read your notifications out loud for 15 seconds.|15",
+"Do an infomercial selling {p} to the room.",
+"Let the group pick a song. Lip sync it like it's the halftime show.",
+"Act out {p} getting ready for a date.",
+"Make {r} laugh in 30 seconds. If you can't, do 10 squats.|30",
+"Let {p} change their name in your phone to anything they want.",
+"Text your group chat \"I have something important to tell you all\" and don't reply for 10 minutes.",
+"Let {l} write your bio on any social app. It stays until tomorrow.",
+"Be a cooking show host and make a snack with whatever's in the kitchen.",
+"Recreate a famous meme pose and let {p} take the picture.",
+"Leave someone a voice note in your best movie trailer voice.",
+"Tell {p} one thing you'd change about them, then three things you love.",
+"Do 20 seconds of stand-up about the people in this room.|20",
+"Let the group judge the last five songs you played.",
+"Pick someone in your contacts at random and send them a real compliment.",
+"Walk like a model while {l} announces you to the room.",
+"Show the most embarrassing photo of yourself on your phone.",
+"Let {p} pick an emoji. Text it to the last three people you messaged with no explanation.",
+"Do your best impression of your mom or dad catching you sneaking in.",
+"Let {r} pick a celebrity. Stay in character as them until your next turn.",
+"Sing the chorus of any song as loud as you can. Right now.",
+"Call the last person you texted and tell them a fun fact, then hang up."
+]},
+spicy: {
+truth: [
+"Who in this room would you go on a date with?",
+"What's the first thing you notice about someone you're into?",
+"What's your biggest turn-on that isn't physical?",
+"What's the most romantic thing you've ever done for someone?",
+"Have you ever had a crush on a friend?",
+"What's the boldest move you've ever made on someone?",
+"Rate your flirting game from 1 to 10. Then {p} rates it.",
+"What's the cheesiest pickup line that has actually worked on you?",
+"What's your biggest turn-off?",
+"Who here do you think is the best kisser? Why?",
+"What's your love language?",
+"Have you ever slid into someone's DMs? How'd it go?",
+"Tell us about your first kiss.",
+"What instantly makes you lose interest in someone?",
+"Have you ever had feelings for two people at once?",
+"Describe your perfect date night, start to finish.",
+"What's the most attractive thing about {p}?",
+"Have you ever kissed someone and regretted it right away?",
+"Who here would you trust to set you up on a blind date?",
+"What's a secret about your love life nobody here knows?",
+"What's the most jealous you've ever been?",
+"What do you find attractive that most people don't?",
+"Read the last flirty text you sent.",
+"Have you ever kept a relationship secret?",
+"Who's the one that got away?",
+"What's the most spontaneous romantic thing you've done?",
+"If you had to kiss someone in this room, who would it be?",
+"What's a compliment you'd love to hear from someone you like?",
+"Have you ever had a crush on a teacher or a boss?",
+"What's your most embarrassing moment on a date?",
+"What song sets the mood for you?",
+"What's one thing you want a partner to do more often?",
+"Have you ever lied about your age or job to impress someone?",
+"Who here would you want to be stuck on an island with?",
+"What's your favorite feature on yourself?",
+"Who was the last person who gave you butterflies?",
+"What would your ex say is your worst habit?",
+"What's the longest you've waited before texting back someone you liked?",
+"What's the most attractive voice or accent to you?",
+"Who here do you think flirts the most?"
+],
+dare: [
+"Give {p} your most convincing pickup line.",
+"Kiss {p} on the cheek.",
+"Whisper something flirty in {l}'s ear.",
+"Give {p} a shoulder massage for 30 seconds.|30",
+"Hold eye contact with {p} for 30 seconds without laughing.|30",
+"Slow dance with {p} for 30 seconds. No music needed.|30",
+"Write {p}'s dating profile out loud.",
+"Send the flirtiest emoji you know to your most recent chat. No explanation.",
+"Serenade {p} with a love song. Make one up if you have to.",
+"Do your most confident walk across the room.",
+"Recreate a romantic movie scene with {p}.",
+"Sit next to {p} with your arm around them until your next turn.",
+"Give everyone a one-word compliment about how they look tonight.",
+"Show the last selfie you took. No deleting first.",
+"Hold hands with {p} until your next turn.",
+"Write a three-line love poem for {p} and read it out loud.",
+"Flirt with {p} using only food puns for 30 seconds.|30",
+"Feed {p} a bite of something, romantic-movie style.",
+"The group picks someone here. Give them a 10-second hug.|10",
+"Read the ingredients of something nearby in your most seductive voice.",
+"Act out how you'd ask {p} on a date.",
+"Kiss {l}'s hand like royalty.",
+"Let {p} style your date-night outfit with whatever's in the room.",
+"Rate everyone's outfit tonight from 1 to 10, out loud.",
+"Let the group read your last DM conversation and judge your game.",
+"Trace a heart on {p}'s hand and say something sweet.",
+"Give {p} a pet name. Use it until the game ends.",
+"Do your best body roll for 10 seconds.|10",
+"Show us exactly how you flirt at a party. {p} is your target.",
+"Let {l} write a flirty text. You choose who gets it.",
+"Tell {p} the most attractive thing about them.",
+"Whisper your celebrity crush to {p}. They announce it like breaking news.",
+"Introduce {p} to the room like they're your date.",
+"Take your best kissy-face selfie and make it your profile picture for an hour.",
+"Wink at every player, one at a time, and keep a straight face.",
+"Let {p} ask you anything. You can't lie.",
+"Describe your dream date with {p} like a movie trailer.",
+"Give {r} a compliment so smooth they blush. If they don't, try again.",
+"Text someone you used to talk to \"thought about you today.\"",
+"Pick the person here with the best smile and tell them why."
+]}};
+const MIX = {chill:{chill:1}, party:{party:.72, chill:.28}, spicy:{spicy:.62, party:.38}};
+const HEAT_NAME = {chill:'Chill', party:'Party', spicy:'Spicy'};
+const PTS = {truth:1, dare:2, double:4, chicken:-1};
+const SWAPS = 2, DOUBLE_CHANCE = .1;
+
+/* ================= STORAGE ================= */
+const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+            set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+            del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const cfg = Object.assign({players:[], heat:'party', rounds:5, sound:true, age:false, games:0, flips:0, dares:0}, ls.get('dtod-cfg',{}));
+let mine = ls.get('dtod-mine', []);
+let G = ls.get('dtod-game', null);
+const saveCfg = () => ls.set('dtod-cfg', cfg);
+const saveGame = () => { if (G && G.online) return; G ? ls.set('dtod-game', G) : ls.del('dtod-game'); };  // online games live on the host's phone, never saved here
+const saveMine = () => ls.set('dtod-mine', mine);
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const rnd = n => Math.floor(Math.random() * n);
+let curScreen = '';
+function show(id){ for (const s of ['title','home','online','turn','cardScr','end']) $(s).hidden = s !== id; if (curScreen !== id){ window.scrollTo(0,0); $(id).scrollTop = 0; } curScreen = id; }
+function sheet(id, on){ $(id).hidden = !on; }
+document.querySelectorAll('.sheet').forEach(s => {
+  s.addEventListener('click', e => { if (e.target === s || e.target.hasAttribute('data-close')) s.hidden = true; });
+});
+let toastT;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1800); }
+function burst(txt, color){ const b = $('burst'); b.textContent = txt; b.style.color = color; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
+function buzz(p){ try{ navigator.vibrate && navigator.vibrate(p) }catch(e){} }
+
+/* sound: tiny Web Audio blips, no files */
+let AC;
+function tone(f, d, type='sine', v=.08, slide=0){
+  if (!cfg.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(f*slide, t+d);
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t+d);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+.02);
+  }catch(e){}
+}
+function flipSfx(){
+  if (!cfg.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const n = AC.sampleRate*.12, b = AC.createBuffer(1,n,AC.sampleRate), d = b.getChannelData(0);
+    for (let i=0;i<n;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/n, 3);
+    const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+    f.type='bandpass'; f.frequency.value=2400; g.gain.value=.35; s.buffer=b; s.connect(f).connect(g).connect(AC.destination); s.start();
+  }catch(e){}
+}
+const sfx = {
+  done(){ tone(523,.12,'triangle'); setTimeout(()=>tone(784,.18,'triangle'),90); },
+  big(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.2,'triangle',.09),i*80)); },
+  chicken(){ tone(420,.35,'sawtooth',.05,.45); },
+  tick(){ tone(1200,.04,'square',.03); },
+  ring(){ tone(880,.25,'triangle',.1); setTimeout(()=>tone(880,.25,'triangle',.1),280); }
+};
+
+/* ================= HOME ================= */
+function renderHome(){
+  const list = $('players'); list.textContent = '';
+  cfg.players.forEach((n, i) => {
+    const r = el('div','prow'); r.append(el('span','n', i+1), el('span','name', n));
+    const x = el('button'); x.setAttribute('aria-label','Remove '+n); x.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    x.onclick = () => { cfg.players.splice(i,1); saveCfg(); renderHome(); };
+    r.append(x); list.append(r);
+  });
+  $('pCount').textContent = cfg.players.length + ' / 12';
+  $('nameIn').disabled = cfg.players.length >= 12;
+  document.querySelectorAll('#heatSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.heat === cfg.heat));
+  document.querySelectorAll('#roundSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === cfg.rounds));
+  const ok = cfg.players.length >= 2;
+  $('startBtn').disabled = !ok;
+  $('startNote').textContent = ok ? (cfg.players.length + ' players · ' + HEAT_NAME[cfg.heat] + ' deck · ' + (cfg.rounds ? cfg.rounds + ' rounds' : 'no round limit'))
+                                  : (cfg.players.length ? 'Seat one more player.' : 'Seat at least 2 players.');
+  $('mineCount').textContent = mine.length;
+  $('resumePanel').hidden = !G;
+  $('stats').hidden = !(cfg.games || cfg.flips);
+  $('stGames').textContent = cfg.games; $('stCards').textContent = cfg.flips; $('stDares').textContent = cfg.dares;
+  $('stGamesW').textContent = cfg.games === 1 ? 'game' : 'games'; $('stCardsW').textContent = cfg.flips === 1 ? 'card flipped' : 'cards flipped'; $('stDaresW').textContent = cfg.dares === 1 ? 'dare done' : 'dares done';
+  if (G) $('resumeInfo').textContent = G.players.map(p => p.n).slice(0,4).join(', ') + (G.players.length > 4 ? ' +' + (G.players.length - 4) : '') + ' · round ' + G.round + (G.rounds ? ' of ' + G.rounds : '');
+  $('sndWave').style.display = cfg.sound ? '' : 'none';
+}
+$('addForm').onsubmit = e => {
+  e.preventDefault();
+  const v = $('nameIn').value.trim().replace(/\s+/g,' ');
+  if (!v) return;
+  if (cfg.players.length >= 12) return toast('12 players max');
+  if (cfg.players.some(p => p.toLowerCase() === v.toLowerCase())) return toast('That name is taken');
+  cfg.players.push(v); $('nameIn').value = ''; saveCfg(); renderHome(); tone(660,.08,'triangle',.05);
+};
+$('heatSeg').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.heat === 'spicy' && !cfg.age) return sheet('ageSheet', true);
+  cfg.heat = b.dataset.heat; saveCfg(); renderHome();
+};
+$('ageOk').onclick = () => { cfg.age = true; cfg.heat = 'spicy'; saveCfg(); sheet('ageSheet', false); renderHome(); if (NET.on && isHost()){ pushPres({lob:{hr:cfg.heat, rn:cfg.rounds}}); renderLobby(); } };
+$('roundSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; cfg.rounds = +b.dataset.r; saveCfg(); renderHome(); };
+$('soundBtn').onclick = () => { cfg.sound = !cfg.sound; saveCfg(); renderHome(); if (cfg.sound) tone(660,.1,'triangle'); };
+$('rulesBtn').onclick = () => sheet('rulesSheet', true);
+$('mineBtn').onclick = () => { renderMine(); sheet('mineSheet', true); };
+$('startBtn').onclick = () => {
+  if (G) toast('Started fresh. The old game was replaced.');
+  newGame();
+};
+$('resumeBtn').onclick = () => G.cur ? showCard(false) : showTurn();
+$('newBtn').onclick = () => { renderHome(); show('home'); tone(560,.08,'triangle',.05); };
+$('backBtn').onclick = () => { renderHome(); show('title'); };
+
+/* ================= CUSTOM CARDS ================= */
+function renderMine(){
+  const l = $('mineList'); l.textContent = '';
+  if (!mine.length) { l.append(el('div','empty','No house cards yet. Write the first one above.')); return; }
+  mine.slice().reverse().forEach((c) => {
+    const idx = mine.indexOf(c);
+    const r = el('div', c.k === 'truth' ? 't' : 'd');
+    r.append(el('i', null, c.k === 'truth' ? 'Truth' : 'Dare'), el('span', null, c.t));
+    const x = el('button', null, '✕'); x.setAttribute('aria-label','Delete card');
+    x.onclick = () => { mine.splice(idx,1); saveMine(); renderMine(); renderHome(); };
+    r.append(x); l.append(r);
+  });
+}
+function addMine(k){
+  let t = $('mineText').value.trim().replace(/\s+/g,' ');
+  if (t.length < 4) return toast('Write the card first');
+  t = t.replace(/^(truth|dare)\s*[:\-–]\s*/i, '');
+  mine.push({k, t}); saveMine(); $('mineText').value = ''; renderMine(); renderHome(); toast('Added to every deck');
+}
+$('addT').onclick = () => addMine('truth');
+$('addD').onclick = () => addMine('dare');
+
+/* ================= GAME ================= */
+function newGame(){
+  G = { players: cfg.players.map(n => ({n, s:0, t:0, d:0, c:0, w:SWAPS, dd:0})),
+        heat: cfg.heat, rounds: cfg.rounds, round: 1, turn: 0, used: {}, cur: null };
+  saveGame(); showTurn();
+}
+function me(){ return G.players[G.turn]; }
+function showTurn(){
+  const p = me();
+  $('whoName').textContent = p.n;
+  const lines = ['Truth or dare?','No lying. We can tell.','Your move.','Choose wisely.','Everyone is watching.','Feeling brave?'];
+  $('whoLine').textContent = lines[(G.round + G.turn) % lines.length];
+  $('roundChip').textContent = 'Round ' + G.round + (G.rounds ? ' / ' + G.rounds : '');
+  $('heatChip').textContent = HEAT_NAME[G.heat];
+  renderStrip(); onlineTurnChrome(); show('turn');
+}
+function renderStrip(){
+  const s = $('strip'); s.textContent = '';
+  G.players.map((p,i)=>({p,i})).sort((a,b)=>b.p.s-a.p.s).forEach(({p,i}) => {
+    const d = el('div', i === G.turn ? 'me' : null); d.append(el('span',null,p.n), el('b',null,p.s)); s.append(d);
+  });
+}
+function pool(heat, kind){
+  // weighted pick of which sub-deck to draw from, plus custom cards
+  const mix = MIX[heat], r = Math.random(); let acc = 0, src = Object.keys(mix)[0];
+  for (const k in mix){ acc += mix[k]; if (r <= acc){ src = k; break; } }
+  const cards = DECK[src][kind].map((t,i) => ({id: src[0]+kind[0]+i, t, src}));
+  const own = mine.filter(c => c.k === kind).map((c,i) => ({id:'m'+kind[0]+c.t.length+'_'+i, t:c.t, src:'mine'}));
+  if (own.length && Math.random() < Math.min(.35, own.length * .06)) return own;
+  return cards;
+}
+function draw(kind, avoid){
+  let cards = pool(G.heat, kind);
+  let fresh = cards.filter(c => !G.used[c.id] && c.id !== avoid);
+  if (!fresh.length){ cards.forEach(c => delete G.used[c.id]); fresh = cards.filter(c => c.id !== avoid); }
+  const c = fresh[rnd(fresh.length)];
+  G.used[c.id] = 1;
+  let text = c.t, secs = 0;
+  const m = text.match(/\|(\d+)$/); if (m){ secs = +m[1]; text = text.slice(0, m.index); }
+  // fill names
+  const n = G.players.length, i = G.turn;
+  const others = G.players.filter((_,j) => j !== i);
+  const P = others[rnd(others.length)].n, L = G.players[(i+1)%n].n, R = G.players[(i-1+n)%n].n;
+  const named = /\{[lrp]\}|\{player\}/.test(text);
+  text = text.replace(/\{l\}/g, '\u0001'+L+'\u0002').replace(/\{r\}/g, '\u0001'+R+'\u0002').replace(/\{p\}|\{player\}/g, '\u0001'+P+'\u0002');
+  const dbl = kind === 'dare' && Math.random() < DOUBLE_CHANCE;
+  G.cur = {kind, id:c.id, text, secs, dbl, src:c.src, named};
+  saveGame();
+}
+function pick(kind){
+  if (G && G.online) return netAct(kind);
+  if (kind === 'random') kind = Math.random() < .5 ? 'truth' : 'dare';
+  draw(kind); showCard(true);
+}
+$('pickT').onclick = () => pick('truth');
+$('pickD').onclick = () => pick('dare');
+$('pickR').onclick = () => { tone(500,.08,'triangle'); if (G && G.online) return netAct('random'); setTimeout(()=>pick('random'), 120); };
+
+function renderPrompt(text){
+  const box = $('prompt'); box.textContent = '';
+  const span = el('span');
+  text.split(/(\u0001[^\u0002]*\u0002)/).forEach(part => {
+    if (part.startsWith('\u0001')) span.append(el('mark', null, part.slice(1,-1)));
+    else if (part) span.append(document.createTextNode(part));
+  });
+  box.append(span);
+  // shrink long prompts so they always fit
+  box.style.fontSize = '';
+  requestAnimationFrame(() => { let s = parseFloat(getComputedStyle(box).fontSize), k = 0;
+    while (span.offsetHeight > box.clientHeight - 8 && s > 15 && k++ < 30){ s -= 1; box.style.fontSize = s + 'px'; } });
+}
+function showCard(animate){
+  const c = G.cur, p = me();
+  stopTimer();
+  $('cardWho').textContent = p.n + (c.kind === 'truth' ? ' · truth' : ' · dare');
+  const front = $('front'); front.dataset.kind = c.kind; front.classList.toggle('double', c.dbl);
+  $('kind').textContent = c.kind === 'truth' ? 'TRUTH' : 'DARE';
+  $('pts').textContent = '+' + (c.dbl ? PTS.double : PTS[c.kind]);
+  $('badge').hidden = !c.dbl;
+  $('deckTag').textContent = c.src === 'mine' ? 'House card' : HEAT_NAME[c.src] + ' deck';
+  $('timer').hidden = !c.secs; resetTimer();
+  $('swapLeft').textContent = p.w ? p.w + ' left' : 'none left';
+  $('swapBtn').disabled = !p.w;
+  $('consent').hidden = !(G.heat === 'spicy' && c.named);
+  $('doneBtn').textContent = c.kind === 'truth' ? 'Answered' : 'Done it';
+  show('cardScr');
+  const card = $('card');
+  if (animate){
+    card.classList.remove('flip','deal'); void card.offsetWidth; card.classList.add('deal');
+    renderPrompt(c.text);
+    setTimeout(() => { card.classList.add('flip'); flipSfx(); buzz(12);
+      if (c.dbl) setTimeout(() => { burst('DOUBLE DARE', '#ff3b3b'); sfx.big(); buzz([30,40,30]); }, 450); }, 420);
+  } else { card.classList.remove('deal'); card.classList.add('flip'); renderPrompt(c.text); }
+  onlineCardChrome();
+}
+function finishTurn(kind){
+  const p = me(), c = G.cur;
+  stopTimer();
+  cfg.flips++; if (kind !== 'chicken' && c.kind === 'dare') cfg.dares++; saveCfg();
+  if (kind === 'chicken'){ p.s += PTS.chicken; p.c++; sfx.chicken(); buzz(80); burst('BAWK!', '#ff3b3b'); }
+  else { const pts = c.dbl ? PTS.double : PTS[c.kind]; p.s += pts; if (c.kind === 'truth') p.t++; else { p.d++; if (c.dbl) p.dd++; }
+         (c.dbl ? sfx.big : sfx.done)(); buzz(20); burst('+' + pts, c.kind === 'truth' ? '#ffffff' : '#ff3b3b'); }
+  G.cur = null; advance();
+}
+function advance(){
+  G.turn++;
+  if (G.turn >= G.players.length){ G.turn = 0; G.round++; }
+  saveGame();
+  if (G.rounds && G.round > G.rounds) return setTimeout(endGame, 500);
+  setTimeout(() => { if (G && G.round > 1 && G.turn === 0) toast('Round ' + G.round); showTurn(); }, 420);
+}
+$('doneBtn').onclick = () => G && G.online ? netAct('done') : finishTurn('done');
+$('chickenBtn').onclick = () => G && G.online ? netAct('chicken') : finishTurn('chicken');
+$('swapBtn').onclick = () => {
+  if (G && G.online) return netAct('swap');
+  const p = me(); if (!p.w) return;
+  p.w--; const old = G.cur; draw(old.kind, old.id);
+  const card = $('card'); card.classList.remove('flip'); tone(400,.08,'triangle');
+  setTimeout(() => showCard(true), 350);
+};
+
+/* timer */
+let tInt = null, tLeft = 0;
+function resetTimer(){ const c = G && G.cur; tLeft = c ? c.secs : 0; $('timerTxt').textContent = tLeft ? 'Start ' + tLeft + 's' : ''; $('timer').className = 'timer'; $('timer').querySelector('.p').style.strokeDashoffset = 0; }
+function stopTimer(){ clearInterval(tInt); tInt = null; }
+$('timer').onclick = () => {
+  const c = G.cur; if (!c || !c.secs) return;
+  if (tInt){ stopTimer(); resetTimer(); return; }
+  tLeft = c.secs; const t0 = Date.now(), circ = 56.55;
+  $('timer').className = 'timer run';
+  tInt = setInterval(() => {
+    const left = Math.max(0, c.secs - (Date.now() - t0)/1000), whole = Math.ceil(left);
+    $('timer').querySelector('.p').style.strokeDashoffset = circ * (1 - left / c.secs);
+    if (whole !== tLeft){ tLeft = whole; if (whole <= 3 && whole > 0) sfx.tick(); }
+    $('timerTxt').textContent = left > 0 ? whole + 's' : "Time's up";
+    if (left <= 0){ stopTimer(); $('timer').className = 'timer done'; sfx.ring(); buzz([60,60,60]); }
+  }, 100);
+};
+
+/* end */
+function endGame(){
+  if (!G) return;
+  showEnd(G.players, false);
+  G = null; saveGame();
+}
+function showEnd(players, online){
+  cfg.games++; saveCfg();
+  const ps = players.slice().sort((a,b) => b.s - a.s);
+  const top = ps[0].s, champs = ps.filter(p => p.s === top);
+  $('winner').textContent = champs.map(p => p.n).join(' & ');
+  const wl = $('winner').textContent.length;
+  $('winner').style.fontSize = wl > 22 ? 'clamp(30px,9vw,44px)' : wl > 12 ? 'clamp(40px,12vw,60px)' : '';
+  $('winLine').textContent = (champs.length > 1 ? 'Shared crown with ' : 'With ') + top + ' point' + (Math.abs(top) === 1 ? '' : 's') + '.';
+  fillTable($('finalTable'), ps);
+  const aw = $('awards'); aw.textContent = '';
+  const award = (title, key, unit) => {
+    const best = Math.max(...players.map(p => p[key])); if (best <= 0) return;
+    const who = players.filter(p => p[key] === best).map(p => p.n).join(' & ');
+    const a = el('div','award'); a.append(el('small',null,title), el('b',null,who), el('span',null,best + ' ' + unit + (best === 1 ? '' : 's'))); aw.append(a);
+  };
+  award('Most daring','d','dare'); award('Open book','t','truth'); award('Double trouble','dd','double dare'); award('Biggest chicken','c','chicken-out');
+  const host = online && isHost();
+  $('againBtn').hidden = online && !host;
+  $('againBtn').textContent = online ? 'Play again' : 'Run it back';
+  $('homeBtn').textContent = online ? 'Leave room' : 'Change players';
+  $('endNote').hidden = !online || host;
+  $('endNote').textContent = 'Waiting for the host to start another game.';
+  stopTimer(); show('end'); sfx.big(); buzz([40,60,40,60,120]);
+}
+function fillTable(box, ps){
+  box.textContent = ''; let rank = 0, last = null;
+  ps.forEach((p, i) => { if (p.s !== last){ rank = i + 1; last = p.s; }
+    const r = el('div','trow');
+    r.append(el('span','r', rank), el('span','nm', p.n), el('span','st', p.t + 'T · ' + p.d + 'D' + (p.c ? ' · ' + p.c + '🐔' : '')), el('span','sc', p.s));
+    box.append(r); });
+}
+$('againBtn').onclick = () => { if (NET.on){ if (isHost()) hostStart(); return; } newGame(); };
+$('homeBtn').onclick = () => { if (NET.on) return leaveRoom(); renderHome(); show('title'); };
+
+/* menu + board */
+const openMenu = () => {
+  const on = !!(G && G.online);
+  $('mSkip').hidden = $('mEnd').hidden = on && !isHost();
+  $('mHome').hidden = on; $('mLeave').hidden = !on;
+  sheet('menuSheet', true);
+};
+$('menuBtn').onclick = openMenu; $('menuBtn2').onclick = openMenu;
+const openBoard = () => { fillTable($('boardTable'), G.players.slice().sort((a,b)=>b.s-a.s)); sheet('boardSheet', true); };
+$('boardBtn').onclick = openBoard; $('boardBtn2').onclick = openBoard;
+$('mResume').onclick = () => sheet('menuSheet', false);
+$('mSkip').onclick = () => { sheet('menuSheet', false); stopTimer(); if (G && G.online){ if (isHost()) hostSkip(me().n + ' was skipped.'); return; } G.cur = null; toast(me().n + ' skipped'); advance(); };
+$('mEnd').onclick = () => { sheet('menuSheet', false); stopTimer(); if (G && G.online){ if (isHost()) hostEnd(); return; } endGame(); };
+$('mLeave').onclick = () => { sheet('menuSheet', false); leaveRoom(); };
+$('mHome').onclick = () => { sheet('menuSheet', false); stopTimer(); saveGame(); renderHome(); show('title'); };
+
+/* boot */
+/* ================= ONLINE PLAY =================
+   Rooms are "td-<code>" on the arcade's /api/room, or Claude's live rooms when the page runs as a Claude artifact
+   (httpRoom() gives /api/room the same shape, as in DARE Buckets). Everything rides in presence:
+     host:  {app:'tod', role:'h', nick, lob:{hr,rn}, st, chat}
+            st = {g, v, ph:'pick'|'card'|'over', hr, rn, r, t, cur, ev, pl:[[peer,name,score,truths,dares,chickens,swaps,doubles,away]]}
+     guest: {app:'tod', role:'g', nick, act:{g, v, a}, chat}
+   The host's phone is the table: it shuffles, draws, scores and moves the turn, then publishes st with a new v.
+   A guest acts by putting {g, v, a} in its presence; the host applies it once (only when v matches its current v,
+   and only from the player whose turn it is). Late joiners are seated at the end; a player gone 5 s is marked away
+   and skipped, and if the current player stays gone 20 s their turn is skipped. */
+const DP = window.DAREPlay || null;
+const IN_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
+const ON_SITE = /^https?:$/.test(location.protocol) && !IN_CLAUDE;
+const MAX_ONLINE = 8, GAME_ID = 'truth-or-dare';
+const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(4)), b => CODE_ABC[b % CODE_ABC.length]).join('');
+const cleanNick = s => String(s || '').replace(/[\u0000-\u001f\u007f-\u009f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+const NET = { on:false, lobby:null, code:'', role:'', me:'', pres:{}, unsub:null, lfg:false, lfgT:0, hostGoneAt:0, everHost:false,
+  joinedAt:0, endedG:0, evSeen:'', cardKey:'', pending:null, spectNoted:false,
+  pollMs(){ return !this.on ? 1500 : (G && G.online && G.ph !== 'over') ? (this.pending ? 400 : this.role === 'h' ? 600 : 900) : 1200; } };
+
+function httpRoom(){
+  const me = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+  const post = (body, keep) => fetch('/api/room', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), keepalive:!!keep});
+  return { async join(name){
+    let pres = {}, alive = true, ok = true, snap = Object.freeze([]), wake = null;
+    const subs = [], conns = [];
+    const self = () => Object.freeze({peer:me, presence:pres, sameTab:true, isMe:true, kind:'viewer', guest:false, by:null, updatedAt:Date.now()});
+    async function once(){
+      const r = await post({room:name, peer:me, presence:pres});
+      if (!r.ok){ let m = ''; try{ m = (await r.json()).error || '' }catch(e){} throw new Error(m || "Couldn't reach the match server."); }
+      const d = await r.json(), list = [self()];
+      for (const p of (d.peers || [])) if (p && p.peer !== me)
+        list.push(Object.freeze({peer:String(p.peer), presence:Object.freeze(p.presence || {}), sameTab:false, isMe:false, kind:'viewer', guest:false, by:null, updatedAt:Date.now()}));
+      snap = Object.freeze(list);
+      subs.forEach(f => { try{ f({peers:snap, joined:[], left:[], updated:[]}) }catch(e){ console.error(e) } });
+    }
+    const setOk = v => { if (v !== ok){ ok = v; conns.forEach(f => { try{ f(v) }catch(e){} }); } };
+    await once();
+    (async function loop(){
+      while (alive){
+        await new Promise(r => { wake = r; setTimeout(r, NET.pollMs()); });
+        wake = null;
+        if (!alive) break;
+        try{ await once(); setOk(true); }catch(e){ setOk(false); }
+      }
+    })();
+    return { name,
+      presence: async patch => { pres = {...pres, ...patch}; for (const k in patch) if (patch[k] === null) delete pres[k];
+        if (wake){ const w = wake; wake = null; setTimeout(w, 50); } },
+      peers: () => snap,
+      onPeers: f => { subs.push(f); setTimeout(() => f({peers:snap, joined:snap, left:[], updated:[]}), 0); return () => { const i = subs.indexOf(f); if (i >= 0) subs.splice(i, 1); }; },
+      onConnection: f => { conns.push(f); setTimeout(() => f(ok), 0); return () => { const i = conns.indexOf(f); if (i >= 0) conns.splice(i, 1); }; },
+      connected: () => ok,
+      leave: async () => { alive = false; if (wake) wake(); try{ await post({room:name, peer:me, leave:true}, true) }catch(e){} } };
+  }};
+}
+NET.roomP = IN_CLAUDE ? window.claude.use('room').catch(() => null) : Promise.resolve(ON_SITE ? httpRoom() : null);
+
+const CHAT = DP && DP.chat({accent:'#e3121b', quick:['Do it!','Spill it 👀','No way','😂','🔥','Bawk 🐔','GG'],
+  onSend(){ pushPres({}); },
+  onMessage(){ if (!CHAT.isOpen()) chatDots(true); },
+  onOpen(open){ if (open) chatDots(false); }});
+if (CHAT) CHAT.showButton(false);   // the chat opens from the top-bar buttons instead of a floating one
+const CHAT_BTNS = ['chatT','chatC','chatO','chatE'];
+function chatDots(on){ CHAT_BTNS.forEach(i => $(i).querySelector('.dot').hidden = !on); }
+function chatButtons(){ const on = !!(CHAT && NET.on); CHAT_BTNS.forEach(i => $(i).hidden = !on); if (!on) chatDots(false); }
+CHAT_BTNS.forEach(i => $(i).onclick = () => { if (CHAT) CHAT.open(); });
+if (CHAT) CHAT.reset = (orig => function(){ orig.call(this); try{ document.querySelector('.dp-sheet .dp-empty').textContent = 'Say something to the table.'; document.querySelector('.dp-sheet .dp-sub').textContent = 'Everyone in the room sees this'; }catch(e){} })(CHAT.reset);
+
+function pushPres(patch){
+  if (!NET.lobby) return;
+  patch = patch || {};
+  if (CHAT){ const ob = CHAT.outbox(); if (ob) patch.chat = ob; }
+  NET.lobby.presence(patch).catch(e => { if (patch.st) console.warn('presence', e); });
+}
+const myPeer = () => { const s = NET.lobby && NET.lobby.peers().find(p => p.sameTab); return s ? s.peer : ''; };
+const others = () => NET.lobby ? NET.lobby.peers().filter(p => !p.sameTab && p.kind !== 'agent' && p.presence && p.presence.app === 'tod') : [];
+const nickOf = p => cleanNick(p.presence.nick) || 'Player';
+const isHost = () => NET.on && NET.role === 'h';
+const curPlayer = () => G && G.players[G.turn];
+const isMyTurn = () => !!(G && G.online && curPlayer() && curPlayer().id === NET.me);
+const canAct = () => !G || !G.online || isMyTurn() || (isHost() && curPlayer() && curPlayer().away);
+function setBanner(t){ $('netBanner').textContent = t; $('netBanner').hidden = !t; }
+
+/* ---- setup + lobby screens ---- */
+function openOnline(){
+  if (NET.on){ renderLobby(true); return; }
+  show('online'); $('olSetup').hidden = false; $('olLobby').hidden = true;
+  $('olNick').value = cfg.nick || (DP && DP.nick()) || '';
+  NET.roomP.then(room => {
+    const ok = !!room;
+    $('olCreate').disabled = $('olJoin').disabled = !ok;
+    if (!ok) $('olStatus').textContent = IN_CLAUDE ? "Online rooms aren't available in this view." : 'Online play runs on the DARE Arcade site.';
+  });
+  $('olFind').hidden = !(DP && ON_SITE);
+  $('olAlerts').hidden = !(DP && ON_SITE);
+  if (DP && ON_SITE) DP.refresh();
+}
+function setOlBusy(b){ $('olCreate').disabled = $('olJoin').disabled = $('olFind').disabled = b; }
+function joinOpen(code){ if (NET.on) netLeave(); openOnline(); $('olCode').value = code; enterRoom(code, 'g'); return true; }
+
+async function enterRoom(code, role, open){
+  const nick = cleanNick($('olNick').value);
+  if (!nick){ $('olStatus').textContent = 'Add your name first.'; $('olNick').focus(); return; }
+  if (!/^[A-Z0-9]{4}$/.test(code)){ $('olStatus').textContent = 'Room codes are 4 letters or numbers.'; return; }
+  cfg.nick = nick; saveCfg(); if (DP) DP.setNick(nick);
+  setOlBusy(true); $('olStatus').textContent = 'Connecting…';
+  const room = await NET.roomP;
+  let lobby = null;
+  try{ lobby = room && await room.join('td-' + code.toLowerCase()); }
+  catch(e){ lobby = null; $('olStatus').textContent = (e && e.message) || "Couldn't connect. Check your connection and try again."; }
+  setOlBusy(false);
+  if (!lobby){ if (!room) $('olStatus').textContent = 'Online play runs on the DARE Arcade site.'; return; }
+  $('olStatus').textContent = '';
+  if (G && !G.online) saveGame();
+  Object.assign(NET, {on:true, lobby, code, role, me:'', hostGoneAt:0, everHost:false, joinedAt:Date.now(), endedG:0, evSeen:'', cardKey:'', pending:null, spectNoted:false});
+  G = null;
+  pushPres({app:'tod', role, nick, act:null, st:null, lob: role === 'h' ? {hr:cfg.heat, rn:cfg.rounds} : null});
+  NET.unsub = lobby.onPeers(() => netPeers(), () => leaveRoom('Lost the connection to the room.'));
+  if (DP) DP.busy = true;
+  if (CHAT){ CHAT.reset(); CHAT.attach('the table'); CHAT.showButton(false); }
+  chatButtons();
+  if (open && DP && ON_SITE){
+    NET.lfg = true;
+    DP.post(GAME_ID, code, nick).then(r => { if (NET.code === code && NET.lfg) $('olNote').textContent = r.alerted ? 'Your room is posted and ' + r.alerted + ' player' + (r.alerted === 1 ? ' was' : 's were') + ' alerted. You can also share the code.' : 'Your room is posted for anyone to join. You can also share the code.'; })
+      .catch(e => { NET.lfg = false; if (NET.code === code) $('olNote').textContent = "Couldn't post the room (" + e.message + '). Share the code instead.'; });
+    NET.lfgT = setInterval(() => { if (NET.lfg) DP.keep(GAME_ID, code); }, 45000);
+  }
+  $('olNote').textContent = role === 'h' ? (open ? 'Posting your room…' : 'Send the code to your friends. They open Truth or Dare, tap Play online and enter it.') : '';
+  renderLobby(true);
+}
+function lfgStop(){ if (NET.lfg){ clearInterval(NET.lfgT); if (DP) DP.cancel(GAME_ID, NET.code); NET.lfg = false; } }
+function netLeave(){
+  if (!NET.on) return;
+  NET.on = false; lfgStop();
+  try{ NET.unsub && NET.unsub(); }catch(e){}
+  const l = NET.lobby; NET.lobby = null; if (l) l.leave().catch(() => {});
+  if (CHAT) CHAT.detach();
+  chatButtons();
+  if (DP) DP.busy = false;
+  setBanner(''); stopTimer();
+  G = ls.get('dtod-game', null);   // back to this phone's own saved game, if any
+}
+function leaveRoom(msg){ netLeave(); renderHome(); show('title'); if (msg) toast(msg); }
+
+function lobbyRows(){
+  const os = others(), rows = [];
+  const host = NET.role === 'h' ? null : os.find(p => p.presence.role === 'h');
+  if (NET.role === 'h') rows.push({n:cfg.nick, me:true, host:true}); else if (host) rows.push({n:nickOf(host), host:true});
+  for (const p of os) if (p.presence.role !== 'h') rows.push({n:nickOf(p)});
+  if (NET.role !== 'h') rows.push({n:cfg.nick, me:true});
+  return {rows, host};
+}
+function renderLobby(force){
+  if (!NET.on || (G && G.online)) return;
+  if (force || $('online').hidden) show('online');
+  $('olSetup').hidden = true; $('olLobby').hidden = false;
+  $('olCodeShow').textContent = NET.code;
+  const {rows, host} = lobbyRows();
+  const list = $('olPlayers'); list.textContent = '';
+  rows.forEach((r, i) => {
+    const d = el('div', 'prow' + (r.me ? ' me' : ''));
+    d.append(el('span', 'n', i + 1), el('span', 'name', r.n));
+    if (r.host) d.append(el('span', 'tag host', 'Host')); else if (r.me) d.append(el('span', 'tag', 'You'));
+    list.append(d);
+  });
+  $('olCount').textContent = Math.min(rows.length, MAX_ONLINE) + ' / ' + MAX_ONLINE;
+  const h = NET.role === 'h';
+  $('olRole').textContent = h ? "You're the host" : host ? nickOf(host) + ' is the host' : 'Looking for the host…';
+  $('olCopy').hidden = !h;
+  $('olHostSet').hidden = !h; $('olStart').hidden = !h;
+  if (h){
+    document.querySelectorAll('#olHeat button').forEach(b => b.setAttribute('aria-pressed', b.dataset.heat === cfg.heat));
+    document.querySelectorAll('#olRounds button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === cfg.rounds));
+    $('olStart').disabled = rows.length < 2;
+    $('olStart').textContent = rows.length < 2 ? 'Waiting for players' : 'Deal everyone in';
+    $('olWait').hidden = true;
+  } else {
+    const lob = host && host.presence.lob || {};
+    const heat = HEAT_NAME[lob.hr] || 'Party', rn = lob.rn === 0 ? 'no round limit' : (lob.rn || 5) + ' rounds';
+    $('olWait').hidden = false;
+    $('olWait').textContent = host ? 'Waiting for ' + nickOf(host) + ' to start. ' + heat + ' deck, ' + rn + '.'
+      : Date.now() - NET.joinedAt > 6000 ? 'No room with that code yet. Check the code, or wait for the host to create it.' : 'Looking for the room…';
+    if (host && rows.length > MAX_ONLINE) $('olWait').textContent += " The table is full, so you'll watch.";
+  }
+}
+
+/* ---- room traffic ---- */
+function netPeers(){
+  if (!NET.on) return;
+  NET.me = myPeer();
+  const os = others();
+  if (CHAT) for (const p of os) CHAT.receive(p.peer, p.presence.chat, nickOf(p));
+  if (NET.role === 'h') hostTick(os); else guestTick(os);
+}
+const newPlayer = (id, n) => ({id, n, s:0, t:0, d:0, c:0, w:SWAPS, dd:0, away:false, gone:0});
+function uniq(name, taken){
+  let n = name, k = 2;
+  while (taken.has(n.toLowerCase())) n = name.slice(0, 13) + ' ' + k++;
+  taken.add(n.toLowerCase()); return n;
+}
+function hostStart(){
+  if (!NET.me){ toast('Still connecting. Try again in a second.'); return; }
+  const os = others().filter(p => p.presence.role !== 'h');
+  if (!os.length){ toast('Wait for at least one more player.'); return; }
+  const taken = new Set(), players = [newPlayer(NET.me, uniq(cfg.nick || 'Host', taken))];
+  for (const p of os.slice(0, MAX_ONLINE - 1)) players.push(newPlayer(p.peer, uniq(nickOf(p), taken)));
+  lfgStop(); $('olNote').textContent = '';
+  G = {online:true, g:1 + rnd(1e9), v:1, ph:'pick', heat:cfg.heat, rounds:cfg.rounds, round:1, turn:0, used:{}, cur:null, ev:null, players};
+  hostPush(); renderOnline();
+}
+function hostPush(){
+  pushPres({st:{g:G.g, v:G.v, ph:G.ph, hr:G.heat, rn:G.rounds, r:G.round, t:G.turn, cur:G.cur, ev:G.ev || null,
+    pl:G.players.map(p => [p.id, p.n, p.s, p.t, p.d, p.c, p.w, p.dd, p.away ? 1 : 0])}});
+}
+function hostTick(os){
+  if (!G || !G.online){ renderLobby(); return; }
+  const now = Date.now(), ids = new Set(os.map(p => p.peer)), taken = new Set(G.players.map(p => p.n.toLowerCase()));
+  let changed = false;
+  for (const p of os){
+    if (p.presence.role === 'h' || G.ph === 'over' || G.players.length >= MAX_ONLINE || G.players.some(q => q.id === p.peer)) continue;
+    const q = newPlayer(p.peer, uniq(nickOf(p), taken)); G.players.push(q); changed = true; toast(q.n + ' joined the table');
+  }
+  for (const q of G.players){
+    if (q.id === NET.me) continue;
+    if (ids.has(q.id)){ q.gone = 0; if (q.away){ q.away = false; changed = true; } }
+    else { if (!q.gone) q.gone = now; if (!q.away && now - q.gone > 5000){ q.away = true; changed = true; } }
+  }
+  const cur = curPlayer();
+  if (G.ph !== 'over' && cur && cur.away && now - cur.gone > 20000){ hostSkip(cur.n + ' dropped out. Skipped.'); return; }
+  for (const p of os){
+    const a = p.presence.act;
+    if (a && a.g === G.g && a.v === G.v && hostApply(p.peer, String(a.a))) return;
+  }
+  if (changed){ hostPush(); renderOnline(); }
+}
+function hostApply(from, a){
+  const cur = curPlayer(); if (!cur || G.ph === 'over') return false;
+  if (from !== cur.id && from !== NET.me) return false;
+  if (G.ph === 'pick' && (a === 'truth' || a === 'dare' || a === 'random')){
+    draw(a === 'random' ? (Math.random() < .5 ? 'truth' : 'dare') : a);
+    G.ph = 'card'; G.v++; hostPush(); renderOnline(); return true;
+  }
+  if (G.ph === 'card' && G.cur && (a === 'done' || a === 'chicken')){ hostFinish(a); return true; }
+  if (G.ph === 'card' && G.cur && a === 'swap' && cur.w > 0){
+    cur.w--; const old = G.cur; draw(old.kind, old.id); G.v++; hostPush(); renderOnline(); return true;
+  }
+  return false;
+}
+function hostFinish(kind){
+  const p = curPlayer(), c = G.cur; let pts;
+  if (kind === 'chicken'){ pts = PTS.chicken; p.s += pts; p.c++; }
+  else { pts = c.dbl ? PTS.double : PTS[c.kind]; p.s += pts; if (c.kind === 'truth') p.t++; else { p.d++; if (c.dbl) p.dd++; } }
+  G.ev = {v:G.v + 1, k: kind === 'chicken' ? 'c' : c.kind, dbl:!!c.dbl, pts, who:p.id};
+  hostAdvance();
+}
+function hostSkip(msg){ G.ev = {v:G.v + 1, k:'skip', who:(curPlayer() || {}).id, msg}; hostAdvance(); }
+function hostAdvance(){
+  G.cur = null;
+  const n = G.players.length; let guard = 0;
+  do { G.turn++; if (G.turn >= n){ G.turn = 0; G.round++; } } while (G.players[G.turn].away && ++guard < n);
+  G.ph = G.rounds && G.round > G.rounds ? 'over' : 'pick';
+  G.v++; hostPush(); renderOnline();
+}
+function hostEnd(){ G.cur = null; G.ph = 'over'; G.v++; hostPush(); renderOnline(); }
+
+function guestTick(os){
+  const host = os.find(p => p.presence.role === 'h'), now = Date.now();
+  if (!host){
+    if (!NET.hostGoneAt) NET.hostGoneAt = now;
+    const gone = now - NET.hostGoneAt;
+    if (NET.everHost){
+      setBanner(gone > 3000 ? 'Waiting for the host to come back…' : '');
+      if (gone > 45000) return leaveRoom('The host left the room.');
+    }
+    if (!G || !G.online) renderLobby();
+    return;
+  }
+  NET.hostGoneAt = 0; NET.everHost = true; setBanner('');
+  const st = host.presence.st;
+  if (st && typeof st === 'object' && Array.isArray(st.pl) && st.pl.length) applyState(st);
+  else if (G && G.online){ G = null; NET.endedG = 0; renderLobby(true); }
+  else renderLobby();
+}
+function applyState(st){
+  if (G && G.online && G.g === st.g && G.v === st.v) return;
+  const str = v => String(v == null ? '' : v);
+  const cur = st.cur && typeof st.cur === 'object' ? {kind: st.cur.kind === 'dare' ? 'dare' : 'truth', id:str(st.cur.id).slice(0, 40), text:str(st.cur.text).slice(0, 400),
+    secs:Math.min(120, st.cur.secs | 0), dbl:!!st.cur.dbl, src: HEAT_NAME[st.cur.src] || st.cur.src === 'mine' ? st.cur.src : 'party', named:!!st.cur.named} : null;
+  G = {online:true, g:st.g, v:st.v | 0, ph: ['pick','card','over'].includes(st.ph) ? st.ph : 'pick', heat: HEAT_NAME[st.hr] ? st.hr : 'party', rounds:st.rn | 0,
+    round:Math.max(1, st.r | 0), turn:Math.max(0, st.t | 0), cur, ev: st.ev && typeof st.ev === 'object' ? st.ev : null,
+    players: st.pl.slice(0, MAX_ONLINE).map(a => ({id:str(a[0]), n:cleanNick(a[1]) || 'Player', s:a[2] | 0, t:a[3] | 0, d:a[4] | 0, c:a[5] | 0, w:a[6] | 0, dd:a[7] | 0, away:!!a[8]}))};
+  if (G.turn >= G.players.length) G.turn = 0;
+  if (G.ph === 'card' && !G.cur) G.ph = 'pick';
+  if (NET.pending && NET.pending.v !== G.v){ NET.pending = null; pushPres({act:null}); }
+  if (!NET.spectNoted && !G.players.some(p => p.id === NET.me)){ NET.spectNoted = true; toast("The table is full, so you're watching this game."); }
+  renderOnline();
+}
+
+/* ---- what every phone shows ---- */
+function renderOnline(){
+  if (!G || !G.online) return;
+  let delay = 0;
+  const ev = G.ev, evKey = G.g + ':' + (ev && ev.v);
+  if (ev && ev.v === G.v && NET.evSeen !== evKey){ NET.evSeen = evKey; showEvent(ev); delay = 450; }
+  if (G.ph === 'over'){ if (NET.endedG !== G.g){ NET.endedG = G.g; setTimeout(() => G && G.online && showEnd(G.players, true), delay + 300); } return; }
+  NET.endedG = 0;
+  if (G.ph === 'pick'){ NET.cardKey = ''; delay ? setTimeout(() => G && G.online && G.ph === 'pick' && showTurn(), delay) : showTurn(); return; }
+  const key = G.g + ':' + G.round + ':' + G.turn + ':' + G.cur.id;
+  const fresh = key !== NET.cardKey; NET.cardKey = key;
+  if (fresh) showCard(true);
+  else if ($('cardScr').hidden) showCard(false);
+  else onlineCardChrome();
+}
+function showEvent(ev){
+  const who = G.players.find(p => p.id === ev.who), name = who ? who.n : 'Someone';
+  if (ev.k === 'skip'){ toast(String(ev.msg || name + ' was skipped.').slice(0, 80)); return; }
+  if (ev.who === NET.me){ cfg.flips++; if (ev.k === 'dare') cfg.dares++; saveCfg(); }
+  if (ev.k === 'c'){ sfx.chicken(); buzz(80); burst('BAWK!', '#ff3b3b'); return; }
+  (ev.dbl ? sfx.big : sfx.done)(); buzz(20); burst('+' + (ev.pts | 0), ev.k === 'truth' ? '#ffffff' : '#ff3b3b');
+}
+function onlineTurnChrome(){
+  const on = !!(G && G.online), p = curPlayer();
+  $('turnEyebrow').textContent = !on ? 'Pass the phone to' : isMyTurn() ? 'Your turn' : 'Up now';
+  if (!on){ document.querySelector('.pick').classList.remove('locked'); $('pickR').hidden = false; return; }
+  const act = canAct();
+  document.querySelector('.pick').classList.toggle('locked', !act);
+  $('pickR').hidden = !act;
+  if (!isMyTurn()) $('whoLine').textContent = p.away ? p.n + " is away. You can pick for them, or skip from the menu." : 'Waiting for ' + p.n + ' to pick';
+  if (isHost() && p.away && act) $('whoLine').textContent = p.n + ' is away. Pick for them, or skip from the menu.';
+}
+function onlineCardChrome(){
+  const on = !!(G && G.online), act = canAct();
+  document.querySelector('.actions').classList.toggle('locked', on && !act);
+  const w = $('cardWait');
+  w.hidden = !on || act;
+  if (on && !act){ w.textContent = ''; w.append('Everyone sees this card. '); w.append(el('b', null, curPlayer().n)); w.append(' marks it done.'); }
+  if (on && NET.pending) document.querySelector('.actions').classList.add('locked');
+}
+function netAct(a){
+  if (!G || !G.online || !canAct()) return;
+  if (isHost()){ hostApply(NET.me, a); return; }
+  if (NET.pending) return;
+  NET.pending = {g:G.g, v:G.v, a};
+  pushPres({act:NET.pending});
+  tone(520, .06, 'triangle', .05);
+  if (G.ph === 'card') onlineCardChrome(); else document.querySelector('.pick').classList.add('locked');
+  setTimeout(() => { if (NET.pending && G && NET.pending.v === G.v){ NET.pending = null; pushPres({act:null}); renderOnline(); toast("The host didn't get that. Try again."); } }, 8000);
+}
+
+/* ---- wiring ---- */
+$('onlineBtn').onclick = () => { tone(560, .08, 'triangle', .05); openOnline(); };
+$('olBack').onclick = () => { if (NET.on) leaveRoom(); else { renderHome(); show('title'); } };
+$('olCreate').onclick = () => enterRoom(newCode(), 'h');
+$('olFind').onclick = () => enterRoom(newCode(), 'h', true);
+$('olJoin').onclick = () => enterRoom($('olCode').value.trim().toUpperCase(), 'g');
+$('olCode').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); });
+$('olCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('olJoin').click(); });
+$('olNick').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+$('olLeave').onclick = () => leaveRoom();
+$('olStart').onclick = () => hostStart();
+$('olHeat').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.heat === 'spicy' && !cfg.age) return sheet('ageSheet', true);
+  cfg.heat = b.dataset.heat; saveCfg(); pushPres({lob:{hr:cfg.heat, rn:cfg.rounds}}); renderLobby();
+};
+$('olRounds').onclick = e => { const b = e.target.closest('button'); if (!b) return; cfg.rounds = +b.dataset.r; saveCfg(); pushPres({lob:{hr:cfg.heat, rn:cfg.rounds}}); renderLobby(); };
+$('olCopy').onclick = async () => {
+  const link = ON_SITE ? location.origin + '/truth-or-dare/?join=' + NET.code : '';
+  const text = link ? 'Play Truth or Dare with me. Room ' + NET.code + ': ' + link : 'Play Truth or Dare with me. Tap Play online and enter room ' + NET.code + '.';
+  try{ await navigator.clipboard.writeText(text); toast(link ? 'Invite link copied' : 'Invite copied'); }
+  catch(e){ toast('Room code: ' + NET.code); }
+};
+window.addEventListener('pagehide', () => { if (NET.on && NET.lobby) NET.lobby.leave().catch(() => {}); });
+if (DP && ON_SITE){
+  DP.feed({accent:'#e3121b', onJoin: m => m.game === GAME_ID ? joinOpen(m.code) : false});
+  DP.openList($('olOpen'), GAME_ID, m => joinOpen(m.code));
+  DP.alerts.toggle($('olAlerts'), [GAME_ID], {accent:'#e3121b', label:'Get a notification when someone opens a Truth or Dare room.'});
+}
+
+renderHome(); show('title');
+if (DP && DP.joinCode()){
+  const c = DP.joinCode(); DP.clearJoin(); openOnline(); $('olCode').value = c;
+  if (cfg.nick || DP.nick()) { $('olNick').value = cfg.nick || DP.nick(); enterRoom(c, 'g'); }
+  else $('olStatus').textContent = 'Add your name, then tap Join.';
+}
+</script>
+</body>
+</html>

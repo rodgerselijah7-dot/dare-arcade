@@ -1,5 +1,5 @@
 /* DARE Arcade · play together
-   Shared by the arcade lobby, DARE Buckets, DARE Chess, DARE Connect, DARE Dice and DARE Pool:
+   Shared by the arcade lobby, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool and Truth or Dare:
    - DAREPlay.chat(opts)    in-match chat. Messages ride inside each player's match presence, so they work
                             over /api/room and inside Claude alike. outbox() goes into presence, receive() reads.
    - DAREPlay.feed(opts)    "X wants to play" alerts for open matches, polled from /api/lfg while the page is open.
@@ -9,7 +9,7 @@
   if (window.DAREPlay) return;
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
   const ss = { get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} } };
-  const GAMES = { buckets: "DARE Buckets", chess: "DARE Chess", connect: "DARE Connect", dice: "DARE Dice", pool: "DARE Pool", "crate-digger": "Crate Digger", "crown-rush": "Crown Rush" };
+  const GAMES = { buckets: "DARE Buckets", chess: "DARE Chess", connect: "DARE Connect", dice: "DARE Dice", pool: "DARE Pool", "crate-digger": "Crate Digger", "crown-rush": "Crown Rush", "truth-or-dare": "Truth or Dare" };
   const ONLINE = /^https?:$/.test(location.protocol) && !window.claude;
   const peer = (() => { let p = ls.get("dare-peer"); if (!/^[a-z0-9]{12}$/.test(p || "")) { p = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => "abcdefghijklmnopqrstuvwxyz0123456789"[b % 36]).join(""); ls.set("dare-peer", p); } return p; })();
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -46,6 +46,7 @@
 .dp-m{max-width:78%;padding:7px 12px;border-radius:16px;word-wrap:break-word;white-space:pre-wrap}
 .dp-m.me{align-self:flex-end;background:var(--dp-acc);color:#111;border-bottom-right-radius:4px}
 .dp-m.them{align-self:flex-start;background:rgba(255,255,255,.1);border-bottom-left-radius:4px}
+.dp-from{display:block;font-size:12px;font-weight:700;color:var(--dp-acc);margin-bottom:1px}
 .dp-sys{align-self:center;color:var(--dp-dim);font-size:12px;padding:2px 0}
 .dp-empty{margin:auto;color:var(--dp-dim);text-align:center;font-size:14px;max-width:220px}
 .dp-quick{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none}
@@ -131,21 +132,23 @@
     ["keydown", "keyup", "keypress"].forEach(t => sheet.addEventListener(t, stopKeys));
     ["pointerdown", "touchstart", "mousedown", "click"].forEach(t => sheet.addEventListener(t, e => e.stopPropagation()));
 
-    function add(kind, text) {
+    function add(kind, text, who) {
       const e = log.querySelector(".dp-empty"); if (e) e.remove();
       const el = document.createElement("div");
-      el.className = kind === "sys" ? "dp-sys" : "dp-m " + kind; el.textContent = text;
+      el.className = kind === "sys" ? "dp-sys" : "dp-m " + kind;
+      if (who) { const b = document.createElement("b"); b.className = "dp-from"; b.textContent = who; el.appendChild(b); el.appendChild(document.createTextNode(text)); }
+      else el.textContent = text;
       log.appendChild(el);
       while (log.children.length > 120) log.firstChild.remove();
       log.scrollTop = log.scrollHeight;
     }
     function setBadge() { badge.hidden = !unread; badge.textContent = unread > 9 ? "9+" : unread; }
-    function peek(text) {
+    function peek(text, who) {
       if (!attached) return;
       const wrap = toastHost();
       if (peekEl) peekEl.remove();
       const el = peekEl = document.createElement("button"); el.type = "button"; el.className = "dp-msg";
-      el.innerHTML = I.chat + `<div><b>${esc(opp)}</b><span></span></div>`;
+      el.innerHTML = I.chat + `<div><b>${esc(who || opp)}</b><span></span></div>`;
       el.querySelector("span").textContent = text;
       el.onclick = e => { e.stopPropagation(); el.remove(); open(); };
       wrap.appendChild(el);
@@ -186,7 +189,7 @@
       setOpp(name) { opp = name || "Opponent"; $(".dp-who").textContent = "Chat with " + opp; },
       showButton(on) { fabOk = !!on; fab.hidden = !(attached && fabOk && sheet.hidden); if (!on && !sheet.hidden) close(); },
       outbox() { return out.length ? out.slice() : null; },
-      receive(from, list) {
+      receive(from, list, who) { // who: the sender's name, for group games (shown on each message)
         if (!Array.isArray(list)) return;
         let last = seen[from] || 0, fresh = [];
         for (const m of list) if (Array.isArray(m) && typeof m[0] === "number" && m[0] > last && typeof m[1] === "string") fresh.push(m);
@@ -196,8 +199,8 @@
         if (muted) return;
         for (const m of fresh) {
           const t = m[1].replace(/\s+/g, " ").trim().slice(0, 140); if (!t) continue;
-          add("them", t);
-          if (sheet.hidden) { unread++; setBadge(); peek(t); }
+          add("them", t, who);
+          if (sheet.hidden) { unread++; setBadge(); peek(t, who); }
         }
         if (opts.onMessage) opts.onMessage();
       },

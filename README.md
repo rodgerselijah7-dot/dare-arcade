@@ -25,7 +25,8 @@ Browser games by Dontae Amare. Static site — no build step.
 /crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
 /rare-rumble/          Rare Rumble (single-file canvas platform fighter + icons + manifest)
 /jenga/                Jenga (single-file 3D block tower + icons + manifest; loads three.js r128 and cannon.js 0.6.2 from cdnjs)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush and Rare Rumble online play (Upstash Redis)
+/truth-or-dare/        Truth or Dare (single-file card game + icons + manifest; pass-the-phone and online rooms)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush, Rare Rumble and Truth or Dare online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
 /api/scores.js         Live Fire Range leaderboards (Upstash Redis)
 /icons/                Arcade icons
@@ -96,7 +97,7 @@ Every push to `main` redeploys automatically.
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range.
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -105,7 +106,7 @@ Every push to `main` redeploys automatically.
 - Home screen (best, total popped, top round, Continue / New game) and a separate game screen. Saved on the phone (localStorage keys `dbub-*`).
 - Paid game ($2.99, also in the All-Access Pass): rounds 1 to 3 are the free tryout. Clearing round 3, or continuing a saved game past it, shows the unlock panel from `/dare-unlock.js`.
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger)
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Truth or Dare)
 - `dare-play.js` is shared by all five games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
@@ -163,3 +164,15 @@ Every push to `main` redeploys automatically.
 - Messages that would be live events in a Claude artifact ride inside each player's presence as a short numbered queue (`_ev`), and the host trims snapshots to stay under the 4 KB presence limit.
 - A dropped player becomes a CPU after about 3 seconds; reopening the game and tapping Rejoin puts them back in their slot. Players who join mid-match watch until it ends.
 - The same `rare-rumble/index.html` source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
+
+## Truth or Dare
+- Card game for 2 to 12 players on one phone (pass it around), or 2 to 8 online with everyone on their own phone. Opens on a title screen (Continue, New game, Play online, How to play, House cards, and this phone's games / cards flipped / dares done).
+- Three heat levels: **Chill** (anybody), **Party** (embarrassing; mixes in about 28% Chill cards) and **Spicy** (18+ flirty, never explicit; mixes in about 38% Party cards). Spicy asks once that everyone is 18+, and cards that name another player show a reminder that it only happens if that player is up for it.
+- 240 built-in cards (40 truths and 40 dares per level) in `DECK` inside `truth-or-dare/index.html`. In a card, `{l}` is the next player, `{r}` the previous player and `{p}` a random other player; `|30` at the end adds a 30-second timer.
+- Scoring: truth +1, dare +2, Double Dare (10% of dares) +4, chicken out -1. Two free swaps per player per game. Rounds: 3, 5, 10 or no limit. The end screen crowns the top score (ties share it) with Most daring, Open book, Double trouble and Biggest chicken awards.
+- Saved on the phone (localStorage `dtod-cfg`, `dtod-mine`, `dtod-game`). Online games are never saved; they live on the host's phone.
+- **Online** (Play online): rooms are `td-<code>` on `/api/room`. The host's phone runs the table: it shuffles, draws, scores and moves the turn, and publishes the whole table in its presence as `st` (`g` game id, `v` version, `ph` pick/card/over, heat, rounds, round, turn, the current card, the last score event, and every player as `[peer, name, score, truths, dares, chickens, swaps, doubles, away]`). Guests act by putting `act: {g, v, a}` in their presence (`a` is truth, dare, random, done, chicken or swap); the host applies it once, only when `v` matches and only from the player whose turn it is. Everyone sees every card; only the player on turn can pick or mark it done.
+- The host picks heat and rounds in the lobby and starts with 2 or more players. People who join mid-game are seated at the end (up to 8; extra people watch). A player gone 5 seconds is marked away and skipped; if the player on turn stays gone 20 seconds their turn is skipped. The host can also skip a player or end the game from the menu. If the host leaves, everyone else waits 45 seconds, then returns to the title screen. Play again (host) starts a new game with whoever is still in the room.
+- Polling: the host every 0.6s, guests every 0.9s (0.4s while their move is on its way), 1.2s in the lobby. A 20-minute game with 8 phones is roughly 15,000 `/api/room` calls. All phones on one Wi-Fi share the room API's 1,500-per-minute per-IP limit; 8 phones use about 800.
+- Group chat, Find players (`truth-or-dare` in `/api/lfg`), match alerts and `?join=CODE` invite links come from `dare-play.js`, whose chat now labels each message with the sender's name when a game passes one (`receive(peer, list, name)`).
+- The same game also runs as a Claude artifact, where online rooms use Claude's live rooms (people the artifact is shared with), without chat, Find players or alerts.
