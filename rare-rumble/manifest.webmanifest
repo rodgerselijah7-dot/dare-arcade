@@ -1,7 +1,7 @@
 {
   "name": "Rare Rumble",
   "short_name": "Rare Rumble",
-  "description": "A platform fighter with 8 fighters and 8 hazard stages. Fight the CPU, climb to the Titan, or battle friends online. By Dontae Amare.",
+  "description": "A platform fighter with 9 fighters and 8 hazard stages. Fight the CPU, climb to the Titan, or battle friends online. By Dontae Amare.",
   "start_url": "/rare-rumble/",
   "scope": "/rare-rumble/",
   "display": "standalone",
