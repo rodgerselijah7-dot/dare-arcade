@@ -167,6 +167,14 @@ Every push to `main` redeploys automatically.
 - A dropped player becomes a CPU after about 3 seconds; reopening the game and tapping Rejoin puts them back in their slot. Players who join mid-match watch until it ends.
 - The same `rare-rumble/index.html` source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
 
+## Square Up online play
+- Co-op for up to 4 players: Host a match, share the 4-letter code, and the host taps Start once at least one friend has joined. The host's chosen map is used.
+- The host's phone runs the game (zombies, damage, waves, perks, the paywall). Each guest moves their own character on their own phone and sends position, aim and buttons as presence (`inp`); the host sends numbered snapshots (`snap`, about 10 to 20 a second) with every player, zombie, prop, pickup and map hazard, plus a short numbered event list (explosions, kills, toasts) so a guest that misses a snapshot still sees each moment once.
+- Shared: score, combo, weapon unlocks, perks (the host picks for the squad), and the free tryout (the host's unlock decides whether the squad goes past wave 5). Per player: health, ammo, grenades and Second Wind.
+- A player at 0 health goes down; a teammate standing next to them for 2.5 seconds revives them, and clearing a wave revives everyone. The run ends when the whole squad is down. Waves, zombie health and crate drops scale with the number of players.
+- Transport is the same as Rare Rumble: `/api/room` rooms named `su-<code>`, with direct WebRTC links between phones when a network allows them. A guest who stops sending for about 4 seconds drops out; if the host disappears for 9 seconds the guests' match ends.
+- The same source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
+
 ## Truth or Dare
 - Card game for 2 to 12 players on one phone (pass it around), or 2 to 8 online with everyone on their own phone. Opens on a title screen (Continue, New game, Play online, How to play, House cards, and this phone's games / cards flipped / dares done).
 - Three heat levels: **Chill** (anybody), **Party** (embarrassing; mixes in about 28% Chill cards) and **Spicy** (18+: dating, crushes, confidence and romance; bold but never sexual, with no kissing or touching dares; mixes in about 38% Party cards). Spicy asks once that everyone is 18+, and cards that name another player show a reminder that it only happens if that player is up for it.
