@@ -427,7 +427,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <h3>Square Up</h3>
         <span class="status">Play</span>
         <p>A top-down zombie wave shooter across five Fort Worth maps, from the neon streets of The Bottom to a frozen Lake Worth. Chain kills to unlock 9 weapons, throw grenades, dodge stampedes and trains, and take down Big Body every fifth wave.</p>
-        <span class="price">Free to play</span>
+        <span class="price" data-game="square-up">First boss free. Full game $2.99</span>
       </a>
       <a class="row live" href="/live-fire-range/">
         <h3>Live Fire Range</h3>
@@ -468,7 +468,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
       <a class="row pass" id="passRow" href="/shop/?add=all-access">
         <h3>All-Access Pass</h3>
         <span class="status">$14.99</span>
-        <p>All seven paid games, fully unlocked, plus every paid game added later. Save $9.94 over buying them one by one.</p>
+        <p>All eight paid games, fully unlocked, plus every paid game added later. Save $12.93 over buying them one by one.</p>
       </a>
       <p class="pricing"><a href="/shop/" style="color:var(--black)">Shop the full games</a> · Bought one? <button class="unlock-link" id="unlockBtn" type="button">Enter your unlock code</button></p>
     </section>
@@ -611,7 +611,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 // Show what this device has unlocked
 (function(){
   if(!window.DARE)return;
-  const GAMES=['the-last-don','rebel-elimination','dead-rise','cosmic-encounter','ori','break-the-block','bubble'];
+  const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble'];
   function paint(){
     document.querySelectorAll('[data-game]').forEach(el=>{
       const g=el.dataset.game;

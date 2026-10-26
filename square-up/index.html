@@ -215,6 +215,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   </div>
 </div>
 
+<script src="/dare-unlock.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -809,7 +810,12 @@ function newRun(){
   WEAP.forEach((w,i)=>{w.unlocked=i===0;w.ammo=i===0?Infinity:0});
   buildWeapBar();startWave(1);lastHud={};musicLive=true;
 }
-function startWave(n){wave=n;toSpawn=6+n*4;spawnT=1.4;state='play';
+const FREE_WAVES=5; // waves 1 to 5 and the first Big Body fight are the free tryout
+function startWave(n){
+  if(n>FREE_WAVES&&window.DARE&&!DARE.owned('square-up')){state='gate';sticks.L=sticks.R=null;mouse.down=false;keys.Space=false;musicLive=false;
+    DARE.gate('square-up',()=>{state='break';musicLive=true;last=performance.now();startWave(n)},{title:'You took down Big Body',exitLabel:'End run',onExit:()=>{state='break';gameOver()}});
+    return}
+  wave=n;toSpawn=6+n*4;spawnT=1.4;state='play';
   if(n%5===0){toSpawn=Math.round(toSpawn*.65);spawnBoss();showToast('WAVE '+n,'Big Body is on the block');sfx('roar')}
   else{showToast('WAVE '+n,n===1?MAP.name:pick(['Here they come','Stay moving','They smell you','No sleep tonight']));sfx('wave')}}
 
