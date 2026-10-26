@@ -866,7 +866,7 @@ function buildFitList(){const el=$('fitList');el.innerHTML='';FITS.forEach(f=>{c
   b.innerHTML=`<i style="background:${f.look.shirt||'#e7b847'}"></i><span>${f.name}${ok?'':`<small>${f.need}</small>`}</span>`;b.addEventListener('click',()=>{S.fit=f.id;saveS();applyFit();buildFitList();refreshHome()});el.appendChild(b)});
   $('lsTxt').textContent=`Lifetime: ${LS.kills.toLocaleString()} kills · best wave ${LS.best}`}
 function refreshHome(){}
-function buildMapList(){const el=$('mapList');el.innerHTML='';MAPS.forEach(m=>{const b=document.createElement('button');b.className='mp'+(m.id===MAP.id?' on':'');b.setAttribute('role','radio');b.setAttribute('aria-checked',String(m.id===MAP.id));
+function buildMapList(){const el=$('mapList');el.innerHTML='';MAPS.filter(m=>m.id!=='southside').concat(MAPS.filter(m=>m.id==='southside')).forEach(m=>{const b=document.createElement('button');b.className='mp'+(m.id===MAP.id?' on':'');b.setAttribute('role','radio');b.setAttribute('aria-checked',String(m.id===MAP.id));
   b.innerHTML=`<b>${m.name}</b><em>${m.tag}</em><span>${m.blurb}</span>`;b.addEventListener('click',()=>{ensureAudio();if(MAP.id===m.id)return;S.map=m.id;saveS();loadMap(m.id);attract();buildMapList();refreshHome()});el.appendChild(b)})}
 function fmtT(t){t=Math.floor(t);return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
 function renderBoard(el,mine){el.innerHTML='';if(!board.length)return;const h=document.createElement('span');h.className='lbl';h.textContent='Your top runs';el.appendChild(h);
