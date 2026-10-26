@@ -1,0 +1,16 @@
+{
+  "name": "Square Up",
+  "short_name": "Square Up",
+  "description": "A top-down zombie wave shooter across five Fort Worth maps. Chain kills, unlock heavier gear and hold your ground. By Dontae Amare.",
+  "start_url": "/square-up/",
+  "scope": "/square-up/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f0e12",
+  "theme_color": "#0f0e12",
+  "icons": [
+    { "src": "/square-up/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/square-up/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/square-up/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

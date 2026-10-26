@@ -20,6 +20,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
+/square-up/            Square Up (single-file top-down canvas zombie wave shooter + icons + manifest)
 /live-fire-range/      Live Fire Range (3D shooting range: index.html + assets/ photo textures and HDRI skies + icons + manifest; loads three.js r160 from jsDelivr)
 /pool/                 DARE Pool (single-file canvas 8-ball / 9-ball + icons + manifest)
 /crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
