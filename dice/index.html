@@ -195,6 +195,32 @@ input{-webkit-user-select:text;user-select:text}
 .mbox p{margin:0;color:var(--mute);line-height:1.5}
 
 @media (max-height:700px){.who{min-height:38px}.who .av{width:30px;height:30px}.bill{height:40px}.act{min-height:104px}}
+/* ---------- Desktop / big screens: use the whole window ----------
+   The 3D street takes everything on the left; players, bets and the roll button live in a side rail on the right. */
+.fsbtn{display:none}
+.fsbtn[aria-pressed="false"]{color:var(--ivory)}
+@media (min-width:900px) and (orientation:landscape){
+  body{padding-left:max(20px, env(safe-area-inset-left,0px));padding-right:max(20px, env(safe-area-inset-right,0px))}
+  .fsbtn{display:inline-flex}
+  #title .fsbtn{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:0;z-index:3;background:rgba(14,12,14,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  #title,#online{max-width:none}
+  #game{max-width:none;display:grid;column-gap:20px;row-gap:12px;padding-block:20px;
+    grid-template-columns:minmax(0,1fr) clamp(340px,28vw,420px);
+    grid-template-rows:auto auto auto minmax(0,1fr);
+    grid-template-areas:"table bar" "table opp" "table me" "table act"}
+  #game .bar{grid-area:bar}
+  #game .who.opp{grid-area:opp}
+  #game .who.me{grid-area:me}
+  #game .table{grid-area:table;min-height:0;border-radius:26px}
+  #game .act{grid-area:act;min-height:0;overflow-y:auto;justify-content:flex-end}
+  .call{top:22px}
+  .call .big{font-size:58px}
+  .call{font-size:28px}
+  .call small{font-size:15px}
+  .hist span{min-width:28px;height:28px;font-size:13px}
+  .point,.pot{font-size:12px;padding:8px 14px}
+  .point b,.pot b{font-size:19px}
+}
 @media (prefers-reduced-motion:reduce){.rollbtn,.rollbtn.shaking,.who.active .av,.call.pop{animation:none}}
 </style>
 </head>
@@ -204,6 +230,7 @@ input{-webkit-user-select:text;user-select:text}
 
 <section class="screen" id="title">
   <a class="icon toarcade" href="/" id="toArcade">‹ DARE Arcade</a>
+  <button class="icon fsbtn" id="fsTitle" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span class="fstx">Full screen</span></button>
   <div class="brand">
     <span class="pre">DARE</span>
     <h1 class="wordmark">Dice</h1>
@@ -269,6 +296,7 @@ input{-webkit-user-select:text;user-select:text}
     <button class="icon" id="menu" aria-label="Back to title">‹ Menu</button>
     <span class="grow"></span>
     <button class="icon" id="shakeBtn" aria-pressed="true" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 8v8M21 8v8"/></svg><span id="shakeTx">Shake</span></button>
+    <button class="icon fsbtn" id="fsGame" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span class="fstx">Full screen</span></button>
     <button class="icon" id="chatBtn" hidden>Chat<span class="pip" id="chatPip" hidden></span></button>
   </div>
   <div class="who opp">
@@ -1174,10 +1202,26 @@ rb.addEventListener('pointercancel',()=>{holding=false;stopRattle()});
 rb.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();doRoll()}});
 document.addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,textarea,.dp,button'))return;
+  if((e.key==='f'||e.key==='F')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();toggleFS();return}
   if(e.key==='Escape'){$('leaveBox').hidden=true;return}
   if(screen!=='game')return;
   if(e.key===' '||e.key==='Enter'){e.preventDefault();const m=myTurn();if(m==='roll')doRoll();else if(m)postWager()}
 });
+// full screen on desktop: the whole monitor, no browser chrome
+const fsEl=document.documentElement;
+const fsOn=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+const fsOK=!!(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen);
+function toggleFS(){
+  if(!fsOK)return;
+  try{
+    if(fsOn())(document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    else{const p=(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen).call(fsEl,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>{})}
+  }catch(e){}
+}
+function syncFS(){const on=fsOn();for(const id of ['fsTitle','fsGame']){const b=$(id);if(!b)continue;b.hidden=!fsOK;b.setAttribute('aria-pressed',on?'true':'false');b.querySelector('.fstx').textContent=on?'Exit full screen':'Full screen';b.setAttribute('aria-label',on?'Exit full screen':'Full screen')}setTimeout(fit3D,60)}
+for(const id of ['fsTitle','fsGame'])$(id).onclick=toggleFS;
+document.addEventListener('fullscreenchange',syncFS);document.addEventListener('webkitfullscreenchange',syncFS);
+syncFS();
 for(const m of ['solo','online'])$('m-'+m).onclick=()=>{menuMode=m;renderTitle()};
 $('start').onclick=()=>{startShake();menuMode==='online'?openOnline():startSolo(false)};
 $('resume').onclick=()=>{startShake();startSolo(true)};
