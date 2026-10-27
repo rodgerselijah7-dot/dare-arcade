@@ -132,7 +132,7 @@ button.b:focus-visible,#mute:focus-visible{outline:3px solid var(--gold);outline
 .lsw{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid rgba(243,234,216,.15);}
 .mnote{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;background:rgba(244,197,66,.1);border:1px solid rgba(244,197,66,.25);border-radius:12px;padding:8px 12px;font-size:16px;}
 .mnote span{color:var(--mute);font-size:12px;letter-spacing:.12em;text-transform:uppercase;align-self:center;}
-.board{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:22vh;overflow-y:auto;}
 .tick{display:flex;justify-content:space-between;gap:6px;background:rgba(22,57,74,.8);border-radius:10px;padding:6px 10px;font-size:15px;min-width:0;}
 .tick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute);}
 .tick b{font-variant-numeric:tabular-nums;white-space:nowrap;}
@@ -196,8 +196,49 @@ const SP=[
  {id:'cat',name:'Channel Catfish',d:[.6,1],w:[2,32],base:16,per:5,col:'#7a7766',back:'#3e3c33',belly:'#d8d1b8',len:64,h:.28,str:1.2,spd:30,rare:14,whisk:1,spots:2},
  {id:'gar',name:'Alligator Gar',d:[.55,1],w:[20,140],base:70,per:2.5,col:'#6a7a52',back:'#38432a',belly:'#cfcaa0',len:115,h:.16,str:2.0,spd:46,rare:3,snout:1,spots:3},
  {id:'crown',name:'Golden Crown Carp',d:[.78,1],w:[15,45],base:260,per:10,col:'#f0bd2e',back:'#b9780e',belly:'#fff2b8',len:72,h:.42,str:1.7,spd:52,rare:1.2,crown:1,scales:1},
- {id:'trout',name:'Rainbow Trout',d:[.1,.7],w:[1,14],base:18,per:8,col:'#b9b48e',back:'#4f6447',belly:'#f2eee2',len:52,h:.3,str:1.1,spd:66,rare:25},
- {id:'boot',name:'Old Boot',d:[.97,1],w:[1,3],base:1,per:0,col:'#4a3a2c',back:'#2b2118',belly:'#4a3a2c',len:34,h:.5,str:.25,spd:0,rare:3,boot:1}
+ {id:'trout',name:'Rainbow Trout',d:[.1,.7],w:[1,14],base:18,per:8,col:'#b9b48e',back:'#4f6447',belly:'#f2eee2',len:52,h:.3,str:1.1,spd:66,rare:25,lakes:['glacier'],dawn:1},
+ {id:'smallmouth',name:'Smallmouth Bass',lakes:['lunker'],d:[.15,.6],w:[1,7],base:16,per:10,col:'#9a8a4a',back:'#56461f',belly:'#ece2c0',len:46,h:.38,str:1.15,spd:62,rare:12,fins:'bass',iris:'#c8381e',fin:'#7a6a3a',pat:[{t:'bars',n:9,c:'rgba(60,40,15,.35)'}]},
+ {id:'whitebass',name:'White Bass',lakes:['lunker'],d:[.2,.6],w:[.5,4],base:8,per:9,col:'#c8d0d4',back:'#66788a',belly:'#f6f8f8',len:38,h:.38,str:.8,spd:66,rare:16,school:1,fins:'striper',iris:'#e0d070',fin:'#a8b0b4',pat:[{t:'hs',n:6,c:'rgba(40,50,60,.32)',w:.025}]},
+ {id:'bluecat',name:'Blue Catfish',lakes:['lunker'],d:[.6,1],w:[5,60],base:20,per:4,col:'#7d90a4',back:'#3a4858',belly:'#e8eef2',len:74,h:.27,str:1.5,spd:34,rare:6,whisk:1,sc:'none',night:1,fins:'cat',iris:'#5a6070',fin:'#5a6a7a'},
+ {id:'flathead',name:'Flathead Catfish',lakes:['lunker','bayou'],d:[.7,1],w:[5,70],base:22,per:4,col:'#8a7a4a',back:'#463820',belly:'#e8deba',len:70,h:.26,str:1.6,spd:28,rare:4,whisk:1,sc:'none',night:1,fins:'bullhead',iris:'#6a5a30',fin:'#6a5a36',pat:[{t:'mottle',n:40,c1:'rgba(50,35,15,.4)',c2:'rgba(230,210,150,.18)'}]},
+ {id:'drum',name:'Freshwater Drum',lakes:['lunker'],d:[.4,.9],w:[1,20],base:10,per:4,col:'#b2b6b0',back:'#686c66',belly:'#f2f2ec',len:50,h:.4,hump:.22,str:1.1,spd:44,rare:10,fins:'striper',iris:'#d8dce0',fin:'#9a9e98'},
+ {id:'carp',name:'Common Carp',lakes:['lunker','pond'],d:[.3,.9],w:[3,35],base:9,per:3,col:'#a88a3a',back:'#5a4a22',belly:'#ecd8a0',len:62,h:.38,str:1.4,spd:40,rare:12,sc:'big',barb:1,fins:'crown',iris:'#d0a040',fin:'#8a6a34'},
+ {id:'cichlid',name:'Rio Grande Cichlid',lakes:['lunker'],d:[.05,.4],w:[.3,1.6],base:10,per:12,col:'#6f8466',back:'#34463a',belly:'#d8dcb8',len:30,h:.54,str:.6,spd:40,rare:7,fins:'bluegill',iris:'#c83a2a',fin:'#4a5a4a',pat:[{t:'bars',n:6,c:'rgba(25,40,30,.25)'},{t:'spots',n:70,c:'rgba(190,230,255,.75)',r:[1,2.2],y:[-.4,.35]}]},
+ {id:'whiskers',name:'Old Whiskers',legend:'night',glow:'#9ad0ff',lakes:['lunker'],d:[.85,1],w:[80,120],base:420,per:3,col:'#6a7c90',back:'#2c3846',belly:'#dfe6ec',len:96,h:.27,str:2.3,spd:36,rare:.5,whisk:1,sc:'none',fins:'cat',iris:'#9ad0ff',fin:'#4a5868',pat:[{t:'mottle',n:30,c1:'rgba(20,30,40,.35)',c2:'rgba(220,235,255,.12)'}]},
+ {id:'redear',name:'Redear Sunfish',lakes:['pond'],d:[.1,.45],w:[.4,2.5],base:6,per:7,col:'#8a9a5a',back:'#44542e',belly:'#f2d080',len:32,h:.6,str:.6,spd:40,rare:14,school:1,fins:'bluegill',iris:'#7a5a30',fin:'#5a6a40',pat:[{t:'bars',n:6,c:'rgba(40,55,25,.22)'},{t:'ear',c:'#121a20',rim:'#d8402a'},{t:'spots',n:40,c:'rgba(160,90,40,.35)',r:[1,2],y:[-.3,.3]}]},
+ {id:'greensun',name:'Green Sunfish',lakes:['pond'],d:[.04,.35],w:[.2,1],base:4,per:6,col:'#4a7a5a',back:'#264636',belly:'#ead27e',len:26,h:.52,str:.5,spd:42,rare:14,fins:'bluegill',iris:'#b83a2a',fin:'#3a5a46',pat:[{t:'cheek',c:'rgba(80,220,230,.6)'},{t:'ear',c:'#0e1418'},{t:'spots',n:50,c:'rgba(120,220,220,.35)',r:[.8,1.6],y:[-.4,.2]}]},
+ {id:'bullhead',name:'Yellow Bullhead',lakes:['pond'],d:[.55,1],w:[.5,4],base:6,per:6,col:'#a8963a',back:'#584818',belly:'#f4e8a2',len:36,h:.3,str:.8,spd:30,rare:12,whisk:1,sc:'none',night:1,fins:'bullhead',iris:'#6a5a20',fin:'#7a6a2a',pat:[{t:'mottle',n:20,c1:'rgba(60,45,10,.3)',c2:'rgba(255,240,170,.15)'}]},
+ {id:'shiner',name:'Golden Shiner',lakes:['pond'],d:[.05,.4],w:[.1,.8],base:3,per:6,col:'#d6c070',back:'#787a3a',belly:'#fff6cc',len:24,h:.32,str:.4,spd:52,rare:16,school:1,iris:'#d8c060',fin:'#e0a050',pat:[{t:'hs',n:1,c:'rgba(90,80,30,.35)',w:.04}]},
+ {id:'grasscarp',name:'Grass Carp',lakes:['pond'],d:[.2,.8],w:[5,40],base:10,per:3,col:'#8a9a7a',back:'#465640',belly:'#e8eada',len:74,h:.3,str:1.5,spd:50,rare:7,sc:'big',fins:'crown',iris:'#c0b070',fin:'#6a7a5e'},
+ {id:'hog',name:'The Hog',legend:'rain',glow:'#b8f08a',lakes:['pond'],d:[.5,1],w:[60,90],base:380,per:3,col:'#7a8a68',back:'#36462e',belly:'#e2e6cc',len:100,h:.32,str:2.4,spd:46,rare:.5,sc:'big',fins:'crown',iris:'#e0d070',fin:'#5a6a4a'},
+ {id:'bowfin',name:'Bowfin',lakes:['bayou'],d:[.3,.9],w:[2,15],base:14,per:6,col:'#6a7a4a',back:'#384426',belly:'#d8d4a2',len:58,h:.26,str:1.4,spd:50,rare:10,gulp:1,fins:'bowfin',iris:'#b08a3a',fin:'#4a6a3a',pat:[{t:'mottle',n:35,c1:'rgba(30,40,20,.35)',c2:'rgba(200,210,150,.15)'},{t:'ocellus',x:-.33,y:-.12}]},
+ {id:'spotgar',name:'Spotted Gar',lakes:['bayou'],d:[.3,.9],w:[1,8],base:12,per:7,col:'#8a8a5a',back:'#46462a',belly:'#e2deb2',len:70,h:.15,snout:1,str:1.2,spd:50,rare:10,gulp:1,sc:'ganoid',fins:'gar',iris:'#c8a040',fin:'#6a6a42',pat:[{t:'spots',n:120,c:'rgba(25,25,12,.6)',r:[1.4,3],y:[-.5,.5]}]},
+ {id:'warmouth',name:'Warmouth',lakes:['bayou'],d:[.05,.45],w:[.3,1.5],base:7,per:8,col:'#7a6a4a',back:'#463824',belly:'#ead6a2',len:30,h:.5,str:.6,spd:40,rare:10,fins:'bluegill',iris:'#c83020',fin:'#5a4a30',pat:[{t:'mottle',n:40,c1:'rgba(50,35,20,.4)',c2:'rgba(240,220,170,.15)'},{t:'cheek',c:'rgba(140,60,30,.6)'}]},
+ {id:'pickerel',name:'Chain Pickerel',lakes:['bayou'],d:[.1,.6],w:[1,6],base:14,per:8,col:'#8ca262',back:'#3c5828',belly:'#f2eecc',len:54,h:.19,bill:'duck',str:1.1,spd:80,rare:8,ambush:1,fins:'pike',iris:'#d8c060',fin:'#7a8a52',pat:[{t:'chain',c:'rgba(30,45,20,.55)'}]},
+ {id:'buffalo',name:'Bigmouth Buffalo',lakes:['bayou'],d:[.4,1],w:[3,50],base:10,per:3,col:'#8a8070',back:'#484234',belly:'#e8e2d2',len:68,h:.4,hump:.2,str:1.5,spd:38,rare:8,sc:'big',fins:'crown',iris:'#b8b090',fin:'#5a5446'},
+ {id:'eel',name:'American Eel',lakes:['bayou','lunker'],d:[.6,1],w:[.5,6],base:16,per:8,col:'#6a6a3a',back:'#383818',belly:'#eae2aa',len:70,h:.1,eel:1,str:1,spd:44,rare:5,night:1,sc:'none',fins:'eel',iris:'#d8c060',fin:'#5a5a2e'},
+ {id:'bayouking',name:'Bayou King',legend:'dusk',glow:'#ff9a4a',lakes:['bayou'],d:[.8,1],w:[180,280],base:520,per:2,col:'#5a6a44',back:'#28321e',belly:'#cac696',len:150,h:.16,snout:1,str:2.6,spd:44,rare:.4,gulp:1,sc:'ganoid',fins:'gar',iris:'#ff9a3a',fin:'#4a5634',pat:[{t:'spots',n:90,c:'rgba(20,24,10,.55)',r:[2,4],y:[-.5,.5],x:[-.45,.1]}]},
+ {id:'laketrout',name:'Lake Trout',lakes:['glacier'],d:[.5,1],w:[3,40],base:20,per:5,col:'#7a8a8c',back:'#36464e',belly:'#eef0ec',len:66,h:.28,str:1.4,spd:56,rare:12,dawn:1,fins:'trout',tail:'dfork',iris:'#d0c080',fin:'#5a6a6e',pat:[{t:'spots',n:110,c:'rgba(240,240,220,.6)',r:[1.2,2.6],y:[-.5,.25]}]},
+ {id:'brook',name:'Brook Trout',lakes:['glacier'],d:[.1,.5],w:[.5,5],base:16,per:9,col:'#6a7a4a',back:'#2c3c28',belly:'#f0904a',len:40,h:.3,str:.9,spd:60,rare:12,dawn:1,fins:'trout',iris:'#d8b050',fin:'#c8643a',pat:[{t:'worms',c:'rgba(210,220,150,.55)'},{t:'halo',n:16,c:'#d83a3a',h:'rgba(90,150,255,.7)'}]},
+ {id:'cutthroat',name:'Cutthroat Trout',lakes:['glacier'],d:[.1,.6],w:[1,10],base:18,per:8,col:'#b2a272',back:'#58583a',belly:'#f2ead2',len:50,h:.3,str:1.1,spd:62,rare:12,dawn:1,fins:'trout',iris:'#d6b45a',fin:'#9a8a5a',pat:[{t:'spots',n:80,c:'rgba(16,18,10,.6)',r:[1,2],y:[-.5,.3],x:[-.45,0]},{t:'throat',c:'#d8302a'}]},
+ {id:'char',name:'Arctic Char',lakes:['glacier'],d:[.4,.9],w:[1,15],base:22,per:8,col:'#5a6a7c',back:'#28384a',belly:'#e8603a',len:54,h:.3,str:1.2,spd:58,rare:8,dawn:1,fins:'trout',iris:'#d0b060',fin:'#d8603a',pat:[{t:'spots',n:40,c:'rgba(255,170,170,.65)',r:[1.4,2.6],y:[-.35,.25]}]},
+ {id:'kokanee',name:'Kokanee Salmon',lakes:['glacier'],d:[.2,.7],w:[.5,4],base:14,per:10,col:'#c84a3a',back:'#7a2a22',belly:'#f2d2c2',len:44,h:.3,str:.9,spd:64,rare:10,school:1,fins:'trout',iris:'#d8c070',fin:'#5a6a4a',pat:[{t:'head',c:'#3e5a3a'}]},
+ {id:'pike',name:'Northern Pike',lakes:['glacier'],d:[.1,.6],w:[3,30],base:20,per:5,col:'#7a9050',back:'#344e28',belly:'#f2f0d2',len:80,h:.18,bill:'duck',str:1.6,spd:90,rare:8,ambush:1,fins:'pike',iris:'#e0c040',fin:'#7a7a3a',pat:[{t:'beans',c:'rgba(235,240,190,.7)'}]},
+ {id:'burbot',name:'Burbot',lakes:['glacier'],d:[.7,1],w:[1,12],base:14,per:6,col:'#7a6a4a',back:'#3a3022',belly:'#e8debe',len:56,h:.2,str:1,spd:36,rare:8,night:1,sc:'none',whisk:'chin',fins:'burbot',iris:'#b0a070',fin:'#5a4a32',pat:[{t:'mottle',n:45,c1:'rgba(40,30,15,.45)',c2:'rgba(230,215,170,.15)'}]},
+ {id:'ghost',name:'Glacier Ghost',legend:'dawn',glow:'#e8f4ff',lakes:['glacier'],d:[.85,1],w:[150,300],base:600,per:2,col:'#b8c0c4',back:'#56626c',belly:'#f4f6f6',len:150,h:.2,bill:'stur',whisk:'stur',str:2.7,spd:34,rare:.4,sc:'none',fins:'stur',tail:'heter',iris:'#c8e0ff',fin:'#8a949a',pat:[{t:'scutes'}]},
+ {id:'can',name:'Tin Can',nf:1,rest:1,kind:'junk',d:[.97,1],w:[.2,.5],base:1,per:0,len:22,h:.6,str:.2,spd:0,rare:3},
+ {id:'tire',name:'Old Tire',nf:1,rest:1,kind:'junk',d:[.97,1],w:[12,20],base:3,per:0,len:40,h:1,str:.6,spd:0,rare:1.5},
+ {id:'plate',name:'Texas License Plate',nf:1,rest:1,kind:'junk',d:[.97,1],w:[.5,1],base:4,per:0,len:34,h:.5,str:.2,spd:0,rare:1.2},
+ {id:'duck',name:'Rubber Duck',nf:1,rest:1,kind:'junk',d:[.97,1],w:[.1,.2],base:2,per:0,len:24,h:.9,str:.15,spd:0,rare:1},
+ {id:'phone',name:'Sunken Phone',nf:1,rest:1,kind:'junk',d:[.97,1],w:[.3,.4],base:5,per:0,len:20,h:1.9,str:.15,spd:0,rare:.8},
+ {id:'bottle',name:'Message in a Bottle',nf:1,rest:1,kind:'reward',d:[.97,1],w:[.5,1],base:0,per:0,len:30,h:.35,str:.2,spd:0,rare:1.2},
+ {id:'chest',name:'Treasure Chest',nf:1,rest:1,kind:'reward',d:[.97,1],w:[20,40],base:0,per:0,len:38,h:.75,str:.8,spd:0,rare:.5},
+ {id:'tackle',name:'Lost Tackle Box',nf:1,rest:1,kind:'reward',d:[.97,1],w:[3,6],base:0,per:0,len:32,h:.6,str:.4,spd:0,rare:.8},
+ {id:'ring',name:'Gold Ring',nf:1,rest:1,kind:'treasure',d:[.97,1],w:[.05,.1],base:180,per:0,len:14,h:1,str:.1,spd:0,rare:.6},
+ {id:'crawfish',name:'Crawfish',nf:1,kind:'critter',lakes:['lunker','pond','bayou'],d:[.95,1],w:[.05,.2],base:5,per:0,len:22,h:.5,str:.3,spd:10,rare:4},
+ {id:'frog',name:'Bullfrog',nf:1,kind:'critter',lakes:['pond','bayou'],d:[.02,.2],w:[.3,1.2],base:8,per:0,len:26,h:.6,str:.4,spd:24,rare:3},
+ {id:'turtle',name:'Snapping Turtle',nf:1,kind:'critter',lakes:['lunker','pond','bayou'],d:[.25,.8],w:[8,35],base:15,per:0,len:40,h:.6,str:1.1,spd:16,rare:2},
+ {id:'boot',name:'Old Boot',nf:1,rest:1,kind:'junk',d:[.97,1],w:[1,3],base:1,per:0,col:'#4a3a2c',back:'#2b2118',belly:'#4a3a2c',len:34,h:.5,str:.25,spd:0,rare:3}
 ];
 const SPI=Object.fromEntries(SP.map(s=>[s.id,s]));
 
@@ -235,11 +276,11 @@ const LAKES=[
 const lake=()=>LAKES.find(l=>l.id===S.lake)||LAKES[0];
 const curRod=()=>RODS.find(r=>r.id===S.rod)||RODS[0];
 const curOutfit=()=>OUTFITS.find(o=>o.id===S.outfit)||OUTFITS[0];
-const wOf=s=>{const v=lake().w[s.id];return v==null?(s.id==='trout'?0:1):v;};
+const wOf=s=>{if(s.lakes&&!s.lakes.includes(S.lake))return 0;if(s.legend&&!legendOn(s.legend))return 0;const v=lake().w[s.id];return v==null?1:v;};
 function marketDay(){
   if(!S.mk||S.mk.day!==S.days){const R=mulberry(S.days*7919+13);const prev=S.mk?S.mk.m:{};const m={};
-    for(const s of SP)m[s.id]=s.boot?1:Math.round((.7+R()*.75)*100)/100;
-    const pool=SP.filter(s=>!s.boot);const hot=pool[Math.floor(R()*pool.length)].id;let glut=hot;while(glut===hot)glut=pool[Math.floor(R()*pool.length)].id;
+    for(const s of SP)m[s.id]=s.nf?1:Math.round((.7+R()*.75)*100)/100;
+    const pool=SP.filter(s=>!s.nf&&!s.legend);const hot=pool[Math.floor(R()*pool.length)].id;let glut=hot;while(glut===hot)glut=pool[Math.floor(R()*pool.length)].id;
     m[hot]=Math.round((1.6+R()*.5)*100)/100;m[glut]=Math.round((.45+R()*.15)*100)/100;
     S.mk={day:S.days,m,prev,hot,glut};save();}
   return S.mk;
@@ -249,7 +290,7 @@ const priceOf=c=>Math.max(1,Math.round(c.v*(marketDay().m[c.id]||1)*fresh(c)));
 const depthName=s=>s.d[1]<=.45?'Shallow water':s.d[0]>=.5?'Deep water':'Mid-depth';
 function thumbs(){
   ov.querySelectorAll('canvas[data-sp]').forEach(c=>{const sp=SPI[c.dataset.sp];const w=64,h=34;c.width=w*DPR;c.height=h*DPR;const x=c.getContext('2d');x.setTransform(DPR,0,0,DPR,0,0);
-    const len=Math.min(w*.8,(h*.8)/(sp.h*1.3));if(c.dataset.dark){x.filter='brightness(0) opacity(.45)';}drawFish(x,sp,w/2,h/2,len,1,0,{glow:false});});
+    const len=Math.min(w*.8,(h*.8)/(Math.min(1.2,sp.h)*1.3));if(c.dataset.dark){x.filter='brightness(0) opacity(.45)';}drawFish(x,sp,w/2,h/2,len,1,0,{glow:false,thumb:true});});
 }
 function menuView(){
   G.state='menu';hintEl.textContent='';
@@ -326,7 +367,7 @@ function anglerView(){
 function lakesView(){
   G.state='menu';
   const rows=LAKES.map(l=>{const own=S.lakes.includes(l.id),here=S.lake===l.id;
-    const feat=SP.filter(s=>!s.boot&&!s.crown&&((l.w[s.id]==null?(s.id==='trout'?0:1):l.w[s.id])>=1.3)).map(s=>s.name).slice(0,3).join(', ');
+    const fl=SP.filter(s=>!s.nf&&!s.legend&&!s.crown&&inLake(s,l));const feat=fl.filter(s=>s.lakes||(l.w[s.id]||1)>=1.3).map(s=>s.name).slice(0,3).join(', ')+` and ${fl.length} species in all`;
     return `<div class="row"><span class="lsw" style="background:linear-gradient(180deg,${l.sky} 0 38%,${l.water[0]} 38%,${l.water[1]} 70%,${l.water[2]})"></span>
       <div class="n" style="flex:1">${l.name}<small>${l.desc}<br>${l.ft} ft deep${feat?' · Best for '+feat:''}</small></div>
       <button class="b ${here?'alt':''}" data-l="${l.id}" ${here||(!own&&S.coins<l.cost)?'disabled':''}>${here?'Here':own?'Go':'$'+l.cost}</button></div>`;}).join('');
@@ -334,17 +375,17 @@ function lakesView(){
     <div class="list shop">${rows}</div>
     <div class="btns"><button class="b" id="bStart">Start fishing</button><button class="b alt" id="bMenu">Back</button></div></div>`);
   ov.querySelectorAll('button[data-l]').forEach(b=>b.addEventListener('click',()=>{const l=LAKES.find(x=>x.id===b.dataset.l);
-    if(!S.lakes.includes(l.id)){if(S.coins<l.cost)return;S.coins-=l.cost;S.lakes.push(l.id);sfx.buy();}S.lake=l.id;save();resize();lakesView();}));
+    if(!S.lakes.includes(l.id)){if(S.coins<l.cost)return;S.coins-=l.cost;S.lakes.push(l.id);sfx.buy();}S.lake=l.id;save();for(const k in FS)if(!k.endsWith('_t'))delete FS[k];resize();lakesView();}));
   on('bStart',startDay);on('bMenu',menuView);
 }
 function marketView(){
   G.state='menu';const mk=marketDay();
   const trend=id=>{const m=mk.m[id],p=mk.prev[id];return p==null?'':m>p+.02?'<span class="up">▲</span>':m<p-.02?'<span class="dn">▼</span>':'<span class="fl">–</span>';};
-  const board=SP.filter(s=>!s.boot&&(S.rec[s.id]||s.id===mk.hot||s.id===mk.glut)).map(s=>`<div class="tick${s.id===mk.hot?' hot':s.id===mk.glut?' glut':''}"><span>${s.name}</span><b>×${mk.m[s.id].toFixed(2)} ${trend(s.id)}</b></div>`).join('');
+  const board=SP.filter(s=>!s.nf&&(S.rec[s.id]||s.id===mk.hot||s.id===mk.glut)).map(s=>`<div class="tick${s.id===mk.hot?' hot':s.id===mk.glut?' glut':''}"><span>${s.name}</span><b>×${mk.m[s.id].toFixed(2)} ${trend(s.id)}</b></div>`).join('');
   const items=S.cooler.map((c,i)=>({c,i,p:priceOf(c)})).sort((a,b)=>b.p-a.p);
   const total=items.reduce((a,b)=>a+b.p,0);
   const age=c=>{const d=Math.max(0,S.days-c.day);return d===0?'Fresh':d===1?'1 day on ice':d+' days on ice';};
-  const rows=items.map(o=>{const s=SPI[o.c.id];return `<div class="row"><canvas data-sp="${s.id}"></canvas><div class="n" style="flex:1">${s.name}<small>${s.boot?'Junk':fmtW(o.c.w)} · ${age(o.c)}</small></div><button class="b sell" data-i="${o.i}">Sell $${o.p}</button></div>`;}).join('');
+  const rows=items.map(o=>{const s=SPI[o.c.id];return `<div class="row"><canvas data-sp="${s.id}"></canvas><div class="n" style="flex:1">${s.name}<small>${s.nf?(s.kind==='treasure'?'Treasure':'Junk'):fmtW(o.c.w)} · ${age(o.c)}</small></div><button class="b sell" data-i="${o.i}">Sell $${o.p}</button></div>`;}).join('');
   showOv(`<div class="card"><div class="h2">Fish market</div>
     <div class="sub">Prices change after every weigh-in. Fish lose 20% of their value for each day on ice.</div>
     <div class="mnote"><span>Hot today</span><b>${SPI[mk.hot].name} ×${mk.m[mk.hot].toFixed(2)}</b><span>Too many</span><b>${SPI[mk.glut].name} ×${mk.m[mk.glut].toFixed(2)}</b></div>
@@ -358,10 +399,11 @@ function marketView(){
   on('bMenu',menuView);
 }
 function logView(){
-  const rows=SP.map(s=>{const r=S.rec[s.id];const where=s.id==='trout'?'Glacier Lake only':depthName(s);
-    return r?`<div class="row"><canvas data-sp="${s.id}"></canvas><div class="n" style="flex:1">${s.name}<small>Caught ${r.n}× · ${where}</small></div><div class="v">${s.boot?'—':fmtW(r.best)}</div></div>`
+  const KN={junk:'Junk',reward:'Treasure find',treasure:'Treasure',critter:'Critter · catch and release'};
+  const rows=SP.map(s=>{const r=S.rec[s.id];const where=s.nf?KN[s.kind]:s.legend?(r?'Legendary · '+lakeNames(s)+' · '+LEGEND_HINT[s.legend]:'Legendary · '+lakeNames(s)):lakeNames(s)+' · '+depthName(s);
+    return r?`<div class="row"><canvas data-sp="${s.id}"></canvas><div class="n" style="flex:1">${s.name}<small>Caught ${r.n}× · ${where}</small></div><div class="v">${s.nf?'—':fmtW(r.best)}</div></div>`
            :`<div class="row locked"><canvas data-sp="${s.id}" data-dark="1"></canvas><div class="n" style="flex:1">???<small>${where}</small></div><div class="v">—</div></div>`;}).join('');
-  showOv(`<div class="card"><div class="h2">Catch log</div><div class="sub">Personal bests for every species.</div><div class="list">${rows}</div>
+  showOv(`<div class="card"><div class="h2">Catch log</div><div class="sub">${SP.filter(s=>S.rec[s.id]).length} of ${SP.length} found. Personal bests for every fish.</div><div class="list">${rows}</div>
     <div class="btns"><button class="b alt" id="bMenu">Back</button></div></div>`);
   thumbs();on('bMenu',menuView);
 }
@@ -586,7 +628,7 @@ const biteMul=()=>(golden()?1.6:1)*G.weather.bite*(G.twitch>0?1.5:1);
 const streakMul=()=>[1,1,1.25,1.5,2][Math.min(4,G.streak)];
 
 function pickSpecies(df){
-  let pool=SP.filter(s=>df>=s.d[0]-.05&&df<=s.d[1]+.05&&wOf(s)>0);if(!pool.length)pool=SP.filter(s=>wOf(s)>0&&!s.boot);
+  let pool=SP.filter(s=>df>=s.d[0]-.05&&df<=s.d[1]+.05&&wOf(s)>0);if(!pool.length)pool=SP.filter(s=>wOf(s)>0&&!s.nf);
   const rb=UP.lure.rareB[lv('lure')];const ws=pool.map(s=>(s.rare<=3.5?s.rare*rb:s.rare)*wOf(s));
   let r=Math.random()*ws.reduce((a,b)=>a+b,0);for(let i=0;i<pool.length;i++){r-=ws[i];if(r<=0)return pool[i];}return pool[0];
 }
@@ -600,7 +642,7 @@ function spawnFish(initial){
   let y=Math.min(surf+frac*waterH,bottom-24);
   const dir=Math.random()<.5?1:-1;
   let x=initial?tip.x+60+Math.random()*(W-tip.x-40):(dir>0?-90:W+90);
-  if(sp.boot){x=tip.x+80+Math.random()*(W-tip.x-100);y=bottomAt(x)-7;fish.push(makeFish(sp,x,y,1));return;}
+  if(sp.rest){x=tip.x+80+Math.random()*(W-tip.x-100);y=bottomAt(x)-7;fish.push(makeFish(sp,x,y,1));return;}
   const n=sp.school?2+Math.floor(Math.random()*3):1;
   for(let i=0;i<n;i++){const f=makeFish(sp,x-dir*i*(22+Math.random()*14),y+(Math.random()-.5)*26,dir);f.spd=sp.spd*(.9+Math.random()*.1);fish.push(f);}
 }
@@ -643,8 +685,8 @@ function hookFish(){
   G.fx={f,D:d,D0:d,ax:f.x,ay:f.y,T:.3,stam:perfect?.78:1,strF,surge:0,surgeCd:1+Math.random()*2,slack:0,wob:0,jump:null,jumpCd:2.5+Math.random()*3};
   if(perfect){sfx.perfect();floatText(f.x,f.y-30,'PERFECT HOOK','#f4c542',24);}
   const known=S.rec[f.sp.id];
-  fname.textContent=f.sp.boot?'Something heavy…':known?f.sp.name:'Unknown fish';
-  fwt.textContent=f.sp.boot?'? lb':'~'+Math.max(1,Math.round(f.w*(.8+Math.random()*.4)))+' lb';
+  fname.textContent=f.sp.nf?(f.sp.rest?'Something heavy…':'Something’s kicking…'):known?f.sp.name:(f.sp.legend?'Something HUGE':'Unknown fish');
+  fwt.textContent=f.sp.nf?'? lb':'~'+Math.max(1,Math.round(f.w*(.8+Math.random()*.4)))+' lb';
   fightEl.hidden=false;
   for(let i=0;i<10;i++)parts.push({x:f.x,y:f.y,vx:(Math.random()-.5)*60,vy:-30-Math.random()*40,life:1,b:1});
 }
@@ -655,7 +697,7 @@ function startDay(){
   G.t=0;G.haul=0;G.catches=[];G.state='idle';G.lure=null;G.eng=null;G.fx=null;G.overAfter=false;G.streak=0;G.lost=0;
   G.weather=rollWeather();
   const reach=UP.line.depth[lv('line')];
-  const pool=SP.filter(s=>!s.boot&&s.d[0]<=reach-.05&&!s.crown&&wOf(s)>0);
+  const pool=SP.filter(s=>!s.nf&&!s.legend&&s.d[0]<=reach-.05&&!s.crown&&(!s.lakes||s.lakes.includes(S.lake))&&(lake().w[s.id]==null||lake().w[s.id]>0));
   G.bounty=pool[Math.floor(Math.random()*pool.length)];
   fish=[];while(freeFish()<10)spawnFish(true);
   rain=[];hideOv();
@@ -665,9 +707,9 @@ function startDay(){
 function endDay(){
   G.state='over';fightEl.hidden=true;hintEl.className='';S.days++;
   const isBest=G.haul>S.bestDay;if(isBest)S.bestDay=G.haul;save();
-  const real=G.catches.filter(c=>!SPI[c.id].boot);
+  const real=G.catches.filter(c=>!SPI[c.id].nf);
   const big=real.slice().sort((a,b)=>b.w-a.w)[0];
-  const rows=G.catches.slice(-8).reverse().map(c=>`<div class="row"><div class="n">${SPI[c.id].name}<small>${SPI[c.id].boot?'Junk':fmtW(c.w)}</small></div><div class="v">$${c.v}</div></div>`).join('');
+  const rows=G.catches.slice(-8).reverse().map(c=>`<div class="row"><div class="n">${SPI[c.id].name}<small>${SPI[c.id].nf?(SPI[c.id].kind==='critter'?'Released':SPI[c.id].kind==='reward'?'Treasure find':'Junk'):fmtW(c.w)}</small></div><div class="v">$${c.v}</div></div>`).join('');
   showOv(`<div class="card">
     <div class="h2">Weigh-in</div>
     <div class="sub">Sun's down on day ${S.days}. Here's what came off the boat.</div>
@@ -697,38 +739,54 @@ function howView(){
    ['Jumps','Big fish leap. Let go while it’s in the air for a clean jump that tires it out.'],
    ['Bonuses','Golden hour and rain make fish bite more. The daily bounty fish pays double. Land fish back to back to build a streak multiplier.'],
    ['Fish market','Catches go in your cooler. Prices change after every weigh-in, and fish lose value each day on ice. Sell when the price is right.'],
-   ['Lakes','Each lake has different fish and depths. Glacier Lake is the only place to find rainbow trout.']];
+   ['Lakes','Each lake has its own fish. Glacier Lake has trout, char and pike. The bayou has gar, bowfin and eels.'],
+   ['Legends','Every lake hides a legendary fish that only shows up at a certain time or in certain weather. Messages in bottles give hints.'],
+   ['Behavior','Catfish, eels and burbot bite best after dark. Trout bite best at dawn. Pike and pickerel strike fast. Gar come up for air.'],
+   ['Surprises','Junk sells for scrap. Bottles, chests and tackle boxes pay out right away. Critters get released for a bonus.']];
   showOv(`<div class="card"><div class="h2">How to fish</div><div class="list">${tips.map(t=>`<div class="row"><div class="n">${t[0]}<small>${t[1]}</small></div></div>`).join('')}</div>
    <div class="btns"><button class="b" id="bBack">Got it</button></div></div>`);
   on('bBack',menuView);
 }
 function catchView(f){
-  const sp=f.sp;const raw=sp.base+sp.per*f.w;const bounty=G.bounty&&G.bounty.id===sp.id;
-  if(!sp.boot)G.streak++;const sm=sp.boot?1:streakMul();
-  const val=Math.round(raw*(bounty?2:1)*sm);
-  const r=S.rec[sp.id];const isNew=!r;const isPB=r&&f.w>r.best;
+  const sp=f.sp,k=sp.kind;const r=S.rec[sp.id];const isNew=!r;const isPB=r&&f.w>r.best;
   S.rec[sp.id]={n:(r?r.n:0)+1,best:Math.max(r?r.best:0,f.w)};
-  S.cooler.push({id:sp.id,w:Math.round(f.w*100)/100,v:val,day:S.days+1});G.haul+=val;G.catches.push({id:sp.id,w:f.w,v:val});save();
   G.state='caught';sfx.catch();buzz([30,40,30]);
-  const badges=[sp.crown?'<div class="badge">Legendary</div>':'',isNew&&!sp.boot?'<div class="badge teal">New species</div>':'',isPB?'<div class="badge red">Personal best</div>':'',bounty?'<div class="badge">Bounty 2×</div>':''].join('');
+  let title=sp.name,lines='',note='',badges=[],val=0;
+  const tot=(lab,v)=>`<div class="tot"><span>${lab}</span><span class="coins">$${v}</span></div>`;
+  if(!sp.nf){
+    const raw=sp.base+sp.per*f.w;const bounty=G.bounty&&G.bounty.id===sp.id;G.streak++;const sm=streakMul();
+    val=Math.round(raw*(bounty?2:1)*sm);
+    S.cooler.push({id:sp.id,w:Math.round(f.w*100)/100,v:val,day:S.days+1});G.haul+=val;
+    lines=`<div><span>Dock price</span><span>$${Math.round(raw)}</span></div>${bounty?'<div><span>Daily bounty</span><span>×2</span></div>':''}${sm>1?`<div><span>Streak · ${G.streak} in a row</span><span>×${sm}</span></div>`:''}`+tot('Base value',val);
+    note='On ice in your cooler. Sell it at the fish market after the weigh-in.';
+    if(sp.crown||sp.legend)badges.push('<div class="badge">Legendary</div>');if(isNew)badges.push('<div class="badge teal">New species</div>');if(isPB)badges.push('<div class="badge red">Personal best</div>');if(bounty)badges.push('<div class="badge">Bounty 2×</div>');
+  }else if(k==='junk'||k==='treasure'){
+    val=Math.round(sp.base*(k==='treasure'?1+f.sz*.6:1));S.cooler.push({id:sp.id,w:Math.round(f.w*100)/100,v:val,day:S.days+1});G.haul+=val;
+    if(sp.id==='boot')title='Well, that’s a boot.';
+    lines=tot(k==='junk'?'Scrap value':'Base value',val);note=k==='junk'?'Tossed in the cooler. Scrap sells at the market.':'Worth a lot at the fish market.';
+    badges.push(k==='junk'?'<div class="badge teal">Junk</div>':'<div class="badge">Treasure</div>');
+  }else if(k==='reward'){
+    if(sp.id==='bottle'){val=20+Math.floor(Math.random()*61);S.coins+=val;lines=tot('Cash rolled up inside',val);note='The note says: “'+TIPS[Math.floor(Math.random()*TIPS.length)]+'”';badges.push('<div class="badge">Message</div>');}
+    else if(sp.id==='chest'){val=100+Math.floor(Math.random()*201);S.coins+=val;lines=tot('Gold coins',val);note='Added straight to your bank.';badges.push('<div class="badge">Treasure</div>');}
+    else{if(S.lv.lure<3){S.lv.lure++;note='Inside: a '+LBL.lure[S.lv.lure]+'. Your lure just got a free upgrade.';}else{val=150;S.coins+=val;lines=tot('Sold the spare gear',val);note='You already have the best lure, so you sold the extras.';}badges.push('<div class="badge">Free gear</div>');}
+  }else{
+    val=sp.base;S.coins+=val;lines=tot('Release bonus',val);note='You let it go. Good karma pays.';badges.push('<div class="badge teal">Released</div>');
+  }
+  G.catches.push({id:sp.id,w:f.w,v:val});save();
   showOv(`<div class="card">
-    ${badges?`<div class="badges">${badges}</div>`:''}
+    ${badges.length?`<div class="badges">${badges.join('')}</div>`:''}
     <canvas id="fishcv"></canvas>
-    <div class="h2">${sp.boot?'Well, that’s a boot.':sp.name}</div>
-    <div class="catch-w">${fmtW(f.w)}</div>
-    <div class="break">
-      <div><span>Dock price</span><span>$${Math.round(raw)}</span></div>
-      ${bounty?'<div><span>Daily bounty</span><span>×2</span></div>':''}
-      ${sm>1?`<div><span>Streak · ${G.streak} in a row</span><span>×${sm}</span></div>`:''}
-      <div class="tot"><span>${sp.boot?'Scrap value':'Base value'}</span><span class="coins">$${val}</span></div>
-    </div>
-    <div class="sub" style="font-size:15px">On ice in your cooler. Sell it at the fish market after the weigh-in.</div>
+    <div class="h2">${title}</div>
+    ${sp.nf?'':`<div class="catch-w">${fmtW(f.w)}</div>`}
+    ${lines?`<div class="break">${lines}</div>`:''}
+    <div class="sub" style="font-size:15px">${note}</div>
     <div class="btns"><button class="b" id="bGo">Keep fishing</button></div></div>`);
   const fc=$('fishcv');const fw=fc.clientWidth,fh=fc.clientHeight;fc.width=Math.round(fw*DPR);fc.height=Math.round(fh*DPR);
-  const c2=fc.getContext('2d');const scale=Math.min((fw*.72)/f.len,(fh*.62)/(f.len*sp.h*1.5));
+  const c2=fc.getContext('2d');const scale=Math.min((fw*.72)/f.len,(fh*.62)/(f.len*Math.min(1.2,sp.h)*1.5));
+  const gl=sp.glow||'#ffd75a',special=sp.crown||sp.legend||k==='treasure'||k==='reward';
   const sparks=[];for(let i=0;i<30;i++)sparks.push({x:Math.random()*fw,y:Math.random()*fh,v:10+Math.random()*25,s:Math.random()*2+1,p:Math.random()*6});
   cardAnim=(time)=>{c2.setTransform(DPR,0,0,DPR,0,0);c2.clearRect(0,0,fw,fh);
-    for(const s of sparks){s.y-=s.v*.016;if(s.y<-4)s.y=fh+4;c2.fillStyle=sp.crown?`rgba(255,215,90,${.4+.4*Math.sin(time*.005+s.p)})`:`rgba(220,245,255,${.25+.25*Math.sin(time*.004+s.p)})`;c2.beginPath();c2.arc(s.x,s.y,s.s,0,7);c2.fill();}
+    for(const s of sparks){s.y-=s.v*.016;if(s.y<-4)s.y=fh+4;c2.fillStyle=special?mixA(gl,gl,0,.4+.4*Math.sin(time*.005+s.p)):`rgba(220,245,255,${.25+.25*Math.sin(time*.004+s.p)})`;c2.beginPath();c2.arc(s.x,s.y,s.s,0,7);c2.fill();}
     const bob=RM?0:Math.sin(time*.003)*4;drawFish(c2,sp,fw/2,fh/2+bob,f.len*scale,1,time,{swim:1.4});};
   on('bGo',()=>{hideOv();if(G.overAfter||G.t>=DAY_LEN)endDay();else G.state='idle';});
 }
@@ -748,24 +806,28 @@ function update(dt){
     f.t+=dt;f.cool=Math.max(0,f.cool-dt);
     f.face+=(f.dir-f.face)*Math.min(1,dt*6);
     if(f.st==='swim'){
-      if(!f.sp.boot){f.x+=f.dir*f.spd*dt;f.y=f.by+Math.sin(f.t*.9+f.ph)*6;if(Math.random()<.0025)f.dir*=-1;}
+      if(!f.sp.rest){f.x+=f.dir*f.spd*dt;f.y=f.by+Math.sin(f.t*.9+f.ph)*6;if(Math.random()<.0025)f.dir*=-1;
+        if(f.sp.gulp){if(!f.gT&&Math.random()<dt*.04){f.gT=2.6;f.gp=0;}
+          if(f.gT>0){f.gT=Math.max(0,f.gT-dt);const q=1-f.gT/2.6,e=Math.sin(q*Math.PI);f.y=lerp(f.by,surf+8,e);
+            if(q>.45&&!f.gp){f.gp=1;ripples.push({x:f.x+f.len*.4*f.dir,y:surf,r:2,a:.9});ripples.push({x:f.x+f.len*.4*f.dir,y:surf,r:6,a:.6});for(let i=0;i<5;i++)parts.push({x:f.x+f.len*.4*f.dir,y:surf+4,vx:(Math.random()-.5)*14,vy:-10,life:.8,b:1});}}}}
       if(G.state==='sink'&&!G.eng&&L&&L.phase==='sink'&&f.cool<=0){
         const d=Math.hypot(f.x-L.x,f.y-L.y);
-        if(d<attractR()&&Math.random()<dt*(f.sp.boot?3:1.0)*biteMul()){if(!(f.sp.boot&&d>30)){f.st='approach';G.eng=f;}}
+        const ar=attractR()*(f.sp.ambush?1.6:1);
+        if(d<ar&&Math.random()<dt*(f.sp.rest?3:f.sp.ambush?2.2:1.0)*biteMul()*fishBite(f.sp)){if(!(f.sp.rest&&d>30)){f.st='approach';G.eng=f;f.gT=0;}}
       }
     }else if(f.st==='approach'){
       if(!L||G.state!=='sink'){f.st='swim';G.eng=null;continue;}
       const dx=L.x-f.x,dy=L.y-f.y,d=Math.hypot(dx,dy);
       if(Math.abs(dx)>4)f.dir=dx>=0?1:-1;
-      const sp=Math.max(30,f.spd*.8);
+      const sp=Math.max(30,f.spd*.8)*(f.sp.ambush?3.2:1);
       const mx=f.x+(f.len*.48)*f.dir;const md=Math.hypot(L.x-mx,L.y-f.y);
-      if(md<10||d<8){f.st='nibble';f.nib=.6+Math.random()*1.3;f.nt=0;}
+      if(md<10||d<8){f.st='nibble';f.nib=f.sp.ambush?.12+Math.random()*.2:.6+Math.random()*1.3;f.nt=0;if(f.sp.ambush){G.shake=Math.max(G.shake,3);sfx.splash(.12);}}
       else{f.x+=dx/d*sp*dt;f.y+=dy/d*sp*dt;f.by=f.y;}
     }else if(f.st==='nibble'){
       f.nt+=dt;
       f.x=L.x-(f.len*.48)*f.dir+Math.sin(f.nt*18)*1.5;f.y=L.y;
       if(Math.random()<dt*3)ripples.push({x:L.x,y:L.y,r:2,a:.5,u:1});
-      if(f.nt>=f.nib&&G.state==='sink'){G.state='bite';G.biteMax=G.biteT=f.sp.boot?1.2:.62+lv('lure')*.06;sfx.bite();buzz(25);}
+      if(f.nt>=f.nib&&G.state==='sink'){G.state='bite';G.biteMax=G.biteT=f.sp.rest?1.2:.62+lv('lure')*.06;sfx.bite();buzz(25);}
     }else if(f.st==='flee'){
       f.x+=f.dir*f.spd*2.4*dt;f.by=f.y;if(f.cool<1)f.st='swim';
     }
@@ -823,7 +885,7 @@ function updateFight(dt){
   if(F.surge>0)F.surge-=dt;
   // jumps
   F.jumpCd-=dt;
-  if(!F.jump&&F.jumpCd<=0&&!f.sp.boot&&f.sp.str>=.9&&F.stam>.2&&F.D>90&&Math.random()<dt*.6){
+  if(!F.jump&&F.jumpCd<=0&&!f.sp.nf&&!f.sp.eel&&!f.sp.bill&&f.sp.str>=.9&&F.stam>.2&&F.D>90&&Math.random()<dt*.6){
     F.jump={t:0,dur:.85+f.sz*.3,clean:true,h:55+50*f.sz};F.jumpCd=4+Math.random()*4;sfx.jump();splash(f.x,surf,20);G.shake=4;
   }
   const pull=F.strF*(.35+.65*F.stam)*(F.surge>0?1.7:1);
@@ -1185,23 +1247,123 @@ const FINS={
  gar:{d:[[[-.22,-.42],[-.28,-.95],[-.36,-.4]]],a:[[-.22,.42],[-.28,.95],[-.36,.4]],p:[[.02,.5],[-.04,.95],[-.08,.5]],pc:[.22,.2,.12],tail:'round'},
  crown:{d:[[[.16,-.46],[.1,-.86],[-.16,-.66],[-.3,-.36]]],a:[[-.12,.44],[-.17,.78],[-.26,.6],[-.3,.3]],p:[[.12,.46],[.04,.84],[-.01,.46]],pc:[.25,.15,.16],tail:'fork'}
 };
-function fishGeo(sp){const L=FL,h=L*sp.h,nose=sp.snout?.34*L:.5*L,tb=-.4*L;return{L,h,nose,tb};}
-function fishSprite(sp){
-  if(FS[sp.id])return FS[sp.id];
+/* ---- extra fin sets, patterns, objects ---- */
+Object.assign(FINS,{
+ trout:{d:[[[.06,-.46],[0,-.88],[-.1,-.46]],[[-.26,-.42],[-.29,-.62],[-.33,-.38]]],a:[[-.16,.42],[-.2,.76],[-.28,.38]],p:[[.08,.46],[.02,.8],[-.02,.46]],pc:[.26,.14,.14],tail:'rfork'},
+ pike:{d:[[[-.2,-.42],[-.27,-.88],[-.34,-.38]]],a:[[-.2,.42],[-.27,.84],[-.34,.36]],p:[[.02,.46],[-.04,.8],[-.08,.46]],pc:[.24,.16,.12],tail:'fork'},
+ eel:{d:[[[.06,-.45],[-.1,-1.4],[-.38,-1.3],[-.43,-.3]]],a:[[-.04,.45],[-.15,1.3],[-.38,1.2],[-.43,.3]],p:null,pc:[.32,.1,.08],tail:'round'},
+ bowfin:{d:[[[.12,-.46],[.06,-.82],[-.3,-.74],[-.36,-.38]]],a:[[-.24,.42],[-.28,.68],[-.34,.36]],p:[[.04,.46],[-.02,.8],[-.06,.46]],pc:[.26,.14,.14],tail:'round'},
+ burbot:{d:[[[.1,-.46],[.05,-.8],[-.02,-.48]],[[-.04,-.48],[-.08,-.78],[-.38,-.7],[-.41,-.36]]],a:[[-.02,.46],[-.06,.74],[-.38,.66],[-.41,.34]],p:[[.24,.4],[.2,.7],[.17,.4]],pc:[.26,.12,.14],tail:'round'},
+ bullhead:{d:[[[.14,-.46],[.08,-1],[.0,-.5]],[[-.22,-.42],[-.27,-.64],[-.33,-.36]]],a:[[-.04,.46],[-.1,.7],[-.3,.6],[-.35,.3]],p:[[.06,.48],[.0,.84],[-.04,.48]],pc:[.26,.22,.17],tail:'rfork'},
+ stur:{d:[[[-.22,-.42],[-.28,-.9],[-.34,-.4]]],a:[[-.2,.42],[-.26,.8],[-.32,.38]],p:[[.04,.48],[-.02,.86],[-.06,.48]],pc:[.26,.2,.18],tail:'heter'}
+});
+const TIPS=['Old Whiskers only feeds after dark on Lunker Lake.','The Hog comes up at Farm Pond when it rains.','The Bayou King hunts Cypress Bayou at golden hour in the evening.','The Glacier Ghost rises at dawn on Glacier Lake.','The Golden Crown Carp hides in the deepest water of every lake.','Pike and pickerel strike fast. Be ready on the hook.','Catfish, eels and burbot bite best after dark.','Trout and char bite best early in the morning.'];
+const LEGEND_HINT={night:'Feeds after dark',rain:'Comes up in the rain',dusk:'Hunts at evening golden hour',dawn:'Rises at dawn'};
+function legendOn(c){if(G.state==='menu'||G.state==='over')return false;const t=G.t/DAY_LEN;
+  return c==='night'?t>.8:c==='dusk'?t>.78:c==='dawn'?t<.18:c==='rain'?G.weather.id==='rain':true;}
+const inLake=(s,l)=>s.lakes?s.lakes.includes(l.id):((l.w[s.id]==null?1:l.w[s.id])>0);
+const lakeNames=s=>s.lakes?s.lakes.map(id=>LAKES.find(l=>l.id===id).name).join(', '):'Most lakes';
+function fishBite(sp){const t=dayT();return (sp.night&&t>.76?2.2:1)*(sp.dawn&&t<.25?2:1);}
+function patDraw(x,sp,L,h,nose,tb,gx,R){
+  for(const p of sp.pat||[]){
+    if(p.t==='bars'){x.fillStyle=p.c;for(let k=0;k<p.n;k++){x.beginPath();x.ellipse(lerp(-.34*L,gx-.03*L,k/(p.n-1)),-.05*h,.02*L,.5*h,0,0,7);x.fill();}}
+    else if(p.t==='hs'){x.strokeStyle=p.c;x.lineWidth=Math.max(1.5,h*(p.w||.04));for(let k=0;k<p.n;k++){const yy=p.n===1?-.02*h:-.3*h+k*(.55*h/(p.n-1));x.beginPath();x.moveTo(-.42*L,yy*.6);x.bezierCurveTo(-.1*L,yy,.15*L,yy,nose-.1*L,yy*.8);x.stroke();}}
+    else if(p.t==='spots'){const xr=p.x||[-.45,.42],yr=p.y||[-.5,.5];x.fillStyle=p.c;for(let k=0;k<p.n;k++){x.beginPath();x.arc(lerp(xr[0],xr[1],R())*L,lerp(yr[0],yr[1],R())*h,lerp(p.r[0],p.r[1],R()),0,7);x.fill();}}
+    else if(p.t==='mottle'){for(let k=0;k<p.n;k++){x.fillStyle=R()<.6?p.c1:p.c2;x.beginPath();x.ellipse(-.45*L+R()*.95*L,(R()-.55)*h,3+R()*9,2+R()*5,R()*3,0,7);x.fill();}}
+    else if(p.t==='ear'){x.fillStyle=p.c;x.beginPath();x.ellipse(gx-.02*L,-h*.04,.035*L,.1*h,.1,0,7);x.fill();if(p.rim){x.strokeStyle=p.rim;x.lineWidth=2.4;x.beginPath();x.ellipse(gx-.02*L,-h*.04,.035*L,.1*h,.1,-1.7,1.7);x.stroke();}}
+    else if(p.t==='cheek'){x.strokeStyle=p.c;x.lineWidth=2.6;for(let k=0;k<3;k++){x.beginPath();x.moveTo(nose-.04*L,k*.08*h);x.quadraticCurveTo(nose-.12*L,.08*h+k*.08*h,gx+.02*L,-.02*h+k*.1*h);x.stroke();}}
+    else if(p.t==='chain'){x.strokeStyle=p.c;x.lineWidth=2;for(let r=-2;r<=2;r++){x.beginPath();for(let xx=-.45*L,i=0;xx<gx;xx+=.04*L,i++){const yy=r*.17*h+(i%2?.08*h:-.08*h);i?x.lineTo(xx,yy):x.moveTo(xx,yy);}x.stroke();}}
+    else if(p.t==='ocellus'){const ox=p.x*L,oy=p.y*h;x.fillStyle='#e8a030';x.beginPath();x.arc(ox,oy,h*.17,0,7);x.fill();x.fillStyle='#0a0a08';x.beginPath();x.arc(ox,oy,h*.115,0,7);x.fill();}
+    else if(p.t==='worms'){x.strokeStyle=p.c;x.lineWidth=2;for(let k=0;k<30;k++){const sx=-.42*L+R()*.8*L,sy=-.5*h+R()*.32*h;x.beginPath();x.moveTo(sx,sy);x.bezierCurveTo(sx+6,sy-5,sx+10,sy+5,sx+16,sy);x.stroke();}}
+    else if(p.t==='halo'){for(let k=0;k<p.n;k++){const sx=-.4*L+R()*.75*L,sy=(R()-.4)*.5*h;x.fillStyle=p.h;x.beginPath();x.arc(sx,sy,4.4,0,7);x.fill();x.fillStyle=p.c;x.beginPath();x.arc(sx,sy,2.5,0,7);x.fill();}}
+    else if(p.t==='throat'){x.strokeStyle=p.c;x.lineWidth=3.4;x.beginPath();x.moveTo(nose-.04*L,.3*h);x.quadraticCurveTo(nose-.1*L,.44*h,gx,.38*h);x.stroke();}
+    else if(p.t==='head'){const g=x.createLinearGradient(gx-.04*L,0,gx+.03*L,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,p.c);x.fillStyle=g;x.fillRect(gx-.04*L,-h,L,2*h);}
+    else if(p.t==='scutes'){x.fillStyle='rgba(240,244,246,.75)';x.strokeStyle='rgba(60,70,80,.5)';x.lineWidth=1;for(const yy of [-.38,.02,.3])for(let xx=-.38*L;xx<gx;xx+=.045*L){x.beginPath();x.moveTo(xx,yy*h-4);x.lineTo(xx+5,yy*h);x.lineTo(xx,yy*h+4);x.lineTo(xx-5,yy*h);x.closePath();x.fill();x.stroke();}}
+    else if(p.t==='beans'){x.fillStyle=p.c;for(let r=0;r<5;r++)for(let xx=-.42*L+(r%2)*.03*L;xx<gx-.02*L;xx+=.06*L){x.beginPath();x.ellipse(xx,-.36*h+r*.18*h,5.5,2.4,0,0,7);x.fill();}}
+  }
+}
+function drawObj(c,sp,L,time){
+  const H=L*sp.h;let g;const id=sp.id;
+  const glint=(x,y,r)=>{const tw=Math.sin(time*.006+x)*.5+.5;c.fillStyle=`rgba(255,255,240,${.4+.6*tw})`;c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r*.22,y-r*.22);c.lineTo(x+r,y);c.lineTo(x+r*.22,y+r*.22);c.lineTo(x,y+r);c.lineTo(x-r*.22,y+r*.22);c.lineTo(x-r,y);c.lineTo(x-r*.22,y-r*.22);c.closePath();c.fill();};
+  if(id==='boot'){drawBoot(c,L,L*.5);return;}
+  if(id==='can'){c.rotate(.12);g=c.createLinearGradient(0,-H/2,0,H/2);g.addColorStop(0,'#8a9096');g.addColorStop(.35,'#e4e8ea');g.addColorStop(1,'#5a6066');
+    c.fillStyle=g;c.fillRect(-L*.4,-H/2,L*.8,H);c.fillStyle='#b8322a';c.fillRect(-L*.25,-H/2,L*.5,H);c.fillStyle='rgba(255,255,255,.35)';c.fillRect(-L*.25,-H*.32,L*.5,H*.12);
+    c.fillStyle='#c8ccd0';c.beginPath();c.ellipse(L*.4,0,L*.06,H/2,0,0,7);c.fill();c.strokeStyle='#8a9096';c.lineWidth=L*.01;c.beginPath();c.ellipse(L*.4,0,L*.04,H*.4,0,0,7);c.stroke();
+    c.fillStyle='rgba(120,70,30,.35)';c.beginPath();c.ellipse(-L*.2,H*.3,L*.12,H*.12,0,0,7);c.fill();return;}
+  if(id==='tire'){const R=L*.48;c.fillStyle='#1a1a1c';c.beginPath();c.arc(0,0,R,0,7);c.fill();c.fillStyle='#2e2e32';c.beginPath();c.arc(0,0,R*.82,0,7);c.fill();
+    c.strokeStyle='#0a0a0a';c.lineWidth=L*.035;for(let i=0;i<20;i++){const a=i/20*Math.PI*2;c.beginPath();c.moveTo(Math.cos(a)*R*.9,Math.sin(a)*R*.9);c.lineTo(Math.cos(a)*R,Math.sin(a)*R);c.stroke();}
+    g=c.createRadialGradient(0,0,R*.2,0,0,R*.52);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.6)');c.fillStyle='#0d1a14';c.beginPath();c.arc(0,0,R*.5,0,7);c.fill();
+    c.fillStyle='rgba(110,150,80,.45)';c.beginPath();c.ellipse(-R*.4,-R*.7,R*.3,R*.12,-.4,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.12)';c.lineWidth=L*.02;c.beginPath();c.arc(0,0,R*.74,-2.4,-1.2);c.stroke();return;}
+  if(id==='plate'){c.rotate(-.08);c.fillStyle='#f2f0ea';rrC(c,-L/2,-H/2,L,H,L*.05);c.fill();c.fillStyle='#1d3a7a';c.fillRect(-L/2+L*.04,-H/2+H*.08,L*.92,H*.14);c.fillStyle='#b8322a';c.fillRect(-L/2+L*.04,H/2-H*.2,L*.92,H*.1);
+    c.fillStyle='#1a1a1a';c.font=`900 ${H*.42}px Arial,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText('LKR·207',0,H*.05);c.font=`700 ${H*.13}px Arial,sans-serif`;c.fillStyle='#f2f0ea';c.fillText('TEXAS',0,-H*.35);
+    c.fillStyle='rgba(120,70,30,.4)';c.beginPath();c.ellipse(L*.36,H*.3,L*.1,H*.14,0,0,7);c.fill();c.fillStyle='rgba(0,0,0,.15)';c.beginPath();c.moveTo(L*.5,-H*.5);c.lineTo(L*.34,-H*.5);c.lineTo(L*.5,-H*.2);c.fill();c.textAlign='left';c.textBaseline='alphabetic';return;}
+  if(id==='duck'){g=c.createRadialGradient(-L*.08,-H*.1,L*.05,0,H*.1,L*.45);g.addColorStop(0,'#fff27a');g.addColorStop(1,'#e8b818');c.fillStyle=g;c.beginPath();c.ellipse(-L*.05,H*.16,L*.42,H*.3,0,0,7);c.fill();
+    c.beginPath();c.arc(L*.18,-H*.2,L*.22,0,7);c.fill();c.fillStyle='#f28a1a';c.beginPath();c.ellipse(L*.4,-H*.16,L*.13,L*.05,.1,0,7);c.fill();
+    c.fillStyle='#111';c.beginPath();c.arc(L*.24,-H*.28,L*.035,0,7);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(L*.25,-H*.29,L*.012,0,7);c.fill();
+    c.fillStyle='rgba(255,255,255,.45)';c.beginPath();c.ellipse(-L*.18,H*.02,L*.14,H*.06,-.3,0,7);c.fill();return;}
+  if(id==='phone'){c.rotate(.2);c.fillStyle='#14161a';rrC(c,-L/2,-H/2,L,H,L*.12);c.fill();g=c.createLinearGradient(0,-H/2,0,H/2);g.addColorStop(0,'#1e3a5a');g.addColorStop(1,'#0a1420');c.fillStyle=g;rrC(c,-L*.42,-H*.44,L*.84,H*.88,L*.08);c.fill();
+    c.strokeStyle='rgba(220,235,255,.55)';c.lineWidth=L*.012;c.beginPath();c.moveTo(-L*.1,-H*.1);c.lineTo(-L*.3,-H*.3);c.moveTo(-L*.1,-H*.1);c.lineTo(L*.3,-H*.05);c.moveTo(-L*.1,-H*.1);c.lineTo(L*.05,H*.32);c.moveTo(-L*.1,-H*.1);c.lineTo(-L*.36,H*.12);c.stroke();
+    const p=Math.sin(time*.004)*.5+.5;c.fillStyle=`rgba(120,200,255,${.08+.12*p})`;rrC(c,-L*.42,-H*.44,L*.84,H*.88,L*.08);c.fill();return;}
+  if(id==='bottle'){c.rotate(-.15);g=c.createLinearGradient(0,-H/2,0,H/2);g.addColorStop(0,'rgba(120,200,140,.9)');g.addColorStop(.5,'rgba(40,120,70,.85)');g.addColorStop(1,'rgba(20,70,40,.9)');
+    c.fillStyle=g;c.beginPath();c.moveTo(-L*.45,-H*.4);c.lineTo(L*.08,-H*.4);c.quadraticCurveTo(L*.22,-H*.4,L*.26,-H*.16);c.lineTo(L*.44,-H*.16);c.lineTo(L*.44,H*.16);c.lineTo(L*.26,H*.16);c.quadraticCurveTo(L*.22,H*.4,L*.08,H*.4);c.lineTo(-L*.45,H*.4);c.closePath();c.fill();
+    c.fillStyle='#a8784a';c.fillRect(L*.42,-H*.13,L*.08,H*.26);c.fillStyle='#efe2c0';c.fillRect(-L*.32,-H*.18,L*.34,H*.36);c.strokeStyle='#c8b080';c.lineWidth=L*.008;for(let i=0;i<3;i++){c.beginPath();c.moveTo(-L*.28,-H*.08+i*H*.1);c.lineTo(-L*.02,-H*.08+i*H*.1);c.stroke();}
+    c.fillStyle='rgba(255,255,255,.45)';c.fillRect(-L*.4,-H*.32,L*.42,H*.06);glint(L*.1,-H*.3,L*.06);return;}
+  if(id==='chest'){g=c.createLinearGradient(0,-H/2,0,H/2);g.addColorStop(0,'#8a5a2c');g.addColorStop(1,'#4a2c14');c.fillStyle=g;c.fillRect(-L/2,-H*.15,L,H*.65);
+    c.fillStyle='#6a4220';c.beginPath();c.moveTo(-L/2,-H*.15);c.quadraticCurveTo(0,-H*.62,L/2,-H*.15);c.closePath();c.fill();
+    c.fillStyle='rgba(255,215,90,.55)';c.beginPath();c.moveTo(-L*.46,-H*.15);c.quadraticCurveTo(0,-H*.4,L*.46,-H*.15);c.lineTo(L*.46,-H*.1);c.lineTo(-L*.46,-H*.1);c.fill();
+    c.fillStyle='#d4a62a';for(const xx of [-.42,-.05,.32])c.fillRect(L*xx,-H*.4+(Math.abs(xx)<.1?-H*.04:0),L*.08,H*.9);c.fillRect(-L/2,-H*.17,L,H*.07);c.fillRect(-L/2,H*.43,L,H*.07);
+    c.fillStyle='#f4c542';rrC(c,-L*.07,-H*.08,L*.14,H*.2,L*.02);c.fill();c.fillStyle='#2a1a0a';c.fillRect(-L*.012,-H*.02,L*.024,H*.08);glint(-L*.25,-H*.2,L*.07);glint(L*.2,-H*.28,L*.05);return;}
+  if(id==='tackle'){g=c.createLinearGradient(0,-H/2,0,H/2);g.addColorStop(0,'#4a8a46');g.addColorStop(1,'#24502a');c.fillStyle=g;rrC(c,-L/2,-H*.25,L,H*.7,L*.04);c.fill();
+    c.fillStyle='#3a7a3a';rrC(c,-L/2,-H*.38,L,H*.18,L*.03);c.fill();c.strokeStyle='#1c3a1e';c.lineWidth=L*.035;c.beginPath();c.moveTo(-L*.2,-H*.38);c.quadraticCurveTo(0,-H*.62,L*.2,-H*.38);c.stroke();
+    c.fillStyle='#f2a541';c.fillRect(-L*.06,-H*.24,L*.12,H*.12);c.fillStyle='rgba(255,255,255,.18)';c.fillRect(-L*.46,-H*.2,L*.92,H*.05);
+    c.fillStyle='#e5483a';c.beginPath();c.ellipse(L*.3,H*.47,L*.07,L*.03,.4,0,7);c.fill();return;}
+  if(id==='ring'){const R=L*.32;c.strokeStyle='#b8860b';c.lineWidth=L*.14;c.beginPath();c.ellipse(0,H*.08,R,R*.55,0,0,7);c.stroke();c.strokeStyle='#ffe07a';c.lineWidth=L*.05;c.beginPath();c.ellipse(0,H*.06,R,R*.55,0,Math.PI*1.1,Math.PI*1.9);c.stroke();
+    g=c.createRadialGradient(-L*.04,-R*.62,1,0,-R*.55,L*.16);g.addColorStop(0,'#ffffff');g.addColorStop(.4,'#9ad8ff');g.addColorStop(1,'#2a6aa8');c.fillStyle=g;c.beginPath();c.moveTo(0,-R*.95);c.lineTo(L*.14,-R*.58);c.lineTo(0,-R*.25);c.lineTo(-L*.14,-R*.58);c.closePath();c.fill();
+    glint(L*.12,-R*.9,L*.12);return;}
+  if(id==='crawfish'){const w=Math.sin(time*.02)*.15;c.fillStyle='#a8362a';for(let i=0;i<5;i++){c.beginPath();c.ellipse(-L*.12-i*L*.07,0,L*.05,H*.32-i*H*.03,0,0,7);c.fill();}
+    c.beginPath();c.moveTo(-L*.42,0);c.lineTo(-L*.52,-H*.3);c.lineTo(-L*.52,H*.3);c.closePath();c.fill();
+    g=c.createLinearGradient(0,-H*.4,0,H*.4);g.addColorStop(0,'#c84a32');g.addColorStop(1,'#7a2418');c.fillStyle=g;c.beginPath();c.ellipse(L*.08,0,L*.2,H*.42,0,0,7);c.fill();
+    for(const s of [-1,1]){c.save();c.translate(L*.26,s*H*.2);c.rotate(s*(.4+w));c.fillStyle='#b23a2a';c.fillRect(0,-L*.025,L*.16,L*.05);c.beginPath();c.ellipse(L*.24,0,L*.1,L*.055,0,0,7);c.fill();c.restore();}
+    c.strokeStyle='#5a1a12';c.lineWidth=L*.012;c.beginPath();c.moveTo(L*.27,-H*.1);c.quadraticCurveTo(L*.5,-H*.6+w*20,L*.6,-H*.3);c.moveTo(L*.27,H*.05);c.quadraticCurveTo(L*.52,-H*.2,L*.62,H*.1+w*20);c.stroke();
+    c.fillStyle='#111';c.beginPath();c.arc(L*.24,-H*.14,L*.018,0,7);c.fill();return;}
+  if(id==='frog'){const k=Math.sin(time*.012);g=c.createRadialGradient(L*.05,-H*.15,2,0,0,L*.4);g.addColorStop(0,'#8ac25a');g.addColorStop(1,'#3a6a2a');
+    c.strokeStyle='#4a7a32';c.lineWidth=L*.08;c.lineCap='round';c.beginPath();c.moveTo(-L*.15,H*.05);c.lineTo(-L*.38,H*(.2+.15*k));c.lineTo(-L*.56,H*(.05+.3*k));c.stroke();c.lineWidth=L*.05;c.beginPath();c.moveTo(L*.12,H*.15);c.lineTo(L*.22,H*.4);c.stroke();
+    c.fillStyle=g;c.beginPath();c.ellipse(0,0,L*.3,H*.32,0,0,7);c.fill();c.beginPath();c.ellipse(L*.26,-H*.06,L*.16,H*.24,0,0,7);c.fill();
+    c.fillStyle='#e8e0a0';c.beginPath();c.ellipse(L*.08,H*.18,L*.2,H*.12,0,0,7);c.fill();c.fillStyle='#d8c040';c.beginPath();c.arc(L*.3,-H*.28,L*.065,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.arc(L*.31,-H*.28,L*.035,0,7);c.fill();
+    c.fillStyle='rgba(30,60,20,.4)';for(let i=0;i<6;i++){c.beginPath();c.arc(-L*.18+i*L*.07,-H*.1+(i%2)*H*.1,L*.025,0,7);c.fill();}return;}
+  if(id==='turtle'){const k=Math.sin(time*.008);c.fillStyle='#5a5a3a';
+    for(const [lx,ly,a] of [[L*.22,H*.28,.6+k*.3],[-L*.2,H*.28,2.4-k*.3]]){c.save();c.translate(lx,ly);c.rotate(a);c.beginPath();c.ellipse(L*.08,0,L*.1,L*.04,0,0,7);c.fill();c.restore();}
+    c.beginPath();c.ellipse(L*.42,-H*.02,L*.11,H*.14,0,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.arc(L*.46,-H*.06,L*.015,0,7);c.fill();
+    c.strokeStyle='#5a5a3a';c.lineWidth=L*.04;c.beginPath();c.moveTo(-L*.36,H*.05);c.lineTo(-L*.5,H*.12);c.stroke();
+    g=c.createRadialGradient(-L*.05,-H*.3,2,0,0,L*.45);g.addColorStop(0,'#6a6440');g.addColorStop(1,'#2e2c1c');c.fillStyle=g;c.beginPath();c.moveTo(-L*.38,H*.1);c.quadraticCurveTo(-L*.3,-H*.6,0,-H*.58);c.quadraticCurveTo(L*.3,-H*.6,L*.38,H*.1);c.closePath();c.fill();
+    c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=L*.012;for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(i*L*.12,-H*.55);c.lineTo(i*L*.14,H*.08);c.stroke();}
+    c.fillStyle='rgba(110,150,80,.4)';c.beginPath();c.ellipse(-L*.1,-H*.45,L*.12,H*.08,0,0,7);c.fill();c.fillStyle='#8a8460';c.fillRect(-L*.38,H*.06,L*.76,H*.06);return;}
+}
+function rrC(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+function fishGeo(sp){const L=FL,h=L*sp.h,nose=sp.snout?.34*L:sp.bill?.44*L:.5*L,tb=-.4*L;return{L,h,nose,tb};}
+function fishSprite(sp,small){
+  const key=sp.id+(small?'_t':''),ss=small?.75:FSS;if(FS[key])return FS[key];
   const {L,h,nose,tb}=fishGeo(sp);
-  const left=.46*L+6,right=(sp.snout?.67:.54)*L+6,cw=left+right,ch=h*1.3+14;
-  const c=document.createElement('canvas');c.width=Math.ceil(cw*FSS);c.height=Math.ceil(ch*FSS);const x=c.getContext('2d');x.scale(FSS,FSS);x.translate(left,ch/2);
+  const hp=sp.hump||0,left=.46*L+6,right=(sp.snout?.67:sp.bill?.63:.54)*L+6,cw=left+right,ch=h*(1.3+hp*1.4)+14;
+  const c=document.createElement('canvas');c.width=Math.ceil(cw*ss);c.height=Math.ceil(ch*ss);const x=c.getContext('2d');x.scale(ss,ss);x.translate(left,ch/2+hp*h*.35);
   x.lineCap='round';x.lineJoin='round';
-  const body=()=>{x.beginPath();x.moveTo(nose,h*.04);x.bezierCurveTo(nose-.1*L,-h*.64,-.2*L,-h*.58,tb,-h*.13);x.quadraticCurveTo(tb-.035*L,0,tb,h*.13);x.bezierCurveTo(-.2*L,h*.58,nose-.12*L,h*.6,nose,h*.04);x.closePath();};
+  const body=()=>{x.beginPath();x.moveTo(nose,h*.04);x.bezierCurveTo(nose-.1*L,-h*(.64+hp*1.3),-.2*L,-h*(.58+hp*.6),tb,-h*.13);x.quadraticCurveTo(tb-.035*L,0,tb,h*.13);x.bezierCurveTo(-.2*L,h*.58,nose-.12*L,h*.6,nose,h*.04);x.closePath();};
   if(sp.snout){const sg=x.createLinearGradient(0,-h*.22,0,h*.22);sg.addColorStop(0,sp.back);sg.addColorStop(.5,sp.col);sg.addColorStop(1,sp.belly);x.fillStyle=sg;
     x.beginPath();x.moveTo(.27*L,-h*.26);x.quadraticCurveTo(.5*L,-h*.13,.635*L,-h*.045);x.quadraticCurveTo(.65*L,0,.635*L,h*.05);x.quadraticCurveTo(.5*L,h*.15,.27*L,h*.27);x.closePath();x.fill();
     x.fillStyle='rgba(25,28,15,.45)';for(let k=0;k<8;k++){x.beginPath();x.arc(.36*L+k*.03*L,-h*.08+((k*7)%3)*h*.04,1.4,0,7);x.fill();}
     x.fillStyle='rgba(245,240,215,.85)';for(let k=0;k<13;k++){const xx=.35*L+k*.021*L;x.beginPath();x.moveTo(xx,h*.015);x.lineTo(xx+1.2,h*.075);x.lineTo(xx+2.4,h*.015);x.fill();}
     x.strokeStyle='rgba(0,0,0,.5)';x.lineWidth=1.2;x.beginPath();x.moveTo(.32*L,h*.02);x.lineTo(.64*L,h*.005);x.stroke();
     x.fillStyle='rgba(0,0,0,.6)';x.beginPath();x.arc(.62*L,-h*.03,1.2,0,7);x.fill();}
-  body();let g=x.createLinearGradient(0,-h*.55,0,h*.55);g.addColorStop(0,mix(sp.back,'#000000',.3));g.addColorStop(.22,sp.back);g.addColorStop(.48,sp.col);g.addColorStop(.7,sp.col);g.addColorStop(.86,sp.belly);g.addColorStop(1,mix(sp.belly,'#000000',.2));
+  if(sp.bill){const sg=x.createLinearGradient(0,-h*.3,0,h*.3);sg.addColorStop(0,sp.back);sg.addColorStop(.5,sp.col);sg.addColorStop(1,sp.belly);x.fillStyle=sg;x.beginPath();
+    if(sp.bill==='duck'){x.moveTo(.34*L,-h*.34);x.quadraticCurveTo(.5*L,-h*.22,.58*L,-h*.07);x.quadraticCurveTo(.605*L,0,.58*L,h*.08);x.quadraticCurveTo(.5*L,h*.22,.34*L,h*.36);}
+    else{x.moveTo(.34*L,-h*.38);x.quadraticCurveTo(.5*L,-h*.24,.62*L,-h*.03);x.quadraticCurveTo(.5*L,h*.12,.34*L,h*.3);}
+    x.closePath();x.fill();
+    if(sp.bill==='duck'){x.strokeStyle='rgba(0,0,0,.5)';x.lineWidth=1.3;x.beginPath();x.moveTo(.38*L,h*.05);x.lineTo(.585*L,h*.02);x.stroke();x.fillStyle='rgba(245,240,215,.8)';for(let k=0;k<9;k++){const xx=.4*L+k*.02*L;x.beginPath();x.moveTo(xx,h*.045);x.lineTo(xx+1,h*.1);x.lineTo(xx+2,h*.045);x.fill();}}
+    else{x.fillStyle='rgba(255,255,255,.18)';x.beginPath();x.moveTo(.36*L,-h*.3);x.quadraticCurveTo(.5*L,-h*.2,.6*L,-h*.04);x.lineTo(.36*L,-h*.18);x.fill();}}
+  body();let g=x.createLinearGradient(0,-h*(.55+hp),0,h*.55);g.addColorStop(0,mix(sp.back,'#000000',.3));g.addColorStop(.22,sp.back);g.addColorStop(.48,sp.col);g.addColorStop(.7,sp.col);g.addColorStop(.86,sp.belly);g.addColorStop(1,mix(sp.belly,'#000000',.2));
   x.fillStyle=g;x.fill();
-  const gx=sp.snout?.24*L:nose-.2*L;
+  const gx=sp.snout?.24*L:sp.bill?.22*L:nose-.2*L;
   x.save();body();x.clip();
   const R=mulberry(sp.id.length*97+sp.len);
   if(sp.id==='bluegill'){x.fillStyle='rgba(28,52,40,.3)';for(let k=0;k<7;k++){x.beginPath();x.ellipse(-.3*L+k*.085*L,-.05*h,.022*L,.5*h,0,0,7);x.fill();}
@@ -1215,15 +1377,17 @@ function fishSprite(sp){
     for(let k=0;k<70;k++){x.fillStyle='rgba(14,18,10,.55)';x.beginPath();x.arc(-.46*L+R()*.86*L,(R()-.78)*.72*h,1+R()*1.9,0,7);x.fill();}}
   if(sp.id==='cat'){for(let k=0;k<28;k++){x.fillStyle='rgba(18,20,24,.45)';x.beginPath();x.arc(-.37*L+R()*.62*L,(R()-.65)*.7*h,1.5+R()*2.6,0,7);x.fill();}}
   if(sp.id==='gar'){for(let k=0;k<44;k++){x.fillStyle='rgba(24,28,14,.45)';x.beginPath();x.arc(-.42*L+R()*.5*L,(R()-.5)*.9*h,1.5+R()*3,0,7);x.fill();}}
+  patDraw(x,sp,L,h,nose,tb,gx,R);
   // scales
-  if(sp.id!=='cat'){const s=sp.id==='crown'?h*.2:sp.id==='gar'?h*.34:Math.max(7,h*.12);const headX=gx-.01*L;
+  const scT=sp.sc||(sp.id==='cat'?'none':sp.id==='crown'?'big':sp.id==='gar'?'ganoid':'n'),gold=sp.id==='crown',bigS=scT==='big';
+  if(scT!=='none'){const s=bigS?h*.2:scT==='ganoid'?h*.34:Math.max(7,h*.12);const headX=gx-.01*L;
     for(let yy=-h*.56,r=0;yy<h*.56;yy+=s*.62,r++)for(let xx=tb-s;xx<headX;xx+=s*.8){const cx=xx+(r%2)*s*.4;
-      if(sp.id==='gar'){x.strokeStyle='rgba(20,25,10,.28)';x.lineWidth=1;x.beginPath();x.moveTo(cx,yy-s*.3);x.lineTo(cx+s*.4,yy);x.lineTo(cx,yy+s*.3);x.lineTo(cx-s*.4,yy);x.closePath();x.stroke();continue;}
-      x.strokeStyle=sp.id==='crown'?'rgba(150,70,0,.55)':'rgba(0,0,0,.14)';x.lineWidth=sp.id==='crown'?1.8:1.1;x.beginPath();x.arc(cx,yy,s*.55,Math.PI-1.15,Math.PI+1.15);x.stroke();
-      x.strokeStyle=sp.id==='crown'?'rgba(255,250,200,.4)':'rgba(255,255,255,.08)';x.lineWidth=1;x.beginPath();x.arc(cx+1.2,yy-.6,s*.5,Math.PI-1,Math.PI+1);x.stroke();}}
+      if(scT==='ganoid'){x.strokeStyle='rgba(20,25,10,.28)';x.lineWidth=1;x.beginPath();x.moveTo(cx,yy-s*.3);x.lineTo(cx+s*.4,yy);x.lineTo(cx,yy+s*.3);x.lineTo(cx-s*.4,yy);x.closePath();x.stroke();continue;}
+      x.strokeStyle=gold?'rgba(150,70,0,.55)':bigS?'rgba(0,0,0,.22)':'rgba(0,0,0,.14)';x.lineWidth=bigS?1.8:1.1;x.beginPath();x.arc(cx,yy,s*.55,Math.PI-1.15,Math.PI+1.15);x.stroke();
+      x.strokeStyle=gold?'rgba(255,250,200,.4)':bigS?'rgba(255,255,255,.13)':'rgba(255,255,255,.08)';x.lineWidth=1;x.beginPath();x.arc(cx+1.2,yy-.6,s*.5,Math.PI-1,Math.PI+1);x.stroke();}}
   if(sp.id==='crown'){g=x.createLinearGradient(0,-h*.5,0,h*.5);g.addColorStop(.18,'rgba(255,255,255,0)');g.addColorStop(.33,'rgba(255,250,215,.4)');g.addColorStop(.48,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(-L,-h,2*L,2*h);}
   // lateral line
-  if(sp.id!=='cat'){x.fillStyle='rgba(255,255,255,.3)';for(let xx=tb+.04*L;xx<gx-.02*L;xx+=4){const u=(xx-tb)/(gx-tb);x.fillRect(xx,-h*.1-Math.sin(u*Math.PI)*h*.08,2.2,1);}}
+  if(scT!=='none'){x.fillStyle='rgba(255,255,255,.3)';for(let xx=tb+.04*L;xx<gx-.02*L;xx+=4){const u=(xx-tb)/(gx-tb);x.fillRect(xx,-h*.1-Math.sin(u*Math.PI)*h*.08,2.2,1);}}
   // iridescence
   g=x.createLinearGradient(tb,0,nose,0);g.addColorStop(0,'rgba(120,255,220,0)');g.addColorStop(.3,'rgba(120,230,255,.12)');g.addColorStop(.55,'rgba(255,140,220,.08)');g.addColorStop(.8,'rgba(255,230,140,.1)');g.addColorStop(1,'rgba(255,230,140,0)');
   x.fillStyle=g;x.fillRect(-L,-h*.32,2*L,h*.5);
@@ -1242,19 +1406,19 @@ function fishSprite(sp){
   x.strokeStyle='rgba(20,10,10,.6)';x.lineWidth=1.7;x.beginPath();
   if(sp.id==='bass'){x.moveTo(nose,h*.04);x.quadraticCurveTo(nose-.06*L,h*.17,nose-.16*L,h*.1);}
   else if(sp.id==='cat'){x.moveTo(nose,h*.1);x.quadraticCurveTo(nose-.04*L,h*.2,nose-.09*L,h*.15);}
-  else if(!sp.snout){x.moveTo(nose,h*.04);x.quadraticCurveTo(nose-.03*L,h*.08,nose-.06*L,h*.07);}
+  else if(!sp.snout&&!sp.bill){x.moveTo(nose,h*.04);x.quadraticCurveTo(nose-.03*L,h*.08,nose-.06*L,h*.07);}
   x.stroke();
-  if(!sp.snout){x.strokeStyle='rgba(255,255,255,.18)';x.lineWidth=1;x.beginPath();x.moveTo(nose-.005*L,h*.0);x.quadraticCurveTo(nose-.04*L,h*.02,nose-.07*L,h*.01);x.stroke();}
+  if(!sp.snout&&!sp.bill){x.strokeStyle='rgba(255,255,255,.18)';x.lineWidth=1;x.beginPath();x.moveTo(nose-.005*L,h*.0);x.quadraticCurveTo(nose-.04*L,h*.02,nose-.07*L,h*.01);x.stroke();}
   // eye
-  const ex=sp.snout?.26*L:nose-(sp.id==='bass'?.12:sp.id==='cat'?.1:.13)*L,ey=sp.id==='cat'?-h*.02:-h*.1;let er=Math.min(h*.11,L*.04);if(sp.id==='cat')er*=.7;
+  const catEye=sp.whisk===1||sp.whisk==='chin';const ex=sp.snout?.26*L:sp.bill?.31*L:nose-(sp.id==='bass'||sp.id==='smallmouth'?.12:catEye?.1:.13)*L,ey=catEye?-h*.02:sp.bill?-h*.14:-h*.1;let er=Math.min(h*.11,L*.04);if(catEye)er*=.7;if(sp.eel)er=Math.max(er,3.2);
   g=x.createRadialGradient(ex,ey,er*.8,ex,ey,er*1.7);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.beginPath();x.arc(ex,ey,er*1.7,0,7);x.fill();
-  const ic=IRIS[sp.id];g=x.createRadialGradient(ex,ey,er*.3,ex,ey,er);g.addColorStop(0,mix(ic,'#000000',.3));g.addColorStop(.7,ic);g.addColorStop(1,mix(ic,'#000000',.6));
+  const ic=IRIS[sp.id]||sp.iris||'#c8a040';g=x.createRadialGradient(ex,ey,er*.3,ex,ey,er);g.addColorStop(0,mix(ic,'#000000',.3));g.addColorStop(.7,ic);g.addColorStop(1,mix(ic,'#000000',.6));
   x.fillStyle=g;x.beginPath();x.arc(ex,ey,er,0,7);x.fill();
   x.fillStyle='#050608';x.beginPath();x.arc(ex+er*.08,ey,er*.55,0,7);x.fill();
   x.fillStyle='rgba(255,255,255,.95)';x.beginPath();x.ellipse(ex-er*.25,ey-er*.32,er*.27,er*.18,-.5,0,7);x.fill();
   x.fillStyle='rgba(255,255,255,.55)';x.beginPath();x.arc(ex+er*.3,ey+er*.28,er*.1,0,7);x.fill();
   if(sp.id==='bluegill'){x.fillStyle='#101a30';x.beginPath();x.ellipse(gx-.02*L,-h*.04,.035*L,.1*h,.1,0,7);x.fill();x.fillStyle='rgba(120,160,255,.35)';x.beginPath();x.ellipse(gx-.025*L,-h*.07,.012*L,.03*h,0,0,7);x.fill();}
-  return FS[sp.id]={c,left,cw,ch};
+  return FS[key]={c,left,cw,ch,ss,oy:hp*h*.35};
 }
 function pointOn(E,f){if(E.length===1)return E[0];const t=f*(E.length-1);const i=Math.min(E.length-2,Math.floor(t));const u=t-i;return[lerp(E[i][0],E[i+1][0],u),lerp(E[i][1],E[i+1][1],u)];}
 function finDraw(c,P,col,alpha,lw){
@@ -1268,6 +1432,7 @@ function finDraw(c,P,col,alpha,lw){
 }
 function tailPts(type,L,h,sweep,tb){
   const th=type==='round'?Math.max(h*1.15,.17*L):Math.max(h,.3*L);const lx=-.22*L*sweep;
+  if(type==='heter')return[[tb,-.14*h],[tb+lx*.7,-.95*th],[tb+lx*1.2,-1.15*th],[tb+lx*.75,-.25*th],[tb+lx*.55,.42*th],[tb,.14*h]];
   if(type==='round')return[[tb,-.16*h],[tb+lx*.5,-.48*th],[tb+lx*.95,-.26*th],[tb+lx*1.04,0],[tb+lx*.95,.26*th],[tb+lx*.5,.48*th],[tb,.16*h]];
   const notch=type==='dfork'?.42:type==='rfork'?.8:.6,spread=type==='dfork'?.7:.62;
   return[[tb,-.14*h],[tb+lx*.55,-spread*.66*th],[tb+lx,-spread*th],[tb+lx*notch,0],[tb+lx,spread*th],[tb+lx*.55,spread*.66*th],[tb,.14*h]];
@@ -1283,28 +1448,30 @@ function drawBoot(c,L,h){
 function drawFish(c,sp,x,y,len,face,time,o={}){
   const {L,h,nose,tb}=fishGeo(sp);const k=len/FL;
   c.save();c.translate(x,y);if(o.arc)c.rotate(o.arc*Math.sign(face||1));c.scale((face||1)*k,k);
-  if(sp.boot){drawBoot(c,L,L*.5);c.restore();return;}
-  const S=fishSprite(sp);const lw=Math.max(1,.7/k);
+  if(sp.nf){drawObj(c,sp,L,time);c.restore();return;}
+  const S=fishSprite(sp,o.thumb);const lw=Math.max(1,.7/k);
   const sw=o.swim||1;const ph=time*.011*sw+x*.02;const wig=Math.sin(ph)*.16*Math.min(1.8,sw);
-  const split=-.06*L,rr=wig*.5;const fd=FINS[sp.id]||FINS.def;const fc=FINC[sp.id];
-  if(sp.crown&&o.glow!==false){const a=.5+.2*Math.sin(time*.004);const g=c.createRadialGradient(0,0,0,0,0,L*.75);g.addColorStop(0,`rgba(255,215,90,${.5*a})`);g.addColorStop(1,'rgba(255,215,90,0)');c.fillStyle=g;c.fillRect(-L*.8,-L*.7,L*1.6,L*1.4);}
+  const split=-.06*L,rr=wig*(sp.eel?1.3:.5);const fd=FINS[sp.fins||sp.id]||FINS.def;const fc=FINC[sp.id]||sp.fin||sp.back;const tailT=sp.tail||fd.tail;
+  if((sp.crown||sp.legend)&&o.glow!==false){const a=.5+.2*Math.sin(time*.004),gc=sp.glow||'#ffd75a';const g=c.createRadialGradient(0,0,0,0,0,L*.75);g.addColorStop(0,mixA(gc,gc,0,.5*a));g.addColorStop(1,mixA(gc,gc,0,0));c.fillStyle=g;c.fillRect(-L*.8,-L*.7,L*1.6,L*1.4);}
   // back fins
   for(const d of fd.d)finDraw(c,d.map(p=>[p[0]*L,p[1]*h]),fc,.82,lw);
   finDraw(c,fd.a.map(p=>[p[0]*L,p[1]*h]),fc,.75,lw);
   // rear segment + tail
   c.save();c.translate(split,0);c.rotate(rr);c.translate(-split,0);
   c.save();c.translate(tb,0);c.rotate(wig*.7);c.translate(-tb,0);
-  finDraw(c,tailPts(fd.tail,L,h,.7+.3*Math.abs(Math.cos(ph)),tb),fc,.85,lw);c.restore();
-  const sl=S.left+split+2;c.drawImage(S.c,0,0,sl*FSS,S.ch*FSS,-S.left,-S.ch/2,sl,S.ch);
+  finDraw(c,tailPts(tailT,L,h,.7+.3*Math.abs(Math.cos(ph)),tb),fc,.85,lw);c.restore();
+  const sl=S.left+split+2,oy=-S.ch/2-S.oy;c.drawImage(S.c,0,0,sl*S.ss,S.ch*S.ss,-S.left,oy,sl,S.ch);
   c.restore();
-  const fx=S.left+split;c.drawImage(S.c,fx*FSS,0,Math.min(S.c.width-fx*FSS,(S.cw-fx)*FSS),S.ch*FSS,split,-S.ch/2,S.cw-fx,S.ch);
+  const fx=S.left+split;c.drawImage(S.c,fx*S.ss,0,Math.min(S.c.width-fx*S.ss,(S.cw-fx)*S.ss),S.ch*S.ss,split,-S.ch/2-S.oy,S.cw-fx,S.ch);
   // pelvic + pectoral
-  finDraw(c,fd.p.map(p=>[p[0]*L,p[1]*h]),fc,.7,lw);
+  if(fd.p)finDraw(c,fd.p.map(p=>[p[0]*L,p[1]*h]),fc,.7,lw);
   const pc=fd.pc,pb=[pc[0]*L,pc[1]*h],pl=pc[2]*L,flap=Math.sin(time*.018*sw+x*.05)*.38;const th0=Math.PI-.45+flap;
   const pts=[[pb[0],pb[1]-3]];for(const [s,m] of [[-.34,.8],[-.12,1],[.12,1],[.34,.82]])pts.push([pb[0]+Math.cos(th0+s)*pl*m,pb[1]+Math.sin(th0+s)*pl*m]);pts.push([pb[0],pb[1]+3]);
   finDraw(c,pts,fc,.55,lw);
-  if(sp.whisk||sp.crown){const wv=Math.sin(time*.006)*3;c.strokeStyle='rgba(28,24,20,.8)';c.lineWidth=Math.max(1.2,.9/k);const mx=nose-.01*L,my=h*.1;
-    c.beginPath();if(sp.whisk){c.moveTo(mx,my);c.quadraticCurveTo(mx+.1*L,h*.35+wv,mx+.12*L,h*.62);c.moveTo(mx,my-h*.04);c.quadraticCurveTo(mx+.14*L,h*.02,mx+.2*L,h*.28+wv);c.moveTo(mx-.03*L,my+h*.06);c.quadraticCurveTo(mx,h*.42,mx-.03*L,h*.66+wv);c.moveTo(mx-.06*L,my+h*.08);c.quadraticCurveTo(mx-.05*L,h*.38,mx-.08*L,h*.58);}
+  if(sp.whisk||sp.crown||sp.barb){const wv=Math.sin(time*.006)*3;c.strokeStyle='rgba(28,24,20,.8)';c.lineWidth=Math.max(1.2,.9/k);const mx=nose-.01*L,my=h*.1;
+    c.beginPath();if(sp.whisk==='chin'){c.moveTo(nose-.03*L,h*.3);c.quadraticCurveTo(nose-.02*L,h*.6+wv,nose-.05*L,h*.8);}
+    else if(sp.whisk==='stur'){c.strokeStyle='rgba(200,190,170,.85)';for(let i=0;i<4;i++){const bx=.46*L+i*.025*L;c.moveTo(bx,h*.12);c.quadraticCurveTo(bx+wv*.5,h*.32,bx-.01*L,h*.48);}}
+    else if(sp.whisk){c.moveTo(mx,my);c.quadraticCurveTo(mx+.1*L,h*.35+wv,mx+.12*L,h*.62);c.moveTo(mx,my-h*.04);c.quadraticCurveTo(mx+.14*L,h*.02,mx+.2*L,h*.28+wv);c.moveTo(mx-.03*L,my+h*.06);c.quadraticCurveTo(mx,h*.42,mx-.03*L,h*.66+wv);c.moveTo(mx-.06*L,my+h*.08);c.quadraticCurveTo(mx-.05*L,h*.38,mx-.08*L,h*.58);}
     else{c.strokeStyle='rgba(150,80,10,.8)';c.moveTo(mx,my);c.quadraticCurveTo(mx+.04*L,h*.2+wv*.5,mx+.03*L,h*.3);}c.stroke();}
   if(sp.crown){const cx=.14*L,cy=-.48*h,s=L*.055;const g=c.createLinearGradient(0,cy-s*1.2,0,cy);g.addColorStop(0,'#fff3b0');g.addColorStop(.5,'#ffd34d');g.addColorStop(1,'#b8780a');
     c.fillStyle=g;c.strokeStyle='#6a4500';c.lineWidth=Math.max(1,.8/k);c.beginPath();c.moveTo(cx-s,cy);c.lineTo(cx-s*1.05,cy-s*.95);c.lineTo(cx-s*.5,cy-s*.45);c.lineTo(cx,cy-s*1.2);c.lineTo(cx+s*.5,cy-s*.45);c.lineTo(cx+s*1.05,cy-s*.95);c.lineTo(cx+s,cy);c.closePath();c.fill();c.stroke();
@@ -1469,7 +1636,7 @@ function drawLure(x,y,spin,time){
 let last=performance.now();
 function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;
   if(ov.hidden)update(dt);
-  else{ambient(dt);for(const f of fish){f.t+=dt;f.face+=(f.dir-f.face)*Math.min(1,dt*6);if(f.st!=='hooked'&&!f.sp.boot){f.x+=f.dir*f.spd*dt*.6;f.y=f.by+Math.sin(f.t*.9+f.ph)*6;}}
+  else{ambient(dt);for(const f of fish){f.t+=dt;f.face+=(f.dir-f.face)*Math.min(1,dt*6);if(f.st!=='hooked'&&!f.sp.rest){f.x+=f.dir*f.spd*dt*.6;f.y=f.by+Math.sin(f.t*.9+f.ph)*6;}}
     fish=fish.filter(f=>f.x>-160&&f.x<W+160);while(freeFish()<10)spawnFish(false);
     for(const r of ripples){r.r+=40*dt;r.a-=dt*.8;}ripples=ripples.filter(r=>r.a>0);
     for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;if(!p.b)p.vy+=420*dt;p.life-=dt;}parts=parts.filter(p=>p.life>0);
