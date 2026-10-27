@@ -411,6 +411,12 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <p>Aim, bank off the walls and match three to pop. Knock out the bubbles holding a cluster up and watch the whole thing drop, before the ceiling comes down.</p>
         <span class="price" data-game="bubble">Rounds 1 to 3 free. Full game $2.99</span>
       </a>
+      <a class="row live" href="/dirt-line/">
+        <h3>Dirt Line</h3>
+        <span class="status">Play</span>
+        <p>3D BMX racing. Race three riders from the gate, pump the rollers, clear the doubles and land square, or hit the Trick Jam with nine tricks to chain. Seven tracks from Rookie Loop to Night Session.</p>
+        <span class="price" data-game="dirt-line">First Ride, Rookie Loop and Pro Rhythm free. Full game $2.99</span>
+      </a>
       <a class="row live" href="/grand-prix/">
         <h3>Grand Prix</h3>
         <span class="status">Play</span>
@@ -468,7 +474,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
       <a class="row pass" id="passRow" href="/shop/?add=all-access">
         <h3>All-Access Pass</h3>
         <span class="status">$14.99</span>
-        <p>All eight paid games, fully unlocked, plus every paid game added later. Save $12.93 over buying them one by one.</p>
+        <p>All nine paid games, fully unlocked, plus every paid game added later. Save $15.92 over buying them one by one.</p>
       </a>
       <p class="pricing"><a href="/shop/" style="color:var(--black)">Shop the full games</a> · Bought one? <button class="unlock-link" id="unlockBtn" type="button">Enter your unlock code</button></p>
     </section>
@@ -611,7 +617,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 // Show what this device has unlocked
 (function(){
   if(!window.DARE)return;
-  const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble'];
+  const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble','dirt-line'];
   function paint(){
     document.querySelectorAll('[data-game]').forEach(el=>{
       const g=el.dataset.game;

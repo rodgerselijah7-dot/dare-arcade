@@ -1,0 +1,29 @@
+{
+  "name": "Dirt Line",
+  "short_name": "Dirt Line",
+  "description": "3D BMX racing and tricks. Race from the gate, pump the rollers, clear the doubles and land square. By Dontae Amare.",
+  "start_url": "/dirt-line/",
+  "scope": "/dirt-line/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#15120f",
+  "theme_color": "#15120f",
+  "icons": [
+    {
+      "src": "/dirt-line/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/dirt-line/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/dirt-line/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /2048/                 DARE 2048 (single-file sliding number puzzle + icons + manifest)
 /1010/                 DARE 1010 (single-file 10x10 block puzzle + icons + manifest)
 /bubble/               DARE Bubble Blaster (single-file canvas bubble shooter + icons + manifest)
+/dirt-line/            Dirt Line (single-file 3D BMX racer + icons + manifest; loads three.js r128 from cdnjs)
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
@@ -29,7 +30,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /truth-or-dare/        Truth or Dare (single-file card game + icons + manifest; pass-the-phone and online rooms)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush, Rare Rumble and Truth or Dare online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
-/api/scores.js         Live Fire Range leaderboards (Upstash Redis)
+/api/scores.js         Live Fire Range and Dirt Line leaderboards (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -97,7 +98,7 @@ Every push to `main` redeploys automatically.
 
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
-- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99. All-Access Pass $14.99 (saves $9.94).
+- Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99, Square Up $2.99, Dirt Line $2.99. All-Access Pass $14.99 (saves $15.92).
 - Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare.
 
 ## DARE Bubble Blaster
@@ -106,6 +107,13 @@ Every push to `main` redeploys automatically.
 - Every 6 misses the ceiling drops a new row (the gold bar at the top counts down). The game ends when a bubble crosses the dashed line.
 - Home screen (best, total popped, top round, Continue / New game) and a separate game screen. Saved on the phone (localStorage keys `dbub-*`).
 - Paid game ($2.99, also in the All-Access Pass): rounds 1 to 3 are the free tryout. Clearing round 3, or continuing a saved game past it, shows the unlock panel from `/dare-unlock.js`.
+
+## Dirt Line
+- 3D BMX racer (three.js r128). Custom 2D bike physics at 240 Hz drives a 3D rider and bike; crashes switch the rider to a ragdoll while the bike stays on the ground.
+- Race mode: three AI riders from the gate, medals per track. Trick Jam: score run with nine tricks (trick, style and flair buttons plus a lean), combos and landing grades. Ghosts, replays with slow-mo, photo mode, a garage (tag, number, kit, frame, helmet) and a guided First Ride tutorial.
+- Paid game ($2.99, also in the All-Access Pass): First Ride, Rookie Loop and Pro Rhythm are the free tryout. Big Air, Desert Mesa, Pine Ridge and Night Session show the unlock panel from `/dare-unlock.js`.
+- Leaderboards use `/api/scores?game=dl`: best race time per track (`t-<track>`) and best Trick Jam score (`j-<track>`) in `arc:dl:*`, rider names in `arc:dl:names`. The page runs in arcade mode because it sets `window.DL_ARCADE=true` before loading.
+- Progress is saved on the phone (localStorage keys `dirtline*` and `dl_pid`).
 
 ## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Truth or Dare)
 - `dare-play.js` is shared by all five games. It adds:
