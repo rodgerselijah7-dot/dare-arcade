@@ -1,0 +1,16 @@
+{
+  "name": "Lunker Lake",
+  "short_name": "Lunker Lake",
+  "description": "Arcade fishing from sunrise to sundown across four lakes and ponds, with rods, outfits and a daily fish market. By Dontae Amare.",
+  "start_url": "/lunker-lake/",
+  "scope": "/lunker-lake/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0b1a24",
+  "theme_color": "#0b1a24",
+  "icons": [
+    { "src": "/lunker-lake/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/lunker-lake/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/lunker-lake/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
