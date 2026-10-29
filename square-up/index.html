@@ -179,7 +179,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </div>
 <div class="combo" id="combo" style="opacity:0"><b id="comboTxt">x0</b><span class="lbl">combo</span><div class="bar"><i id="comboBar"></i></div></div>
 <div class="rage" id="rage" hidden>RAGE · DOUBLE DAMAGE</div>
-<div class="boss" id="boss" hidden><span id="bossName">KINGPIN</span><div class="bar"><i id="bossFill"></i></div></div>
+<div class="boss" id="boss" hidden><span id="bossName">THE DEAD BOSS</span><div class="bar"><i id="bossFill"></i></div></div>
 <div class="weap" id="weap" hidden></div>
 <button class="dash" id="dashBtn" hidden aria-label="Dash"><i id="dashFill"></i><span>DASH</span></button>
 <button class="nade" id="nadeBtn" hidden aria-label="Throw grenade"><span>NADE</span><b id="nadeN">3</b></button>
@@ -880,13 +880,13 @@ function newRun(slots){
   buildWeapBar();lastHud={};musicLive=true;$('downMsg').hidden=true;$('waitMsg').hidden=true;
   if(isGuest()){state='play';wave=1;toSpawn=0}else startWave(1);
 }
-const FREE_WAVES=5; // waves 1 to 5 and the first Kingpin fight are the free tryout
+const FREE_WAVES=5; // waves 1 to 5 and the first Dead Boss fight are the free tryout
 function startWave(n){
   if(n>FREE_WAVES&&window.DARE&&!DARE.owned('square-up')){state='gate';sticks.L=sticks.R=null;mouse.down=false;keys.Space=false;musicLive=false;
-    DARE.gate('square-up',()=>{state='break';musicLive=true;last=performance.now();startWave(n)},{title:'You took down the Kingpin',exitLabel:'End run',onExit:()=>{state='break';gameOver()}});
+    DARE.gate('square-up',()=>{state='break';musicLive=true;last=performance.now();startWave(n)},{title:'You took down The Dead Boss',exitLabel:'End run',onExit:()=>{state='break';gameOver()}});
     return}
   wave=n;toSpawn=Math.round((6+n*4)*(1+.35*(PL.length-1)));spawnT=1.4;state='play';
-  if(n%5===0){toSpawn=Math.round(toSpawn*.65);spawnBoss();fx('t','WAVE '+n,'The Kingpin is on the block');fx('s','roar')}
+  if(n%5===0){toSpawn=Math.round(toSpawn*.65);spawnBoss();fx('t','WAVE '+n,'The Dead Boss is on the block');fx('s','roar')}
   else{fx('t','WAVE '+n,n===1?MAP.name:pick(['Here they come','Stay moving','They smell you','No sleep tonight']));fx('s','wave')}}
 
 /* effects that every phone in a match sees: the host runs them and queues them for guests */
@@ -1098,7 +1098,7 @@ function killZ(z,nx,ny,o){o=o||{};z.dead=true;kills++;combo++;comboT=P.comboTime
   if(P.leech){const c=nearestLive(z.x,z.y);if(c){c.leechN++;if(c.leechN>=5){c.leechN=0;c.hp=Math.min(P.maxhp,c.hp+P.leech)}}}
   const fl=(z.crawl?1:0)|(z.armL?0:2)|(z.armR?0:4)|(z.headless?8:0)|(o.noCorpse?16:0),dir=(nx||0)>=0?1:-1;
   killFx(z.x,z.y,z.type,z.face,fl,pts,dir,z.look);netEv('k',Math.round(z.x),Math.round(z.y),TYPES.indexOf(z.type),Math.round(z.face*10),fl,pts,dir,z.id);
-  if(z.type==='boss'){bossRef=null;dropPick(z.x-20,z.y,'ammo');dropPick(z.x+20,z.y,'hp');dropPick(z.x,z.y+20,'rage');fx('t','KINGPIN DOWN','+'+pts)}
+  if(z.type==='boss'){bossRef=null;dropPick(z.x-20,z.y,'ammo');dropPick(z.x+20,z.y,'hp');dropPick(z.x,z.y+20,'rage');fx('t','DEAD BOSS DOWN','+'+pts)}
   else if(z.type==='brute'&&Math.random()<.5)dropPick(z.x,z.y,Math.random()<.5?'ammo':'hp');
   else if(Math.random()<.05*(PL.length>1?1.4:1))dropPick(z.x,z.y,Math.random()<.12?'rage':Math.random()<.4?'hp':'ammo');
   WEAP.forEach((w,i)=>{if(!w.unlocked&&combo>=w.unlock){for(const pl of PL)pl.ammo[i]=Math.round(w.give*P.ammo);fx('ul',i)}})}
