@@ -40,11 +40,11 @@ button:focus-visible{outline:3px solid var(--plate);outline-offset:2px}
 .stat{display:flex;flex-direction:column;line-height:1;text-shadow:0 1px 6px rgba(0,0,0,.55)}
 .stat .lbl{font-size:11px;letter-spacing:.16em;font-weight:700;color:var(--dust)}
 .stat .val{font-family:var(--f-display);font-weight:900;font-size:30px;letter-spacing:.01em}
-.stat.r{align-items:flex-end}
-.prog{flex:1;min-width:0;margin-top:14px;position:relative;height:6px;border-radius:3px;background:rgba(243,235,222,.18)}
-#progFill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:3px;background:var(--clay)}
-.tick{position:absolute;top:-3px;width:2px;height:12px;background:rgba(243,235,222,.55)}
-.tick.fin{background:var(--plate);width:3px}
+.stat.r{align-items:flex-end;margin-left:auto}
+.prog{position:absolute;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 60px);height:6px;border-radius:3px;background:rgba(21,18,15,.35);box-shadow:0 1px 6px rgba(0,0,0,.35)}
+#progFill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:3px;background:var(--clay);will-change:width}
+.tick{position:absolute;top:1px;width:2px;height:4px;margin-left:-1px;border-radius:1px;background:rgba(243,235,222,.4)}
+.tick.fin{top:-3px;height:12px;width:3px;margin-left:0;background:var(--plate)}
 #btnPause,.hbtn{pointer-events:auto;min-width:40px;height:40px;padding:0 8px;border-radius:10px;border:1px solid rgba(243,235,222,.25);
   background:rgba(21,18,15,.55);color:var(--bone);font-weight:700;font-size:15px;letter-spacing:.06em}
 #speedo{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);
@@ -56,7 +56,7 @@ button:focus-visible{outline:3px solid var(--plate);outline-offset:2px}
   text-shadow:0 2px 14px rgba(0,0,0,.6);text-wrap:balance;padding:0 16px}
 #popup .p{font-family:var(--f-display);font-weight:700;font-size:24px;color:var(--plate);text-shadow:0 2px 10px rgba(0,0,0,.6)}
 #popup.bad .t{color:#ff8a6b}
-#flash{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translateX(-50%);font-weight:700;
+#flash{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);transform:translateX(-50%);font-weight:700;
   letter-spacing:.16em;font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(21,18,15,.7);opacity:0;transition:opacity .3s;white-space:nowrap}
 #flash.show{opacity:1}
 #gateUI{position:absolute;left:50%;top:26%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -140,16 +140,18 @@ h2{margin:0;font-family:var(--f-display);font-weight:900;font-size:clamp(40px,9v
 .tl.n{left:50%;top:-14px}.tl.s{left:50%;top:110px}.tl.e{left:112px;top:50%}.tl.w{left:-14px;top:50%}
 .tl.ne{left:96px;top:4px}.tl.nw{left:0;top:4px}.tl.se{left:96px;top:92px}.tl.sw{left:0;top:92px}
 body.touch #speedo{bottom:calc(env(safe-area-inset-bottom,0px) + 196px)}
+body.touch #flash{bottom:calc(env(safe-area-inset-bottom,0px) + 252px)}
+body.touch #hud:has(#guide:not([hidden])) #flash{bottom:calc(env(safe-area-inset-bottom,0px) + 318px)}
 /* HUD extras */
 #posBox .val{color:var(--plate)}
 .odot{position:absolute;top:-4px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--bone);border:2px solid var(--ink);opacity:.85}
-#tip{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 100px);width:min(560px,calc(100% - 32px));
+#tip{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 116px);width:min(560px,calc(100% - 32px));
   background:rgba(21,18,15,.82);border:1px solid rgba(255,210,31,.45);border-radius:14px;padding:10px 14px;display:flex;gap:12px;align-items:baseline;font-size:15px;line-height:1.35}
 #tip b{font-family:var(--f-display);font-weight:900;color:var(--plate);font-size:18px;white-space:nowrap}
-#combo{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 64px);display:flex;gap:10px;align-items:baseline;
+#combo{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 80px);display:flex;gap:10px;align-items:baseline;
   font-family:var(--f-display);font-weight:900;font-size:clamp(20px,4vw,30px);text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,.6);white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden}
 #combo b{color:var(--plate)}
-#guide{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 64px);width:150px;height:80px;
+#guide{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 80px);width:150px;height:80px;
   background:rgba(21,18,15,.45);border-radius:12px}
 body.touch #guide{top:auto;right:auto;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 246px);width:120px;height:64px}
 /* menus */
@@ -1891,7 +1893,7 @@ function frame(now){
   if(popT>0){popT-=dt;if(popT<=0)$('popup').classList.remove('show');}
   if(flashT>0){flashT-=dt;if(flashT<=0)$('flash').classList.remove('show');}
   $('tTime').textContent=S.mode==='jam'?fmt(S.jamT):fmt(S.time);$('tScore').textContent=S.score.toLocaleString();$('tSpeed').textContent=Math.round(sp*3.6);
-  $('progFill').style.width=(clamp((B.x-T.startX)/(T.finishX-T.startX),0,1)*100)+'%';
+  $('progFill').style.width=(Math.round(clamp((B.x-T.startX)/(T.finishX-T.startX),0,1)*1000)/10)+'%';
   if(S.mode==='race'&&OPP){const ahead=OPP.filter(o=>o.done||(o.b.x>B.x+0.4&&S.state!=='finished')).length;S.pos=1+ahead;$('tPos').textContent=S.pos+'/'+(OPP.length+1);
     if(S.pos===1&&S.lastPos>1&&S.time>4&&S.state==='ride')AU.sayRL('Number '+numWords(prof.num)+' takes the lead!');S.lastPos=S.pos;}
   updateCombo();updateGuide();tutUpdate();
