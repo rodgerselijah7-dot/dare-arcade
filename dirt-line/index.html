@@ -144,6 +144,12 @@ body.touch #flash{bottom:calc(env(safe-area-inset-bottom,0px) + 252px)}
 body.touch #hud:has(#guide:not([hidden])) #flash{bottom:calc(env(safe-area-inset-bottom,0px) + 318px)}
 /* HUD extras */
 #posBox .val{color:var(--plate)}
+.split{display:none;margin-top:4px;font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--plate);white-space:nowrap;opacity:0;transition:opacity .3s}
+.split.show{opacity:1}
+@media (orientation:portrait){body.touch .split{display:block}
+  body.touch .prog{top:calc(env(safe-area-inset-top,0px) + 76px)}
+  body.touch #combo{top:calc(env(safe-area-inset-top,0px) + 96px)}
+  body.touch #tip{top:calc(env(safe-area-inset-top,0px) + 132px)}}
 .odot{position:absolute;top:-4px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--bone);border:2px solid var(--ink);opacity:.85}
 #tip{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 116px);width:min(560px,calc(100% - 32px));
   background:rgba(21,18,15,.82);border:1px solid rgba(255,210,31,.45);border-radius:14px;padding:10px 14px;display:flex;gap:12px;align-items:baseline;font-size:15px;line-height:1.35}
@@ -213,7 +219,7 @@ body.touch #guide{top:auto;right:auto;left:50%;transform:translateX(-50%);bottom
 
 <div id="hud" hidden>
   <div class="top">
-    <div class="stat"><span class="lbl" id="tTimeLbl">TIME</span><span class="val num" id="tTime">0:00.00</span></div>
+    <div class="stat"><span class="lbl" id="tTimeLbl">TIME</span><span class="val num" id="tTime">0:00.00</span><span class="split num" id="tSplit" aria-live="polite"></span></div>
     <div class="stat" id="posBox"><span class="lbl">POS</span><span class="val num" id="tPos">1/4</span></div>
     <div class="prog" id="prog"><div id="progFill"></div></div>
     <div class="stat r"><span class="lbl">SCORE</span><span class="val num" id="tScore">0</span></div>
@@ -1560,6 +1566,7 @@ function startRace(i,mode){
   mode=mode||S.mode;if(mode!=='tut'&&needsUnlock(TRACKS[i].id)){gateTrack(i,()=>startRace(i,mode));return;}S.mode=mode;if(mode!=='tut')S.ti=i;
   const def=mode==='tut'?TUTORIAL:TRACKS[S.ti];S.def=def;
   AU.init();buildWorld(def);placeBikeAt(T.startX,0);
+  splitT=0;$('tSplit').classList.remove('show');
   Object.assign(S,{state:'gate',time:0,score:0,crashes:0,cp:-1,gateT:0,gateOpen:false,gateDrop:2.7+0.1+Math.random()*2.6,toneAt:[],finT:0,crowd:0,
     order:[],pos:1,lastPos:9,jamT:90,called:{},rotLock:0,crouch:0,crouchV:0,
     tut:mode==='tut'?{i:0,pumped:0,lands:0,tricks:0,manual:0,shown:-1}:null});
@@ -1581,6 +1588,8 @@ function setVisible(h){$('hud').hidden=!h;$('pads').style.visibility=h?'visible'
 
 let popT=0;
 function popup(text,pts,bad){const p=$('popup');p.querySelector('.t').textContent=text;p.querySelector('.p').textContent=pts?'+'+pts.toLocaleString():'';p.classList.toggle('bad',!!bad);p.classList.add('show');popT=bad?1.8:1.5;}
+let splitT=0;const PORTRAIT=matchMedia('(orientation:portrait)');
+function cpSplit(n,t){if(isTouch&&PORTRAIT.matches){const e=$('tSplit');e.textContent='CP '+n+' · '+t;e.classList.add('show');splitT=3;}else flash('CHECKPOINT '+n+' · '+t);}
 let flashT=0;function flash(t){$('flash').textContent=t;$('flash').classList.add('show');flashT=1.4;}
 function fmt(t){const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(2);}
 
@@ -1854,7 +1863,7 @@ function frame(now){
   if(B.crashed){S.crashT+=dt;if(S.state==='ride')S.state='crashed';if(S.crashT>2.4&&S.state==='crashed'){respawn();S.state='ride';}}
   if(!B.crashed&&S.state==='ride'&&S.gateOpen){S.prog.t+=dt;if(S.prog.t>4.5){if(B.x-S.prog.x<2&&!(keys.brake))respawn();S.prog={x:B.x,t:0};}}
   // checkpoints & finish
-  if(!B.crashed&&S.state==='ride'){while(S.cp+1<T.cps.length&&B.x>T.cps[S.cp+1]){S.cp++;if(S.mode!=='tut')flash('CHECKPOINT '+(S.cp+1)+' · '+fmt(S.time));}
+  if(!B.crashed&&S.state==='ride'){while(S.cp+1<T.cps.length&&B.x>T.cps[S.cp+1]){S.cp++;if(S.mode!=='tut')cpSplit(S.cp+1,fmt(S.time));}
     if(B.x>T.finishX)finish();}
   if(S.mode==='jam'&&S.state==='ride'||S.mode==='jam'&&S.state==='crashed'){S.jamT-=dt;if(S.jamT<=0){S.jamT=0;finish();}}
   if(S.state==='finished'){S.finT+=dt;if(S.finT>1.8&&$('results').hidden&&$('replayBar').hidden)showResults();}
@@ -1892,6 +1901,7 @@ function frame(now){
   // HUD
   if(popT>0){popT-=dt;if(popT<=0)$('popup').classList.remove('show');}
   if(flashT>0){flashT-=dt;if(flashT<=0)$('flash').classList.remove('show');}
+  if(splitT>0){splitT-=dt;if(splitT<=0)$('tSplit').classList.remove('show');}
   $('tTime').textContent=S.mode==='jam'?fmt(S.jamT):fmt(S.time);$('tScore').textContent=S.score.toLocaleString();$('tSpeed').textContent=Math.round(sp*3.6);
   $('progFill').style.width=(Math.round(clamp((B.x-T.startX)/(T.finishX-T.startX),0,1)*1000)/10)+'%';
   if(S.mode==='race'&&OPP){const ahead=OPP.filter(o=>o.done||(o.b.x>B.x+0.4&&S.state!=='finished')).length;S.pos=1+ahead;$('tPos').textContent=S.pos+'/'+(OPP.length+1);
