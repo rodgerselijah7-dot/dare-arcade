@@ -817,7 +817,7 @@ button{-webkit-font-smoothing:antialiased;}
 .pm-js .comic-panel-wrap.in{opacity:1;transform:none;}
 .comic-panel{background:#000;outline:none;box-shadow:0 0 0 3px #000,0 0 0 4px rgba(240,192,64,.28),0 14px 34px rgba(0,0,0,.7);margin:6px 0;}
 .pm-art{position:absolute;inset:0;transform-origin:50% 45%;will-change:transform;}
-.pm-art svg{filter:brightness(1.38) contrast(1.14) saturate(1.28);}
+.pm-art svg{filter:brightness(1.14) contrast(1.1) saturate(1.04);}
 .comic-panel-wrap.in .pm-art{animation:pmKen 16s ease-out forwards;}
 @keyframes pmKen{from{transform:scale(1);}to{transform:scale(1.07) translate(-.6%,-.5%);}}
 .pm-ov{position:absolute;inset:0;pointer-events:none;z-index:3;}
@@ -853,6 +853,18 @@ button{-webkit-font-smoothing:antialiased;}
 #pm-toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:920;background:var(--glass);border:1px solid var(--glass-b);color:var(--bone);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;padding:8px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .4s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 #pm-toast.show{opacity:1;}
 @media(prefers-reduced-motion:reduce){.comic-panel-wrap.in .pm-art{animation:none!important;}}
+/* ═════════ THE LAST DON — TITLE POLISH ═════════ */
+#pm-hero{position:absolute;left:0;right:0;bottom:0;height:min(40vh,380px);z-index:1;pointer-events:none;display:none;}
+#pm-hero svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 -10px 30px rgba(240,192,64,.12));}
+@media (min-height:760px){#pm-hero{display:block;}}
+#title>*:not(#pm-sky):not(#pm-hero):not(.arcade-link){z-index:3;}
+.btn{color:#1a1004!important;font-weight:700;text-shadow:0 1px 0 rgba(255,255,255,.45)!important;letter-spacing:6px;}
+.btn-sm{text-shadow:0 2px 6px rgba(0,0,0,.8);}
+.tagline{position:relative;}
+.tagline::after{content:'';display:block;width:140px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,#f0c040,transparent);}
+.byline{margin-top:10px!important;}
+.logo-don{filter:drop-shadow(0 0 30px rgba(240,192,64,.5)) drop-shadow(0 4px 0 rgba(123,24,24,.9));}
+.logo-pre{font-size:1.1em;}
 </style>
 <script src="/dare-unlock.js"></script>
 </head>
@@ -3740,6 +3752,230 @@ document.addEventListener('keydown',e=>{if(!ov.classList.contains('on'))return;
   else if(e.key==='ArrowLeft'&&comicChapter>0)switchComicChapter(comicChapter-1);
   else if(e.key==='Escape')closeComic();});
 addEventListener('resize',()=>{if(ov.classList.contains('on'))scroll.querySelectorAll('.pm-art svg').forEach(fitText);});
+})();
+</script>
+<script>
+/* ═════════ DETAILED CHARACTERS + COMIC PATCHES + TITLE HERO ═════════ */
+(function(){
+'use strict';
+let UID=0;
+const PAL={
+ donnie:{skin:['#d29a66','#9a6334','#5c3519'],hair:'#0b0706',jacket:['#34302b','#12100e'],shirt:'#ece4d3',accent:'#f0c040',trou:['#26282f','#101116'],beard:'stub',hs:'fade',iris:'#2a160a'},
+ donnieY:{skin:['#d9a672','#a46b3a','#64391b'],hair:'#0b0706',jacket:['#3a3f4a','#15171c'],shirt:'#d8d2c4',accent:'#f0c040',trou:['#2a2c34','#111218'],beard:'none',hs:'fade',iris:'#2a160a'},
+ vance:{skin:['#c68a56','#8a5530','#4e2c14'],hair:'#151010',jacket:['#3d2024','#1a0b0e'],shirt:'#f1ece2',accent:'#c9972a',trou:['#2a1a1d','#120a0c'],tie:'#a1121b',beard:'goatee',hs:'slick',grey:1,iris:'#1c0e06'},
+ vanceY:{skin:['#cf935f','#94603a','#563219'],hair:'#120d0b',jacket:['#2d3342','#10131b'],shirt:'#f1ece2',accent:'#c9972a',trou:['#1e222c','#0d0f14'],tie:'#7a1018',beard:'none',hs:'slick',iris:'#1c0e06'},
+ leon:{skin:['#b57a4c','#7c4c28','#432610'],hair:'#c9c6bd',jacket:['#5b4527','#241a0c'],shirt:'#e9dfc8',accent:'#f0c040',trou:['#2c2418','#120e08'],tie:'#3b5a3a',beard:'grey',hs:'short',glasses:1,iris:'#3a2210'},
+ leon70:{skin:['#c18454','#85542c','#4a2a12'],hair:'#120b06',jacket:['#7a4a22','#2e1a0a'],shirt:'#e8d9b0',accent:'#f0c040',trou:['#3a2a18','#16100a'],beard:'stache',hs:'afro',medal:1,iris:'#2a160a'},
+ elder:{skin:['#a8744a','#6e4426','#3c2210'],hair:'#bdb8ad',jacket:['#2a2630','#0d0b10'],shirt:'#d9d2c2',accent:'#f0c040',trou:['#1c1a20','#0b0a0d'],beard:'none',hs:'short',iris:'#2a160a'}
+};
+function fig(o){
+ const id='pf'+(++UID),p=Object.assign({},PAL[o.who]||PAL.elder,o.pal||{});
+ const dk=(h,f)=>'#'+[1,3,5].map(i=>Math.round(parseInt(h.substr(i,2),16)*f).toString(16).padStart(2,'0')).join('');
+ const s=(o.h||200)/200,fl=o.flip?-1:1,[sl,sm,sd]=p.skin.map(c=>dk(c,.8)),hc=p.hair;
+ const crop=o.crop;const cb=crop!=null?crop:22;
+ const E=(x,y,rx,ry,f,ex)=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${f}" ${ex||''}/>`;
+ let d=`<defs>
+<linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${sl}"/><stop offset=".55" stop-color="${sm}"/><stop offset="1" stop-color="${sd}"/></linearGradient>
+<linearGradient id="${id}j" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="${p.jacket[0]}"/><stop offset="1" stop-color="${p.jacket[1]}"/></linearGradient>
+<linearGradient id="${id}t" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${p.trou[0]}"/><stop offset="1" stop-color="${p.trou[1]}"/></linearGradient>
+<linearGradient id="${id}h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgba(0,0,0,0)"/><stop offset=".55" stop-color="rgba(0,0,0,.08)"/><stop offset="1" stop-color="rgba(10,3,0,.5)"/></linearGradient>
+<radialGradient id="${id}g"><stop offset="0" stop-color="${o.eyeGlow||'#fff'}" stop-opacity=".65"/><stop offset="1" stop-color="${o.eyeGlow||'#fff'}" stop-opacity="0"/></radialGradient>
+<clipPath id="${id}c"><rect x="-140" y="-260" width="280" height="${260+cb}"/></clipPath></defs>`;
+ let b='';
+ const skinF=`url(#${id}s)`;
+ /* shadow */
+ if(crop==null)b+=E(0,1,36,5.5,'rgba(0,0,0,.6)');
+ const back=!!o.back;
+ /* legs */
+ if(crop==null||crop>-92){
+  b+=`<path d="M-21,-94 L-24,-9 L-8,-9 L-3,-94Z" fill="url(#${id}t)"/><path d="M3,-94 L8,-9 L24,-9 L21,-94Z" fill="url(#${id}t)"/>
+<path d="M-14,-90 L-16,-12" stroke="rgba(255,255,255,.07)" stroke-width="1"/><path d="M14,-90 L16,-12" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+<path d="M-25,-10 Q-27,0 -15,0 L-5,0 Q-5,-6 -8,-10Z" fill="#0b0807"/><path d="M25,-10 Q27,0 15,0 L5,0 Q5,-6 8,-10Z" fill="#0b0807"/>
+<path d="M-23,-6 Q-18,-8 -9,-6" stroke="rgba(255,240,200,.28)" stroke-width="1" fill="none"/><path d="M23,-6 Q18,-8 9,-6" stroke="rgba(255,240,200,.22)" stroke-width="1" fill="none"/>`;
+ }
+ const arm=(x1,y1,cx,cy,x2,y2,hand)=>{
+  const hh=hand===false?'':`<ellipse cx="${x2}" cy="${y2}" rx="5.4" ry="6" fill="${skinF}"/><path d="M${x2-2},${y2+2} l0,3 M${x2+1},${y2+3} l0,3" stroke="${sd}" stroke-width=".7"/>`;
+  const ang=Math.atan2(y2-cy,x2-cx)*57.3;
+  return `<path d="M${x1},${y1} Q${cx},${cy} ${x2},${y2}" stroke="url(#${id}j)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
+<path d="M${x1-1},${y1-3} Q${cx},${cy-4} ${x2},${y2-4}" stroke="rgba(255,235,190,.14)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+<rect x="${x2-5.6}" y="${y2-5.6}" width="11.2" height="4.2" rx="1.6" fill="${p.shirt}" transform="rotate(${ang-90} ${x2} ${y2-3.5})"/>${hh}`;};
+ /* arms (behind torso for stand) */
+ const pose=o.pose||'stand';
+ let armsBack='',armsFront='';
+ if(pose==='stand'){armsFront=arm(-30,-139,-38,-112,-33,-84)+arm(30,-139,38,-112,33,-84);}
+ else if(pose==='cross'){armsFront=arm(-30,-139,-40,-104,8,-106)+arm(30,-139,40,-104,-8,-114);}
+ else if(pose==='point'){armsFront=arm(-30,-139,-38,-112,-33,-84)+arm(30,-139,54,-134,80,-120);}
+ else if(pose==='spread'){armsFront=arm(-30,-139,-58,-134,-84,-108)+arm(30,-139,58,-134,84,-108);}
+ else if(pose==='hips'){armsFront=arm(-30,-139,-50,-112,-22,-96)+arm(30,-139,50,-112,22,-96);}
+ else if(pose==='none'){armsFront='';}
+ /* torso */
+ if(!back){
+  b+=armsBack;
+  b+=`<path d="M-32,-139 Q-34,-148 -22,-150 L22,-150 Q34,-148 32,-139 L28,-84 Q0,-78 -28,-84Z" fill="url(#${id}j)"/>`;
+  b+=`<path d="M-9,-150 L0,-121 L9,-150Z" fill="${p.shirt}"/><path d="M-9,-150 L0,-121 L0,-150Z" fill="rgba(0,0,0,.12)"/>`;
+  if(p.tie)b+=`<path d="M-2.6,-134 L2.6,-134 L4,-102 L0,-93 L-4,-102Z" fill="${p.tie}"/><path d="M-3.4,-137 L3.4,-137 L2.6,-132 L-2.6,-132Z" fill="${p.tie}"/><path d="M0,-134 L0,-96" stroke="rgba(0,0,0,.28)" stroke-width="1"/>`;
+  b+=`<path d="M-22,-150 L-9,-150 L0,-121 L-6,-98 L-19,-124Z" fill="rgba(0,0,0,.28)"/><path d="M22,-150 L9,-150 L0,-121 L6,-98 L19,-124Z" fill="rgba(255,235,190,.07)"/>`;
+  b+=`<path d="M0,-98 L0,-84" stroke="rgba(0,0,0,.4)" stroke-width="1"/><circle cx="0" cy="-97" r="1.6" fill="${p.accent}"/>`;
+  b+=`<path d="M-26,-119 l8,-1 l0,3 l-8,1Z" fill="rgba(240,230,210,.8)"/>`; // pocket square
+  b+=`<path d="M-27,-138 Q-24,-110 -26,-86" stroke="rgba(0,0,0,.22)" stroke-width="2" fill="none"/>`;
+  if(o.who==='donnie'||o.who==='donnieY'){b+=`<path d="M-8,-149 Q0,-128 8,-149" stroke="${p.accent}" stroke-width="1.6" fill="none"/><path d="M-6,-146 Q0,-132 6,-146" stroke="${p.accent}" stroke-width="1" fill="none" stroke-dasharray="1.4 1.4"/><path d="M0,-134 l-3,6 l6,0Z" fill="${p.accent}"/>`;}
+  if(p.medal)b+=`<path d="M-7,-148 Q0,-124 7,-148" stroke="${p.accent}" stroke-width="1.2" fill="none"/><circle cx="0" cy="-124" r="3.6" fill="${p.accent}" stroke="#7b5410" stroke-width=".6"/>`;
+  b+=`<path d="M30,-146 L27,-88" stroke="rgba(255,214,120,.5)" stroke-width="1.5" fill="none"/>`;
+  b+=armsFront;
+ } else {
+  b+=`<path d="M-32,-139 Q-34,-148 -22,-150 L22,-150 Q34,-148 32,-139 L28,-84 Q0,-78 -28,-84Z" fill="url(#${id}j)"/><path d="M0,-148 L0,-84" stroke="rgba(0,0,0,.4)" stroke-width="1.2"/><path d="M-12,-150 Q0,-143 12,-150" stroke="${p.shirt}" stroke-width="3" fill="none"/><path d="M32,-142 L28,-90" stroke="rgba(255,214,120,.55)" stroke-width="1.6" fill="none"/><path d="M-32,-142 L-28,-90" stroke="rgba(180,200,255,.25)" stroke-width="1.4" fill="none"/>`;
+ }
+ /* neck + head */
+ b+=`<path d="M-6.5,-156 L-6.5,-146 Q0,-139 6.5,-146 L6.5,-156Z" fill="${sd}"/>`;
+ if(p.hs==='afro')b+=E(0,-184,26,23,hc)+E(-14,-190,12,10,'rgba(255,255,255,.05)');
+ b+=E(-15.4,-171,2.8,4.6,sm)+E(15.4,-171,2.8,4.6,sd);
+ const head='M-15,-178 C-15,-193 15,-193 15,-178 L15,-166 C15,-152 8,-146 0,-146 C-8,-146 -15,-152 -15,-166Z';
+ b+=`<path d="${head}" fill="${skinF}"/>`;
+ if(back){
+  b+=`<path d="${head}" fill="${hc}"/><path d="M-15,-178 C-14,-193 14,-193 15,-178 L14,-168 Q0,-160 -14,-168Z" fill="${hc}"/><path d="M-8,-186 Q0,-190 8,-186" stroke="rgba(255,255,255,.18)" stroke-width="1.4" fill="none"/><path d="M14,-186 Q16,-172 12,-164" stroke="rgba(255,214,120,.6)" stroke-width="1.4" fill="none"/>`;
+ } else {
+  b+=`<path d="${head}" fill="url(#${id}h)"/>`;
+  b+=E(-7,-166,5,3.2,'rgba(255,230,190,.12)');
+  // hair
+  if(p.hs==='fade')b+=`<path d="M-15.4,-176 C-17,-197 17,-197 15.4,-176 C14,-184 9,-187 0,-187 C-9,-187 -14,-184 -15.4,-176Z" fill="${hc}"/><path d="M-14,-182 Q0,-190 14,-182" stroke="rgba(255,255,255,.18)" stroke-width="1.2" fill="none"/><path d="M-15.4,-176 L-14,-168 M15.4,-176 L14,-168" stroke="${hc}" stroke-width="1.6" opacity=".7"/>`;
+  if(p.hs==='slick')b+=`<path d="M-16,-175 C-19,-198 19,-199 16,-175 C15,-186 6,-191 -3,-190 C-10,-189 -14,-183 -16,-175Z" fill="${hc}"/><path d="M-10,-191 Q0,-196 10,-190" stroke="rgba(255,255,255,.28)" stroke-width="1.3" fill="none"/>${p.grey?`<path d="M-16,-176 L-14.6,-168 M16,-176 L14.6,-168" stroke="#aaa6a0" stroke-width="2.2"/><path d="M-12,-188 Q-4,-190 4,-189" stroke="#8d8a86" stroke-width="1.4" fill="none"/>`:''}`;
+  if(p.hs==='short')b+=`<path d="M-15.6,-176 C-17,-195 17,-195 15.6,-176 C14,-184 9,-186 0,-186 C-9,-186 -14,-184 -15.6,-176Z" fill="${hc}"/><path d="M-12,-185 Q0,-190 12,-185" stroke="rgba(255,255,255,.3)" stroke-width="1.2" fill="none"/>`;
+  if(p.hs==='afro')b+=`<path d="M-15,-181 Q0,-190 15,-181 L15,-186 Q0,-196 -15,-186Z" fill="${hc}"/>`;
+  // brows
+  const mood=o.mood||'calm';const bl=mood==='menace'||mood==='stern'?1.8:mood==='worried'?-1.4:0;
+  [-1,1].forEach(e=>{const x=e*6.5;
+   const inner=-178.6+bl*.9, outer=-180.4-bl*.5;
+   b+=`<path d="M${x+e*4.8},${outer} Q${x},${-182.2} ${e*2},${inner}" stroke="${hc==='#c9c6bd'?'#9b968c':hc}" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+   // eye
+   b+=E(x,-175,3.8,2.2,'#efe6d6')+`<circle cx="${x+e*.3}" cy="-175" r="1.95" fill="${o.eyeGlow||p.iris}"/><circle cx="${x+e*.3}" cy="-175" r=".95" fill="#050200"/><circle cx="${x+e*.3+.7}" cy="-175.8" r=".55" fill="#fff"/>`;
+   if(o.eyeGlow)b+=`<circle cx="${x}" cy="-175" r="7" fill="url(#${id}g)"/>`;
+   b+=`<path d="M${x-4.1},${-175.2} Q${x},${-178.4+bl*.35} ${x+4.1},${-175.2}" stroke="#1a0c04" stroke-width="1.15" fill="none"/><path d="M${x-3.4},${-172.8} Q${x},${-171.6} ${x+3.4},${-172.8}" stroke="rgba(0,0,0,.22)" stroke-width=".7" fill="none"/>`;
+  });
+  if(p.glasses)b+=`<circle cx="-6.5" cy="-175" r="5.2" fill="rgba(255,255,255,.06)" stroke="${p.accent}" stroke-width=".9"/><circle cx="6.5" cy="-175" r="5.2" fill="rgba(255,255,255,.06)" stroke="${p.accent}" stroke-width=".9"/><path d="M-1.3,-175.4 Q0,-176.4 1.3,-175.4" stroke="${p.accent}" stroke-width=".8" fill="none"/>`;
+  // nose
+  b+=`<path d="M1.4,-176 Q3.6,-168 2.4,-165 L-.4,-165.6Z" fill="rgba(40,16,4,.28)"/><path d="M-1.8,-166 Q0,-164 1.8,-166" stroke="${sd}" stroke-width="1.1" fill="none"/><circle cx="-1.7" cy="-165.6" r=".6" fill="rgba(20,6,0,.5)"/><circle cx="1.7" cy="-165.6" r=".6" fill="rgba(20,6,0,.5)"/>`;
+  // beard
+  if(p.beard==='stub')b+=`<path d="M-15,-168 C-15,-150 15,-150 15,-168 C13,-160 8,-156 0,-156 C-8,-156 -13,-160 -15,-168Z" fill="rgba(10,6,4,.42)"/><path d="M-4,-161 Q0,-163 4,-161" stroke="rgba(10,6,4,.5)" stroke-width="1.6" fill="none"/>`;
+  if(p.beard==='goatee')b+=`<path d="M-6,-158 Q0,-153 6,-158 L5,-150 Q0,-146 -5,-150Z" fill="${hc}"/><path d="M-5.5,-161 Q0,-163.4 5.5,-161" stroke="${hc}" stroke-width="1.6" fill="none"/>`;
+  if(p.beard==='grey')b+=`<path d="M-15,-170 C-16,-150 16,-150 15,-170 C13,-161 9,-157.5 0,-157.5 C-9,-157.5 -13,-161 -15,-170Z" fill="#c9c6bd"/><path d="M-5,-161.4 Q0,-163.4 5,-161.4" stroke="#e8e5dd" stroke-width="1.6" fill="none"/>`;
+  if(p.beard==='stache')b+=`<path d="M-7,-161.5 Q-3,-164 0,-162.4 Q3,-164 7,-161.5 Q3,-159.6 0,-160.4 Q-3,-159.6 -7,-161.5Z" fill="${hc}"/>`;
+  // mouth
+  const sm2=o.mood==='smirk';
+  if(p.beard!=='grey')b+=sm2?`<path d="M-5,-157.4 Q0,-156.2 6,-159" stroke="#2a0e06" stroke-width="1.4" stroke-linecap="round" fill="none"/>`:`<path d="M-5,-157.6 Q0,-156.2 5,-157.6" stroke="#2a0e06" stroke-width="1.4" stroke-linecap="round" fill="none"/><path d="M-3.4,-155.4 Q0,-153.8 3.4,-155.4" stroke="rgba(30,10,4,.3)" stroke-width=".9" fill="none"/>`;
+  else b+=`<path d="M-3.4,-158 Q0,-156.8 3.4,-158" stroke="#5a3a28" stroke-width="1.1" fill="none"/>`;
+  // rim light
+  b+=`<path d="M15,-182 C16.5,-172 14.5,-160 9,-150" stroke="rgba(255,218,130,.6)" stroke-width="1.5" fill="none"/>`;
+ }
+ const mask=crop!=null?` clip-path="url(#${id}c)"`:'';
+ return `<g class="pmfig" transform="translate(${o.x},${o.y}) scale(${fl*s},${s})">${d}<g${mask}>${b}</g></g>`;
+}
+window.pmFig=fig;
+
+/* ---------- comic panel patches ---------- */
+const CH=window.COMIC_CHAPTERS||COMIC_CHAPTERS;
+function cut(h,a,b,incl){const L=h.split('\n');const i=L.findIndex(l=>l.includes(a));if(i<0)return h;const j=L.findIndex((l,k)=>k>=i&&l.includes(b));if(j<0)return h;L.splice(i,j-i+(incl===false?0:1));return L.join('\n');}
+function patch(c,i,fn){const pn=CH[c].panels[i];const o=pn.render;pn.render=w=>{let h=o(w);try{h=fn(h,w,pn);}catch(e){console.error('patch',c,i,e);}return h;};}
+const f1=n=>n.toFixed(1);
+try{
+/* council */
+patch(0,1,(h,w)=>{
+  h=h.replace(/<circle cx="[\d.]+" cy="[\d.]+" r="9" fill="#2A1C0C"\/><rect[^>]*\/><circle[^>]*r="3\.5"[^>]*\/>/g,'');
+  const half=w/2-1,cols=['#C9972A','#2A7AC9','#8A8A8A','#C97A2A','#C0392B'];let out='';
+  const order=[0,1,4,3,2].sort((a,b)=>Math.sin(a/5*6.283-1.57)-Math.sin(b/5*6.283-1.57));
+  order.forEach(i=>{const ang=i/5*Math.PI*2-Math.PI/2;const cx=half/2+Math.cos(ang)*half*.38,cy=148+Math.sin(ang)*16;
+    out+=fig({who:'elder',x:cx,y:cy+8,h:78,pose:'stand',pal:{accent:cols[i],hair:i%2?'#c4c0b6':'#14100c',skin:[['#c58a58','#8c5a30','#4e2c14'],['#b8824f','#7e4e28','#43240f'],['#d2995f','#966030','#582f14'],['#a8744a','#6e4426','#3c2210'],['#c68e5c','#8a5a32','#4c2a13']][i],jacket:['#2e2a34','#0e0c12']},pose:'stand'});});
+  return h+out;});
+/* vance splash */
+patch(0,3,(h,w)=>{h=cut(h,'rx="75" ry="16"','r="90"',false);return h+fig({who:'vance',x:w/2,y:338,h:300,pose:'spread',mood:'stern'});});
+/* donnie */
+patch(0,4,(h,w,pn)=>{h=cut(h,'rx="20" ry="5"','fill="#110800"');pn.bubble.x=.5;pn.bubble.y=.05;return h+fig({who:'donnie',x:w*.29,y:352,h:312,pose:'stand',mood:'stern'});});
+/* leon + young vance */
+CH[1].panels[0].h=360;CH[1].panels[0].bubble.x=.02;CH[1].panels[0].bubble.y=.1;CH[1].panels[0].bubble2.x=.53;CH[1].panels[0].bubble2.y=.1;
+patch(1,0,(h,w)=>{h=h.replace(/height="300"/g,'height="360"').replace(/height="82"/,'height="142"');h=cut(h,'rx="16" ry="4"','rotate(-8');
+  return h+fig({who:'leon',x:w*.3,y:346,h:186,pose:'stand',mood:'calm'})+fig({who:'vanceY',x:w*.7,y:346,h:192,pose:'hips',mood:'smirk'});});
+/* the offer */
+patch(1,1,(h,w)=>{
+  h=h.split('\n').filter(l=>!l.includes('r="13" fill="#130808"')).join('\n');
+  h=cut(h,'r="14" fill="#2A1A08"','fill="rgba(0,0,0,.55)" rx="2"');
+  let o='';
+  [.2,.38,.56].forEach((k,i)=>{o+=fig({who:'elder',x:w*k,y:204,h:130,crop:-66,pose:'none',eyeGlow:'#ff4030',mood:'menace',pal:{jacket:['#241418','#0a0507'],hair:i==1?'#b8b4aa':'#0f0b0a',skin:['#7c5638','#4e3220','#2a190d']}});});
+  o+=`<rect x="${(w*.08).toFixed(0)}" y="158" width="${(w*.84).toFixed(0)}" height="10" rx="2" fill="#1E1610"/><rect x="${(w*.08).toFixed(0)}" y="158" width="${(w*.84).toFixed(0)}" height="2" fill="rgba(201,151,42,.12)"/>`;
+  o+=fig({who:'vance',x:w*.8,y:262,h:205,flip:true,pose:'point',mood:'smirk'});
+  return h+o;});
+/* triptych */
+CH[1].panels[2].render=(w)=>{
+  const st=[{mood:'worried',pal:{},lbl:'TEMPTED',tc:'rgba(240,192,90,.9)',bg:['#1d150a','#0b0805']},{mood:'stern',pal:{},lbl:'DECIDED',tc:'rgba(170,120,235,.95)',bg:['#171027','#08060d'],},{mood:'menace',eyeGlow:'#ffb73a',lbl:'TRANSFORMED',tc:'rgba(235,90,70,.95)',bg:['#2a0c0c','#070303']}];
+  let o='';
+  st.forEach((t,i)=>{const px=i*(w/3+.5),pw=w/3-1.5;const gid='tg'+i;
+    o+=`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.bg[0]}"/><stop offset="1" stop-color="${t.bg[1]}"/></linearGradient></defs>`;
+    o+=`<svg x="${px.toFixed(1)}" y="0" width="${pw.toFixed(1)}" height="250" viewBox="0 0 ${pw.toFixed(1)} 250"><rect width="${pw}" height="250" fill="url(#${gid})"/>`+
+      fig({who:i<2?'vanceY':'vance',x:pw/2,y:470,h:430,crop:-120,pose:'none',mood:t.mood,eyeGlow:t.eyeGlow,pal:i==2?{skin:['#b27a4c','#75482a','#3a200f']}:{}})+
+      `<rect y="170" width="${pw}" height="80" fill="rgba(0,0,0,.5)"/><text x="${pw/2}" y="214" font-family="Bebas Neue" font-size="14" text-anchor="middle" fill="${t.tc}" letter-spacing="3">${t.lbl}</text></svg>`;
+    if(i<2)o+=`<rect x="${(px+pw).toFixed(1)}" y="0" width="1.5" height="250" fill="#060404"/>`;});
+  return o;};
+/* architect */
+patch(1,3,(h,w)=>{h=cut(h,'fill="#170A0A" opacity=".88"','r="18" fill="#221208"');
+  return h+fig({who:'vance',x:w/2,y:296,h:210,crop:-92,back:true,pose:'none'})+`<rect x="${(w*.08).toFixed(0)}" y="200" width="${(w*.84).toFixed(0)}" height="14" rx="2" fill="#1E1010"/><rect x="${(w*.08).toFixed(0)}" y="200" width="${(w*.84).toFixed(0)}" height="3" fill="rgba(255,255,255,.06)"/>`;});
+/* 1978 Leon */
+patch(2,0,(h,w)=>{h=cut(h,'rx="22" ry="5"','fill="#110800"');return h+fig({who:'leon70',x:w*.6,y:268,h:230,pose:'stand',mood:'calm'});});
+CH[2].panels[0].h=330;
+/* stoop */
+CH[2].panels[2].h=360;
+CH[2].panels[2].bubble.x=.04;CH[2].panels[2].bubble.y=.1;
+CH[2].panels[2].render=(w)=>{
+  return `<defs><radialGradient id="sdG" cx="50%" cy="80%" r="60%"><stop offset="0" stop-color="rgba(201,151,42,.2)"/><stop offset="1" stop-color="transparent"/></radialGradient><linearGradient id="sdW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c150a"/><stop offset="1" stop-color="#0e0a05"/></linearGradient></defs>
+<rect width="${w}" height="360" fill="#0d0b07"/><rect width="${w}" height="360" fill="url(#sdG)"/>
+<rect x="0" y="0" width="${w}" height="330" fill="url(#sdW)"/>
+${Array.from({length:6},(_,r)=>Array.from({length:8},(_,c)=>`<rect x="${(c*w/7.5+(r%2)*w/15-4).toFixed(0)}" y="${r*40+6}" width="${(w/8).toFixed(0)}" height="36" fill="${(r+c)%3?'#171009':'#130d07'}" stroke="#0a0705" stroke-width=".8"/>`).join('')).join('')}
+<rect x="${(w*.38).toFixed(0)}" y="120" width="${(w*.24).toFixed(0)}" height="190" rx="2" fill="#0b0805" stroke="rgba(201,151,42,.18)" stroke-width="1.2"/>
+<rect x="${(w*.41).toFixed(0)}" y="132" width="${(w*.08).toFixed(0)}" height="62" fill="rgba(255,190,90,.07)"/><rect x="${(w*.51).toFixed(0)}" y="132" width="${(w*.08).toFixed(0)}" height="62" fill="rgba(255,190,90,.09)"/>
+<rect x="${(w*.06).toFixed(0)}" y="60" width="${(w*.2).toFixed(0)}" height="70" fill="rgba(255,200,100,.1)" stroke="#080604"/><rect x="${(w*.74).toFixed(0)}" y="60" width="${(w*.2).toFixed(0)}" height="70" fill="rgba(255,200,100,.07)" stroke="#080604"/>
+<rect x="0" y="308" width="${w}" height="52" fill="#0b0906"/><rect x="0" y="308" width="${w}" height="2" fill="rgba(201,151,42,.14)"/>
+<rect x="${(w*.1).toFixed(0)}" y="318" width="${(w*.8).toFixed(0)}" height="9" fill="#18130a"/><rect x="${(w*.05).toFixed(0)}" y="327" width="${(w*.9).toFixed(0)}" height="11" fill="#130f08"/>
+`+fig({who:'leon',x:w*.3,y:342,h:196,pose:'cross',mood:'calm'})+fig({who:'donnieY',x:w*.7,y:342,h:204,pose:'point',flip:true,mood:'stern'});};
+/* city dusk */
+CH[2].panels[3].h=400;
+CH[2].panels[3].render=(w)=>{
+  const sk=[[0,150,24],[30,128,28],[62,160,20],[86,140,30],[w-52,146,24],[w-82,122,30],[w-116,156,22],[w-142,170,20],[w*.42,176,20],[w*.5,160,26]];
+  return `<defs><linearGradient id="dkS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0d10"/><stop offset=".5" stop-color="#6a2a10"/><stop offset=".8" stop-color="#c9772a"/><stop offset="1" stop-color="#2a1608"/></linearGradient><radialGradient id="dkSun" cx="50%" cy="60%" r="50%"><stop offset="0" stop-color="rgba(255,205,110,.9)"/><stop offset=".4" stop-color="rgba(255,150,50,.35)"/><stop offset="1" stop-color="transparent"/></radialGradient></defs>
+<rect width="${w}" height="400" fill="url(#dkS)"/><circle cx="${w/2}" cy="215" r="120" fill="url(#dkSun)"/><circle cx="${w/2}" cy="215" r="26" fill="#ffe2a0"/>
+${sk.map(([x,y,bw])=>`<rect x="${x}" y="${y+60}" width="${bw}" height="${400-y-60}" fill="#150b07"/>${Array.from({length:6},(_,k)=>`<rect x="${x+3+(k%2)*bw/2.2}" y="${y+66+Math.floor(k/2)*18}" width="4" height="6" fill="rgba(255,210,120,${.2+(k%3)*.15})"/>`).join('')}`).join('')}
+<rect x="0" y="372" width="${w}" height="28" fill="#0d0805"/><rect x="0" y="372" width="${w}" height="2" fill="rgba(255,190,90,.25)"/>
+`+fig({who:'leon',x:w*.27,y:392,h:226,pose:'point',mood:'calm'})+fig({who:'donnie',x:w*.68,y:392,h:232,pose:'stand',mood:'stern'});};
+}catch(e){console.error('comic patch fail',e);}
+
+/* ---------- bubble vs. character avoidance ---------- */
+const _fit=window.fitComicBubbles;
+window.fitComicBubbles=function(){
+  document.querySelectorAll('#comic-scroll .comic-panel').forEach(p=>{const bs=p.querySelectorAll('.speech-bubble');bs.forEach(b=>{b.style.maxWidth=bs.length>1?'46%':'64%';});});
+  _fit&&_fit.apply(this,arguments);
+  document.querySelectorAll('#comic-scroll .comic-panel[data-fit]').forEach(p=>{
+    const pr=p.getBoundingClientRect(),pw=p.clientWidth,ph=p.clientHeight;if(!pw)return;
+    const figs=[...p.querySelectorAll('.pmfig')].map(f=>{const r=f.getBoundingClientRect();return{x:r.left-pr.left,y:r.top-pr.top,w:r.width,h:r.height};})
+      .map(r=>({x:r.x+r.w*.18,y:r.y+r.h*.02,w:r.w*.64,h:r.h*.97})); // body core, ignore shadow/limbs margin
+    if(!figs.length)return;
+    const bs=[...p.querySelectorAll('.speech-bubble')],placed=[];
+    const hit=(a,b,m)=>a.x<b.x+b.w+m&&a.x+a.w>b.x-m&&a.y<b.y+b.h+m&&a.y+a.h>b.y-m;
+    bs.forEach(b=>{
+      const bw=b.offsetWidth,bh=b.offsetHeight;let cur={x:b.offsetLeft,y:b.offsetTop,w:bw,h:bh};
+      const ok=r=>!figs.some(f=>hit(r,f,6))&&!placed.some(q=>hit(r,q,6));
+      if(!ok(cur)){let best=null,bd=1e9;
+        for(let y=8;y<=ph-bh-8;y+=8)for(let x=8;x<=pw-bw-8;x+=12){const r={x,y,w:bw,h:bh};if(ok(r)){const d=(x-cur.x)**2+(y-cur.y)**2;if(d<bd){bd=d;best=r;}}}
+        if(best){cur=best;b.style.left=best.x+'px';b.style.top=best.y+'px';}}
+      placed.push(cur);});
+  });
+};
+
+/* ---------- title hero ---------- */
+(function(){
+  const t=document.getElementById('title');if(!t)return;
+  const hero=document.createElement('div');hero.id='pm-hero';
+  hero.innerHTML=`<svg viewBox="0 0 360 330" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs><radialGradient id="hmoon" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6d8"/><stop offset=".25" stop-color="rgba(255,235,170,.55)"/><stop offset="1" stop-color="rgba(255,220,140,0)"/></radialGradient><linearGradient id="hroof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1710"/><stop offset="1" stop-color="#080605"/></linearGradient></defs>
+<circle cx="180" cy="120" r="150" fill="url(#hmoon)"/><circle cx="180" cy="120" r="46" fill="#fff4d0" opacity=".92"/><circle cx="168" cy="108" r="9" fill="rgba(200,180,130,.35)"/><circle cx="194" cy="132" r="6" fill="rgba(200,180,130,.3)"/>
+${fig({who:'donnie',x:180,y:296,h:272,pose:'stand',mood:'stern'})}
+<rect x="-400" y="296" width="1160" height="60" fill="url(#hroof)"/><rect x="-400" y="296" width="1160" height="2" fill="rgba(240,192,64,.55)"/></svg>`;
+  t.appendChild(hero);
+})();
 })();
 </script>
 <script>
