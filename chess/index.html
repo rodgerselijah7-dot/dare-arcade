@@ -47,6 +47,13 @@ button:disabled{opacity:.35;cursor:default}
 .iconbtn svg{width:20px;height:20px}
 .players{display:flex;gap:8px;flex:1;min-width:0}
 .pl{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:12px;border:1px solid transparent;background:rgba(26,18,21,.55);transition:border-color .25s,background .25s}
+.clk{margin-left:auto;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.4);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color:var(--mute);flex:none}
+.pl.on .clk{color:var(--gold-hi);background:rgba(0,0,0,.55)}
+.clk.low{color:#ff6a5a!important;animation:clkp 1s infinite}
+@keyframes clkp{50%{opacity:.55}}
+.seg.five{grid-template-columns:repeat(5,1fr)}
+.seg.five button{font-size:12.5px;padding:10px 2px;flex-direction:column;gap:1px;line-height:1.15}
+.seg.five small{font-size:10px;font-weight:500;opacity:.7}
 .pl.on{border-color:var(--gold);background:rgba(58,38,30,.7)}
 .disc{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:inset 0 -2px 3px rgba(0,0,0,.35)}
 .disc.w{background:radial-gradient(circle at 35% 30%,#fff,#d9cdb5)}
@@ -197,8 +204,8 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
   <header class="top">
     <button class="iconbtn" id="btnPause" aria-label="Game menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <div class="players" id="players">
-      <div class="pl" id="plW"><span class="disc w"></span><span class="plt"><span class="pln" id="nmW">White</span><span class="plc" id="cpW"></span></span></div>
-      <div class="pl" id="plB"><span class="disc b"></span><span class="plt"><span class="pln" id="nmB">Black</span><span class="plc" id="cpB"></span></span></div>
+      <div class="pl" id="plW"><span class="disc w"></span><span class="plt"><span class="pln" id="nmW">White</span><span class="plc" id="cpW"></span></span><span class="clk" id="ckW" hidden></span></div>
+      <div class="pl" id="plB"><span class="disc b"></span><span class="plt"><span class="pln" id="nmB">Black</span><span class="plc" id="cpB"></span></span><span class="clk" id="ckB" hidden></span></div>
     </div>
     <div class="toptitle" id="tutTitle" hidden>Tutorial</div>
   </header>
@@ -265,6 +272,14 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
       <button data-side="w"><span class="disc w"></span>White</button>
       <button data-side="random">Random</button>
       <button data-side="b"><span class="disc b"></span>Black</button>
+    </div>
+    <div class="label">Time</div>
+    <div class="seg five" id="times">
+      <button data-tc="0">Untimed</button>
+      <button data-tc="1+0">1+0<small>Bullet</small></button>
+      <button data-tc="3+2">3+2<small>Blitz</small></button>
+      <button data-tc="5+0">5+0<small>Blitz</small></button>
+      <button data-tc="10+0">10+0<small>Rapid</small></button>
     </div>
     <button class="btn gold wide" id="startAI">Start game</button>
   </div>
@@ -349,6 +364,7 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
     <h3>Game modes</h3>
     <ul>
       <li><strong>Play the Computer.</strong> Novice is forgiving, Club plays solid tactics, Master thinks for up to two seconds a move.</li>
+      <li><strong>Timed games.</strong> Against the Computer, pick Bullet, Blitz or Rapid. Each side gets a clock (minutes + seconds added per move). Run out of time and you lose. Undo is off in timed games.</li>
       <li><strong>Play Online.</strong> Face another player on their own phone. One player creates a match and shares the 4-character code, the other joins with it. The host picks colors, and colors swap on every rematch. If a player stays disconnected for 45 seconds, the other wins.</li>
       <li><strong>Tutorial.</strong> Ten short lessons. Each sets up a position and asks you to find one move.</li>
     </ul>
@@ -1061,6 +1077,28 @@ function loop(){
    GAME LOGIC
    ====================================================================== */
 let S=E.loadFEN(START), legalNow=E.legal(S);
+let tcKey=store.get('tc','0'), clk=null, clkLast=0;
+const tcParse=k=>{ if(!k||k==='0') return null; const [a,b]=k.split('+'); return {base:+a*60000,inc:+b*1000}; };
+const tcLabel=k=>({'1+0':'Bullet 1+0','3+2':'Blitz 3+2','5+0':'Blitz 5+0','10+0':'Rapid 10+0'}[k]||'');
+const clockOn=()=>mode==='ai'&&!!clk;
+function fmtClk(ms){ ms=Math.max(0,ms); if(ms<10000) return (ms/1000).toFixed(1); const t=Math.ceil(ms/1000); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); }
+function renderClocks(){
+  for(const c of ['w','b']){ const el=$(c==='w'?'ckW':'ckB'); if(!el) continue;
+    el.hidden=!clockOn(); if(!clockOn()) continue;
+    el.textContent=fmtClk(clk[c]); el.classList.toggle('low',clk[c]<10000&&!gameOver); }
+}
+function resetClock(){ const t=mode==='ai'?tcParse(tcKey):null; clk=t?{w:t.base,b:t.base}:null; clkLast=performance.now(); renderClocks(); }
+function flagFall(c){
+  gameId++; busy=false; thinking=false; selected=-1; hintMoves=[];
+  gameOver={type:'time',winner:c==='w'?'b':'w'}; clk[c]=0; refreshBoard(); renderClocks(); showOver();
+}
+setInterval(()=>{
+  const now=performance.now(), dt=Math.min(now-clkLast,1000); clkLast=now;
+  if(!clockOn()||gameOver||!S||!S.hist.length) return;
+  if(document.querySelector('.screen:not([hidden])')||!$('pause').hidden) return;
+  clk[S.turn]-=dt; renderClocks();
+  if(clk[S.turn]<=0) flagFall(S.turn);
+},100);
 let mode='menu', humanColor='w', aiLevel=store.get('level','club'), sideChoice=store.get('side','w');
 let selected=-1, lastMove=null, hintMoves=[], gameOver=null, busy=false, thinking=false;
 let sanList=[], posKeys=[], gameId=0;
@@ -1103,7 +1141,8 @@ function onSquare(sq){
 async function commit(m){
   busy=true; selected=-1; hintMoves=[];
   const san=E.san(S,m,legalNow);
-  E.make(S,m); sanList.push(san); posKeys.push(E.key(S)); lastMove=m;
+  const mover=S.turn;
+  E.make(S,m); if(clockOn()){ clk[mover]+=tcParse(tcKey).inc; renderClocks(); } sanList.push(san); posKeys.push(E.key(S)); lastMove=m;
   if(mode==='online') netPushMoves();
   legalNow=E.legal(S);
   for(let i=0;i<64;i++){ dots[i].visible=false; rings[i].visible=false; }
@@ -1146,11 +1185,13 @@ function newGame(fen){
   gameId++; busy=false; thinking=false;
   S=E.loadFEN(fen); legalNow=E.legal(S);
   sanList=[]; posKeys=[E.key(S)]; gameOver=null; selected=-1; lastMove=null; hintMoves=[];
+  resetClock();
   fullSync(); refreshBoard(); updateHUD();
 }
 
 function popMove(){ const m=E.undo(S); sanList.pop(); posKeys.pop(); return m; }
 function undoMove(){
+  if(clockOn()){ toast('Undo is off in timed games'); return; }
   if(busy||!S.hist.length||mode==='tutorial'||mode==='online') return;
   gameId++; gameOver=null; $('over').hidden=true;
   if(mode==='ai'){
@@ -1193,6 +1234,7 @@ function updateHUD(override){
     const adv=c==='w'?diff:-diff;
     $(c==='w'?'cpW':'cpB').innerHTML=(caps||'<span style="opacity:.6">—</span>')+(adv>0?'<b>+'+adv+'</b>':'');
   }
+  renderClocks();
   $('plW').classList.toggle('on',!gameOver&&S.turn==='w');
   $('plB').classList.toggle('on',!gameOver&&S.turn==='b');
   // status
@@ -1239,6 +1281,7 @@ function overText(){
     if(mode==='online') return g.winner===humanColor?{eyebrow:'Victory',title:'Checkmate',text:'You beat '+(NET.oppNick||'your opponent')+' in '+moves+' moves.',win:true}:{eyebrow:'Defeat',title:'Checkmate',text:(NET.oppNick||'Your opponent')+' wins in '+moves+' moves.',lose:true};
     return {eyebrow:'Game over',title:'Checkmate',text:(g.winner==='w'?'White':'Black')+' wins in '+moves+' moves.',win:true};
   }
+  if(g.type==='time'){ if(mode==='ai') return g.winner===humanColor?{eyebrow:'Victory',title:'Time!',text:'The computer ran out of time. You win.',win:true}:{eyebrow:'Defeat',title:'Out of time',text:'Your clock hit zero. The computer wins.',lose:true}; return {eyebrow:'Game over',title:'Time!',text:(g.winner==='w'?'White':'Black')+' wins on time.',win:true}; }
   if(g.type==='abandon') return {eyebrow:'Victory',title:'Opponent left',text:(NET.oppNick||'Your opponent')+' disconnected and didn’t come back. You win.',win:true};
   if(g.type==='resign'&&mode==='online') return g.by==='me'?{eyebrow:'Resigned',title:'Game over',text:'You resigned. '+(NET.oppNick||'Your opponent')+' wins.',lose:true}:{eyebrow:'Victory',title:'They resigned',text:(NET.oppNick||'Your opponent')+' resigned. You win.',win:true};
   if(g.type==='resign') return mode==='ai'?{eyebrow:'Resigned',title:'Game over',text:'You resigned. The computer takes the point.',lose:true}:{eyebrow:'Resigned',title:'Game over',text:(g.winner==='w'?'White':'Black')+' wins by resignation.'};
@@ -1251,7 +1294,7 @@ function overText(){
 function showOver(){
   const o=overText();
   $('ovEyebrow').textContent=o.eyebrow; $('ovTitle').textContent=o.title; $('ovText').textContent=o.text;
-  $('ovMeta').textContent=(mode==='ai'?LEVELS[aiLevel].label+' · ':'Online vs '+(NET.oppNick||'Opponent')+' · ')+Math.ceil(sanList.length/2)+' moves';
+  $('ovMeta').textContent=(mode==='ai'?LEVELS[aiLevel].label+' · '+(tcLabel(tcKey)?tcLabel(tcKey)+' · ':''):'Online vs '+(NET.oppNick||'Opponent')+' · ')+Math.ceil(sanList.length/2)+' moves';
   $('over').hidden=false;
   updateRematch();
   sfx(o.lose?'lose':'win');
@@ -1375,6 +1418,7 @@ function bindPress(sel,attr,cb,cur){
   set(cur);
 }
 bindPress('[data-lvl]','lvl',v=>{ aiLevel=v; store.set('level',v); },aiLevel);
+bindPress('[data-tc]','tc',v=>{ tcKey=v; store.set('tc',v); },tcKey);
 bindPress('[data-side]','side',v=>{ sideChoice=v; store.set('side',v); },sideChoice);
 
 $('goAI').onclick=()=>showScreen('scrAI');
