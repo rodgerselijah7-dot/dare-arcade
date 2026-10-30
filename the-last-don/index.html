@@ -865,6 +865,19 @@ button{-webkit-font-smoothing:antialiased;}
 .byline{margin-top:10px!important;}
 .logo-don{filter:drop-shadow(0 0 30px rgba(240,192,64,.5)) drop-shadow(0 4px 0 rgba(123,24,24,.9));}
 .logo-pre{font-size:1.1em;}
+/* ═════════ MAP BACKDROP ═════════ */
+.map-svg-wrap{background:radial-gradient(ellipse 90% 70% at 50% 45%,#16110b 0%,#0a0807 60%,#050404 100%);}
+#pm-mapbg{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+#pm-mapbg .lyr{position:absolute;inset:-30%;background-repeat:repeat;will-change:transform,background-position;}
+#pm-mapbg .l1{opacity:.45;}
+#pm-mapbg .l2{opacity:.5;}
+#pm-mapbg .rings{position:absolute;left:50%;top:50%;width:1400px;height:1400px;margin:-700px 0 0 -700px;will-change:transform;opacity:.9;}
+#pm-mapbg .beam{position:absolute;left:50%;top:78%;width:520px;height:900px;margin-left:-260px;transform-origin:50% 0;background:linear-gradient(180deg,rgba(255,235,170,.0),rgba(255,235,170,.09) 40%,transparent);clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);transform:rotate(180deg);animation:pmBeam 14s ease-in-out infinite alternate;}
+@keyframes pmBeam{from{transform:rotate(150deg);}to{transform:rotate(210deg);}}
+#pm-mapbg .fog{position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 50%,transparent 40%,rgba(5,4,3,.65) 100%);}
+#pm-mapbg .horizon{position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(180deg,transparent,rgba(120,60,15,.12) 80%,rgba(201,151,42,.1));}
+#city-map{position:relative;z-index:1;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(180deg,transparent 0,#000 6%,#000 92%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(180deg,transparent 0,#000 6%,#000 92%,transparent 100%);mask-composite:intersect;}
+@media(prefers-reduced-motion:reduce){#pm-mapbg .beam{animation:none;}}
 </style>
 <script src="/dare-unlock.js"></script>
 </head>
@@ -3976,6 +3989,64 @@ ${fig({who:'donnie',x:180,y:296,h:272,pose:'stand',mood:'stern'})}
 <rect x="-400" y="296" width="1160" height="60" fill="url(#hroof)"/><rect x="-400" y="296" width="1160" height="2" fill="rgba(240,192,64,.55)"/></svg>`;
   t.appendChild(hero);
 })();
+})();
+</script>
+<script>
+/* ═════════ MAP BACKDROP (parallax city beyond the map edge) ═════════ */
+(function(){
+'use strict';
+const wrap=document.getElementById('map-svg-wrap');if(!wrap)return;
+const rnd=(s=>()=>(s=(s*16807)%2147483647)/2147483647);
+function tile(size,seed,kind){
+  const r=rnd(seed);let o='';
+  if(kind==='far'){
+    for(let i=0;i<=size;i+=size/6){o+=`<path d="M${i} 0V${size}M0 ${i}H${size}" stroke="rgba(201,151,42,.09)" stroke-width="${i%(size/3)?1:2}"/>`;}
+    for(let i=0;i<14;i++){const x=(r()*size)|0,y=(r()*size)|0;o+=`<rect x="${x}" y="${y}" width="${10+r()*26|0}" height="${10+r()*26|0}" fill="rgba(255,255,255,${.015+r()*.03})"/>`;}
+    for(let i=0;i<26;i++)o+=`<rect x="${(r()*size)|0}" y="${(r()*size)|0}" width="2" height="2" fill="rgba(255,214,130,${.15+r()*.4})"/>`;
+  }else{
+    const g=size/4;
+    for(let a=0;a<4;a++)for(let b=0;b<4;b++){
+      const x=a*g+8,y=b*g+8,w=g-16,h=g-16;
+      const parts=r()>.5?2:1;
+      for(let k=0;k<parts;k++){
+        const bw=w/parts-(parts>1?3:0),bx=x+k*(w/parts),bh=h*(.55+r()*.45),by=y+(h-bh);
+        o+=`<rect x="${bx|0}" y="${by|0}" width="${bw|0}" height="${bh|0}" fill="rgba(${18+r()*8|0},${14+r()*6|0},${10},.95)" stroke="rgba(201,151,42,${.1+r()*.12})" stroke-width="1"/>`;
+        o+=`<rect x="${bx|0}" y="${by|0}" width="${bw|0}" height="2" fill="rgba(255,225,150,.16)"/>`;
+        const cols=Math.max(1,(bw/9)|0),rows=Math.max(1,(bh/12)|0);
+        for(let cx=0;cx<cols;cx++)for(let cy=0;cy<rows;cy++)if(r()>.72)o+=`<rect x="${(bx+4+cx*9)|0}" y="${(by+6+cy*12)|0}" width="4" height="5" fill="rgba(255,214,120,${.25+r()*.45})"/>`;
+      }
+      if(r()>.8)o+=`<circle cx="${(x+w/2)|0}" cy="${y-2}" r="2" fill="rgba(240,70,50,.8)"/>`;
+    }
+  }
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${o}</svg>`;
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+}
+const bg=document.createElement('div');bg.id='pm-mapbg';
+const rings=(()=>{let o='';for(let i=1;i<=6;i++)o+=`<circle cx="700" cy="700" r="${i*105}" fill="none" stroke="rgba(201,151,42,${.1-i*.01})" stroke-width="1" ${i%2?'stroke-dasharray="3 9"':''}/>`;
+  for(let a=0;a<12;a++){const t=a*Math.PI/6;o+=`<line x1="700" y1="700" x2="${700+Math.cos(t)*700}" y2="${700+Math.sin(t)*700}" stroke="rgba(201,151,42,.05)"/>`;}
+  o+=`<text x="700" y="64" font-family="Bebas Neue,Arial" font-size="20" letter-spacing="14" text-anchor="middle" fill="rgba(201,151,42,.25)">N</text>`;
+  o+=`<text x="700" y="1352" font-family="Oswald,Arial" font-size="12" letter-spacing="10" text-anchor="middle" fill="rgba(201,151,42,.18)">BEYOND THE CITY LIMITS</text>`;
+  return `<svg class="rings" viewBox="0 0 1400 1400" xmlns="http://www.w3.org/2000/svg">${o}</svg>`;})();
+bg.innerHTML=`<div class="lyr l1"></div><div class="lyr l2"></div>${rings}<div class="beam"></div><div class="horizon"></div><div class="fog"></div>`;
+bg.querySelector('.l1').style.backgroundImage=tile(480,7,'far');
+bg.querySelector('.l2').style.backgroundImage=tile(720,19,'near');
+bg.querySelector('.l2').style.backgroundSize='720px 720px';
+wrap.insertBefore(bg,wrap.firstChild);
+const l1=bg.querySelector('.l1'),l2=bg.querySelector('.l2'),rg=bg.querySelector('.rings');
+const _a=window.applyMapTransform;
+window.applyMapTransform=function(smooth){
+  const W=wrap.clientWidth||390,H=wrap.clientHeight||800;
+  const lim=Math.max(0,MAP.scale-.6);
+  const mx=W*(.42+.55*lim),my=H*(.4+.5*lim);
+  MAP.x=Math.max(-mx,Math.min(mx,MAP.x));MAP.y=Math.max(-my,Math.min(my,MAP.y));
+  _a&&_a.apply(this,arguments);
+  const z=1+(MAP.scale-1)*.18,tr=smooth?'transform .35s ease-out':'none';
+  l1.style.transition=l2.style.transition=rg.style.transition=tr;
+  l1.style.transform=`translate(${MAP.x*.25}px,${MAP.y*.25}px) scale(${z})`;
+  l2.style.transform=`translate(${MAP.x*.55}px,${MAP.y*.55}px) scale(${1+(MAP.scale-1)*.4})`;
+  rg.style.transform=`translate(${MAP.x*.9}px,${MAP.y*.9}px) scale(${.7+MAP.scale*.3})`;
+};
+if(typeof MAP!=='undefined')window.applyMapTransform(false);
 })();
 </script>
 <script>
