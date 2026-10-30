@@ -462,6 +462,7 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;-webkit-text-size-adju
 // edge-to-edge. All game coordinates are in 800 480 space.
 // We store scale factors so touch/click coords can be mapped if needed.
 let scaleX=1,scaleY=1,DPR=1,WX=1;
+var isLandscape=false,HUDH=0,STRIPH=0,STRIPY=0;
 function fitScreen(){
   const vw=window.innerWidth,vh=window.innerHeight;
   const isMobile=window.matchMedia('(pointer:coarse)').matches;
@@ -473,6 +474,13 @@ function fitScreen(){
   GH=Math.round(vh-tcH);
   // Sprites were W/800 = tiny (~18px) on portrait phones; floor them by height. World x never compresses below design size.
   S=Math.max(W/800,Math.min(1,GH/900));WX=Math.max(1,W/800);scaleX=1;scaleY=1;
+  // Landscape is a short, wide playfield: size characters, jump and HUD from playfield HEIGHT so proportions match portrait
+  const land=vw>vh*1.1;isLandscape=land;
+  if(land)S=Math.min(S,GH*0.0022);
+  const _pf=Math.min(1,GH/700);GRAVITY=0.52*_pf;PJUMP=-17.5*_pf;PSPEED=6.2;
+  HUDH=land?Math.max(30,Math.round(GH*.12)):Math.round(GH*.072);
+  STRIPH=land?Math.max(20,Math.round(GH*.085)):Math.round(GH*.038);
+  STRIPY=HUDH+Math.round(GH*.012);
   DPR=Math.min(window.devicePixelRatio||1,2);
   ['gameCanvas','titleCanvas'].forEach(id=>{
     const el=document.getElementById(id);
@@ -489,12 +497,11 @@ function fitScreen(){
   // Position tPause button directly below weapon sub-strip (beneath wave label)
   const _tp=document.getElementById('tPause');
   if(_tp){
-    const _hudH=Math.round(GH*0.072);
-    const _sY=_hudH+Math.round(GH*0.012);
-    const _sH=Math.round(GH*0.038);
+    const _sY=STRIPY;
+    const _sH=STRIPH;
     _tp.style.top=(_sY+_sH)+'px';
-    _tp.style.height=_sH+'px';
-    _tp.style.width=Math.round(W*0.14)+'px';
+    _tp.style.height=Math.max(isLandscape?28:38,_sH)+'px';
+    _tp.style.width=(isLandscape?60:Math.max(56,Math.round(W*0.14)))+'px';
     _tp.style.fontSize=Math.max(8,Math.round(W/55))+'px';
     // Only visible during active gameplay
     if(GS!=='playing'){_tp.style.opacity='0';_tp.style.pointerEvents='none';}
@@ -923,7 +930,7 @@ const STAGES=[
 // ==============================================================
 //  GAME STATE
 // ==============================================================
-const GRAVITY=0.52,PJUMP=-17.5,PSPEED=6.2;  // tuned: fast enough, slow enough to enjoy scenery
+let GRAVITY=0.52,PJUMP=-17.5,PSPEED=6.2;  // tuned: fast enough, slow enough to enjoy scenery
 const WEATHER_TYPES=['rain','steam','ash'];
 const WCOL={RIFLE:'#ffee00',SPREAD:'#ff8800',LASER:'#00eeff',RAPID:'#ff44ff',ROCKET:'#ff4400'};
 
@@ -1079,12 +1086,14 @@ function buildBgCache(){
   bgOffscreenStage=-1; // force rebuild on next drawBG
 }
 
+function gndTop(){return (stagePlats&&stagePlats[0])?stagePlats[0].y:Math.round(GH*.917);}
+function gndY(h){return gndTop()-h-1;}
 function mkPlayer(){
-  return{x:Math.round(W*.15),y:Math.round(GH*.81),w:Math.round(36*S),h:Math.round(50*S),vx:0,vy:0,grounded:false,
+  return{x:Math.round(W*.15),y:gndY(Math.round(50*S)),w:Math.round(36*S),h:Math.round(50*S),vx:0,vy:0,grounded:false,
     facing:1,aimUp:false,aimDiag:false,
     weapon:'RIFLE',shootCool:0,invincible:0,
     animFrame:0,animTimer:0,running:false,
-    jumpPressed:false,coyote:0,trail:[],
+    jumpPressed:false,jumpBuf:0,coyote:0,trail:[],
     shieldActive:false,shieldTimer:0,shieldCooldown:0,
     dashCooldown:0,dashTimer:0,dashDir:0,lastTapDir:0,lastTapTime:0,fastFalling:false};
 }
@@ -1143,7 +1152,10 @@ function updatePlayer(dt=1){
   p.aimDiag=p.aimUp&&p.running;
 
   //  Jump 
-  if(keys[' ']&&(p.grounded||p.coyote>0)&&!p.jumpPressed){
+  if(keys[' ']&&!p.jumpPressed)p.jumpBuf=7;   // jump buffer: a press just before landing still jumps
+  if(p.jumpBuf>0)p.jumpBuf-=dt;
+  if(p.jumpBuf>0&&(p.grounded||p.coyote>0)&&!p.jumpPressed){
+    p.jumpBuf=0;
     p.vy=PJUMP;p.grounded=false;p.coyote=0;p.jumpPressed=true;p.fastFalling=false;
     spawnFX(p.x+13,p.y+p.h-4,stageCfg.groundLine,7,'jump');sfxJump();
   }
@@ -1164,7 +1176,7 @@ function updatePlayer(dt=1){
   //  Fast-fall: ONLY near apex (vy close to 0) 
   // Condition: ArrowDown, airborne, near apex (vy > -2), not already fast-falling
   if(keys['ArrowDown']&&!p.grounded&&p.vy>-2&&!p.fastFalling){
-    p.vy=Math.min(14*S,18); // strong downward snap
+    p.vy=14; // strong downward snap
     p.fastFalling=true;
     spawnFX(p.x+p.w/2,p.y+p.h,'#ffffff',4,'jump');
   }
@@ -1332,7 +1344,7 @@ function spawnEnemy(){
   // Shoot timers scale with stage  later stages are more aggressive
   const baseST=Math.max(30,70-(stage-1)*12);
   enemies.push({type,x:scrollX+W+Math.round(80*S),
-    y:type==='drone'?droneMinY+Math.random()*droneRangeY:Math.round(GH*.845),
+    y:type==='drone'?droneMinY+Math.random()*droneRangeY:gndY(Math.round(60*S)),
     w:Math.round((type==='shield'?50:40)*S),h:Math.round(60*S),hp:ehp,maxHp:ehp,
     vx:evx,vy:0,grounded:true,
     shootTimer:type==='turret'?baseST:type==='drone'?(baseST+10):baseST+Math.random()*20,
@@ -1674,8 +1686,8 @@ function updateEnemies(dt=1){
         }
         if(stage===3&&e.phase>=2&&e.attackCycle===2&&
            enemies.filter(en=>en.type!=='boss').length<4){
-          spawnEnemyAt(scrollX+W*.7,GH*.84,'soldier');
-          spawnEnemyAt(scrollX+W*.3,GH*.84,'soldier');
+          spawnEnemyAt(scrollX+W*.7,gndTop()-8,'soldier');
+          spawnEnemyAt(scrollX+W*.3,gndTop()-8,'soldier');
           floatTexts.push({x:bx,y:by-Math.round(30*S),txt:'REINFORCEMENTS!',color:'#ff2200',life:50,maxLife:50,vy:-0.6});
         }
 
@@ -1797,7 +1809,7 @@ function updateEnemies(dt=1){
         }
         if(e.hp<=0){
           const ex=e.x+e.w/2,ey=e.y+e.h/2,isB=e.type==='boss';
-          bigExplosion(ex,ey,isB?'#ffd700':stageCfg.groundLine,isB);
+          bigExplosion(ex,ey,isB?'#ffd700':stageCfg.groundLine,isB);try{if(navigator.vibrate)navigator.vibrate(isB?[40,20,60]:12);}catch(_e){}
           const pts=isB?8000*stage:e.type==='turret'?400*stage:e.type==='shield'?350*stage:e.type==='jumper'?200*stage:150*stage;
           addCombo(pts,ex,ey);
           if(isB){bossDefeated=true;screenShake=35;triggerFlash(.8);hitPause=6;}
@@ -1851,7 +1863,7 @@ function updateBullets(dt=1){
 }
 
 // == POWERUPS ==
-function spawnPowerup(){const t=PWTYPES[Math.floor(Math.random()*PWTYPES.length)];const pwY=Math.round(GH*.81);powerups.push({x:scrollX+W+80,y:pwY,baseY:pwY,type:t,bob:Math.random()*Math.PI*2,spin:0});}
+function spawnPowerup(){const t=PWTYPES[Math.floor(Math.random()*PWTYPES.length)];const pwY=gndTop()-Math.max(Math.round(GH*.107),Math.round(34*S));powerups.push({x:scrollX+W+80,y:pwY,baseY:pwY,type:t,bob:Math.random()*Math.PI*2,spin:0});}
 function updatePowerups(dt=1){
   for(let i=powerups.length-1;i>=0;i--){
     const p=powerups[i];p.bob+=.07*dt;p.spin+=.04*dt;p.y=p.baseY+(Math.sin(p.bob)*Math.round(12*S));
@@ -2029,7 +2041,7 @@ function hitDamage(){
       enemies=enemies.filter(e=>e.type==='boss');
       bullets=bullets.filter(b=>b.owner==='player');
       player.x=scrollX+W*0.15;
-      player.y=Math.round(GH*.81);
+      player.y=gndY(player.h);
       player.vy=-3; // small upward pop on respawn -- vx preserved from knockback
       player.grounded=false;
       player.invincible=110; // short grace on respawn
@@ -2178,9 +2190,9 @@ function updateHUD(){
 function drawWeaponBadge(){} // weapon now drawn inline in drawHUD
 
 function drawHUD(){
-  const hudH=Math.round(GH*.072);
+  const hudH=HUDH||Math.round(GH*.072);
   const fSz=Math.max(14,Math.round(W/85));
-  const smFz=Math.max(11,Math.round(W/115));
+  const smFz=Math.max(12,Math.round(W/100));
   ctx.save();
 
   // Background strip
@@ -2205,11 +2217,11 @@ function drawHUD(){
   // Individual hearts (max 5 shown, filled=alive, hollow=lost)
   const maxHeartsShow=Math.min(7,Math.max(lives||0,5));
   const heartSize=Math.round(fSz*.82);
-  const heartGap=Math.round(heartSize*1.35);
+  const heartGap=Math.round(heartSize*1.75);
   const heartsW=maxHeartsShow*heartGap;
   const hx0=lx;
   function drawHeart(hcx,hcy,sz,filled){
-    ctx.save();ctx.translate(hcx,hcy);ctx.scale(sz*.09,sz*.09);
+    ctx.save();ctx.translate(hcx,hcy);ctx.scale(sz*.062,sz*.062);
     if(filled){ctx.fillStyle=lives<=1?'#ff2200':'#ff4444';}
     else{ctx.fillStyle='#331111';}
     ctx.beginPath();ctx.moveTo(0,6);ctx.bezierCurveTo(-10,-2,-14,-12,-7,-14);
@@ -2225,7 +2237,7 @@ function drawHUD(){
     drawHeart(hx0+Math.round(heartSize*.5)+hi*heartGap,cy,heartSize,hi<(lives||0));
   }
   // Separator between lives and score
-  sep(Math.round(W*.22));
+  sep(Math.round(W*.28));
 
 
   // -- SCORE (centre) --------------------------------------------
@@ -2239,8 +2251,8 @@ function drawHUD(){
   // Show at x1 as ghost, brightens when active
   {
   const _cActive=combo>1;
-    const comboCol=_cActive?(combo>=10?'#ff00ff':combo>=5?'#ffd700':'#ff8800'):'#333333';
-    ctx.globalAlpha=_cActive?1:0.35;
+    const comboCol=_cActive?(combo>=10?'#ff00ff':combo>=5?'#ffd700':'#ff8800'):'#8a8a9a';
+    ctx.globalAlpha=_cActive?1:0.7;
     ctx.fillStyle=comboCol;
     ctx.font='bold '+Math.max(10,Math.round(fSz*.9))+'px "Press Start 2P"';
     ctx.textAlign='center';ctx.textBaseline='middle';
@@ -2252,11 +2264,12 @@ function drawHUD(){
 
   // -- STAGE + DIFFICULTY (right, row 1)  clearly separated ----
   const rx=Math.round(W*.985);
-  ctx.font='bold '+Math.max(9,smFz)+'px "Press Start 2P"';
+  ctx.font='bold '+smFz+'px "Press Start 2P"';
   ctx.textAlign='right';ctx.textBaseline='middle';
   // S1/3 in top quarter of HUD strip
-  ctx.fillStyle='#aaa';
+  ctx.fillStyle='#f2f2f2';ctx.shadowColor='#000';ctx.shadowBlur=3;
   ctx.fillText('S'+(stage||1)+'/3',rx,Math.round(hudH*.28));
+  ctx.shadowBlur=0;
   // Diff pill in bottom quarter of HUD strip
   const dlbl=['REC','SOL','LEG'][difficulty]||'SOL';
   const dcol=['#44ff88','#ffee00','#ff4444'][difficulty]||'#ffee00';
@@ -2293,12 +2306,12 @@ function drawHUD(){
   // -- WEAPON SUB-STRIP: dedicated row below progress bar --------
   // This gives weapon its own clear unobstructed area
   {
-    const wStripH=Math.round(GH*.038); // ~26px on 701px screen
-    const wStripY=hudH+Math.round(GH*.012); // just below progress bar
+    const wStripH=STRIPH; // ~26px on 701px screen
+    const wStripY=STRIPY; // just below progress bar
     const wc=WCOL[player?player.weapon:'RIFLE']||'#ffee00';
     const _wmap={'RIFLE':'RIFLE','SPREAD':'SPREAD','LASER':'LASER','RAPID':'RAPID','ROCKET':'ROCKET'};
     const _wname=_wmap[player?player.weapon:'RIFLE']||'RIFLE';
-    const wSz=Math.max(9,Math.round(W/130));
+    const wSz=Math.max(12,Math.round(W/105));
     // Subtle background for this row
     ctx.fillStyle='rgba(0,0,0,0.55)';
     ctx.fillRect(0,wStripY,W,wStripH);
@@ -2321,7 +2334,7 @@ function drawHUD(){
     ctx.shadowBlur=0;
     // Elevation bonus indicator
     if(player&&player.grounded&&player.y<GH*0.76){
-      const eSz=Math.max(7,Math.round(W/160));
+      const eSz=Math.max(10,Math.round(W/130));
       const _wNameW=_wname.length*wSz*0.68;
       ctx.fillStyle='#ffd700';ctx.shadowColor='#ffd700';ctx.shadowBlur=3;
       ctx.font='bold '+eSz+'px "Press Start 2P"';
@@ -2339,10 +2352,10 @@ function drawHUD(){
      ctx.fillStyle=hot?'#ff5533':'rgba(255,255,255,0.45)';ctx.fillText(hot?'HOT':'HEAT',hbX+hbW+Math.round(6*S),wcy);}
     // Wave label: right side of weapon strip, clearly separated
     if(!bossSpawned){
-      ctx.fillStyle='rgba(255,255,255,0.55)';
-      ctx.font=Math.max(8,Math.round(wSz*.9))+'px "Press Start 2P"';
+      ctx.fillStyle='rgba(255,255,255,0.92)';ctx.shadowColor='#000';ctx.shadowBlur=3;
+      ctx.font='bold '+Math.max(11,Math.round(wSz*.9))+'px "Press Start 2P"';
       ctx.textAlign='right';ctx.textBaseline='middle';
-      ctx.fillText('WAVE '+(waveCount+1),Math.round(W*.985),wcy);
+      ctx.fillText('WAVE '+(waveCount+1),Math.round(W*.985),wcy);ctx.shadowBlur=0;
     }
     // Separator line right side of weapon name zone
     ctx.fillStyle='rgba(255,255,255,0.10)';
@@ -3425,10 +3438,12 @@ function drawPlayer(){
   }
 
   if(p.invincible>0&&Math.floor(p.invincible/5)%2===0)return;
+  groundShadow(sx+p.w/2,p.y+p.h,p.w*1.3);
 
   ctx.save();
   ctx.translate(sx+p.w/2, p.y+p.h/2);
   ctx.scale(p.facing*S, S);
+  ctx.shadowColor='#ffaa4499';ctx.shadowBlur=1.5;
 
   const wc=WCOL[p.weapon]||'#ffee00';
   const fr=p.animFrame, run=p.running, air=!p.grounded;
@@ -4335,6 +4350,13 @@ function drawBoss(e,sx){
 }
 
 
+// soft contact shadow so characters sit on the ground instead of floating
+function groundShadow(cx,fy,w){
+  const gy=gndTop();
+  const rx=Math.max(8,w*.55),k=Math.max(0,1-Math.abs(gy-fy)/(GH*.25));
+  ctx.save();ctx.globalAlpha=.32*Math.max(.35,k);ctx.fillStyle='#000';
+  ctx.beginPath();ctx.ellipse(cx,Math.min(fy,gy)+2,rx,Math.max(2,rx*.22),0,0,Math.PI*2);ctx.fill();ctx.restore();
+}
 function drawEnemies(){
   enemies.forEach(e=>{
     const sx=e.x-scrollX;if(sx<-120||sx>W+120)return;
@@ -4349,20 +4371,16 @@ function drawEnemies(){
       drawBoss(e,sx);return;
     }
     // Hit flash for regular enemies
-    if(e.hitStun>0){
-      ctx.save();
-      if(e.hitStun%2===0){
-        // Draw a white rect over where the enemy will be drawn
-        ctx.fillStyle='rgba(255,255,255,0.9)';
-        ctx.fillRect(sx,e.y,e.w,e.h);
-      }
-      ctx.restore();
-    }
+    if(e.type!=='drone'&&e.type!=='turret')groundShadow(sx+e.w/2,e.y+e.h,e.w);
+    const _hf=e.hitStun>0&&e.hitStun%2===0;
+    const _rim={soldier:'#ff3322',jumper:'#3377ff',turret:'#ff8800',drone:'#ff44cc',shield:'#44ccff'}[e.type]||'#ff3322';
+    ctx.save();ctx.shadowColor=_hf?'#ffffff':_rim+'99';ctx.shadowBlur=_hf?14:(enemies.length>7?0:1.5);
     if(e.type==='soldier')drawSoldier(e,sx);
     else if(e.type==='jumper')drawJumper(e,sx);
     else if(e.type==='turret')drawTurret(e,sx);
     else if(e.type==='drone')drawDrone(e,sx);
     else if(e.type==='shield')drawShield(e,sx);
+    ctx.restore();
     if(e.maxHp>2&&e.hp<e.maxHp){
       const pct=e.hp/e.maxHp;
       const hbh=Math.max(4,Math.round(4*S));
@@ -4985,9 +5003,9 @@ function drawDeathAnim(){
   ctx.restore();
 }
 
-function diffSpdMult(){return DIFF.enemySpdMult[difficulty];}
+function diffSpdMult(){return (DIFF.enemySpdMult[difficulty]||1);}
 
-function diffSpawnMult(){return DIFF.spawnMult[difficulty];}
+function diffSpawnMult(){return (DIFF.spawnMult[difficulty]||1);}
 
 const DIFF={
   enemyHpMult:   [0.6,  1.0,  2.0],
@@ -4999,7 +5017,7 @@ const DIFF={
   extraCheckpts: [1,    0,    0  ],  // Recruit: extra checkpoint at 25%
 };
 
-function diffHpMult(){return DIFF.enemyHpMult[difficulty];}
+function diffHpMult(){return (DIFF.enemyHpMult[difficulty]||1);}
 
 const touchKeys={};
 function tD(k,e){
