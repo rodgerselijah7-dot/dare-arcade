@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="booting">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -88,6 +88,21 @@ body.touch #speedo{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 .brand{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
 .brand h1{margin:0;font-family:var(--f-display);font-weight:900;font-size:clamp(56px,13vw,112px);line-height:.82;letter-spacing:-.01em;text-transform:uppercase;text-wrap:balance}
 .brand h1 span{color:var(--clay)}
+/* loading screen: covers the menu until the 3D track has drawn its first frame */
+#boot{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;
+  background:var(--ink);color:var(--bone);text-align:center;transition:opacity .4s}
+#boot.out{opacity:0;pointer-events:none}
+#boot h1{margin:0;font-family:var(--f-display);font-weight:900;font-size:clamp(48px,14vw,88px);line-height:.85;text-transform:uppercase}
+#boot h1 span{color:var(--clay)}
+#boot .lb{width:min(220px,60vw);height:4px;border-radius:2px;background:rgba(243,235,222,.15);overflow:hidden}
+#boot .lb i{display:block;width:40%;height:100%;border-radius:2px;background:var(--plate);animation:bootbar 1.1s ease-in-out infinite}
+@keyframes bootbar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+#boot p{margin:0;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dust)}
+#boot button{display:none}
+#boot.fail .lb{display:none}
+#boot.fail button{display:inline-block;padding:12px 22px;border-radius:12px;border:0;background:var(--plate);color:var(--ink);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+html.booting #menu{visibility:hidden}
+@media (prefers-reduced-motion:reduce){#boot .lb i{animation-duration:2.4s}}
 .plate{display:inline-flex;align-items:center;justify-content:center;background:var(--plate);color:#111;border-radius:12px 12px 22px 22px;
   font-family:var(--f-display);font-weight:900;padding:6px 14px 8px;font-size:30px;line-height:1;box-shadow:0 4px 0 rgba(0,0,0,.35)}
 .tag{margin:0;color:var(--dust);font-size:16px;max-width:60ch;line-height:1.4}
@@ -216,6 +231,7 @@ body.touch #guide{top:auto;right:auto;left:50%;transform:translateX(-50%);bottom
 </style>
 </head>
 <body>
+<div id="boot" role="status" aria-live="polite"><h1>Dirt <span>Line</span></h1><div class="lb"><i></i></div><p id="bootMsg">Building the track</p><button type="button" id="bootRetry" onclick="location.reload()">Try again</button></div>
 <canvas id="c"></canvas>
 
 <div id="hud" hidden>
@@ -364,6 +380,9 @@ body.touch #guide{top:auto;right:auto;left:50%;transform:translateX(-50%);bottom
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.DL_BOOTFAIL=function(m){var b=document.getElementById('boot');if(!b)return;b.classList.add('fail');document.getElementById('bootMsg').textContent=m;};
+if(!window.THREE)DL_BOOTFAIL("Couldn't load the game. Check your connection.");
+window.addEventListener('error',function(e){var b=document.getElementById('boot');if(document.documentElement.classList.contains('booting')&&b&&!b.classList.contains('fail'))DL_BOOTFAIL('Something went wrong loading the game.');});</script>
 
 <script id="phys">
 /* ================= PHYSICS + TRACK (no rendering) ================= */
@@ -2050,6 +2069,8 @@ setVisible(false);
 buildWorld(TRACKS[0]);placeBikeAt(T.startX,0);setMode('race');renderToggles();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>redraws.forEach(f=>f()));
 requestAnimationFrame(frame);
+// reveal the menu once the first frame has drawn (shaders compiled, scene on screen)
+requestAnimationFrame(()=>requestAnimationFrame(()=>{document.documentElement.classList.remove('booting');const b=$('boot');if(b){b.classList.add('out');setTimeout(()=>b.remove(),450);}}));
 })();
 </script>
 
