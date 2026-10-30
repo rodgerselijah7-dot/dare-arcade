@@ -585,6 +585,12 @@ function init3D(){
   const looseMat=new THREE.MeshStandardMaterial({map:looseBillTex(),roughness:.8,side:THREE.DoubleSide,transparent:true});
   R3={renderer,scene,camera,dice,billMat,edgeMat,dustMat,looseMat,pot:[],leaving:[],parts:[],flyers:[],rattle:false,shake:0,host:null};
   attach3D(screen==='game'?'table':'titleBg');
+  // warm up every material/shader now (behind the loading screen) so the first game frame never stalls compiling them
+  try{
+    const wst=makeStack(100),wlb=new THREE.Mesh(new THREE.PlaneGeometry(.5,.25),looseMat.clone()),wsp=new THREE.Sprite(dustMat.clone());
+    wst.position.z=wlb.position.z=wsp.position.z=2.35;scene.add(wst,wlb,wsp);
+    renderer.compile(scene,camera);renderer.render(scene,camera);scene.remove(wst,wlb,wsp);
+  }catch(e){}
   try{const ro=new ResizeObserver(fit3D);ro.observe($('table'));ro.observe($('titleBg'))}catch(e){addEventListener('resize',fit3D)}
   requestAnimationFrame(frame);
   return true;
@@ -598,11 +604,14 @@ function attach3D(where){
 function fit3D(){
   if(!R3||!R3.host)return;
   const r=R3.host.getBoundingClientRect();if(!r.width||!r.height)return;
-  R3.renderer.setSize(r.width,r.height,false);
-  const cam=R3.camera;cam.aspect=r.width/r.height;
+  const cam=R3.camera,rw=Math.round(r.width),rh=Math.round(r.height);
+  if(R3.sw!==rw||R3.sh!==rh){R3.sw=rw;R3.sh=rh;R3.renderer.setSize(r.width,r.height,false);R3.resized=true;}
+  cam.aspect=r.width/r.height;
   const k=Math.max(.75,.62/cam.aspect);
   R3.base=V3(0,8.2*k,7.6*k);
   cam.position.copy(R3.base);cam.lookAt(0,0,-.3);cam.updateProjectionMatrix();
+  // setSize clears the canvas: redraw in the same task so no blank frame is ever shown
+  if(R3.resized){R3.resized=false;try{R3.renderer.render(R3.scene,cam)}catch(e){}}
 }
 // a banded stack of play bills; height grows with the amount
 function makeStack(amount){
@@ -996,7 +1005,7 @@ function show(which){
   $('chatBtn').hidden=!(which==='game'&&online()&&CHAT);
   $('titleBg').hidden=which==='game';$('titleBg').classList.toggle('dim',which==='online');
   init3D();
-  if(which==='game'){attach3D('table');requestAnimationFrame(()=>{fit3D();placeDice();render();maybeCpu()})}
+  if(which==='game'){attach3D('table');fit3D();placeDice();render();requestAnimationFrame(maybeCpu)}
   else{attach3D('titleBg');if(R3)setPot(0,true)}
   if(which==='title'){stopCpu();renderTitle()}
 }
