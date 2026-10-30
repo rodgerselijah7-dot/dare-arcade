@@ -697,7 +697,9 @@ button{-webkit-font-smoothing:antialiased;}
 .sp-img.villain{box-shadow:0 0 18px rgba(192,57,43,.35),0 6px 16px rgba(0,0,0,.6);}
 .s-lbox{background:var(--glass);border:1px solid var(--glass-b);border-left:3px solid var(--gold);border-radius:3px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 /* ── LEVEL INTRO ── */
-#level-intro{background:radial-gradient(ellipse at 50% 40%,rgba(54,38,10,.9),rgba(0,0,0,.97) 70%);}
+#level-intro{background:radial-gradient(ellipse at 50% 40%,#2c1f08,#050403 72%),#000;}
+.li-obj-icon{display:flex;}
+.li-obj-icon svg{filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));}
 .li-num{background:var(--foil);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 30px rgba(240,192,64,.3));}
 .li-obj-item{background:var(--glass);border:1px solid var(--glass-b);border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,.5);}
 .li-go{filter:drop-shadow(0 0 22px rgba(240,192,64,.6));}
@@ -1609,7 +1611,7 @@ function showLevelIntro(ch,lv){
   const objEl=el('li-obj');objEl.innerHTML='';
   Object.entries(cfg.obj).forEach(([tid,need])=>{
     const div=document.createElement('div');div.className='li-obj-item';
-    div.innerHTML=`<div class="li-obj-icon"><svg viewBox="0 0 20 20" width="26" height="26">${OBJ_SVG[tid].match(/<svg[^>]*>([\s\S]*?)<\/svg>/)?.[1]||''}</svg></div><div class="li-obj-count">${need}</div><div class="li-obj-lbl">${tid.toUpperCase()}</div>`;
+    div.innerHTML=`<div class="li-obj-icon">${(OBJ_SVG[tid]||'').replace('<svg ','<svg width="42" height="42" ')}</div><div class="li-obj-count">${need}</div><div class="li-obj-lbl">${tid.toUpperCase()}</div>`;
     objEl.appendChild(div);
   });
   const pbKeyLI=`${ch}-${lv}`;const pbLI=G.personalBest?.[pbKeyLI];
