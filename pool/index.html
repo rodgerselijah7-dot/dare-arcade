@@ -1081,10 +1081,21 @@ cv.addEventListener('pointerdown',e=>{audio();
   if(G.rules==='8t'&&!G.isBreak&&onEight(balls,G,G.turn)){ // call a pocket
     let bi=-1,bd=40;POCKETS.forEach((pk,i)=>{const d=hyp(p.x-pk.x,p.y-pk.y);if(d<bd){bd=d;bi=i}});
     if(bi>=0){G.called=bi;tone(880,0.08,0.1,'triangle');toast('8-ball called');return}}
+  // grab the cue stick itself and pull it straight back to shoot
+  {const ux=Math.cos(aim+Math.PI),uy=Math.sin(aim+Math.PI),dx=p.x-cue.x,dy=p.y-cue.y,t=dx*ux+dy*uy,d=Math.abs(dx*uy-dy*ux),b0=R+3+pull*95,slop=Math.max(14,20/s);
+   if(cue.on&&t>b0-slop&&t<b0+430&&d<slop&&!(G.bih&&hyp(dx,dy)<R*3.4)){
+     if(needCall()){toast('Call your pocket first: tap where the 8 is going',2400);return}
+     dragging={stick:true,t0:t,ux,uy};lastHaptic=-1;try{cv.setPointerCapture(e.pointerId)}catch(_){}return}}
   if(G.bih&&hyp(p.x-cue.x,p.y-cue.y)<R*3.4)dragging={cue:true,dx:cue.x-p.x,dy:cue.y-p.y};else{dragging={cue:false};aimAt(p)}
   try{cv.setPointerCapture(e.pointerId)}catch(_){}});
-cv.addEventListener('pointermove',e=>{if(!dragging||!humanCanAct())return;const cs=e.getCoalescedEvents?e.getCoalescedEvents():[];const p=toT(cs.length?cs[cs.length-1]:e);if(dragging.cue)tryPlace(p.x+dragging.dx,p.y+dragging.dy);else aimAt(p)});
-const endDrag=()=>{dragging=null};cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('pointermove',e=>{if(!dragging||!humanCanAct())return;const cs=e.getCoalescedEvents?e.getCoalescedEvents():[];const p=toT(cs.length?cs[cs.length-1]:e);
+  if(dragging.stick){const t=(p.x-cue.x)*dragging.ux+(p.y-cue.y)*dragging.uy;pull=clamp((t-dragging.t0)/(STICK_TRAVEL*POW_TRAVEL[powSens]),0,1);setPowerUI(pull);
+    const st=Math.floor(pull*10);if(st!==lastHaptic){if(st>lastHaptic&&st>0)buzz(3+st*1.6);lastHaptic=st}return}
+  if(dragging.cue)tryPlace(p.x+dragging.dx,p.y+dragging.dy);else aimAt(p)});
+const STICK_TRAVEL=260; // table units of pull-back for full power (scaled by the power sensitivity setting)
+const endDrag=e=>{const d=dragging;dragging=null;if(!d||!d.stick)return;const p=pull;setPowerUI(0);
+  if(e.type==='pointerup'&&p>0.02&&humanCanAct()&&cue.on)startStrike(p);else pull=0};
+cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
 $('replayBadge').onclick=endReplay;
 $('replayPill').onclick=e=>{e.stopPropagation();if(lastRec&&(state==='aim'||state==='wait'||state==='cpu'&&!cpuAnim&&!cpuGen))startReplay(lastRec)};
 
