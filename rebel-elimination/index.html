@@ -251,6 +251,45 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;-webkit-text-size-adju
 #goStage{font-size:clamp(9px,2.2vw,11px)!important;}
 .diff-desc{font-size:clamp(8px,2vw,10px);}
 .ov-content{max-height:100%;overflow-y:auto;}
+
+/* == HOME SCREEN POLISH == */
+.title-eyebrow{font-size:clamp(10px,2.6vw,14px);letter-spacing:clamp(4px,1.8vw,9px);color:#ff8a3c;opacity:1;text-shadow:0 0 12px #ff6b0088,0 2px 6px #000;}
+.title-name{font-size:clamp(30px,9.2vw,76px);line-height:1.02;letter-spacing:2px;filter:drop-shadow(0 0 24px #ff6b00aa) drop-shadow(0 3px 0 #7a1100);}
+.title-premise{color:#f0c9a8;text-shadow:0 2px 10px #000,0 0 3px #000;opacity:1;font-size:clamp(12px,3.2vw,18px);letter-spacing:1px;}
+.title-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.title-chips span{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:clamp(11px,2.8vw,15px);letter-spacing:2px;color:#ffd9b8;border:1px solid #ff6b0088;background:rgba(255,107,0,.12);padding:3px 10px;border-radius:3px;}
+.title-stats{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:clamp(11px,2.8vw,14px);letter-spacing:2px;color:#9ff;text-shadow:0 1px 6px #000;text-align:center;line-height:1.6;}
+.title-stats b{color:#ffd23f;font-weight:700;}
+.ts2{display:block;}
+.title-actions{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:6px;width:100%;}
+.title-row{display:flex;gap:10px;width:min(440px,100%);justify-content:center;}
+.title-row .btn{flex:1;min-height:46px;padding:10px 8px;font-size:clamp(9px,2.5vw,12px);letter-spacing:1px;}
+.title-link{background:none;border:none;color:#ff9a55;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:clamp(11px,2.8vw,14px);letter-spacing:2px;text-decoration:underline;padding:4px 10px;min-height:32px;cursor:pointer;text-shadow:0 1px 6px #000;}
+.title-mute{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:20;width:44px;height:44px;border-radius:50%;border:1px solid #ff6b0099;background:rgba(0,0,0,.5);color:#ffb070;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+#startBtn{animation:startPulse 2.4s ease-in-out infinite;}
+@keyframes startPulse{0%,100%{transform:scale(1);filter:brightness(1);}50%{transform:scale(1.035);filter:brightness(1.2);}}
+@media(prefers-reduced-motion:reduce){#startBtn,.title-name,.title-sub{animation:none !important;}}
+@media(orientation:landscape) and (max-height:540px){
+  #titleContent{align-items:flex-start;justify-content:center;width:64%;padding:44px 0 0 max(5vw,env(safe-area-inset-left));gap:5px;}
+  .title-eyebrow{white-space:nowrap;letter-spacing:clamp(3px,1vw,6px);font-size:clamp(9px,2.6vh,12px);}
+  .ts2{display:inline;margin-left:12px;}
+  .title-actions{flex-direction:row !important;flex-wrap:wrap;align-items:center !important;gap:6px 14px !important;}
+  .title-actions .title-row{flex:0 0 100%;}
+  .title-name br{display:none;}
+  .title-name{font-size:clamp(22px,min(8.4vh,4.8vw),50px);text-align:left;white-space:nowrap;}
+  .title-rule,.title-premise{display:none;}
+  .title-chips{justify-content:flex-start;}
+  .title-stats{text-align:left;}
+  .title-actions{align-items:flex-start;margin-top:2px;gap:6px;}
+  .title-row{justify-content:flex-start;width:auto;}
+  .title-row .btn{flex:0 0 auto;padding:8px 14px;min-height:38px;}
+  #startBtn{padding:10px 30px !important;font-size:clamp(11px,3.4vh,15px) !important;}
+}
+@media(orientation:landscape) and (max-height:400px){
+  .title-chips,.ts2{display:none;}
+  #titleContent{gap:4px;padding-top:40px;}
+  .title-stats{font-size:11px;}
+}
 </style>
 <script src="/dare-unlock.js"></script>
 </head>
@@ -267,16 +306,19 @@ html,body{position:fixed;inset:0;overscroll-behavior:none;-webkit-text-size-adju
   <div class="overlay show" id="titleScreen">
     <canvas id="titleCanvas"></canvas>
     <a class="arcade-link" href="/" aria-label="Back to DARE Arcade">&lsaquo; ARCADE</a>
+    <button class="title-mute" id="titleMute" aria-label="Toggle sound" onclick="safeCall(()=>toggleMute())">&#128266;</button>
     <div id="titleContent">
-      <div class="title-name">DONTAE<br>AMARE</div>
-      <div class="title-sub">Rebel Elimination</div>
+      <div class="title-eyebrow">DONTAE AMARE PRESENTS</div>
+      <div class="title-name">REBEL <br>ELIMINATION</div>
       <div class="title-rule"></div>
-      <div class="title-premise">Fort Worth is under siege.<br>One rebel stands between the city and total annihilation.</div>
-      <div class="title-tag">3 STAGES &nbsp;&middot;&nbsp; 3 BOSSES &nbsp;&middot;&nbsp; ONE LEGEND</div>
-      <div style="display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:6px;width:100%;">
-        <button class="btn" style="font-size:clamp(11px,2.8vw,16px);padding:clamp(14px,3.5vw,20px) clamp(28px,8vw,48px);letter-spacing:3px;" onclick="chooseDiff()">&#9654; START MISSION</button>
+      <div class="title-premise">Fort Worth is under siege.<br>One rebel stands between the city and annihilation.</div>
+      <div class="title-chips"><span>3 STAGES</span><span>3 BOSSES</span><span>1 LEGEND</span></div>
+      <div class="title-stats" id="titleStats" style="display:none"></div>
+      <div class="title-actions">
+        <button class="btn" id="startBtn" style="font-size:clamp(12px,3.2vw,17px);padding:clamp(15px,3.8vw,21px) clamp(30px,9vw,54px);letter-spacing:3px;" onclick="chooseDiff()">&#9654; START MISSION</button>
         <button class="btn btn-gold" id="contBtn" style="display:none;font-size:clamp(9px,2.3vw,13px);padding:12px 26px;" onclick="continueStage()"></button>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+        <button class="title-link" id="diffLink" style="display:none" onclick="chooseDiff()">CHANGE DIFFICULTY</button>
+        <div class="title-row">
           <button class="btn btn-teal" onclick="showLB('title')">&#127942; HALL OF REBELS</button>
           <button class="btn btn-howto" onclick="safeCall(()=>{window._howFrom='titleScreen';hideAll();document.getElementById('howToPlay').classList.add('show');})">? HOW TO PLAY</button>
         </div>
@@ -667,6 +709,7 @@ function toggleMute(){
     btn.textContent=audioMuted?' SOUND OFF':' SOUND ON';
     btn.style.opacity=audioMuted?'0.55':'1';
   }
+  try{refreshMuteIcons();}catch(e){}
 }
 // Dynamic music: check if boss is present and scale BPM
 function updateMusicTempo(){
@@ -1010,7 +1053,7 @@ let runId=0,_advancing=false,_vicSaved=true;
 function hideAll(){['titleScreen','pauseScreen','gameOver','stageClear','victoryScreen','lbScreen','diffScreen'].forEach(id=>document.getElementById(id).classList.remove('show'));}
 function quitToTitle(){stopMusic();GS='idle';runId++;_advancing=false;releaseAll();hideAll();document.getElementById('howToPlay').classList.remove('show');
   if(history.state&&history.state.re)history.back();refreshContinue();(function(){const _b=document.getElementById('tPause');if(_b){_b.style.opacity='0';_b.style.pointerEvents='none';}})();document.getElementById('titleScreen').classList.add('show');drawTitleScreen();
-  if(!titleAnimInterval)titleAnimInterval=setInterval(()=>{try{const _ts=document.getElementById('titleScreen');if(_ts&&_ts.classList.contains('show'))drawTitleScreen();}catch(e){}},80);
+  if(!titleAnimInterval)titleAnimInterval=setInterval(()=>{try{const _ts=document.getElementById('titleScreen');if(_ts&&_ts.classList.contains('show'))drawTitleScreen();}catch(e){}},42);
 }
 function togglePause(){
   if(GS==='playing'){
@@ -1035,7 +1078,7 @@ function fullLives(){return difficulty===0?7:5;} // Recruit 7, Soldier/Legend 5
 function getStageSave(){try{const v=JSON.parse(localStorage.getItem('daRE_stage')||'null');return v&&v.stage>=2&&v.stage<=3?v:null;}catch(e){return null;}}
 function saveStage(){try{localStorage.setItem('daRE_stage',JSON.stringify({stage,score,maxCombo,difficulty}));}catch(e){}refreshContinue();}
 function clearStageSave(){try{localStorage.removeItem('daRE_stage');}catch(e){}refreshContinue();}
-function refreshContinue(){const b=document.getElementById('contBtn'),sv=getStageSave();if(!b)return;
+function refreshContinue(){try{refreshTitle();}catch(e){}const b=document.getElementById('contBtn'),sv=getStageSave();if(!b)return;
   if(sv){b.style.display='';b.innerHTML='&#8635; CONTINUE &middot; STAGE '+sv.stage+'<span class="diff-desc" style="margin-top:4px">'+['RECRUIT','SOLDIER','LEGEND'][sv.difficulty||0]+' &middot; '+(sv.score||0).toLocaleString()+' PTS</span>';}
   else b.style.display='none';}
 function continueStage(){
@@ -2480,163 +2523,133 @@ function checkStage(dt=1){
 // ==============================================================
 //  TITLE SCREEN ART \u2014 Fort Worth skyline drawn with canvas
 // ==============================================================
-function drawTitleScreen(){
-  if(!tctx||!tc)return;
-  const c=tctx,w=Math.round(tc.width/DPR)||800,h=Math.round(tc.height/DPR)||480;
-
-  // Deep night sky gradient
-  const sky=c.createLinearGradient(0,0,0,h);
-  sky.addColorStop(0,'#000005');sky.addColorStop(.4,'#080018');sky.addColorStop(.75,'#140010');sky.addColorStop(1,'#1a0005');
-  c.fillStyle=sky;c.fillRect(0,0,w,h);
-
-  // Stars with twinkle
-  for(let i=0;i<180;i++){
-    const sx=(i*137)%w,sy=(i*83)%280;
-    const sz=i%9===0?2.2:i%4===0?1.4:.7;
-    const brightness=.4+Math.sin(i+Date.now()*.001)*.6;
-    c.fillStyle=`rgba(200,180,255,${brightness*.9})`;
-    c.beginPath();c.arc(sx,sy,sz,0,Math.PI*2);c.fill();
+// ==============================================================
+//  HOME SCREEN SCENE - cached layers + light animation (parallax city, rain, embers, searchlight, hero)
+// ==============================================================
+let _tsc=null,_tsLastRefresh=0;
+function _tsRng(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+function _tsLayer(w,h){const o=document.createElement('canvas');o.width=Math.max(1,Math.round(w*DPR));o.height=Math.max(1,Math.round(h*DPR));const g=o.getContext('2d');g.setTransform(DPR,0,0,DPR,0,0);return{o:o,g:g};}
+function buildTitleScene(w,h){
+  const land=w>h*1.1,rng=_tsRng(11);
+  const gy=Math.round(h*(land?.82:.80));
+  const heroH=land?h*.36:Math.min(h*.19,w*.48);
+  const hx=land?w*.77:w*.66,roofY=Math.round(land?h*.72:h*.375);
+  const rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const sc={key:w+'x'+h+'x'+DPR,w:w,h:h,land:land,gy:gy,heroH:heroH,hx:hx,roofY:roofY,rm:rm,wins:[],stars:[],rain:[],embers:[]};
+  // sky
+  const bg=_tsLayer(w,h),b=bg.g;
+  const sky=b.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0,'#000006');sky.addColorStop(.45,'#0a0020');sky.addColorStop(.78,'#1a0516');sky.addColorStop(1,'#200508');
+  b.fillStyle=sky;b.fillRect(0,0,w,h);
+  sc.bg=bg;
+  for(let i=0;i<(land?90:130);i++)sc.stars.push({x:rng()*w,y:rng()*gy*.62,r:rng()<.1?1.6:rng()<.4?1.1:.7,p:rng()*6.28});
+  // far skyline (tiles horizontally)
+  const far=_tsLayer(w,h),f=far.g;f.fillStyle='#0b0018';
+  for(let x=0;x<w;){let bw=22+rng()*34;if(x+bw>w)bw=w-x;const bh=h*(.10+rng()*.2);f.fillRect(x,gy-bh,bw,bh+2);if(rng()<.18){f.fillRect(x+bw*.45,gy-bh-h*.04,1.5,h*.04);}x+=bw;}
+  sc.far=far;
+  // mid skyline with windows, Bass Hall dome, Burnett spire and neon roof lines
+  const mid=_tsLayer(w,h),m=mid.g;
+  const cols=['#15002b','#190036','#12002a','#1d003d'],neon=['#ff6b0099','#ff330099','#ff880099'];
+  let i=0;
+  for(let x=0;x<w;i++){
+    let bw=34+rng()*40;if(x+bw>w)bw=w-x;if(bw<14){x+=bw;continue;}
+    const bh=h*(.17+rng()*.22);const top=gy-bh;
+    m.fillStyle=cols[i%4];m.fillRect(x,top,bw,bh+2);
+    if(i%7===3){m.beginPath();m.arc(x+bw/2,top,bw/2,Math.PI,0);m.fill();}
+    if(i%9===5){m.fillStyle='#22004c';m.fillRect(x+bw*.3,top-h*.03,bw*.4,h*.03);m.fillStyle='#3300aa';m.fillRect(x+bw*.5-1,top-h*.08,2,h*.05);}
+    if(i%4===1){m.save();m.strokeStyle=neon[i%3];m.lineWidth=1.5;m.shadowColor=neon[i%3];m.shadowBlur=6;m.beginPath();m.moveTo(x,top);m.lineTo(x+bw,top);m.stroke();m.restore();}
+    for(let wy=top+10;wy<gy-8;wy+=15)for(let wx=x+6;wx+7<x+bw-4;wx+=12){
+      const r=rng();if(r>.62)continue;
+      sc.wins.push({x:wx,y:wy,c:rng()>.7?'100,200,255':'255,180,50',ph:rng()*6.28,fl:r<.05});
+    }
+    x+=bw;
   }
-
-  // Moon \u2014 big amber moon over Fort Worth
-  const mx=580,my=90,mr=50;
-  const moonGlow=c.createRadialGradient(mx,my,0,mx,my,mr*3);
-  moonGlow.addColorStop(0,'rgba(255,200,50,0.18)');moonGlow.addColorStop(1,'transparent');
-  c.fillStyle=moonGlow;c.beginPath();c.arc(mx,my,mr*3,0,Math.PI*2);c.fill();
-  const moonFace=c.createRadialGradient(mx-10,my-10,0,mx,my,mr);
-  moonFace.addColorStop(0,'#ffe090');moonFace.addColorStop(.7,'#ffaa22');moonFace.addColorStop(1,'#cc6600');
-  c.fillStyle=moonFace;c.beginPath();c.arc(mx,my,mr,0,Math.PI*2);c.fill();
-  // Crater details
-  c.fillStyle='rgba(0,0,0,0.15)';
-  [{x:10,y:-10,r:8},{x:-15,y:12,r:5},{x:18,y:16,r:6},{x:-5,y:-18,r:4}].forEach(cr=>{c.beginPath();c.arc(mx+cr.x,my+cr.y,cr.r,0,Math.PI*2);c.fill();});
-
-  // Far city layer (very dark, no detail)
-  c.fillStyle='#090014';
-  // Burnett Plaza style tall tower
-  c.fillRect(110,180,40,250);c.fillRect(115,175,30,8);c.fillRect(125,168,10,10);
-  // Bass Hall style with dome suggestion
-  c.fillRect(200,240,70,200);c.beginPath();c.arc(235,240,35,Math.PI,0);c.fill();
-  // Generic towers
-  [[295,200,35,240],[340,230,28,210],[370,210,45,230],[425,195,30,245],[460,220,55,220],[520,250,30,190],[555,235,40,205],[600,260,28,180],[635,240,50,200],[695,270,32,170],[730,255,45,185],[780,275,20,165]].forEach(([x,y,w2,h2])=>c.fillRect(x,y,w2,h2));
-
-  // Mid layer: more detailed FW buildings (dark purple-blue tint)
-  const midBuildings=[
-    {x:0,y:280,w:55,h:200,col:'#14002a',dome:false},
-    {x:55,y:300,w:40,h:180,col:'#12002a'},
-    {x:95,y:260,w:65,h:220,col:'#180035',dome:true}, // Bass Hall
-    {x:165,y:290,w:35,h:190,col:'#110028'},
-    {x:200,y:270,w:50,h:210,col:'#160032'},
-    {x:255,y:310,w:30,h:170,col:'#100024'},
-    {x:290,y:250,w:70,h:230,col:'#1c003e'}, // Burnett Plaza
-    {x:295,y:244,w:60,h:8,col:'#200048'}, // spire base
-    {x:315,y:230,w:20,h:22,col:'#200048'},
-    {x:325,y:210,w:2,h:40,col:'#3300aa'}, // antenna
-    {x:365,y:295,w:45,h:185,col:'#12002a'},
-    {x:415,y:275,w:55,h:205,col:'#170034'},
-    {x:475,y:305,w:35,h:175,col:'#110028'},
-    {x:515,y:260,w:65,h:220,col:'#1c003c'},
-    {x:585,y:295,w:40,h:185,col:'#130030'},
-    {x:630,y:278,w:55,h:202,col:'#160038'},
-    {x:690,y:310,w:30,h:170,col:'#100024'},
-    {x:725,y:268,w:50,h:212,col:'#1a0038'},
-    {x:775,y:298,w:25,h:182,col:'#110028'},
-  ];
-  midBuildings.forEach(b=>{
-    c.fillStyle=b.col;c.fillRect(b.x,b.y,b.w,b.h);
-    if(b.dome){c.beginPath();c.arc(b.x+b.w/2,b.y,b.w/2,Math.PI,0);c.fill();}
-  });
-
-  // Window lights on mid buildings
-  midBuildings.forEach(b=>{
-    if(b.w<10)return;
-    c.fillStyle='rgba(255,180,50,0.3)';
-    for(let wy=b.y+10;wy<b.y+b.h-8;wy+=16)
-      for(let wx=b.x+6;wx<b.x+b.w-6;wx+=12)
-        if(Math.random()>.38){c.fillStyle=Math.random()>.7?'rgba(100,200,255,0.35)':'rgba(255,180,50,0.3)';c.fillRect(wx,wy,7,9);}
-  });
-
-  // Neon accent lines on buildings
-  c.shadowBlur=8;
-  [[110,180,150,180,'#ff6b0066'],[290,250,360,250,'#ff3300aa'],[515,260,580,260,'#ff8800aa']].forEach(([x1,y1,x2,y2,col])=>{
-    c.strokeStyle=col;c.lineWidth=1.5;c.shadowColor=col;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y1);c.stroke();
-  });
-  c.shadowBlur=0;
-
-  // Foreground silhouette \u2014 dark street level
-  c.fillStyle='#04000a';
-  c.fillRect(0,h*.77,w,h-h*.77);
-
-  // Street-level details: lamp posts, signs
-  [[.10,.71],[.225,.71],[.375,.72],[.538,.71],[.70,.72],[.85,.71],[.95,.71]].map(([rx,ry])=>[Math.round(rx*w),Math.round(ry*h)]).forEach(([lx,ly])=>{
-    c.fillStyle='#0a0018';c.fillRect(lx-Math.round(w*.0025),ly,Math.round(w*.005),h-ly);
-    c.fillStyle='rgba(255,200,80,0.6)';
-    const lampR=Math.round(w*.031);
-    const lampGlow=c.createRadialGradient(lx,ly,0,lx,ly,lampR);
-    lampGlow.addColorStop(0,'rgba(255,200,80,0.5)');lampGlow.addColorStop(1,'transparent');
-    c.fillStyle=lampGlow;c.fillRect(lx-25,ly-20,50,40);
-    c.fillStyle='#ffdd66';c.fillRect(lx-5,ly-4,10,4);
-  });
-
-  // Foreground glow on ground
-  const gndGlow=c.createLinearGradient(0,h*.77,0,h);
-  gndGlow.addColorStop(0,'rgba(255,80,0,0.12)');gndGlow.addColorStop(1,'rgba(255,40,0,0.04)');
-  c.fillStyle=gndGlow;c.fillRect(0,h*.77,w,h-h*.77);
-
-  // Ground glow line
-  c.strokeStyle='#ff6b00';c.lineWidth=2;c.shadowColor='#ff6b00';c.shadowBlur=14;
-  c.beginPath();c.moveTo(0,h*.775);c.lineTo(w,h*.775);c.stroke();c.shadowBlur=0;
-
-  // Distant fire glow (Fort Worth heat)
-  const fireGlow=c.createRadialGradient(w/2,h*.79,0,w/2,h*.79,w*.5);
-  fireGlow.addColorStop(0,'rgba(255,80,0,0.15)');fireGlow.addColorStop(1,'transparent');
-  c.fillStyle=fireGlow;c.fillRect(0,0,w,h); // fire glow
-
-  // Top vignette
-  const vignette=c.createLinearGradient(0,0,0,h);
-  vignette.addColorStop(0,'rgba(0,0,0,0.7)');vignette.addColorStop(.3,'transparent');
-  vignette.addColorStop(.7,'transparent');vignette.addColorStop(1,'rgba(0,0,0,0.85)');
-  c.fillStyle=vignette;c.fillRect(0,0,w,h);
-
-  // DA CHARACTER  silhouette standing in the street
-  const cx2=Math.round(w*.72),groundY=Math.round(h*.83);
-  const chH=Math.round(h*.32),chW=Math.round(chH*.38);
-  // Glow behind character
-  const heroGlow=c.createRadialGradient(cx2,groundY-chH*.5,0,cx2,groundY-chH*.5,chH*.9);
-  heroGlow.addColorStop(0,'rgba(255,100,0,0.22)');heroGlow.addColorStop(1,'transparent');
-  c.fillStyle=heroGlow;c.fillRect(cx2-chH,groundY-chH*1.1,chH*2,chH*1.2);
-  // Body silhouette
-  c.fillStyle='rgba(20,8,0,0.92)';
-  // Legs
-  c.fillRect(cx2-Math.round(chW*.18),groundY-Math.round(chH*.42),Math.round(chW*.16),Math.round(chH*.42));
-  c.fillRect(cx2+Math.round(chW*.02),groundY-Math.round(chH*.42),Math.round(chW*.16),Math.round(chH*.42));
-  // Torso
-  c.fillRect(cx2-Math.round(chW*.22),groundY-Math.round(chH*.78),Math.round(chW*.44),Math.round(chH*.38));
-  // Head
-  c.beginPath();c.arc(cx2,groundY-Math.round(chH*.88),Math.round(chW*.18),0,Math.PI*2);c.fill();
-  // Cape  orange, behind body
-  c.save();c.globalAlpha=0.8;
-  c.fillStyle='#ff5500';
-  c.beginPath();c.moveTo(cx2-Math.round(chW*.12),groundY-Math.round(chH*.72));
-  c.quadraticCurveTo(cx2-Math.round(chW*.55),groundY-Math.round(chH*.4),cx2-Math.round(chW*.38),groundY-Math.round(chH*.05));
-  c.lineTo(cx2-Math.round(chW*.05),groundY-Math.round(chH*.42));c.closePath();c.fill();
+  sc.mid=mid;
+  // near layer: rooftop for the hero, street, lamps, ground line
+  const near=_tsLayer(w,h),n=near.g;
+  const rw=heroH*.85;
+  n.fillStyle='#06000d';n.fillRect(hx-rw,roofY,rw*2,h-roofY);
+  n.fillStyle='#0d0418';n.fillRect(hx-rw,roofY,rw*2,Math.max(3,h*.008));
+  n.save();n.strokeStyle='#ff6b00';n.lineWidth=2;n.shadowColor='#ff6b00';n.shadowBlur=10;n.beginPath();n.moveTo(hx-rw,roofY);n.lineTo(hx+rw,roofY);n.stroke();n.restore();
+  n.fillStyle='#0b0414';n.fillRect(hx+rw*.45,roofY-heroH*.14,rw*.3,heroH*.14);n.fillRect(hx+rw*.8,roofY-heroH*.3,2,heroH*.3);
+  n.fillStyle='#04000a';n.fillRect(0,gy,w,h-gy);
+  n.save();n.strokeStyle='#ff6b00';n.lineWidth=2;n.shadowColor='#ff6b00';n.shadowBlur=14;n.beginPath();n.moveTo(0,gy);n.lineTo(w,gy);n.stroke();n.restore();
+  [.08,.27,.5,.9].forEach(function(rx){const lx=Math.round(rx*w),ly=gy-h*.07;
+    n.fillStyle='#0a0018';n.fillRect(lx-1.5,ly,3,h-ly);
+    const lg=n.createRadialGradient(lx,ly,0,lx,ly,h*.06);lg.addColorStop(0,'rgba(255,200,80,.45)');lg.addColorStop(1,'transparent');
+    n.fillStyle=lg;n.fillRect(lx-h*.06,ly-h*.06,h*.12,h*.12);n.fillStyle='#ffdd66';n.fillRect(lx-5,ly-3,10,3);});
+  sc.near=near;
+  // text-safe darkening + vignette
+  const ov=_tsLayer(w,h),o=ov.g;
+  if(land){const g=o.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(0,0,0,.82)');g.addColorStop(.40,'rgba(0,0,0,.6)');g.addColorStop(.66,'rgba(0,0,0,0)');o.fillStyle=g;o.fillRect(0,0,w,h);}
+  else{const g=o.createLinearGradient(0,h*.38,0,h);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.28,'rgba(0,0,0,.34)');g.addColorStop(.62,'rgba(0,0,0,.78)');g.addColorStop(1,'rgba(0,0,0,.92)');o.fillStyle=g;o.fillRect(0,h*.38,w,h*.62);}
+  const vg=o.createLinearGradient(0,0,0,h);vg.addColorStop(0,'rgba(0,0,0,.6)');vg.addColorStop(.22,'rgba(0,0,0,0)');o.fillStyle=vg;o.fillRect(0,0,w,h);
+  sc.over=ov;
+  for(let k=0;k<(land?45:60);k++)sc.rain.push({x:Math.random()*w,y:Math.random()*h,v:7+Math.random()*6,l:8+Math.random()*8});
+  for(let k=0;k<(land?18:26);k++)sc.embers.push({x:Math.random()*w,y:gy-Math.random()*h*.25,v:.25+Math.random()*.6,ph:Math.random()*6.28,s:.8+Math.random()*1.4});
+  return sc;
+}
+function _tsHero(c,cx,fy,H,t){
+  const k=H/100,br=Math.sin(t*.003)*.8,w1=Math.sin(t*.006),w2=Math.sin(t*.0045+1);
+  c.save();c.translate(cx,fy);c.scale(-k,k);   // faces left, toward the city and the title text
+  c.shadowColor='#ff6b00';c.shadowBlur=9;
+  c.fillStyle='#d44a00';c.beginPath();c.moveTo(-5,-71+br);c.quadraticCurveTo(-26,-56,-35+w1*5,-24);c.lineTo(-27+w2*4,-8);c.quadraticCurveTo(-14,-22,-4,-40);c.closePath();c.fill();
+  c.fillStyle='#120a06';c.fillRect(-7,-38,6,35);c.fillRect(1,-38,6,35);c.fillRect(-8,-4,9,4);c.fillRect(0,-4,9,4);
+  c.fillStyle='#1d1008';c.fillRect(-9,-72+br,18,34);
+  c.fillStyle='#3a1f0a';c.fillRect(-9,-40,18,3);
+  c.shadowBlur=0;c.fillStyle='#ff7a00';c.globalAlpha=.85;c.fillRect(-2,-68+br,4,24);c.globalAlpha=1;
+  c.shadowBlur=9;c.fillStyle='#261409';c.beginPath();c.arc(0,-81+br,9,0,Math.PI*2);c.fill();
+  c.fillStyle='#e01818';c.fillRect(-9.5,-87+br,19,5);
+  c.beginPath();c.moveTo(-9,-85+br);c.quadraticCurveTo(-22,-84+w1*3,-33+w2*5,-78+br+w1*3);c.lineTo(-24+w1*2,-83+br);c.closePath();c.fill();
+  c.beginPath();c.moveTo(-9,-84+br);c.quadraticCurveTo(-20,-78+w2*3,-29+w1*5,-70+br+w2*3);c.lineTo(-21+w2*2,-80+br);c.closePath();c.fill();
+  c.shadowBlur=0;c.fillStyle='#ffb347';c.fillRect(3,-82+br,3.2,1.6);
+  c.shadowBlur=6;c.fillStyle='#1d1008';c.fillRect(6,-66+br,18,6);
+  c.fillStyle='#2b2b33';c.fillRect(12,-67+br,34,5);c.fillRect(46,-66+br,8,2);c.fillRect(9,-66+br,6,9);
+  const pulse=Math.sin(t*.008)>.9?4:2;
+  c.shadowColor='#ffee66';c.shadowBlur=14;c.fillStyle='#ffee66';c.beginPath();c.arc(56,-65+br,pulse*.7,0,Math.PI*2);c.fill();
   c.restore();
-  // Bandana tails  orange, flowing right
-  c.save();c.globalAlpha=0.85;c.fillStyle='#ff6b00';
-  c.beginPath();c.moveTo(cx2+Math.round(chW*.1),groundY-Math.round(chH*.86));
-  c.quadraticCurveTo(cx2+Math.round(chW*.55),groundY-Math.round(chH*.78),cx2+Math.round(chW*.62),groundY-Math.round(chH*.68));
-  c.lineTo(cx2+Math.round(chW*.38),groundY-Math.round(chH*.80));c.closePath();c.fill();
-  c.restore();
-  // Weapon arm (raised, holding rifle shape)
-  c.save();c.fillStyle='rgba(20,8,0,0.92)';
-  c.fillRect(cx2+Math.round(chW*.18),groundY-Math.round(chH*.72),Math.round(chW*.45),Math.round(chH*.07));
-  c.restore();
-  // Orange chest stripe
-  c.save();c.globalAlpha=0.6;c.fillStyle='#ff6600';
-  c.fillRect(cx2-Math.round(chW*.06),groundY-Math.round(chH*.76),Math.round(chW*.12),Math.round(chH*.34));c.restore();
-  // Ground shadow
-  const shad=c.createRadialGradient(cx2,groundY,0,cx2,groundY,Math.round(chW*.7));
-  shad.addColorStop(0,'rgba(0,0,0,0.45)');shad.addColorStop(1,'transparent');
-  c.fillStyle=shad;c.fillRect(cx2-Math.round(chW*.7),groundY-Math.round(h*.018),Math.round(chW*1.4),Math.round(h*.018));
+}
+function drawTitleScreen(){
+  if(!tctx||!tc||document.hidden)return;
+  const c=tctx,w=Math.round(tc.width/DPR)||800,h=Math.round(tc.height/DPR)||480;
+  if(!_tsc||_tsc.key!==w+'x'+h+'x'+DPR)_tsc=buildTitleScene(w,h);
+  const s=_tsc,rm=s.rm,t=rm?0:performance.now();
+  c.drawImage(s.bg.o,0,0,w,h);
+  // stars
+  for(let i=0;i<s.stars.length;i++){const st=s.stars[i];c.fillStyle='rgba(200,185,255,'+(.35+.55*(.5+.5*Math.sin(st.p+t*.002)))+')';c.fillRect(st.x,st.y,st.r,st.r);}
+  // moon
+  const mr=Math.min(w*.14,h*.11),mx=s.land?w*.84:w*.8,my=s.land?h*.2:h*.15,pg=1+Math.sin(t*.0015)*.06;
+  const mg=c.createRadialGradient(mx,my,0,mx,my,mr*3*pg);mg.addColorStop(0,'rgba(255,200,50,.2)');mg.addColorStop(1,'transparent');
+  c.fillStyle=mg;c.fillRect(mx-mr*3.2,my-mr*3.2,mr*6.4,mr*6.4);
+  const mf=c.createRadialGradient(mx-mr*.2,my-mr*.2,0,mx,my,mr);mf.addColorStop(0,'#ffe090');mf.addColorStop(.7,'#ffaa22');mf.addColorStop(1,'#cc6600');
+  c.fillStyle=mf;c.beginPath();c.arc(mx,my,mr,0,Math.PI*2);c.fill();
+  // parallax city
+  let ox=(t*.004)%w;c.drawImage(s.far.o,-ox,0,w,h);c.drawImage(s.far.o,w-ox,0,w,h);
+  ox=(t*.009)%w;c.drawImage(s.mid.o,-ox,0,w,h);c.drawImage(s.mid.o,w-ox,0,w,h);
+  for(let i=0;i<s.wins.length;i++){const q=s.wins[i];let x=q.x-ox;if(x<-8)x+=w;if(x>w)continue;
+    const a=q.fl?(Math.sin(t*.003+q.ph)>.55?.5:.12):.3;c.fillStyle='rgba('+q.c+','+a+')';c.fillRect(x,q.y,7,9);}
+  // searchlight sweep
+  const ax=s.w*(s.land?.55:.2),ay=s.gy,ang=-Math.PI/2+Math.sin(t*.0004)*.6,L=h*.95;
+  const bx=ax+Math.cos(ang)*L,by=ay+Math.sin(ang)*L,sg=c.createLinearGradient(ax,ay,bx,by);
+  sg.addColorStop(0,'rgba(255,230,160,.18)');sg.addColorStop(1,'rgba(255,230,160,0)');
+  c.fillStyle=sg;c.beginPath();c.moveTo(ax,ay);c.lineTo(ax+Math.cos(ang-.07)*L*1.1,ay+Math.sin(ang-.07)*L*1.1);c.lineTo(ax+Math.cos(ang+.07)*L*1.1,ay+Math.sin(ang+.07)*L*1.1);c.closePath();c.fill();
+  c.drawImage(s.near.o,0,0,w,h);
+  // hero glow + hero
+  const hg=c.createRadialGradient(s.hx,s.roofY-s.heroH*.5,0,s.hx,s.roofY-s.heroH*.5,s.heroH*.95);hg.addColorStop(0,'rgba(255,100,0,'+(.2+.05*Math.sin(t*.002))+')');hg.addColorStop(1,'transparent');
+  c.fillStyle=hg;c.fillRect(s.hx-s.heroH,s.roofY-s.heroH*1.5,s.heroH*2,s.heroH*1.6);
+  _tsHero(c,s.hx,s.roofY,s.heroH,t);
+  if(!rm){
+    c.fillStyle='rgba(255,150,50,.8)';
+    for(let i=0;i<s.embers.length;i++){const e=s.embers[i];e.y-=e.v;e.x+=Math.sin(t*.002+e.ph)*.3;if(e.y<s.gy-s.h*.28){e.y=s.gy+Math.random()*(s.h-s.gy)*.5;e.x=Math.random()*w;}
+      c.globalAlpha=Math.max(0,Math.min(1,(e.y-(s.gy-s.h*.28))/(s.h*.2)))*.8;c.fillRect(e.x,e.y,e.s,e.s);}
+    c.globalAlpha=1;
+    c.strokeStyle='rgba(150,190,255,.26)';c.lineWidth=1;c.beginPath();
+    for(let i=0;i<s.rain.length;i++){const r=s.rain[i];r.y+=r.v;r.x-=1.2;if(r.y>h){r.y=-12;r.x=Math.random()*(w+30);}c.moveTo(r.x,r.y);c.lineTo(r.x-1.6,r.y+r.l);}
+    c.stroke();
+  }
+  c.drawImage(s.over.o,0,0,w,h);
+  // keep progress panel / difficulty shortcut fresh (cheap, change-checked)
+  if(t-_tsLastRefresh>1000||rm){_tsLastRefresh=t;try{refreshTitle();}catch(e){}}
 }
 
 // ==============================================================
@@ -5037,6 +5050,23 @@ function tU(k,e){
   if(e&&e.currentTarget)e.currentTarget.classList.remove('pressed');
 }
 
+function refreshMuteIcons(){const m=document.getElementById('titleMute');if(m){m.innerHTML=audioMuted?'&#128263;':'&#128266;';m.setAttribute('aria-pressed',audioMuted?'true':'false');m.style.opacity=audioMuted?'0.6':'1';}}
+function refreshTitle(){
+  const st=document.getElementById('titleStats'),sb=document.getElementById('startBtn'),dl=document.getElementById('diffLink');
+  if(!st||!sb)return;
+  let last=0,ld=null;try{last=+localStorage.getItem('daRE_last')||0;ld=localStorage.getItem('daRE_diff');}catch(e){}
+  const a=getScores();let html='';
+  if(a.length){
+    const best=a[0].score||0,far=a.reduce((m,x)=>Math.max(m,x.stage||1),1);
+    html='BEST <b>'+best.toLocaleString()+'</b> &nbsp;&middot;&nbsp; FURTHEST <b>STAGE '+far+'/3</b>';
+    if(last){const days=Math.floor((Date.now()-last)/86400000);html+='<span class="ts2">LAST PLAYED <b>'+(days<=0?'TODAY':days===1?'YESTERDAY':days+' DAYS AGO')+'</b></span>';}
+  }
+  if(st.innerHTML!==html){st.innerHTML=html;st.style.display=html?'':'none';}
+  const di=(ld==='0'||ld==='1'||ld==='2')?+ld:-1;
+  const lbl=di<0?'&#9654; START MISSION':'&#9654; START &middot; '+['RECRUIT','SOLDIER','LEGEND'][di];
+  if(sb.innerHTML!==lbl){sb.innerHTML=lbl;sb.onclick=di<0?function(){chooseDiff();}:function(){setDiff(di);};}
+  if(dl)dl.style.display=di<0?'none':'';
+}
 function chooseDiff(){
   hideAll();
   document.getElementById('diffScreen').classList.add('show');
@@ -5045,6 +5075,7 @@ function chooseDiff(){
 function setDiff(d){
   try{
     difficulty=d;
+    try{localStorage.setItem('daRE_diff',String(d));localStorage.setItem('daRE_last',String(Date.now()));}catch(e){}
     hideAll();
     initAudio();
     stage=1;score=0;lives=5;maxCombo=0;stageKills=0;
@@ -5075,7 +5106,9 @@ function initWeather(){
 // -- BOOT ------------------------------------------------------------------
 
 try {
+  try{audioMuted=localStorage.getItem('daRE_muted')==='1';}catch(e){}
   fitScreen();
+  refreshMuteIcons();
   refreshContinue();
   document.getElementById('titleScreen').classList.add('show');
   drawTitleScreen();
@@ -5084,7 +5117,7 @@ try {
       const _ts = document.getElementById('titleScreen');
       if(_ts && _ts.classList.contains('show')) drawTitleScreen();
     } catch(e) {}
-  }, 80);
+  }, 42);
   // Start the game loop ONCE - it reschedules itself via rAF internally
   requestAnimationFrame(gameLoop);
 } catch(e) {
