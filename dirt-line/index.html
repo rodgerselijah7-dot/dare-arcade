@@ -1491,7 +1491,10 @@ const AU={ctx:null,on:store.get('dirtline.sound',true),musicOn:store.get('dirtli
     g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.55,t+0.01);g.gain.exponentialRampToValueAtTime(0.001,t+d);o.connect(f);f.connect(g);g.connect(this.music);o.start(t);o.stop(t+d+0.05);},
   chord(m,min,t,d){const c=this.ctx;for(const iv of [0,min?3:4,7])for(const det of [-6,6]){const o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();o.type='sawtooth';o.frequency.value=this.hz(m+iv);o.detune.value=det;
     f.type='lowpass';f.frequency.value=950;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.022,t+0.25);g.gain.linearRampToValueAtTime(0.0001,t+d);o.connect(f);f.connect(g);g.connect(this.music);o.start(t);o.stop(t+d+0.05);}},
-  say(text,pri){if(!this.annOn||!this.on)return;try{const ss=window.speechSynthesis;if(!ss)return;if(pri)ss.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=1.06;u.pitch=0.85;ss.speak(u);}catch(e){}},
+  say(text,pri,done){let fired=false;const fin=()=>{if(!fired){fired=true;if(done)done();}};const est=0.25+text.length*0.062;
+    if(!this.annOn||!this.on){if(done)setTimeout(fin,est*1000);return est;}
+    try{const ss=window.speechSynthesis;if(!ss){if(done)setTimeout(fin,est*1000);return est;}if(pri)ss.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=1.06;u.pitch=0.85;u.onend=fin;u.onerror=fin;ss.speak(u);
+      if(done)setTimeout(fin,(est+1.2)*1000);}catch(e){if(done)setTimeout(fin,est*1000);}return est;},
   sayRL(text){const n=performance.now();if(n-(this.lastSay||-1e9)<3800)return;this.lastSay=n;this.say(text);}
 };
 const ONES=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],TENS=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
@@ -1604,7 +1607,7 @@ function startRace(i,mode){
   const def=mode==='tut'?TUTORIAL:TRACKS[S.ti];S.def=def;
   AU.init();buildWorld(def);placeBikeAt(T.startX,0);
   splitT=0;$('tSplit').classList.remove('show');
-  Object.assign(S,{state:'gate',time:0,score:0,crashes:0,cp:-1,gateT:0,gateOpen:false,gateDrop:2.7+0.1+Math.random()*2.6,toneAt:[],finT:0,crowd:0,
+  Object.assign(S,{state:'gate',time:0,score:0,crashes:0,cp:-1,gateT:0,gateOpen:false,gateDrop:Infinity,gateStep:0,callEnd:-1,toneAt:[],finT:0,crowd:0,
     order:[],pos:1,lastPos:9,jamT:90,called:{},rotLock:0,crouch:0,crouchV:0,
     tut:mode==='tut'?{i:0,pumped:0,lands:0,tricks:0,manual:0,shown:-1}:null});
   edges.length=0;
@@ -1619,7 +1622,8 @@ function startRace(i,mode){
   $('posBox').hidden=mode!=='race';$('tTimeLbl').textContent=mode==='jam'?'LEFT':'TIME';$('tip').hidden=true;$('combo').hidden=true;
   document.querySelectorAll('.lights i').forEach(e=>e.classList.remove('on'));$('call').textContent='Okay riders, random start';
   $('popup').classList.remove('show');S.camX=B.x;S.camY=B.y;S.camZ=0;
-  AU.say(mode==='tut'?'Welcome to your first ride. Okay rider, random start.':'Okay riders, random start.',true);
+  const run=S.run=(S.run||0)+1;S.gateStep=0;S.callEnd=-1;
+  AU.say(mode==='tut'?'Welcome to your first ride. Okay rider, random start.':'Okay riders, random start.',true,()=>{if(S.run===run&&S.state==='gate')S.callEnd=S.gateT;});
 }
 function setVisible(h){$('hud').hidden=!h;$('pads').style.visibility=h?'visible':'hidden';}
 
@@ -1883,11 +1887,13 @@ function frame(now){
   while(edges.length)tryTrick(edges.shift());
   S.rotLock=Math.max(0,S.rotLock-dt);
   // gate sequence
-  if(st==='gate'){S.gateT+=dt;const g=S.gateT;
-    if(g>1.4&&!S.called.r){S.called.r=1;$('call').textContent='Riders ready';AU.say('Riders ready.');}
-    if(g>2.5&&!S.called.w){S.called.w=1;$('call').textContent='Watch the gate';AU.say('Watch the gate.');}
+  if(st==='gate'){S.gateT+=dt;const g=S.gateT,run=S.run;
+    const next=(txt,step)=>{S.gateStep=step;S.callEnd=-1;$('call').textContent=txt;AU.say(txt+'.',false,()=>{if(S.run===run&&S.state==='gate')S.callEnd=S.gateT;});};
+    if(S.gateStep===0&&S.callEnd>=0&&g>=S.callEnd+0.4)next('Riders ready',1);
+    else if(S.gateStep===1&&S.callEnd>=0&&g>=S.callEnd+0.4)next('Watch the gate',2);
+    else if(S.gateStep===2&&S.callEnd>=0){S.gateStep=3;S.gateDrop=S.callEnd+0.1+Math.random()*2.6+0.36;}
     const tones=[S.gateDrop-0.36,S.gateDrop-0.24,S.gateDrop-0.12,S.gateDrop];
-    tones.forEach((tt,i)=>{if(g>=tt&&!S.toneAt[i]){S.toneAt[i]=1;AU.tone(i===3?1180:630,i===3?0.5:0.09);lightTree[i].emissiveIntensity=3;document.querySelectorAll('.lights i')[i].classList.add('on');}});
+    tones.forEach((tt,i)=>{if(g>=tt&&!S.toneAt[i]){S.toneAt[i]=1;AU.tone(i===3?1150:632,i===3?2.25:0.06);lightTree[i].emissiveIntensity=3;document.querySelectorAll('.lights i')[i].classList.add('on');}});
     if(g>=S.gateDrop){S.state='ride';S.gateOpen=true;S.time=0;AU.gateClang();$('call').textContent='Go';setTimeout(()=>{if(S.state!=='gate')$('gateUI').hidden=true;},700);}
   }
   if(S.gateOpen&&gateG.rotation.z>-1.45)gateG.rotation.z=Math.max(-1.45,gateG.rotation.z-dt*7);
