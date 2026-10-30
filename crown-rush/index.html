@@ -3109,8 +3109,15 @@ function drawScreenFx(){
     for(let i=0;i<10;i++){const yy=(i*61+now*.07)%H,xx=W-((now*1.6+i*113)%(W+200));ctx.beginPath();ctx.moveTo(xx,yy);ctx.lineTo(xx+50+i%3*30,yy);ctx.stroke()}}
   // rivals off screen: edge markers in their colour with distance
   if(player&&(state==='race'||state==='done')&&runners.length>1){ctx.font='700 9px "Chakra Petch",sans-serif';ctx.textAlign='center';
-    for(const r of runners){if(r===player||r.dead>0)continue;const sx=r.x-camX,sy=r.y-camY-20;if(sx>-10&&sx<W+10&&sy>-10&&sy<H+10)continue;
-      const right=sx>W/2,ex=clamp(sx,16,W-16),ey=clamp(sy,52,H-30),d=Math.round(Math.abs(r.x-player.x)/10);
+    // side markers stay above the touch buttons (special/item on the right, slide/dash on the left) and never stack on each other
+    const placed={l:[],r:[]},offs=[];
+    for(const r of runners){if(r===player||r.dead>0)continue;const sx=r.x-camX,sy=r.y-camY-20;if(sx>-10&&sx<W+10&&sy>-10&&sy<H+10)continue;offs.push({r,sx,sy})}
+    offs.sort((a,b)=>a.sy-b.sy);
+    for(const {r,sx,sy} of offs){
+      const right=sx>W/2,side=sx<0||sx>W,ex=clamp(sx,16,W-16),d=Math.round(Math.abs(r.x-player.x)/10);
+      let ey=clamp(sy,side?64:52,side?H-(right?182:96):H-30);
+      if(side){const L=placed[right?'r':'l'];for(const y of L)if(Math.abs(ey-y)<36)ey=y+36;
+        const lim=H-(right?182:96);if(ey>lim){ey=lim;for(let k=L.length-1;k>=0;k--)if(Math.abs(ey-L[k])<36)ey=L[k]-36;}L.push(ey);L.sort((a,b)=>a-b)}
       ctx.save();ctx.translate(ex,ey);ctx.globalAlpha=.85;ctx.fillStyle='rgba(13,11,31,.75)';ctx.beginPath();ctx.arc(0,0,11,0,7);ctx.fill();ctx.fillStyle=r.color;ctx.beginPath();ctx.arc(0,0,7.5,0,7);ctx.fill();
       ctx.fillStyle=r.color;ctx.beginPath();if(sx<0||sx>W){const s2=right?1:-1;ctx.moveTo(13*s2,0);ctx.lineTo(8*s2,-5);ctx.lineTo(8*s2,5)}else{const s2=sy<0?-1:1;ctx.moveTo(0,13*s2);ctx.lineTo(-5,8*s2);ctx.lineTo(5,8*s2)}ctx.fill();
       ctx.fillStyle='#f4efe1';ctx.fillText(d+'m',0,24);ctx.restore()}}
