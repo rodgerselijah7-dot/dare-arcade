@@ -321,6 +321,9 @@ body.ingame #controlBar{display:flex;position:absolute;left:0;right:0;bottom:0;z
 .upg-lv{font-family:'Share Tech Mono';font-size:8px;letter-spacing:1.5px;color:rgba(255,210,0,.85);margin-top:3px}
 body.gfx-low #scanlines,body.gfx-low .scanlines{display:none!important}
 @media (max-height:700px){#stageCanvas{transform:scale(.8);margin:-12px 0}#stageBars{display:none}}
+body.ingame #controlRow{align-items:flex-end;padding-bottom:max(6px,calc(env(safe-area-inset-bottom,0px) * .35));}
+body.ingame #zoneLeft,body.ingame #zoneRight,body.ingame #zoneMid{align-items:flex-end;}
+body.ingame #zoneMid{padding-bottom:18px;}
 </style>
 <script src="/dare-unlock.js"></script>
 </head>
