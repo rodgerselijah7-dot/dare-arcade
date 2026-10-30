@@ -240,7 +240,7 @@ body{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:0;pad
 /* ── CONTROL BAR ── */
 :root{--bar-h:160px;}
 #controlBar{display:none;flex:0 0 calc(var(--bar-h) + env(safe-area-inset-bottom,0px));width:100%;height:calc(var(--bar-h) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:linear-gradient(180deg,rgba(0,5,10,0.98) 0%,rgba(0,0,0,1) 100%);border-top:1px solid rgba(0,255,200,0.18);flex-direction:column;overflow:hidden;touch-action:none;pointer-events:all;}
-body.ingame #controlBar{display:flex;}
+body.ingame #controlBar{display:flex;position:absolute;left:0;right:0;bottom:0;z-index:5;background:linear-gradient(180deg,rgba(0,5,12,0) 0%,rgba(0,5,12,.5) 38%,rgba(0,3,8,.82) 100%);border-top:none;}
 
 #barTop{display:flex;align-items:center;gap:6px;padding:6px 16px 3px;flex-shrink:0;}
 #shipBadge{font-size:7px;letter-spacing:2px;color:rgba(255,255,255,0.45);font-family:'Share Tech Mono';white-space:nowrap;}
@@ -605,9 +605,11 @@ const chromaCtx=chromaCanvas.getContext('2d');
 let CW=1,CH=1,drawSC=1,DPR=1,SAT=0,TOPF=0;
 function readSafeTop(){let pr=document.getElementById('_satProbe');if(!pr){pr=document.createElement('div');pr.id='_satProbe';pr.style.cssText='position:fixed;top:0;left:0;width:1px;height:var(--sat);visibility:hidden;pointer-events:none;';document.body.appendChild(pr);}return pr.getBoundingClientRect().height||0;}
 
+let BARPX=160;
+function barTop(){return Math.max(0.5,1-(BARPX+18)/CH);}
 function applyLayout(){
   const barH=Math.max(150,Math.min(230,Math.round(window.innerHeight*0.27)));
-  document.documentElement.style.setProperty('--bar-h',barH+'px');
+  document.documentElement.style.setProperty('--bar-h',barH+'px');BARPX=barH;
   requestAnimationFrame(()=>{
     const wrap=document.getElementById('canvasWrap');
     CW=wrap.clientWidth||window.innerWidth;
@@ -1442,7 +1444,7 @@ function doSpecial(){
   if(S==='phantom'){for(let i=-2;i<=2;i++)bullets.push({rx:player.rx,ry:player.ry-16/CH,vx:i*0.0004,vy:-0.015,dmg:player.dmg});}
   else if(S==='seraph'){eBullets=[];energy=Math.min(maxEnergy,energy+20);fxRing(player.rx*CW,player.ry*CH,'#aa66ff',150);}
   else if(S==='void'){
-    player.ry=Math.max((36+SAT)/CH,Math.min(1-(24/CH),player.ry-90/CH));player.invincible=45;
+    player.ry=Math.max((36+SAT)/CH,Math.min(barTop(),player.ry-90/CH));player.invincible=45;
     fxRing(player.rx*CW,player.ry*CH,'#4d8dff',90);
   }
   else if(S==='aegis'){
@@ -1472,7 +1474,7 @@ function updatePlayer(){
   let mx=joy.dx,my=joy.dy;
   if(keys['ArrowLeft']||keys['KeyA'])mx-=1;if(keys['ArrowRight']||keys['KeyD'])mx+=1;
   if(keys['ArrowUp']||keys['KeyW'])my-=0.7;if(keys['ArrowDown']||keys['KeyS'])my+=0.7;
-  const spd=player.speed,mg=18/Math.min(CW,CH),botEdge=1-(24/CH);
+  const spd=player.speed,mg=18/Math.min(CW,CH),botEdge=barTop();
   player.rx=Math.max(mg,Math.min(1-mg,player.rx+mx*spd));
   player.ry=Math.max((36+SAT)/CH,Math.min(botEdge,player.ry+my*spd*0.75));
   player.vxs=(mx||0); // used by the ship sprite for banking
@@ -1842,7 +1844,7 @@ function togglePause(){
 function _init(){
   runId++;releaseControls();
   applyLayout();
-  player.rx=0.5;player.ry=0.72;
+  player.rx=0.5;player.ry=Math.min(0.72,barTop());
   player.speed=(SHIPS[selectedShip]||SHIPS.phantom).speed;
   player.trail=[];player.invincible=60;player.fireCooldown=0;
   player.shield=false;player.shieldHP=0;player.fireCooldownMult=1;
