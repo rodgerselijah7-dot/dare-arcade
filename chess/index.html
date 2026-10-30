@@ -299,6 +299,14 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
         <button data-hc="random">Random</button>
         <button data-hc="b"><span class="disc b"></span>Black</button>
       </div>
+      <div class="label">If you create the match, time</div>
+      <div class="seg five" id="olTimes">
+        <button data-otc="0">Untimed</button>
+        <button data-otc="1+0">1+0<small>Bullet</small></button>
+        <button data-otc="3+2">3+2<small>Blitz</small></button>
+        <button data-otc="5+0">5+0<small>Blitz</small></button>
+        <button data-otc="10+0">10+0<small>Rapid</small></button>
+      </div>
       <button class="btn gold wide" id="olFind">Find an opponent</button>
       <p class="olnote" style="margin-top:-6px">Posts an open match anyone can join. Players with match alerts on get a notification.</p>
       <button class="btn wide" id="olCreate">Create a private match</button>
@@ -364,7 +372,7 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
     <h3>Game modes</h3>
     <ul>
       <li><strong>Play the Computer.</strong> Novice is forgiving, Club plays solid tactics, Master thinks for up to two seconds a move.</li>
-      <li><strong>Timed games.</strong> Against the Computer, pick Bullet, Blitz or Rapid. Each side gets a clock (minutes + seconds added per move). Run out of time and you lose. Undo is off in timed games.</li>
+      <li><strong>Timed games.</strong> Against the Computer or online (the match creator picks), choose Bullet, Blitz or Rapid. Each side gets a clock (minutes + seconds added per move). Run out of time and you lose. Undo is off in timed games.</li>
       <li><strong>Play Online.</strong> Face another player on their own phone. One player creates a match and shares the 4-character code, the other joins with it. The host picks colors, and colors swap on every rematch. If a player stays disconnected for 45 seconds, the other wins.</li>
       <li><strong>Tutorial.</strong> Ten short lessons. Each sets up a position and asks you to find one move.</li>
     </ul>
@@ -1080,24 +1088,28 @@ let S=E.loadFEN(START), legalNow=E.legal(S);
 let tcKey=store.get('tc','0'), clk=null, clkLast=0;
 const tcParse=k=>{ if(!k||k==='0') return null; const [a,b]=k.split('+'); return {base:+a*60000,inc:+b*1000}; };
 const tcLabel=k=>({'1+0':'Bullet 1+0','3+2':'Blitz 3+2','5+0':'Blitz 5+0','10+0':'Rapid 10+0'}[k]||'');
-const clockOn=()=>mode==='ai'&&!!clk;
+const curTc=()=>mode==='online'?(NET.tc||'0'):tcKey;
+let otcKey=store.get('otc','0');
+const clockOn=()=>(mode==='ai'||mode==='online')&&!!clk;
 function fmtClk(ms){ ms=Math.max(0,ms); if(ms<10000) return (ms/1000).toFixed(1); const t=Math.ceil(ms/1000); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); }
 function renderClocks(){
   for(const c of ['w','b']){ const el=$(c==='w'?'ckW':'ckB'); if(!el) continue;
     el.hidden=!clockOn(); if(!clockOn()) continue;
     el.textContent=fmtClk(clk[c]); el.classList.toggle('low',clk[c]<10000&&!gameOver); }
 }
-function resetClock(){ const t=mode==='ai'?tcParse(tcKey):null; clk=t?{w:t.base,b:t.base}:null; clkLast=performance.now(); renderClocks(); }
+function resetClock(){ const t=(mode==='ai'||mode==='online')?tcParse(curTc()):null; clk=t?{w:t.base,b:t.base}:null; clkLast=performance.now(); renderClocks(); }
 function flagFall(c){
+  if(mode==='online'){ gameOver={type:'time',winner:c==='w'?'b':'w',by:c===humanColor?'me':'opp'}; clk[c]=0; busy=false; NET.pres.tf=NET.game; netKick(); refreshBoard(); renderClocks(); showOver(); return; }
   gameId++; busy=false; thinking=false; selected=-1; hintMoves=[];
   gameOver={type:'time',winner:c==='w'?'b':'w'}; clk[c]=0; refreshBoard(); renderClocks(); showOver();
 }
 setInterval(()=>{
   const now=performance.now(), dt=Math.min(now-clkLast,1000); clkLast=now;
   if(!clockOn()||gameOver||!S||!S.hist.length) return;
-  if(document.querySelector('.screen:not([hidden])')||!$('pause').hidden) return;
+  if(mode==='ai'&&(document.querySelector('.screen:not([hidden])')||!$('pause').hidden)) return;
+  if(mode==='online'&&clk[S.turn]<=0) return;
   clk[S.turn]-=dt; renderClocks();
-  if(clk[S.turn]<=0) flagFall(S.turn);
+  if(clk[S.turn]<=0){ if(mode==='online'&&S.turn!==humanColor){ clk[S.turn]=0; renderClocks(); } else flagFall(S.turn); }
 },100);
 let mode='menu', humanColor='w', aiLevel=store.get('level','club'), sideChoice=store.get('side','w');
 let selected=-1, lastMove=null, hintMoves=[], gameOver=null, busy=false, thinking=false;
@@ -1142,7 +1154,7 @@ async function commit(m){
   busy=true; selected=-1; hintMoves=[];
   const san=E.san(S,m,legalNow);
   const mover=S.turn;
-  E.make(S,m); if(clockOn()){ clk[mover]+=tcParse(tcKey).inc; renderClocks(); } sanList.push(san); posKeys.push(E.key(S)); lastMove=m;
+  E.make(S,m); if(clockOn()){ clk[mover]+=tcParse(curTc()).inc; renderClocks(); } sanList.push(san); posKeys.push(E.key(S)); lastMove=m;
   if(mode==='online') netPushMoves();
   legalNow=E.legal(S);
   for(let i=0;i<64;i++){ dots[i].visible=false; rings[i].visible=false; }
@@ -1281,7 +1293,8 @@ function overText(){
     if(mode==='online') return g.winner===humanColor?{eyebrow:'Victory',title:'Checkmate',text:'You beat '+(NET.oppNick||'your opponent')+' in '+moves+' moves.',win:true}:{eyebrow:'Defeat',title:'Checkmate',text:(NET.oppNick||'Your opponent')+' wins in '+moves+' moves.',lose:true};
     return {eyebrow:'Game over',title:'Checkmate',text:(g.winner==='w'?'White':'Black')+' wins in '+moves+' moves.',win:true};
   }
-  if(g.type==='time'){ if(mode==='ai') return g.winner===humanColor?{eyebrow:'Victory',title:'Time!',text:'The computer ran out of time. You win.',win:true}:{eyebrow:'Defeat',title:'Out of time',text:'Your clock hit zero. The computer wins.',lose:true}; return {eyebrow:'Game over',title:'Time!',text:(g.winner==='w'?'White':'Black')+' wins on time.',win:true}; }
+  if(g.type==='time'){ if(mode==='online') return g.winner===humanColor?{eyebrow:'Victory',title:'Time!',text:(NET.oppNick||'Your opponent')+' ran out of time. You win.',win:true}:{eyebrow:'Defeat',title:'Out of time',text:'Your clock hit zero. '+(NET.oppNick||'Your opponent')+' wins.',lose:true};
+    if(mode==='ai') return g.winner===humanColor?{eyebrow:'Victory',title:'Time!',text:'The computer ran out of time. You win.',win:true}:{eyebrow:'Defeat',title:'Out of time',text:'Your clock hit zero. The computer wins.',lose:true}; return {eyebrow:'Game over',title:'Time!',text:(g.winner==='w'?'White':'Black')+' wins on time.',win:true}; }
   if(g.type==='abandon') return {eyebrow:'Victory',title:'Opponent left',text:(NET.oppNick||'Your opponent')+' disconnected and didn’t come back. You win.',win:true};
   if(g.type==='resign'&&mode==='online') return g.by==='me'?{eyebrow:'Resigned',title:'Game over',text:'You resigned. '+(NET.oppNick||'Your opponent')+' wins.',lose:true}:{eyebrow:'Victory',title:'They resigned',text:(NET.oppNick||'Your opponent')+' resigned. You win.',win:true};
   if(g.type==='resign') return mode==='ai'?{eyebrow:'Resigned',title:'Game over',text:'You resigned. The computer takes the point.',lose:true}:{eyebrow:'Resigned',title:'Game over',text:(g.winner==='w'?'White':'Black')+' wins by resignation.'};
@@ -1294,7 +1307,7 @@ function overText(){
 function showOver(){
   const o=overText();
   $('ovEyebrow').textContent=o.eyebrow; $('ovTitle').textContent=o.title; $('ovText').textContent=o.text;
-  $('ovMeta').textContent=(mode==='ai'?LEVELS[aiLevel].label+' · '+(tcLabel(tcKey)?tcLabel(tcKey)+' · ':''):'Online vs '+(NET.oppNick||'Opponent')+' · ')+Math.ceil(sanList.length/2)+' moves';
+  $('ovMeta').textContent=(mode==='ai'?LEVELS[aiLevel].label+' · '+(tcLabel(tcKey)?tcLabel(tcKey)+' · ':''):'Online vs '+(NET.oppNick||'Opponent')+' · '+(tcLabel(NET.tc)?tcLabel(NET.tc)+' · ':''))+Math.ceil(sanList.length/2)+' moves';
   $('over').hidden=false;
   updateRematch();
   sfx(o.lose?'lose':'win');
@@ -1496,6 +1509,7 @@ if(DP){
 }
 $('olCode').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4); });
 $('olCode').addEventListener('keydown',e=>{ if(e.key==='Enter') $('olJoin').click(); });
+bindPress('[data-otc]','otc',v=>{ otcKey=v; store.set('otc',v); },otcKey);
 bindPress('[data-hc]','hc',v=>{ hcChoice=v; store.set('hc',v); },hcChoice);
 
 async function roomPost(body,keep){
@@ -1584,6 +1598,7 @@ function netPeers(list){
   }
   if(o&&NET.role==='g'&&o.presence.opp&&o.presence.opp!==NET.me){ NET.opp=null; o=null; NET.full=true; delete NET.pres.opp; }
   const was=NET.oppOnline; NET.oppOnline=!!o;
+  if(o&&NET.role==='g') NET.tc=String(o.presence.tc||'0');
   if(o){ NET.oppNick=cleanNick(o.presence.nick)||'Opponent'; if(CHAT){ CHAT.setOpp(NET.oppNick); CHAT.receive(o.peer,o.presence.chat); } }
   if(CHAT&&hadOpp&&NET.opp&&was!==!!o) CHAT.note(o?NET.oppNick+' is back':(NET.oppNick||'Your opponent')+' disconnected');
   if(mode!=='online'){
@@ -1604,6 +1619,7 @@ function netPeers(list){
   if(NET.role==='g'&&(p.go|0)>NET.game) return startOnlineGame(p.go|0,p.hc==='w'?'b':'w');
   NET.oppRe=(p.re|0)===NET.game;
   if((p.g|0)===NET.game){
+    if((p.tf|0)===NET.game&&!gameOver){ gameOver={type:'time',winner:humanColor,by:'opp'}; busy=false; if(clk) clk[humanColor==='w'?'b':'w']=0; showOver(); return; }
     if((p.res|0)===NET.game&&!gameOver){ gameOver={type:'resign',winner:humanColor,by:'opp'}; busy=false; showOver(); return; }
     if(!gameOver) applyRemote(String(p.mv||''));
   }
@@ -1624,7 +1640,8 @@ function applyRemote(mv){
 function hostStart(g,hc){ NET.pres.go=g; NET.pres.hc=hc; startOnlineGame(g,hc); }
 function startOnlineGame(g,color){
   NET.game=g; humanColor=color; if(NET.role==='h') NET.hostColor=color;
-  NET.pres.g=g; NET.pres.mv=''; delete NET.pres.res; NET.oppRe=false; NET.offSince=0;
+  if(NET.role==='h'){ NET.tc=otcKey; NET.pres.tc=otcKey; }
+  NET.pres.g=g; NET.pres.mv=''; delete NET.pres.res; delete NET.pres.tf; NET.oppRe=false; NET.offSince=0;
   for(const id of ['pause','over','promo']) $(id).hidden=true;
   mode='online'; showScreen(null); newGame(START); cam.zoom=1; turnTo(humanColor);
   sfx('check'); toast('You play '+(color==='w'?'White. You move first.':'Black. White moves first.'));
