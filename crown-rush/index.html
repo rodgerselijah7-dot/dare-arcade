@@ -408,9 +408,9 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
         <li>Come up short? Runners <b>grab ledges</b> on rooftops and platforms and pull themselves up. Tap while hanging to <b>vault</b> up instantly.</li>
         <li>Run through <b>crates</b> for an item. Every racer can open every crate once.</li>
         <li>Special items: <b>Rocket</b> homes in on the runner ahead, <b>Freeze</b> ices everyone behind, <b>Swap</b> trades places with the runner in front, <b>Ghost</b> makes you untouchable for 3s, <b>Magnet</b> pulls in coins.</li>
-        <li><b>Saws and traps</b> throw ahead with the big button or back with ◀. <b>Bolt</b> zaps everyone, <b>Boost</b> speeds you up, <b>Shield</b> blocks hits.</li>
+        <li><b>Saws and traps</b> throw ahead with the big button or back with ◀. <b>Bolt</b> zaps everyone ahead of you, <b>Boost</b> speeds you up, <b>Shield</b> blocks hits.</li>
         <li>Stages mix <b>loops</b>, <b>bounce walls</b>, <b>tunnels</b>, <b>zip lines</b>, lifts, crumbling bridges, updrafts and laser gates.</li>
-        <li>Six maps: city rooftops plus <b>Frostbite Docks</b> (ice slides, icicles, floes), <b>Magma Works</b> (lava, fireballs, pistons, conveyors) and <b>Jungle Ruins</b> (vine swings, boulders, mushrooms).</li>
+        <li>Six maps: city rooftops plus <b>Frostbite Docks</b> (ice slides, icicles, floes), <b>Magma Works</b> (lava, fireballs, pistons, conveyors) and <b>Jungle Ruins</b> (bamboo launchers, boulders, mushrooms).</li>
         <li>Grab <b>coins</b> to buy runners, headwear, trails and upgrades. Every runner has a trait and their own entrance at the countdown.</li>
         <li><b>▼ Slide</b> under red beams. In the air it becomes a <b>ground pound</b> that stuns anyone you land near and smashes crates.</li>
         <li><b>» Dash</b> bursts forward, once per jump (twice with the jet pack). After a spring or bounce launch it becomes a <b>trick</b>: land clean for a boost, land mid-spin and you stumble.</li>
@@ -499,7 +499,7 @@ const CREW=[
   {name:'HOP',kind:'bunny',label:'Bunny',color:'#efe4ff',trait:'Bunny hop',tdesc:'Double jumps 18% higher',cost:150},
   {name:'LEAP',kind:'frog',label:'Frog',color:'#6fd36a',trait:'Spring feet',tdesc:'Springs, mushrooms and bounce walls launch 20% higher',cost:200},
   {name:'MIKA',kind:'cat',label:'Cat',color:'#f0a95a',trait:'Nine lives',tdesc:'Back on your feet twice as fast after a fall',cost:200},
-  {name:'MOJO',kind:'monkey',label:'Monkey',color:'#9a6a3a',trait:'Swinger',tdesc:'Zip lines, vines and loops are 25% faster',cost:250},
+  {name:'MOJO',kind:'monkey',label:'Monkey',color:'#9a6a3a',trait:'Swinger',tdesc:'Zip lines, bamboo launchers and loops are 25% faster',cost:250},
   {name:'HOOT',kind:'owl',label:'Owl',color:'#8a6bc4',trait:'Wise',tdesc:'Crates always give the strongest items',cost:250},
   {name:'FINN',kind:'shark',label:'Shark',color:'#5f9fd6',trait:'Hunter',tdesc:'Speed burst every time you pass someone',cost:300},
   {name:'GEAR',kind:'robot',label:'Robot',color:'#a9b4c8',trait:'Steel body',tdesc:'Spikes, lasers and other stage hazards stun 50% less',cost:350},
@@ -567,8 +567,8 @@ const TRACKS=[
   {id:'magma',grade:'#ff5a20',name:'Magma Works',sub:'Lava pits · fireballs · pistons · conveyors',seed:6660,len:15000,gapP:.25,spikeP:.3,padP:.15,springP:.12,style:'magma',
    mix:['roof','lava','piston','conveyor','lava','laser','zip','piston','conveyor','bounce','lava'],props:['pipe','gauge','stack','vat','pipe','barrel'],
    sky:['#12040a','#4a0f14','#a8321c'],slab:'#2a1c1e',top:'#433234',lip:'#ff8a3d',moon:'#ffb347',city:'#2a0c10',win:'rgba(255,140,60,.3)',plat:'#ffb347'},
-  {id:'jungle',grade:'#ffcc70',name:'Jungle Ruins',sub:'Vine swings · rolling boulders · mushroom bounces',seed:4242,len:15000,gapP:.3,spikeP:.3,padP:.1,springP:.1,style:'ruins',
-   mix:['roof','vine','boulder','mushroom','roof','vine','crumble','boulder','loop','mushroom','tunnel','vine'],props:['statue','pillar','torch','bush','palm','bush'],
+  {id:'jungle',grade:'#ffcc70',name:'Jungle Ruins',sub:'Bamboo launchers · rolling boulders · mushroom bounces',seed:4242,len:15000,gapP:.3,spikeP:.3,padP:.1,springP:.1,style:'ruins',
+   mix:['roof','bamboo','boulder','mushroom','roof','bamboo','crumble','boulder','loop','mushroom','tunnel','bamboo'],props:['statue','pillar','torch','bush','palm','bush'],
    sky:['#1a3a2a','#c77a3a','#ffd08a'],slab:'#4a4636',top:'#625d48',lip:'#9be36a',moon:'#fff0b3',city:'#2a4a32',win:'rgba(255,220,140,.25)',plat:'#9be36a'}
 ];
 const DIFF=[{name:'Easy',miss:.15,skill:[.9,.95],band:1.03},{name:'Normal',miss:.07,skill:[.95,1.01],band:1.07},{name:'Hard',miss:.025,skill:[.99,1.04],band:1.1}];
@@ -599,7 +599,7 @@ function persist(){try{localStorage.setItem(KEY,JSON.stringify(save))}catch(e){}
 /* ---------- state ---------- */
 let W=600,H=360,scale=1,dpr=1;
 let state='menu',mode='quick',T=TRACKS[0],cupIdx=0,cupPts={},demoIdx=0;
-let icicles=[],iceSecs=[],pistons=[],conveyors=[],pools=[],fireballs=[],vines=[],boulderSecs=[],boulders=[],cupTracks=[0,1,2];
+let icicles=[],iceSecs=[],pistons=[],conveyors=[],pools=[],fireballs=[],vines=[],catapults=[],boulderSecs=[],boulders=[],cupTracks=[0,1,2];
 let cloudImg=null,fg=[],clouds=[],texWall=null,texGrain=null,zoom=1;
 let deco=[],sky2=[],loops=[],tunnels=[],zips=[],amb=[],freeze=0,fwT=0,prevCamX=0;
 let segs=[],plats=[],spikes=[],boxes=[],pads=[],springs=[],coins=[],saws=[],traps=[],parts=[],sky=[],stars=[],lasers=[],vents=[],simT=0,halfCalled=false,cupCrew=null;
@@ -700,7 +700,7 @@ function setMute(m){
 function buildCourse(track){
   const R=mulberry(track.seed),rr=(a,b)=>a+R()*(b-a),rp=a=>a[R()*a.length|0];
   bolts=[];slicks=[];decoys=[];twisters=[];warpT=0;
-  segs=[];plats=[];spikes=[];boxes=[];pads=[];springs=[];coins=[];saws=[];traps=[];parts=[];lasers=[];vents=[];loops=[];tunnels=[];zips=[];icicles=[];iceSecs=[];pistons=[];conveyors=[];pools=[];fireballs=[];vines=[];boulderSecs=[];boulders=[];simT=0;
+  segs=[];plats=[];spikes=[];boxes=[];pads=[];springs=[];coins=[];saws=[];traps=[];parts=[];lasers=[];vents=[];loops=[];tunnels=[];zips=[];icicles=[];iceSecs=[];pistons=[];conveyors=[];pools=[];fireballs=[];vines=[];catapults=[];boulderSecs=[];boulders=[];simT=0;
   segs.push({x:-600,w:1200,y:280});
   let x=600,y=280;
   const row=(cx,cy,n,dx=26)=>{for(let k=0;k<n;k++)coins.push({x:cx+k*dx,y:cy,got:0})};
@@ -802,6 +802,12 @@ function buildCourse(track){
       const th0=.87,Lr=170,gy=y,V={x0:x,gy,Lr,th0,px:x+Lr*Math.sin(th0),py:gy-44-Lr*Math.cos(th0),cur:-th0};vines.push(V);
       for(let k=1;k<6;k++){const th=-th0+2*th0*k/6;coins.push({x:V.px+Lr*Math.sin(th),y:V.py+Lr*Math.cos(th)+20,got:0})}
       x+=rr(300,335);addSeg(rr(360,520),rp([0,40]));
+    }else if(type==='bamboo'){
+      // bamboo launcher: a bent stalk at the edge of a ravine flings runners across in a big arc
+      const s=addSeg(rr(300,360)),gap=rr(400,460),y1=clamp(y+rp([-40,0,0,40]),190,310);
+      const Cb={x:s.x+s.w-46,y:s.y,x1:x+gap+70,y1,H:rr(125,150),t:0};catapults.push(Cb);
+      for(let k=1;k<7;k++){const f=k/7;coins.push({x:Cb.x+(Cb.x1-Cb.x)*f,y:Cb.y+(Cb.y1-Cb.y)*f-Cb.H*4*f*(1-f)-22,got:0})}
+      x+=gap;addSeg(rr(380,520),y1-y);
     }else if(type==='boulder'){
       const s=addSeg(rr(920,1060),rp([0,-40,40]));
       boulderSecs.push({x0:s.x+40,x1:s.x+s.w-30,y:s.y,per:rr(2.3,2.9),t:R()*2});
@@ -990,6 +996,7 @@ function jump(r){
   if(r.wall){r.wall=null;r.vy=-(r.mod==='gtail'?760:670);r.jumps=1;r.dashes=0;r.jt=.12;r.spring=true;
     for(let i=0;i<6;i++)parts.push({x:r.x+9,y:r.y-14+rnd(-10,10),vx:rnd(-40,40),vy:rnd(-60,20),life:.35,c:'rgba(230,220,240,.6)'});
     if(r.isPlayer){beep(820,.06,'triangle');call('WALL JUMP',T.lip);buzz(12)}if(r===player)dq('walls');return}
+  if(r.launch)return;
   if(r.vine){r.vine=null;r.vy=-430;r.jumps=1;r.spring=true;return}
   if(r.ledge){const L=r.ledge,ex=L.plat?L.plat.x:L.x,ey=L.plat?L.plat.y:L.y;r.ledge=null;r.x=ex-2;r.y=Math.min(r.y,ey+20);r.vy=-560;r.jumps=1;r.spring=true;r.flip=.42;
     for(let i=0;i<5;i++)parts.push({x:ex,y:ey,vx:rnd(-40,60),vy:rnd(-80,-20),life:.3,c:'rgba(230,220,240,.6)'});if(r.isPlayer){beep(760,.07,'triangle');call('VAULT!',T.lip)}return}
@@ -1498,7 +1505,7 @@ function botThink(r,dt){
     const wall=s&&s.y<r.y-4&&(!ahead||ahead===s),gap=!ahead;
     const lift=ahead&&ahead.kind==='lift'&&ahead!==r.onPlat;
     const laser=lasers.some(k=>k.x-r.x>4&&k.x-r.x<look+8&&Math.abs(k.y-r.y)<4&&(laserOn(k)||laserWarn(k)||k.x-r.x<30));
-    const spring=springs.some(k=>k.x-r.x>-4&&k.x-r.x<look);
+    const spring=springs.some(k=>k.x-r.x>-4&&k.x-r.x<look)||catapults.some(c=>c.x-r.x>-4&&c.x-r.x<look+40&&Math.abs(c.y-r.y)<4);
     const spike=spikes.some(k=>k.x-r.x>4&&k.x-r.x<look+6&&Math.abs(k.y-r.y)<4);
     const trap=traps.some(k=>k.owner!==r&&k.x-r.x>4&&k.x-r.x<look+6&&Math.abs(k.y-r.y)<4);
     const pist=pistons.some(k=>k.x-r.x>2&&k.x-r.x<look+10&&Math.abs(k.y-r.y)<4&&pistonWarn(k));
@@ -1608,6 +1615,12 @@ function updRunner(r,dt){
       collectCoins(r,dt);return;
     }
   }
+  if(r.launch){
+    const L=r.launch;if(r.stun>0)r.stun-=dt;L.t+=dt;const f=Math.min(1,L.t/L.T),py=r.y;
+    r.x=L.x0+(L.x1-L.x0)*f;r.y=L.y0+(L.y1-L.y0)*f-L.H*4*f*(1-f);r.vy=(r.y-py)/Math.max(dt,1e-4);r.onGround=false;r.jumps=1;r.phase+=dt*6;
+    if(f>=1){r.launch=null;r.y=L.y1-.5;r.vy=120}
+    collectCoins(r,dt);return;
+  }
   if(r.vine){
     const V=r.vine.V;
     if(r.stun>0)r.stun-=dt;
@@ -1685,6 +1698,13 @@ function updRunner(r,dt){
   }
   if(r.onGround&&r.onPlat&&r.onPlat.kind==='crumble'&&!r.onPlat.t)r.onPlat.t=.001;
   if(r.onGround&&!r.finish)for(const L of loops)if(px<L.x0&&r.x>=L.x0&&Math.abs(r.y-L.y)<3){r.loop={L,th:0};r.x=L.x0;break}
+  if(!r.finish&&!r.launch)for(const Cb of catapults){
+    if(px<Cb.x&&r.x>=Cb.x&&r.y>Cb.y-90&&r.y<Cb.y+30){
+      const TT=(Cb.x1-Cb.x)/(SPEED*1.55*(r.kind==='monkey'?1.25:1)*(r.boost>0?1.15:1));
+      r.launch={x0:Cb.x,y0:Cb.y,x1:Cb.x1,y1:Cb.y1,H:Cb.H,t:0,T:TT};Cb.t=.35;r.x=Cb.x;r.onGround=false;r.spring=true;r.jumps=1;r.pound=0;r.slide=0;r.grap=null;r.wall=null;
+      if(r.isPlayer){call('LAUNCHED!',T.lip);beep(240,.06,'triangle');setTimeout(()=>beep(760,.14,'triangle'),60);buzz(18)}
+      break}
+  }
   if(!r.finish&&!r.vine)for(const V of vines){
     if(px<V.x0+2&&r.x>=V.x0-2&&r.y>V.gy-140&&r.y<V.gy+60){r.vine={V,th:-V.th0};r.x=V.x0;r.onGround=false;if(r.isPlayer)beep(520,.06,'triangle');break}
   }
@@ -1799,6 +1819,7 @@ function sim(dt){
   for(let i=boulders.length-1;i>=0;i--){const b=boulders[i];b.x-=200*dt;b.a-=200*dt/17;
     if(Math.random()<.15)parts.push({x:b.x+12,y:b.y-2,vx:rnd(20,60),vy:rnd(-30,-5),life:.35,c:'rgba(200,180,140,.5)'});
     if(b.x<b.sec.x0){for(let k=0;k<8;k++)parts.push({x:b.x,y:b.y-17,vx:rnd(-120,40),vy:rnd(-160,-20),life:.5,c:'#8a7a60'});boulders.splice(i,1)}}
+  for(const Cb of catapults)Cb.t=Math.max(0,Cb.t-dt);
   for(const V of vines){if(!runners.some(r=>r.vine&&r.vine.V===V))V.cur+=(-V.th0+Math.sin(simT*1.6)*.06-V.cur)*Math.min(1,dt*3)}
   for(let i=saws.length-1;i>=0;i--){
     const s=saws[i];
@@ -1898,7 +1919,8 @@ function update(rdt){
     const air=!focus.onGround&&!focus.loop&&!focus.ledge;
     let ty=(focus.dead?camY+H*.64:focus.y)-H*(air&&focus.vy>300?.58:.64);   // falling: more room below to see the landing
     if(air&&focus.vy<0&&!focus.dead)ty=clamp(camY,focus.y-H*.64,focus.y-H*.3); // rising: let the runner climb before following
-    const dy=ty-camY;camY+=dy*Math.min(1,rdt*(Math.abs(dy)>H*.3?7:air?3.2:4.5));
+    if(focus.launch&&!focus.dead)ty=focus.y-H*.5; // bamboo launch: track the arc closely so the runner never leaves the screen
+    const dy=ty-camY;camY+=dy*Math.min(1,rdt*(focus.launch?9:Math.abs(dy)>H*.3?7:air?3.2:4.5));
     const zt=player&&state!=='menu'?1+(player.boost>0?.05:0)+(player.dash>0?.03:0)+(player.loop?.06:0)+(player.vine||player.zip?.035:0)-(air&&Math.abs(player.vy)>650?.04:0)+(photoT>0?.08:0):1;zoom+=(zt-zoom)*Math.min(1,rdt*2.5);
     if(T.id==='southside'&&save.gfx!=='fast'&&state!=='paused'&&parts.length<620)for(let i=0;i<2;i++){if(Math.random()<.7){const wx=camX+Math.random()*W,sg=segAt(wx);if(sg&&!sg.bounce)parts.push({k:'ring',x:wx,y:sg.y,r:1,gr:22,life:.22,c:'rgba(210,225,255,.6)'})}}
   }
@@ -2292,6 +2314,23 @@ function drawWorld(){
       ctx.strokeStyle='rgba(220,245,255,.7)';ctx.lineWidth=2;ctx.beginPath();for(let k=0;k<=pl.w;k+=8){const yy=y+Math.sin(now/400+k*.06)*2;k?ctx.lineTo(x+k,yy):ctx.moveTo(x+k,yy)}ctx.stroke();
       ctx.fillStyle='rgba(255,255,255,.12)';for(let k=10;k<pl.w;k+=40)ctx.fillRect(x+k+Math.sin(now/600+k)*6,y+14+(k%3)*8,18,1.5);
     }
+  }
+  for(const Cb of catapults){
+    const x=sx(Cb.x),y=sy(Cb.y);if(x<-90||x>W+90)continue;
+    const k=Cb.t/.35,bend=k>0?.75*k-.1*(1-k):-.42+Math.sin(now/600+Cb.x)*.03;
+    // stone footing with a carved arrow
+    ctx.fillStyle='#6b6450';ctx.beginPath();ctx.moveTo(x-16,y);ctx.lineTo(x-12,y-9);ctx.lineTo(x+12,y-9);ctx.lineTo(x+16,y);ctx.closePath();ctx.fill();ctx.strokeStyle='#0d0b1f';ctx.lineWidth=1.4;ctx.stroke();
+    ctx.strokeStyle='#ffcc70';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(x-5,y-6.5);ctx.lineTo(x,y-4.5);ctx.lineTo(x-5,y-2.5);ctx.moveTo(x+1,y-6.5);ctx.lineTo(x+6,y-4.5);ctx.lineTo(x+1,y-2.5);ctx.stroke();
+    // bent bamboo stalk, five segments that curve more toward the tip
+    let bx=x,by=y-8,a=-Math.PI/2;const pts=[[bx,by]];
+    for(let i=0;i<5;i++){a+=bend*(.12+i*.06);bx+=Math.cos(a)*10;by+=Math.sin(a)*10;pts.push([bx,by])}
+    for(const [w,c] of [[8,'#0d0b1f'],[5.4,'#7fb84a']]){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(const p of pts.slice(1))ctx.lineTo(p[0],p[1]);ctx.stroke()}
+    ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(pts[0][0]-1.2,pts[0][1]);for(const p of pts.slice(1))ctx.lineTo(p[0]-1.2,p[1]);ctx.stroke();
+    ctx.strokeStyle='#3f6b24';ctx.lineWidth=2;for(const p of pts.slice(1,-1)){ctx.beginPath();ctx.arc(p[0],p[1],2.6,0,7);ctx.stroke()}
+    // leaf cup at the tip
+    const tp=pts[pts.length-1];ctx.save();ctx.translate(tp[0],tp[1]);ctx.rotate(a+Math.PI/2);ctx.fillStyle='#3d8a3a';ctx.beginPath();ctx.ellipse(0,-4,11,5,0,Math.PI,0);ctx.closePath();ctx.fill();ctx.strokeStyle='#0d0b1f';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.fillStyle='#9be36a';ctx.beginPath();ctx.ellipse(-3,-6,4,1.4,0,0,7);ctx.fill();ctx.restore();
+    if(k>0){ctx.fillStyle='rgba(155,227,106,'+(.6*k)+')';for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(tp[0]+12+i*7,tp[1]-6-i*5,3,1.4,.5,0,7);ctx.fill()}}
   }
   for(const V of vines){
     const pxv=sx(V.px),pyv=sy(V.py);if(pxv<-260||pxv>W+260)continue;
