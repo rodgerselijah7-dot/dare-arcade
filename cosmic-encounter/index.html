@@ -608,7 +608,7 @@ function readSafeTop(){let pr=document.getElementById('_satProbe');if(!pr){pr=do
 let BARPX=160;
 function barTop(){return Math.max(0.5,1-(BARPX+18)/CH);}
 function applyLayout(){
-  const barH=Math.max(150,Math.min(230,Math.round(window.innerHeight*0.27)));
+  const barH=Math.max(132,Math.min(190,Math.round(window.innerHeight*0.22)));
   document.documentElement.style.setProperty('--bar-h',barH+'px');BARPX=barH;
   requestAnimationFrame(()=>{
     const wrap=document.getElementById('canvasWrap');
