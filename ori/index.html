@@ -288,6 +288,33 @@ body{background:#05060d;}
 .ov-bullets li::before{color:var(--gold2);}
 .arcade-link{background:rgba(255,255,255,.04);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 @media (prefers-reduced-motion:reduce){#so-title,.ov-glow-ring,#so-btn{animation:none}}
+
+/* ===== HOMEPAGE + DECLUTTER ===== */
+#home-fx{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;}
+#so-zones{display:flex;gap:6px;margin-top:6px;}
+#so-zones i{display:block;width:26px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);position:relative;}
+#so-zones i.on{background:linear-gradient(90deg,#A855F7,#F5A623);box-shadow:0 0 10px rgba(168,85,247,.6);}
+#so-zones i.cur{box-shadow:0 0 12px rgba(245,166,35,.9);}
+.ov-bullets{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;line-height:1;}
+.ov-bullets li{font-size:.78em;padding:.5em .8em;border:1px solid rgba(168,85,247,.35);border-radius:999px;background:rgba(168,85,247,.08);color:rgba(238,232,213,.72);}
+.ov-bullets li::before{content:none;}
+#so-row{display:flex;gap:10px;margin-top:16px;}
+.so-link{font-family:inherit;font-weight:600;letter-spacing:.2em;font-size:13px;color:rgba(238,232,213,.6);background:rgba(255,255,255,.04);
+  border:1px solid rgba(168,85,247,.35);border-radius:10px;padding:9px 14px 8px;cursor:pointer;}
+.so-link:active{background:rgba(168,85,247,.25);}
+#howto{position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,6,16,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+#howto.show{display:flex;}
+.ht-card{max-width:380px;width:100%;background:linear-gradient(180deg,rgba(40,24,84,.95),rgba(10,10,28,.95));border:1px solid rgba(168,85,247,.55);border-radius:18px;
+  padding:22px 20px;text-align:center;box-shadow:0 0 40px rgba(123,47,190,.4);}
+.ht-title{font-weight:800;letter-spacing:.3em;color:var(--amber);font-size:20px;margin-bottom:12px;}
+.ht-list{list-style:none;text-align:left;font-size:17px;line-height:1.45;color:rgba(238,232,213,.78);margin-bottom:18px;}
+.ht-list li{padding:7px 0;border-bottom:1px solid rgba(168,85,247,.15);}
+.ht-list b{color:#C4B5FD;font-weight:700;}
+.ht-card .ov-btn{font-size:16px;height:44px;padding:0 34px;}
+/* gameplay: only what you need */
+#logo-sm,.corner-name,#btn-mute{display:none !important;}
+body.wide #hud-extra{opacity:.7;}
+.corner-lbl{opacity:.8;}
 </style>
 <script src="/dare-unlock.js"></script>
 </head>
@@ -296,6 +323,7 @@ body{background:#05060d;}
 
 <!-- START SCREEN -->
 <div id="start-overlay">
+  <canvas id="home-fx"></canvas>
   <div class="ov-glow-ring" id="glow-ring"></div>
   <a class="arcade-link" href="/" aria-label="Back to DARE Arcade">&lsaquo; ARCADE</a>
   <div class="ov-eyebrow" id="so-eyebrow">a new kind of tile game</div>
@@ -303,12 +331,29 @@ body{background:#05060d;}
   <div id="so-author">Dontae Amare</div>
   <div class="ov-rule" id="so-rule"></div>
   <ul class="ov-bullets" id="so-bullets">
-    <li>18 Shapes to Master</li><li>30 Levels · 6 Zones</li>
-    <li>Chain Combos</li><li>Survive</li>
+    <li>18 Shapes</li><li>30 Levels</li><li>6 Zones</li><li>Endless</li>
   </ul>
-  <button class="ov-btn" id="so-btn">BEGIN</button>
+  <button class="ov-btn" id="so-btn">PLAY</button>
   <button class="ov-btn sec" id="so-cont" style="display:none"></button>
+  <div id="so-zones" aria-label="Zone progress"></div>
   <div id="so-best"></div>
+  <div id="so-row">
+    <button class="so-link" id="so-how">HOW TO PLAY</button>
+    <button class="so-link" id="so-snd">SOUND ON</button>
+  </div>
+  <div id="howto" role="dialog" aria-label="How to play">
+    <div class="ht-card">
+      <div class="ht-title">HOW TO PLAY</div>
+      <ul class="ht-list">
+        <li><b>Drop</b> five-block shapes and fill whole rows to clear them.</li>
+        <li><b>Tap</b> the board to rotate · <b>swipe</b> to move · swipe <b>down</b> to drop.</li>
+        <li><b>Hold</b> a piece once per turn to save it for later.</li>
+        <li><b>Chain</b> clears for combo multipliers. Quads pay big.</li>
+        <li>Every 5 levels a new <b>zone</b> adds a twist: rising rows, rubble, fog, hidden next.</li>
+      </ul>
+      <button class="ov-btn" id="ht-close">GOT IT</button>
+    </div>
+  </div>
   <div id="so-keys"><b>&larr; &rarr;</b> move &nbsp;·&nbsp; <b>&uarr;</b> rotate &nbsp;·&nbsp; <b>&darr;</b> soft drop &nbsp;·&nbsp; <b>Space</b> drop &nbsp;·&nbsp; <b>C</b> hold &nbsp;·&nbsp; <b>P</b> pause</div>
 </div>
 <div id="sa-probe"></div>
@@ -1371,6 +1416,7 @@ function cellSprite(color,size,kind){
   x.fillStyle='rgba(255,255,255,.8)';x.beginPath();x.arc(px+s0*.24,py+s0*.24,Math.max(.8,s0*.06),0,TAU);x.fill();
   s={cv,g,full};SPR.set(key,s);return s;
 }
+window.ORI_sprite=cellSprite;
 drawCell=function(context,r,c,color,glow,alpha,isActive){
   const s=cellSprite(color,CS,isActive?1:0);
   context.save();context.globalAlpha=alpha;context.drawImage(s.cv,c*CS-s.g,r*CS-s.g,s.full,s.full);
@@ -1544,6 +1590,52 @@ drawParticles=function(){
 };
 initParticles();boardLayer=null;
 try{draw();if(next)drawNext();if(held)drawMini(hctx,MCS,held);}catch(e){}
+})();
+</script>
+<script>
+/* HOMEPAGE: floating gem backdrop, zone progress, how-to, sound toggle */
+(function(){
+'use strict';
+const hf=$('home-fx'),hx=hf.getContext('2d'),snd=$('so-snd'),how=$('howto');
+const syncSnd=()=>{snd.textContent=muted?'SOUND OFF':'SOUND ON';};
+const _tm=toggleMute;toggleMute=function(){_tm();syncSnd();};
+snd.addEventListener('pointerdown',e=>{e.preventDefault();toggleMute();});
+$('so-how').addEventListener('pointerdown',e=>{e.preventDefault();how.classList.add('show');});
+const closeHow=e=>{if(e)e.preventDefault();how.classList.remove('show');};
+$('ht-close').addEventListener('pointerdown',closeHow);
+how.addEventListener('pointerdown',e=>{if(e.target===how)closeHow(e);});
+document.addEventListener('keydown',e=>{if(how.classList.contains('show')){e.preventDefault();e.stopImmediatePropagation();if(e.key==='Enter'||e.key===' '||e.key==='Escape')closeHow();}},true);
+// zone progress pips
+const zp=$('so-zones');
+function pips(){const z=getZoneSave();zp.innerHTML='';for(let i=0;i<6;i++){const el=document.createElement('i');if(i<=z&&(z>0||i===0))el.className='on'+(i===z?' cur':'');el.title=ZONES[i].name;zp.appendChild(el);}zp.style.display=z>0?'flex':'none';}
+const _rb=refreshBest;refreshBest=function(){_rb();pips();syncSnd();};
+refreshBest();
+// pause screen: sound toggle lives here now
+const _so=showOverlay;showOverlay=function(type){_so(type);
+  if(type==='paused'&&overlayEl){const m=overlayEl.querySelector('#ov-menu');if(m){const b=document.createElement('button');b.className=m.className;b.style.cssText=m.style.cssText;b.id='ov-snd';b.textContent=muted?'SOUND OFF':'SOUND ON';
+    b.addEventListener('pointerdown',e=>{e.preventDefault();toggleMute();b.textContent=muted?'SOUND OFF':'SOUND ON';});overlayEl.insertBefore(b,m);}}};
+// floating gems behind the title
+let pcs=[],W=0,H=0;
+function sizeFx(){const r=startOv.getBoundingClientRect();W=Math.max(1,r.width|0);H=Math.max(1,r.height|0);hf.width=W*DPR;hf.height=H*DPR;hf.style.width=W+'px';hf.style.height=H+'px';hx.setTransform(DPR,0,0,DPR,0,0);
+  pcs=[];const n=W>600?14:9;for(let i=0;i<n;i++){const def=PIECE_DEFS[(Math.random()*PIECE_DEFS.length)|0];pcs.push({def,x:Math.random()*W,y:Math.random()*H,vy:(Math.random()<.5?-1:1)*(6+Math.random()*10),vx:(Math.random()-.5)*6,rot:Math.random()*6.28,vr:(Math.random()-.5)*.25,s:Math.round(16+Math.random()*16),a:.16+Math.random()*.22});}}
+let last=0;
+const shell=$('shell');
+function loop(ts){
+  shell.style.visibility=startOv.style.display==='none'?'':'hidden';
+  if(startOv.style.display==='none'){setTimeout(()=>requestAnimationFrame(loop),300);return;}
+  requestAnimationFrame(loop);
+  const dt=Math.min(.05,(ts-last)/1000||.016);last=ts;
+  if(!W||startOv.clientWidth!==W)sizeFx();
+  hx.clearRect(0,0,W,H);
+  for(const p of pcs){p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;
+    const pad=p.s*5;if(p.y<-pad)p.y=H+pad;if(p.y>H+pad)p.y=-pad;if(p.x<-pad)p.x=W+pad;if(p.x>W+pad)p.x=-pad;
+    const sp=ORI_sprite(p.def.color,p.s,2),cs=p.def.cells;let mr=0,mc=0;for(const[r,c]of cs){if(r>mr)mr=r;if(c>mc)mc=c;}
+    hx.save();hx.translate(p.x,p.y);hx.rotate(p.rot);hx.globalAlpha=p.a;
+    for(const[r,c]of cs)hx.drawImage(sp.cv,(c-mc/2-.5)*p.s-sp.g,(r-mr/2-.5)*p.s-sp.g,sp.full,sp.full);
+    hx.restore();}
+}
+requestAnimationFrame(loop);
+window.addEventListener('resize',()=>{W=0;});
 })();
 </script>
 <!-- Vercel Web Analytics -->
