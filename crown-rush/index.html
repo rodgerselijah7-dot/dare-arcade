@@ -785,13 +785,13 @@ function buildCourse(track){
     }else if(type==='lava'){
       addSeg(rr(260,340));
       const pw=rr(230,270);pools.push({x,w:pw,y:y+50,kind:'lava'});
-      plat({x:x+pw/2-35,w:70,y,kind:'stone'});
-      fireballs.push({x:x+pw*.2,y:y+50,per:rr(1.9,2.5),ph:R()*3},{x:x+pw*.8,y:y+50,per:rr(1.9,2.5),ph:R()*3});
+      plat({x:x+pw/2-55,w:110,y,kind:'stone'});
+      {const fp=rr(2.1,2.6),f0=R()*3;fireballs.push({x:x+pw*.2,y:y+50,per:fp,ph:f0},{x:x+pw*.8,y:y+50,per:fp,ph:f0+fp/2});}
       row(x+pw/2-26,y-40,3);
       x+=pw;addSeg(rr(340,500),rp([0,-40,40]));
     }else if(type==='piston'){
       const s=addSeg(rr(820,980),rp([0,40,-40]));
-      for(let i=0;i<3;i++)pistons.push({x:s.x+180+i*(s.w-340)/2,y:s.y,per:rr(1.7,2.2),ph:R()*3});
+      {const pp=rr(1.9,2.3),p0=R()*3;for(let i=0;i<3;i++)pistons.push({x:s.x+180+i*(s.w-340)/2,y:s.y,per:pp,ph:p0+i*pp/3});}
       row(s.x+60,s.y-40,3,30);
     }else if(type==='conveyor'){
       const s=addSeg(rr(780,920),rp([0,-40,40]));
@@ -819,7 +819,7 @@ function buildCourse(track){
   }
   segs.push({x:x+90,w:1700,y:250});
   finishX=x+460;
-  for(let bx=520;bx<finishX-240;bx+=rr(480,620)){
+  for(let bx=520;bx<finishX-240;bx+=rr(780,960)){
     const s=segAt(bx);if(!s)continue;
     if(spikes.some(k=>Math.abs(k.x-bx)<70)||springs.some(k=>Math.abs(k.x-bx)<70)||lasers.some(k=>Math.abs(k.x-bx)<60)||loops.some(L=>bx>L.x0-80&&bx<L.x0+L.d+L.R+60)||pads.some(k=>bx>k.x-30&&bx<k.x+k.w+30))continue;
     boxes.push({x:bx,y:s.y-34,t:0});
@@ -1010,6 +1010,9 @@ function hit(r,t,by,kind){
   if(r.shield>0&&r.reflect&&by&&by!==r&&PROJ.has(kind)&&!by.remote){r.reflect=false;r.shield=Math.min(r.shield,.4);parts.push({k:'ring',x:r.x,y:r.y-20,r:10,gr:220,life:.35,c:'#4fb8ff'});
     if(r.isPlayer)call('REFLECTED','#4fb8ff');hit(by,t,r,kind);return false}
   if(r.shield>0||r.inv>0||r.ghost>0)return false;
+  const attack=!!(by&&by!==r);
+  if(attack&&raceTime<(r.graceUntil||0))return false; // just got knocked down by someone: a short window where attacks can't chain
+  if(attack)t*=.75;
   if(r.kind==='ghost'&&(kind==='saw'||kind==='bolt')&&Math.random()<.35){
     for(let i=0;i<6;i++)parts.push({k:'bub',x:r.x+rnd(-10,10),y:r.y-20+rnd(-10,10),vx:rnd(-30,30),vy:rnd(-60,-20),g:0,life:.5,s:3,c:'rgba(238,243,255,.8)'});
     if(r.isPlayer)call('PHASED','#eef3ff');return false}
@@ -1022,6 +1025,7 @@ function hit(r,t,by,kind){
   parts.push({k:'ring',x:r.x,y:r.y-20,r:6,gr:150,life:.35,c:'#ffffff'});
   for(let i=0;i<8;i++){const a=Math.random()*7,v=rnd(150,320);parts.push({k:'spark',x:r.x,y:r.y-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:0,life:.25,c:'#ffe14d'})}
   if(r.isPlayer||(by&&by.isPlayer)){freeze=Math.max(freeze,.05+.035*Math.min(t,1.6));if(!reduce){shake=Math.max(shake,.1+.1*Math.min(t,1.5));ab=Math.max(ab,.35)}}
+  if(attack)r.graceUntil=raceTime+t+4;
   r.stun=t;r.inv=t+.8;r.boost=0;r.slide=0;r.dash=0;r.trick=0;r.ram=0;r.frenzy=0;r.fire=0;puff(r.x,r.y-16,r.color,10);
   r.react=kind||'bump';r.reactT=Math.min(t,1.6);
   if(kind==='saw'||kind==='rocket'||kind==='tornado'||kind==='oil'||kind==='pound'||kind==='foxfire'){r.spin=.55;if(r.onGround&&!r.loop&&!r.vine&&!r.zip&&!r.ledge){r.vy=kind==='tornado'?-560:-230;r.onGround=false}}
@@ -1474,7 +1478,7 @@ function grabLedge(r,ex,ey,plat){
 function botThink(r,dt){
   if(r.ledge){if(r.ledge.t>.07&&Math.random()<.06)jump(r);return}
   if(r.wall){if(Math.random()<dt*9)jump(r);return}
-  if(state==='race'&&r.sp>=1&&!r.finish&&r.stun<=0&&Math.random()<dt*.7){
+  if(state==='race'&&r.sp>=1&&!r.finish&&r.stun<=0&&Math.random()<dt*.4){
     const k=r.kind,ah=aheadOf(r,260).length,bh=runners.some(o=>o!==r&&Math.abs(o.x-r.x)<180);
     const ok={teddy:bh,dino:bh,cyborg:bh,dragon:ah>0,fox:aheadOf(r).length>0,frog:aheadOf(r,600).length>0,alien:standings()[0]!==r,ghost:standings()[0]!==r,monkey:runners.some(o=>o!==r&&o.x<r.x&&r.x-o.x<300)}[k];
     if(ok!==false&&r.onGround)special(r);
@@ -1624,7 +1628,7 @@ function updRunner(r,dt){
   }
   let sp=0;
   if(r.finish)sp=90;
-  else if(r.stun>0)r.stun-=dt;
+  else if(r.stun>0){r.stun-=dt;if(!r.onGround&&!r.dead)sp=SPEED*(r.skill||1)*.55} // keep some momentum when knocked mid-air, so a hit over a gap isn't also a fall
   else{
     sp=SPEED*r.skill*(r.boost>0?1.55:1)*(r.isPlayer?1+.015*lv('speed'):1)*(r.slide>0&&r.onGround?(r.spT>0&&r.spK==='penguin'?1.45:1.12):1)*(r.dash>0?2.3:1)*(r.slowW>0?.62:1)*(r.curse>0?.9:1)*(r.skid>0?.8:1)*(r.ghost>0&&r.ghostLv>1?1.2:1)*(r.oilT>0?.65:1);
     if(r.slide>0&&r.onGround&&Math.random()<.6&&parts.length<650)parts.push({k:'spark',x:r.x-8,y:r.y-1,vx:rnd(-200,-90),vy:rnd(-60,-10),g:300,life:.2,c:T.style==='ice'?'#e8f7ff':'#ffe14d'});
@@ -1745,7 +1749,7 @@ function updRunner(r,dt){
       (b.got||(b.got=new Set())).add(r);if(r.isPlayer)b.pop=.35;puff(b.x,b.y,'#ffc83d',8);
       if(r.item){if(r.itemLv<2&&!(r.roll>0)){r.itemLv=2;parts.push({k:'txt',t:'LEVEL UP',x:r.x,y:r.y-60,vx:0,vy:-40,g:0,life:1,c:'#ffc83d'});if(r.isPlayer){setItemUI();call(ITEMS[r.item].label+' II','#ffc83d');beep(1320,.08,'triangle');setTimeout(()=>beep(1760,.1,'triangle'),70)}}
         else if(r.isPlayer){stats.coins+=2;$('coinNum').textContent=stats.coins}}
-      else{const rk=r.kind==='owl'?runners.length-1:standings().indexOf(r);r.item=pickItem(rk,runners.length);r.itemLv=rk>=runners.length-1&&runners.length>2&&Math.random()<.35?2:1;r.itemT=rnd(.6,2.4);
+      else{const rk=r.kind==='owl'?runners.length-1:standings().indexOf(r);r.item=pickItem(rk,runners.length);r.itemLv=rk>=runners.length-1&&runners.length>2&&Math.random()<.35?2:1;r.itemT=r.isPlayer?rnd(.6,2.4):rnd(4,7.5);
         if(r.isPlayer){r.roll=r.kind==='fox'?0:.55;setItemUI();beep(980,.08,'sine')}}
       break;
     }
@@ -1768,7 +1772,7 @@ function sim(dt){
   runners.forEach(r=>{if(!r.isPlayer&&!r.remote)botThink(r,dt)});
   runners.forEach(r=>{if(!r.remote)updRunner(r,dt);else netPuppet(r,dt)});
   for(let i=bolts.length-1;i>=0;i--){const b=bolts[i];b.t-=dt;
-    if(b.t<=0){bolts.splice(i,1);flash=.35;let n=0;runners.forEach(o=>{if(o!==b.owner&&hit(o,b.stun,b.owner,'bolt'))n++});
+    if(b.t<=0){bolts.splice(i,1);flash=.35;let n=0;runners.forEach(o=>{if(o!==b.owner&&o.x>b.owner.x&&hit(o,b.stun,b.owner,'bolt'))n++}); // lightning strikes the racers ahead of you
       if(b.owner.isPlayer&&n)call('BOLTED ×'+n,ITEMS.bolt.color);else if(!b.owner.isPlayer&&player&&player.stun>0)call('BOLTED BY '+b.owner.name,'#ffe14d');beep(90,.35,'sawtooth',.08)}}
   warpT=Math.max(0,warpT-dt);
   for(let i=twisters.length-1;i>=0;i--){const w=twisters[i];w.life-=dt;w.x+=w.vx*dt;w.a+=dt*14;const g=segAt(w.x);if(g)w.y+=(g.y-w.y)*Math.min(1,dt*10);
