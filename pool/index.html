@@ -129,15 +129,24 @@ button:disabled{opacity:.4;cursor:default}
 .splr{display:flex;justify-content:space-between;align-items:center}
 .splr .spl{writing-mode:vertical-rl;transform:rotate(180deg)}
 @media (orientation:landscape) and (max-height:600px){
-  #app{display:grid;grid-template-columns:136px 1fr;grid-template-rows:1fr auto;grid-template-areas:"hud stage" "ctl stage"}
-  #hud{grid-area:hud;flex-wrap:wrap;align-content:flex-start;gap:5px;padding:6px 0 0 6px}
-  #hud .pcard{flex:1 1 100%;order:1}#hud #pc1{order:2}#hud .hbtn{order:3;flex:1;height:34px}
-  #stage{grid-area:stage;margin-right:58px}
-  #controls{grid-area:ctl;padding:0 0 8px 6px;gap:6px}
-  #fine{flex:1;width:auto;min-width:0}
+  /* table fills the screen; controls float in the slim gutters, player chips sit on the top rail */
+  #app{display:block}
+  #stage{position:fixed;inset:0}
+  #hud{position:fixed;inset:0;display:block;padding:0;pointer-events:none;z-index:3}
+  #hud .hbtn{position:fixed;left:calc(env(safe-area-inset-left) + 6px);top:calc(env(safe-area-inset-top) + 8px);width:46px;height:40px;pointer-events:auto}
+  #hud #chatBtn{top:calc(env(safe-area-inset-top) + 54px)}
+  #hud .pcard{position:fixed;left:var(--cx);top:var(--cy);width:var(--cw);height:var(--ch);display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:6px;background:rgba(10,10,10,.82)}
+  #hud #pc1{left:var(--cx1);flex-direction:row-reverse}
+  #hud .pname{gap:6px;min-width:0}#hud .pname b{font-size:15px}
+  #hud .mini{margin:0;height:8px;gap:2px}#hud .mini i{width:8px;height:8px}
+  #controls{display:block;padding:0}
+  #spinBtn{position:fixed;left:calc(env(safe-area-inset-left) + 6px);bottom:calc(env(safe-area-inset-bottom) + 8px)}
+  #fine{position:fixed;left:calc(env(safe-area-inset-left) + 6px);bottom:calc(env(safe-area-inset-bottom) + 62px);width:46px;height:132px;writing-mode:vertical-rl;
+    background-image:repeating-linear-gradient(0deg,transparent 0 6px,rgba(212,175,55,.28) 6px 7px);box-shadow:none}
   #power{position:fixed;right:calc(env(safe-area-inset-right) + 6px);top:calc(env(safe-area-inset-top) + 8px);bottom:calc(env(safe-area-inset-bottom) + 8px);width:46px;height:auto;flex:none}
   #pfill{left:0;right:0;top:0;bottom:auto;width:auto;height:0;background:linear-gradient(0deg,#ff4d2e,#d4af37 55%,rgba(212,175,55,.25))}
   #plabel{writing-mode:vertical-rl;padding:44px 0 0}
+  #replayPill{right:calc(env(safe-area-inset-right) + 64px)}
 }
 .splr .spl.r{transform:none}
 #olOpen .dp-open{margin:2px 0}
@@ -993,6 +1002,7 @@ function updateHUD(){
 let tt;function toast(m,ms=1900){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),ms)}
 let prevOv='menu';
 function show(id){document.querySelectorAll('.ov').forEach(o=>o.classList.toggle('show',o.id===id))}
+const fineIdle=()=>PV?'▲ FINE ▼':'◀ FINE ▶';
 const PVQ=matchMedia('(orientation:landscape) and (max-height:600px)');let PV=PVQ.matches;
 function setPowerUI(p){const pf=$('pfill').style;if(PV){pf.height=(p*100)+'%';pf.width='';$('pknob').style.transform=`translateY(${p*($('power').clientHeight-44)}px)`}else{pf.width=(p*100)+'%';pf.height='';$('pknob').style.transform=`translateX(${-p*($('power').clientWidth-44)}px)`}$('plabel').style.opacity=p>0?0:1;$('pknob').textContent=p>0?Math.round(p*100):(PV?'▼':'◀');$('pknob').style.fontSize=p>0?'12px':'14px'}
 function drawSpin(){const c=$('spinCv'),g=c.getContext('2d');g.clearRect(0,0,104,104);
@@ -1083,18 +1093,18 @@ $('replayPill').onclick=e=>{e.stopPropagation();if(lastRec&&(state==='aim'||stat
 const AIM_RATE=[0,0.0007,0.0011,0.0016,0.0023,0.0032]; // radians per pixel at a steady drag
 const fine=$('fine');let fineX=null,fineT=0,fineOff=0,fineTxT=0,fineTick=0;
 const aimDeg=()=>{let d=(-aim*180/Math.PI)%360;if(d<0)d+=360;return d.toFixed(1)+'°'};
-function showAim(){$('fineTx').textContent=aimDeg();fine.classList.add('on');clearTimeout(fineTxT);fineTxT=setTimeout(()=>{fine.classList.remove('on');$('fineTx').textContent='◀ FINE ▶'},1100)}
+function showAim(){$('fineTx').textContent=aimDeg();fine.classList.add('on');clearTimeout(fineTxT);fineTxT=setTimeout(()=>{fine.classList.remove('on');$('fineTx').textContent=fineIdle()},1100)}
 function nudgeAim(d,dtms){
   const v=Math.abs(d)/Math.max(8,dtms);              // px per ms
   const accel=0.45+Math.min(2.6,v*v*2.2);              // slow = precise, fast = big swings
   aim+=d*AIM_RATE[aimSens]*accel;showAim();
   fineTick+=Math.abs(d);if(fineTick>14){fineTick=0;tone(2400,0.012,0.04,'square');buzz(2)} // wheel clicks
 }
-fine.addEventListener('pointerdown',e=>{audio();if(!humanCanAct())return;fineX=e.clientX;fineT=e.timeStamp;try{fine.setPointerCapture(e.pointerId)}catch(_){}});
+fine.addEventListener('pointerdown',e=>{audio();if(!humanCanAct())return;fineX=PV?e.clientY:e.clientX;fineT=e.timeStamp;try{fine.setPointerCapture(e.pointerId)}catch(_){}});
 fine.addEventListener('pointermove',e=>{if(fineX===null||!humanCanAct())return;
   const evs=e.getCoalescedEvents?e.getCoalescedEvents():[];const list=evs.length?evs:[e];
-  for(const ev of list){const d=ev.clientX-fineX;if(!d)continue;nudgeAim(d,ev.timeStamp-fineT);fineX=ev.clientX;fineT=ev.timeStamp;fineOff+=d}
-  fine.style.backgroundPosition=fineOff+'px 0'});
+  for(const ev of list){const c=PV?ev.clientY:ev.clientX,d=c-fineX;if(!d)continue;nudgeAim(d,ev.timeStamp-fineT);fineX=c;fineT=ev.timeStamp;fineOff+=d}
+  fine.style.backgroundPosition=PV?'0 '+fineOff+'px':fineOff+'px 0'});
 ['pointerup','pointercancel'].forEach(t=>fine.addEventListener(t,()=>{fineX=null}));
 document.addEventListener('keydown',e=>{ // desktop: arrow keys nudge the aim, Shift for bigger steps
   if(e.target.closest('input,textarea,.dp')||!humanCanAct())return;
@@ -1381,7 +1391,14 @@ function resize(){
   const r=$('stage').getBoundingClientRect();dpr=Math.min(2.5,window.devicePixelRatio||1);
   cv.width=Math.max(1,r.width*dpr|0);cv.height=Math.max(1,r.height*dpr|0);
   ROT=r.width>r.height;FW=ROT?H:W;FH=ROT?W:H;PV=PVQ.matches;
-  s=Math.min(r.width/(FW+2*RAIL+14),r.height/(FH+2*RAIL+14));ox=(r.width-FW*s)/2;oy=(r.height-FH*s)/2;
+  if(PV){// full screen: leave only the safe areas and a 58px gutter each side for the controls
+    const cs=getComputedStyle($('app')),L=parseFloat(cs.paddingLeft)+58,Rr=parseFloat(cs.paddingRight)+58,T=parseFloat(cs.paddingTop),B=parseFloat(cs.paddingBottom);
+    const aw=r.width-L-Rr,ah=r.height-T-B;s=Math.min(aw/(FW+2*RAIL+4),ah/(FH+2*RAIL+4));ox=L+(aw-FW*s)/2;oy=T+(ah-FH*s)/2;
+    const st=document.documentElement.style,cw=(FW/2-62)*s,ch=Math.max(16,RAIL*s-4);
+    st.setProperty('--cx',(ox+34*s)+'px');st.setProperty('--cx1',(ox+FW*s-34*s-cw)+'px');st.setProperty('--cw',cw+'px');
+    st.setProperty('--cy',(oy-RAIL*s+(RAIL*s-ch)/2)+'px');st.setProperty('--ch',ch+'px');
+  }else{s=Math.min(r.width/(FW+2*RAIL+14),r.height/(FH+2*RAIL+14));ox=(r.width-FW*s)/2;oy=(r.height-FH*s)/2}
+  if(!$('fine').classList.contains('on'))$('fineTx').textContent=fineIdle();
   $('plabel').textContent=PV?'PULL ▼':'◀ PULL TO SHOOT';
   buildTable();buildPX();setPowerUI(pull);
 }
