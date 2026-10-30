@@ -1195,10 +1195,14 @@ cv.addEventListener('pointerdown',e=>{audio();
   {const ux=Math.cos(aim+Math.PI),uy=Math.sin(aim+Math.PI),dx=p.x-cue.x,dy=p.y-cue.y,t=dx*ux+dy*uy,d=Math.abs(dx*uy-dy*ux),b0=R+3+pull*95,slop=Math.max(14,20/s);
    if(cue.on&&t>b0-slop&&t<b0+430&&d<slop&&!(G.bih&&hyp(dx,dy)<R*3.4)){
      if(needCall()){toast('Call your pocket first: tap where the 8 is going',2400);return}
-     dragging={stick:true,t0:t,ux,uy};lastHaptic=-1;try{cv.setPointerCapture(e.pointerId)}catch(_){}return}}
+     dragging={stick:true,t0:t,ux,uy,p0:p,mode:0};lastHaptic=-1;try{cv.setPointerCapture(e.pointerId)}catch(_){}return}}
   if(G.bih&&hyp(p.x-cue.x,p.y-cue.y)<R*3.4)dragging={cue:true,dx:cue.x-p.x,dy:cue.y-p.y};else{dragging={cue:false};aimAt(p)}
   try{cv.setPointerCapture(e.pointerId)}catch(_){}});
 cv.addEventListener('pointermove',e=>{if(!dragging||!humanCanAct())return;const cs=e.getCoalescedEvents?e.getCoalescedEvents():[];const p=toT(cs.length?cs[cs.length-1]:e);
+  if(dragging.stick&&dragging.mode!=='pull'){ // sideways drag on the stick swings it around the cue ball
+    if(!dragging.mode){const mx=p.x-dragging.p0.x,my=p.y-dragging.p0.y;if(hyp(mx,my)<7)return;
+      dragging.mode=Math.abs(mx*-dragging.uy+my*dragging.ux)>Math.abs(mx*dragging.ux+my*dragging.uy)*.8?'rot':'pull'}
+    if(dragging.mode==='rot'){if(hyp(p.x-cue.x,p.y-cue.y)>R*1.5){aim=Math.atan2(cue.y-p.y,cue.x-p.x);showAim()}return}}
   if(dragging.stick){const t=(p.x-cue.x)*dragging.ux+(p.y-cue.y)*dragging.uy;pull=clamp((t-dragging.t0)/(STICK_TRAVEL*POW_TRAVEL[powSens]),0,1);setPowerUI(pull);
     const st=Math.floor(pull*10);if(st!==lastHaptic){if(st>lastHaptic&&st>0)buzz(3+st*1.6);lastHaptic=st}return}
   if(dragging.cue)tryPlace(p.x+dragging.dx,p.y+dragging.dy);else aimAt(p)});
@@ -1556,7 +1560,7 @@ if(window.ResizeObserver)new ResizeObserver(resize).observe($('stage'));
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{buildGlyphs();buildTable();for(const b of balls)b.dirty=true});
 if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(ONLINE_OK)joinOpen(c)}
 if(/[?&]debug/.test(location.search))window.__pool={get balls(){return balls},get state(){return state},get G(){return G},get cue(){return cue},get NET(){return NET},get mode(){return mode},
-  set aim(v){aim=v},shoot:p=>startStrike(p),setSpin:(x,y)=>{spinX=x;spinY=y},sim:(a,p)=>simulate(balls,G,cue.x,cue.y,a,p,0,0,-1),replay:()=>startReplay(lastRec),get lastRec(){return lastRec},get tray(){return tray},
+  get aim(){return aim},set aim(v){aim=v},shoot:p=>startStrike(p),setSpin:(x,y)=>{spinX=x;spinY=y},sim:(a,p)=>simulate(balls,G,cue.x,cue.y,a,p,0,0,-1),replay:()=>startReplay(lastRec),get lastRec(){return lastRec},get tray(){return tray},
   setDiff:d=>{diff=d},phys:physStep,strikeCue,POCKETS,SEGS,auto:()=>{if(G.isBreak)return 0.95;const o=ghostShots(balls,G,G.turn,cue.x,cue.y)[0];if(o){aim=o.ang;if(G.rules==='8t')G.called=o.pk;return o.power}autoAim();if(G.rules==='8t')G.called=nearestPocketFor8();return 0.4},call:i=>{G.called=i},stats:()=>stats,badges:()=>badges,newGame:o=>newGame(o)};
 requestAnimationFrame(loop);
 })();
