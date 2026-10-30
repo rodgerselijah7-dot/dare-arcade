@@ -120,9 +120,9 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
 .textbtn{background:none;border:0;padding:0;font:inherit;color:var(--black);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 
 .items{margin-top:26px;border-top:1px solid var(--hair)}
-.item{display:grid;grid-template-columns:68px 1fr auto;gap:4px 16px;align-items:center;padding:18px 0;border-bottom:1px solid var(--hair)}
-.item img{grid-row:1 / span 3;width:68px;height:68px;border-radius:14px;display:block;align-self:start}
-.item h3{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.03em;line-height:1;color:var(--black)}
+.item{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:18px 0;border-bottom:1px solid var(--hair)}
+.item>.thw{grid-row:1 / span 3;grid-column:1;width:84px;height:84px;align-self:start}
+.item h3{font-family:var(--display);font-weight:400;font-size:clamp(24px,7vw,30px);letter-spacing:.03em;line-height:1;color:var(--black)}
 .item .free,.item .full{grid-column:2;font-size:16px;line-height:1.35;color:var(--body)}
 .item .free b,.item .full b{font-weight:600;color:var(--black)}
 .item .free{color:var(--grey);font-style:italic}
@@ -133,8 +133,21 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
 .pick.owned{border-color:var(--hair);color:var(--grey);cursor:default}
 .item.pass{border-top:1px solid var(--black);border-bottom:1px solid var(--black);margin-top:-1px}
 .item.pass .tag{display:inline-block;font-family:var(--display);font-size:15px;letter-spacing:.1em;color:var(--wall);background:var(--red);padding:2px 8px 0;margin-left:8px;vertical-align:4px}
-.passimg{grid-row:1 / span 3;width:68px;height:68px;display:grid;grid-template-columns:1fr 1fr;gap:3px;align-self:start}
-.passimg img{width:100%;height:100%;border-radius:7px;grid-row:auto}
+/* thumbnails */
+.thw{position:relative;display:block;border-radius:19px;overflow:hidden;background:#111;box-shadow:0 12px 22px rgba(0,0,0,.28),0 2px 4px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.55);transition:transform .25s cubic-bezier(.3,1.4,.6,1)}
+.thw img{display:block;width:100%;height:100%;object-fit:cover}
+.thw::after{content:"";position:absolute;inset:0;border-radius:19px;pointer-events:none;background:linear-gradient(155deg,rgba(255,255,255,.3) 0%,rgba(255,255,255,0) 38%,rgba(0,0,0,0) 62%,rgba(0,0,0,.25) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.5)}
+.item:hover .thw{transform:translateY(-3px) rotate(-1.5deg)}
+.thw.own::before{content:"\2713";position:absolute;z-index:2;right:5px;bottom:5px;width:22px;height:22px;border-radius:50%;background:#1fa862;color:#fff;font:700 13px/22px Arial,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.5),0 0 0 2px #fff}
+.passimg{grid-row:1 / span 3;grid-column:1;width:84px;height:84px;position:relative;align-self:start}
+.passimg .pi{position:absolute;width:52px;height:52px;border-radius:13px;overflow:hidden;box-shadow:0 6px 12px rgba(0,0,0,.35),0 0 0 1.5px var(--wall),0 0 0 2.5px rgba(0,0,0,.5)}
+.passimg .pi img{display:block;width:100%;height:100%}
+.passimg .pi0{left:0;top:18px;transform:rotate(-9deg);z-index:1}
+.passimg .pi1{left:12px;top:8px;transform:rotate(-3deg);z-index:2}
+.passimg .pi2{left:24px;top:3px;transform:rotate(4deg);z-index:3}
+.passimg .pi3{left:32px;top:14px;transform:rotate(11deg);z-index:4}
+.passimg .more{position:absolute;right:0;bottom:0;z-index:5;font-family:var(--display);font-size:16px;letter-spacing:.06em;color:var(--wall);background:var(--red);padding:3px 8px 1px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+@media (prefers-reduced-motion:reduce){.thw{transition:none}}
 .bag{position:sticky;bottom:0;background:var(--wall);border-top:1px solid var(--black);margin:28px -22px 0;padding:14px 22px calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:space-between;gap:14px;z-index:5}
 .bag .sum{font-size:17px;color:var(--body)}
 .bag .sum b{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:.03em;color:var(--black);display:block;line-height:1}
@@ -167,7 +180,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
   function render(){
     items.innerHTML=CAT.map(p=>{
       const own=owned(p.id),on=picked.has(p.id);
-      const img=p.pass?`<div class="passimg">${p.games.map(g=>`<img src="/${g}/icon-192.png" alt="">`).join("")}</div>`:`<img src="/${p.id}/icon-192.png" alt="">`;
+      const img=p.pass?`<div class="passimg">${p.games.slice(0,4).map((g,i)=>`<span class="pi pi${i}"><img src="/${g}/icon-192.png" alt=""></span>`).join("")}<span class="more">+${p.games.length-4}</span></div>`:`<span class="thw${own?" own":""}"><img src="/${p.id}/icon-512.png" alt="" width="84" height="84" loading="lazy"></span>`;
       const save=p.pass?CAT.filter(x=>!x.pass).reduce((a,x)=>a+x.price,0)-p.price:0;
       return `<div class="item${p.pass?" pass":""}">${img}
         <h3>${esc(p.name)}${p.pass?`<span class="tag">BEST VALUE</span>`:""}</h3>
