@@ -2750,12 +2750,18 @@ function drawChar(g,r,opt){
   const ph=stun?0:(r.phase||0);
   const run=!air&&!stun&&!win;
   const G0=gaitOf(k),pose=opt&&opt.pose;
-  const bob=run?Math.abs(Math.sin(ph))*(G0.bob??2):win?Math.abs(Math.sin(t*7))*4:0;
+  const bob=run&&!(r.slide>0)?Math.abs(Math.sin(ph))*(G0.bob??2):win?Math.abs(Math.sin(t*7))*4:0;
   let sx=1,sy=1;
   if(air){const q=clamp(Math.abs(vy)/2200,0,.12);sy=1+q;sx=1-q*.7}
   if(r.land>0){const q=r.land/.13*.17*(r.landK||1);sy=1-q;sx=1+q*.9}
   if(r.jt>0){const q=r.jt/.12*.15;sy=1+q;sx=1-q*.6}
-  const lean=(r.ledge?(r.ledge.t<.16?-.05:.32):stun?-.1+Math.sin(t*9)*.14:r.boost>0&&run?.28:run?.1+Math.sin(ph*2)*.03:air&&vy<0?.06:0)+(run?(G0.sway||0)*Math.sin(ph):0)+(pose==='sad'?.2:0);
+  const hangM=opt&&opt.hang,slideM=r.slide>0&&r.onGround,reachA=opt&&opt.reach!=null?opt.reach:null;
+  const jumpy=air&&!hangM&&!r.ledge&&!r.wall&&!stun&&!win&&!(r.flip>0)&&!r.pound;
+  const rise=jumpy&&vy<-260,apex=jumpy&&Math.abs(vy)<=260,fall=jumpy&&vy>260;
+  const lean=slideM||hangM?0:(r.ledge?(r.ledge.t<.16?-.05:.32):stun?-.1+Math.sin(t*9)*.14:r.boost>0&&run?.3:run?.14+Math.sin(ph*2)*.035:rise?.04:fall?-.06:apex?.08:0)+(run&&!slideM?(G0.sway||0)*Math.sin(ph):0)+(pose==='sad'?.2:0);
+  // head follow-through: the head lags the body and looks where the runner is going
+  const headTilt=pose?0:slideM?.72:hangM?(hangM.k==='vine'?(hangM.th||0)*.55-.05:-.1+Math.sin(t*5)*.04):stun?Math.sin(t*9)*.18:win?Math.sin(t*7)*.12:r.wall?-.22:
+    r.dash>0?.22:r.boost>0&&run?.12:run?Math.sin(ph*2-1.6)*.04-.03:rise?-.16:fall?.2:apex?.04:0;
   g.save();g.scale(sx,sy);g.rotate(lean);
   if(k==='ghost'){g.translate(0,-5+Math.sin(t*3)*2);g.globalAlpha*=.88}
   const crouch=r.land>0?r.land/.13*2.5:0;
@@ -2763,7 +2769,7 @@ function drawChar(g,r,opt){
   g.lineJoin='round';g.lineCap='round';
   const outl=(w)=>{g.lineWidth=w||1.6;g.strokeStyle=OL;g.stroke()};
   // ---- body mods (back)
-  const md=r.mod;
+  const md=r.mod,tailFix=slideM?.95:hangM&&hangM.k==='vine'?(hangM.th||0)*.85:0; // keep big tails trailing behind instead of hanging under the ground
   if(md==='wings'){const fl=air?Math.sin(t*18)*.55:Math.sin(t*3)*.12+(r.wob||0)*.3;
     for(const [ox,sc,col] of [[-1,1,'#d8d2ee'],[1.5,.8,'#f4efe1']]){g.save();g.translate(-3+ox,ty-7);g.rotate(-.35-fl*sc);g.fillStyle=col;g.beginPath();g.moveTo(0,0);g.quadraticCurveTo(-10,-14,-24,-12);g.quadraticCurveTo(-19,-8,-22,-4);g.quadraticCurveTo(-15,-4,-17,1);g.quadraticCurveTo(-9,-1,0,4);g.closePath();g.fill();outl(1.2);
       g.strokeStyle='rgba(13,11,31,.3)';g.lineWidth=.9;g.beginPath();g.moveTo(-6,-2);g.lineTo(-18,-8);g.moveTo(-5,1);g.lineTo(-14,-2);g.stroke();g.restore()}}
@@ -2780,13 +2786,13 @@ function drawChar(g,r,opt){
     const sp=[[-6,hy-9],[-10,hy-3],[-11,hy+4],[-8,ty-4],[-10,ty+2]];
     sp.forEach(([x,y],i)=>{g.beginPath();g.moveTo(x+2,y-3);g.lineTo(x-6,y+(i<3?-2:0));g.lineTo(x+2,y+4);g.closePath();g.fill();outl(1.1)});
   }else if(k==='redpanda'){
-    g.save();g.translate(-7,ty+2);g.rotate(-.5+Math.sin(ph)*.2-(r.wob||0)*.4);
+    g.save();g.translate(-7,ty+2);g.rotate(-.5+Math.sin(ph)*.2-(r.wob||0)*.4+tailFix);
     g.fillStyle=C;g.beginPath();g.ellipse(-10,0,12,6,0,0,7);g.fill();outl(1.4);
     g.fillStyle=K.dark;for(const tx of [-17,-11,-5]){g.beginPath();g.ellipse(tx,0,1.6,5.4,0,0,7);g.fill()}
     g.fillStyle=K.dark;g.beginPath();g.ellipse(-20,0,2.5,4.5,0,0,7);g.fill();
     g.restore();
   }else if(k==='fox'){
-    g.save();g.translate(-6,ty+1);g.rotate(-.75+Math.sin(ph)*.25-(r.wob||0)*.5);
+    g.save();g.translate(-6,ty+1);g.rotate(-.75+Math.sin(ph)*.25-(r.wob||0)*.5+tailFix);
     g.fillStyle=C;g.beginPath();g.ellipse(-11,0,13,6.8,0,0,7);g.fill();outl(1.4);
     g.fillStyle=K.light;g.beginPath();g.ellipse(-20,0,5,5,0,0,7);g.fill();g.restore();
   }else if(k==='bunny'){
@@ -2814,13 +2820,19 @@ function drawChar(g,r,opt){
   let aB,aF;
   if(pose==='sad'){aB=.12;aF=-.08}
   else if(pose==='clap'){const c=Math.sin(t*16);aB=-1.25+c*.25;aF=-1.5-c*.25}
+  else if(hangM){const sw=hangM.k==='vine'?(hangM.th||0):Math.sin(t*5)*.4;aB=Math.PI+.07+sw*.02;aF=Math.PI-.07+sw*.02}
+  else if(reachA!==null){aB=1.7;aF=reachA}
   else if(r.wall){aB=Math.PI-.35;aF=Math.PI+.05}
-  else if(r.slide>0&&r.onGround){aB=2.5;aF=2.1}
+  else if(slideM){aB=1.01;aF=-1.27+Math.sin(t*22)*.06}
   else if(r.dash>0){aB=1.95;aF=1.7}
   else if(r.ledge&&r.ledge.t<.16){aB=Math.PI-.15;aF=Math.PI+.12}
   else if(r.ledge){aB=.5;aF=-.35}
   else if(win){aB=Math.PI-.6+Math.sin(t*14)*.3;aF=-1.9-Math.sin(t*14)*.35}
   else if(stun){aB=.25;aF=-.25}
+  else if(r.flip>0){aB=-1.55;aF=-1.25}
+  else if(rise){const q=clamp((-vy-260)/650,0,1);aB=Math.PI-.55-q*.25;aF=-(Math.PI-.5-q*.2)}
+  else if(apex){aB=-1.45+Math.sin(t*16)*.12;aF=-1.15-Math.sin(t*16)*.12}
+  else if(fall){aB=1.85+Math.sin(t*14)*.28;aF=-1.95-Math.cos(t*14)*.28}
   else if(air&&vy<0){aB=2.4;aF=-1.25}
   else if(air){aB=1.7+Math.sin(t*22)*.45;aF=-1.35-Math.cos(t*22)*.45}
   else if(r.boost>0){aB=1.95+Math.sin(t*30)*.06;aF=1.8+Math.cos(t*30)*.06}
@@ -2828,8 +2840,8 @@ function drawChar(g,r,opt){
   const slv=SLEEVE[r.shirt];
   const arm=(sh,a,col,bio)=>{
     const ex=sh[0]-Math.sin(a)*8,ey=sh[1]+Math.cos(a)*8;
-    if(k==='penguin'||k==='owl'){g.save();g.translate(sh[0],sh[1]);g.rotate(a);g.fillStyle=k==='owl'?K.dark:col;g.beginPath();g.ellipse(0,5,3,7,0,0,7);g.fill();outl(1.3);g.restore();return}
-    const reach=run&&!r.boost?6.4:7.6,hx2=sh[0]-Math.sin(a)*reach,hy2=sh[1]+Math.cos(a)*reach;
+    if(k==='penguin'||k==='owl'){const fl=hangM?16:5,fh=hangM?17:7;g.save();g.translate(sh[0],sh[1]);g.rotate(a);g.fillStyle=k==='owl'?K.dark:col;g.beginPath();g.ellipse(0,fl,3,fh,0,0,7);g.fill();outl(1.3);g.restore();return}
+    const reach=hangM?33:run&&!r.boost?6.4:7.6,hx2=sh[0]-Math.sin(a)*reach,hy2=sh[1]+Math.cos(a)*reach;
     const mx=(sh[0]+hx2)/2,my=(sh[1]+hy2)/2,dx=hx2-sh[0],dy=hy2-sh[1],dl=Math.hypot(dx,dy)||1,bend=Math.sqrt(Math.max(0,16-dl*dl/4));
     let px=-dy/dl,py=dx/dl;if(px>0){px=-px;py=-py}
     const elx=mx+px*bend,ely=my+py*bend;
@@ -2843,6 +2855,7 @@ function drawChar(g,r,opt){
     g.restore();
   };
   arm([-2,ty-4],aB,k==='robot'?'#7d889e':dark);
+  if(hangM)arm([2,ty-4],aF,md==='barm'?'#aab4c8':k==='robot'?'#9aa6bb':C,md==='barm'); // hanging: both arms reach up behind the head
   // ---- legs
   const hip=ty+5,shoeC=k==='penguin'||k==='owl'?'#ff9a3d':k==='dino'||k==='frog'||k==='dragon'||k==='monkey'?K.dark:k==='cyborg'||k==='robot'?'#c9c4e8':k==='bunny'?'#ffb3d1':'#1c1838';
   const leg=(hx,fx,fy,col)=>{
@@ -2857,14 +2870,19 @@ function drawChar(g,r,opt){
   };
   let f1x,f1y,f2x,f2y;
   const hang=r.ledge&&r.ledge.t<.16,climb=r.ledge&&!hang;
-  if(r.slide>0&&r.onGround){f1x=-2;f1y=0;f2x=3;f2y=0}
+  if(slideM){f1x=-3.8;f1y=-4.5;f2x=2.6;f2y=4.4}
+  else if(hangM&&hangM.k==='vine'){const th=hangM.th||0;f1x=-1.5+th*5;f1y=-1+Math.max(0,th)*2;f2x=2.5+th*6.5;f2y=-2.5+Math.max(0,th)*2}
+  else if(hangM){const sw=Math.sin(t*5);f1x=-1+sw*1.8;f1y=0;f2x=3+sw*2.2;f2y=-1.5}
   else if(pose==='sad'||pose==='clap'){f1x=-3;f2x=3;f1y=f2y=0}
   else if(hang){f1x=-3+Math.sin(t*7)*1.5;f1y=1;f2x=2-Math.sin(t*7)*1.5;f2y=1}
   else if(climb){f1x=-1;f1y=-7;f2x=5;f2y=-4}
   else if(r.flip>0){f1x=-1;f1y=-6;f2x=4;f2y=-5}
-  else if(run){const st=r.boost>0?9:7.5;f1x=-2.5+Math.sin(ph)*st;f1y=-Math.max(0,-Math.cos(ph))*6.5;f2x=2.5-Math.sin(ph)*st;f2y=-Math.max(0,Math.cos(ph))*6.5}
+  else if(run){const st=r.boost>0?9.5:7.8;f1x=-2.5+Math.sin(ph)*st;f1y=-Math.max(0,-Math.cos(ph))*7.4;f2x=2.5-Math.sin(ph)*st;f2y=-Math.max(0,Math.cos(ph))*7.4}
   else if(win){f1x=-4;f2x=4;f1y=f2y=0}
   else if(stun){f1x=-1;f2x=5;f1y=f2y=0}
+  else if(rise){f1x=-5;f1y=-1.5;f2x=4.5;f2y=-6.5}
+  else if(apex){f1x=-1;f1y=-6.5;f2x=4;f2y=-7}
+  else if(fall){const c=Math.sin(t*12);f1x=-2+c*1.2;f1y=1;f2x=4-c*1.2;f2y=.3}
   else if(vy<0){f1x=-6;f1y=-4;f2x=5;f2y=-2}
   else{f1x=-5+Math.sin(t*18)*2;f1y=0;f2x=5-Math.sin(t*18)*2;f2y=-1}
   if(k==='ghost'){
@@ -2891,6 +2909,7 @@ function drawChar(g,r,opt){
   if(k==='robot'){g.fillStyle='#5a6478';g.fillRect(-4,ty-4,9,8);g.fillStyle=Math.sin(t*6)>0?'#4fe39a':'#ff4f6d';g.fillRect(-2,ty-2,2,2);g.fillStyle='#ffc83d';g.fillRect(1.5,ty-2,2,2);g.fillStyle='#4ff0ff';g.fillRect(-2,ty+1.5,5.5,1.2)}
   if(k==='dragon'){g.fillStyle=K.light;g.beginPath();g.ellipse(2.5,ty+1.5,5,5.6,0,0,7);g.fill();g.strokeStyle=shade(K.light,-.3);g.lineWidth=1;for(const yy of [-2,1,4]){g.beginPath();g.moveTo(-1,ty+yy);g.lineTo(6,ty+yy);g.stroke()}}
   if(r.shirt&&r.shirt!=='none')drawShirt(g,r.shirt,ty,hy,t,k);
+  g.save();g.translate(0,ty-7);g.rotate(headTilt);g.translate(0,-(ty-7));
   // ---- head back features
   if(k==='teddy'){for(const ex of [-7.5,7]){g.fillStyle=C;g.beginPath();g.arc(ex,hy-8.5,4.8,0,7);g.fill();outl(1.4);g.fillStyle=K.light;g.beginPath();g.arc(ex,hy-8.5,2.3,0,7);g.fill()}}
   else if(k==='redpanda'){for(const [a,b,c] of [[-11,-6.5,-2],[1.5,7,11]]){g.fillStyle=C;g.beginPath();g.moveTo(a,hy-5);g.lineTo(b,hy-17);g.lineTo(c,hy-8);g.closePath();g.fill();outl(1.3);
@@ -2995,10 +3014,11 @@ function drawChar(g,r,opt){
   }
   if(md==='visor'&&!stun){g.fillStyle='rgba(79,240,255,.4)';g.fillRect(-1,hy-5.5,15.5,7);g.strokeStyle='#4ff0ff';g.lineWidth=1.2;g.strokeRect(-1,hy-5.5,15.5,7);g.fillStyle='rgba(255,255,255,.6)';g.fillRect(1,hy-4.5,5,1.2);g.strokeStyle='#5a6478';g.lineWidth=2;g.beginPath();g.moveTo(-1,hy-2);g.lineTo(-11,hy-1);g.stroke()}
   if(md==='gloweyes'&&!stun){g.save();g.globalCompositeOperation='lighter';for(const [ex,ey] of [e1,e2]){const gg=g.createRadialGradient(ex+1,ey,0,ex+1,ey,6.5);gg.addColorStop(0,'rgba(255,90,209,.75)');gg.addColorStop(1,'rgba(255,90,209,0)');g.fillStyle=gg;g.fillRect(ex-6,ey-6.5,13,13)}g.restore()}
-  // ---- front arm
-  arm([2,ty-4],aF,md==='barm'?'#aab4c8':k==='robot'?'#9aa6bb':C,md==='barm');
   g.restore();
-  if(r.hat&&r.hat!=='none'){g.save();g.scale(sx,sy);g.rotate(lean);drawHat(g,r.hat,hy-11);g.restore()}
+  // ---- front arm
+  if(!hangM)arm([2,ty-4],aF,md==='barm'?'#aab4c8':k==='robot'?'#9aa6bb':C,md==='barm');
+  g.restore();
+  if(r.hat&&r.hat!=='none'){g.save();g.scale(sx,sy);g.rotate(lean);g.translate(0,ty-7);g.rotate(headTilt);g.translate(0,-(ty-7));drawHat(g,r.hat,hy-11);g.restore()}
   if(opt&&opt.leader)drawCrown(g,0,hy-(r.hat==='tophat'||r.hat==='halo'?27:21)*sy,.55);
 }
 function drawRunner(r,leader){
@@ -3016,7 +3036,11 @@ function drawRunner(r,leader){
   ctx.save();ctx.translate(x,y);if(r.rot)ctx.rotate(r.rot);
   if(r.flip>0){ctx.translate(0,-18);ctx.rotate((1-r.flip/.42)*Math.PI*2);ctx.translate(0,18)}
   if(gaitOf(r.kind).swoop&&r.onGround&&!(r.stun>0)&&!r.finish)ctx.translate(0,Math.sin(r.phase*.5)*2);
-  if(r.slide>0&&r.onGround){ctx.translate(-2,-1);ctx.rotate(-1.12)}
+  let hangO=null,reachO=null;
+  if(r.vine){const th=Math.min(r.vine.th,r.vine.V.th0);hangO={k:'vine',th};ctx.translate(0,-44);ctx.rotate(-th*.85);ctx.translate(0,48)}
+  else if(r.zip){const Z=r.zip;hangO={k:'zip'};ctx.translate(0,-38);ctx.rotate(Math.atan2(Z.y2-Z.y1,Z.x2-Z.x1)*.4+Math.sin(t*5)*.06-.05);ctx.translate(0,48)}
+  if(r.grap&&r.grap.o){const o=r.grap.o,dx=o.x-r.x,dy=(o.y-22)-(r.y-15);reachO=Math.atan2(-dx,dy)}
+  if(r.slide>0&&r.onGround){ctx.translate(1.9,-1.5);ctx.rotate(-.95)}
   else if(r.dash>0)ctx.rotate(.32);
   if(r.wall){ctx.translate(3,0);ctx.rotate(-.1)}
   if(r.beam>0)ctx.translate(0,-Math.min(1,(1.4-r.beam)/.4)*Math.min(1,r.beam/.3)*34);
@@ -3028,7 +3052,7 @@ function drawRunner(r,leader){
   if(r.boost>0||r.dash>0){for(let i=3;i>=1;i--){ctx.save();ctx.translate(-i*(r.dash>0?16:11),0);ctx.globalAlpha=.16/i*2;drawChar(ctx,r,{});ctx.restore()}ctx.globalAlpha=1}
   if(r.inv>0&&r.stun<=0&&Math.floor(t*14)%2)ctx.globalAlpha=.45;
   if(r.ghost>0){ctx.globalAlpha*=.42+.12*Math.sin(t*12);ctx.translate(Math.sin(t*9)*1.5,0)}
-  drawChar(ctx,IP&&IP.win?Object.assign({},r,{finish:1}):r,{leader});
+  drawChar(ctx,IP&&IP.win?Object.assign({},r,{finish:1}):r,{leader,hang:hangO,reach:reachO});
   if(IP&&IP.extra){const it=r.introT;
     if(IP.extra==='tongue'){const len=Math.sin(Math.min(1,it/.6)*Math.PI)*36;ctx.strokeStyle='#0d0b1f';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(12,-21);ctx.lineTo(12+len,-23);ctx.stroke();ctx.strokeStyle='#ff6a8a';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#ff6a8a';ctx.beginPath();ctx.arc(12+len,-23,3.2,0,7);ctx.fill()}
     if(IP.extra==='scan'){const sy2=-((it*70)%46);ctx.fillStyle='rgba(79,240,255,.18)';ctx.fillRect(-16,-46,32,46);ctx.shadowColor='#4ff0ff';ctx.shadowBlur=8;ctx.fillStyle='#4ff0ff';ctx.fillRect(-17,sy2,34,2);ctx.shadowBlur=0}
