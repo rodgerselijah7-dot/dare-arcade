@@ -185,6 +185,8 @@ table.lb tr.me td{color:#ffd7c2}
 .namebox{display:flex;gap:8px;flex-wrap:wrap}
 .namebox input{flex:1;min-width:160px;font:inherit;font-size:16px;padding:9px 12px;border-radius:4px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg)}
 #loading{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:var(--ink);font-family:var(--f-num);font-size:12px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;text-align:center;padding:0 24px}
+#loading .ld{display:flex;flex-direction:column;align-items:center;gap:16px}
+#loading button{padding:12px 22px;border:0;border-radius:10px;background:var(--blaze);color:var(--ink);font:inherit;font-weight:700;letter-spacing:.1em;cursor:pointer}
 #skyBusy{font-family:var(--f-num);font-size:11px;color:var(--muted)}
 
 /* ---------- Touch controls ---------- */
@@ -220,7 +222,9 @@ body.touch #pips{display:none}
 </style>
 
 <canvas id="c"></canvas>
-<div id="loading">Loading range photos · <span id="loadPct">0%</span></div>
+<div id="loading"><div class="ld"><span>Loading range photos · <span id="loadPct">0%</span></span></div></div>
+<script>function lfrLoadFail(m){var l=document.getElementById('loading');if(!l)return;l.innerHTML='<div class="ld"><span></span><button type="button" onclick="location.reload()">Try again</button></div>';l.querySelector('span').textContent=m;}
+addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='SCRIPT'&&document.getElementById('loading'))lfrLoadFail("Couldn't load the game. Check your connection.");},true);</script>
 
 <div id="hud" hidden>
   <div class="hud" id="stats"><div class="lbl">Score</div><div id="scoreN">0</div><div id="accN">0 / 0 hits · –</div><div id="stance"></div></div>
@@ -454,7 +458,7 @@ try {
   A = { sky: r[0].sky, env: r[0].env, gravel: r[1], gravelN: r[2], dirt: r[3], berm: r[4], grass: r[5], concrete: r[6], rock: r[7], rockN: r[8], wood: r[9], woodB: r[10], woodR: r[11] };
   tick();
 } catch (err) {
-  $('loading').textContent = 'The range photos did not load. Reload the page to try again.';
+  lfrLoadFail('The range photos did not load.');
   throw err;
 }
 

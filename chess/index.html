@@ -188,6 +188,7 @@ kbd{font-family:var(--mono);font-size:12px;padding:1px 6px;border:1px solid var(
 }
 @media (prefers-reduced-motion:reduce){ .sheet,.card{animation:none} .status .spin{animation:none} }
 </style>
+<script src="/dare-boot.js" data-title="Chess" data-bg="#0e0a0c" data-fg="#f0e7d4" data-accent="#d1aa58" data-font="var(--display)"></script>
 </head>
 <body>
 <canvas id="gl" aria-label="3D chessboard"></canvas>
@@ -1628,6 +1629,7 @@ document.addEventListener('keydown',e=>{
 goMenu();
 cam.phi=cam.defPhi;
 loop();
+window.DAREBOOT&&DAREBOOT.ready();
 if(DP&&DP.joinCode()){ const c=DP.joinCode(); DP.clearJoin(); if(ONLINE_OK) joinOpen(c); }
 })();
 </script>

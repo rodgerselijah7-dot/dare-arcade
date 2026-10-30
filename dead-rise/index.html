@@ -184,6 +184,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:3px}
 @media (max-height:500px){.title{font-size:52px}.panel{gap:11px}.lead{font-size:13px}.areaBtn{height:64px}}
 @media (prefers-reduced-motion:reduce){#banner.go,#toast.go{animation:none;opacity:1}}
 </style>
+<script src="/dare-boot.js" data-title="Dead Rise" data-bg="#100d1b" data-fg="#f4ead9" data-accent="#ffb347" data-font="var(--f-display)"></script>
 </head>
 <body>
 <div id="app">
@@ -1497,6 +1498,7 @@ function frame(now){
 }
 setupMenuScene();
 requestAnimationFrame(frame);
+window.DAREBOOT&&DAREBOOT.ready();
 window.__dr={get state(){return state},startGame,giveWeapon,applyPower,buildArea,spawnBoss,get zombies(){return zombies},P,setYaw:v=>yaw=v,setFiring:v=>firing=v,get wave(){return wave},startWave,travel};
 })();
 </script>

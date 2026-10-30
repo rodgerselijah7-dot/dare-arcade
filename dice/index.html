@@ -223,6 +223,7 @@ input{-webkit-user-select:text;user-select:text}
 }
 @media (prefers-reduced-motion:reduce){.rollbtn,.rollbtn.shaking,.who.active .av,.call.pop{animation:none}}
 </style>
+<script src="/dare-boot.js" data-title="Dice" data-bg="#0b0a0b" data-fg="#f1e8d6" data-accent="#d6a43a" data-font="var(--slab)"></script>
 </head>
 <body>
 
@@ -1261,6 +1262,7 @@ if(DP){
 /* ---------- boot ---------- */
 window.__dd={get catchOpen(){return catchOpen},doCatch,kick:()=>{render();maybeCpu()},get S(){return S},setPick:v=>{pick=v},postWager,doRoll,myTurn};
 show('title');
+window.DAREBOOT&&DAREBOOT.ready();
 if(DP&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();if(ONLINE_OK)joinOpen(c)}
 })();
 </script>
