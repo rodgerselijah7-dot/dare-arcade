@@ -881,34 +881,6 @@ button{-webkit-font-smoothing:antialiased;}
 #pm-mapbg .horizon{position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(180deg,transparent,rgba(120,60,15,.12) 80%,rgba(201,151,42,.1));}
 #city-map{position:relative;z-index:1;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(180deg,transparent 0,#000 6%,#000 92%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%),linear-gradient(180deg,transparent 0,#000 6%,#000 92%,transparent 100%);mask-composite:intersect;}
 @media(prefers-reduced-motion:reduce){#pm-mapbg .beam{animation:none;}}
-/* ═════════ GAME SCREEN: stage + dock (uses spare vertical space) ═════════ */
-.board-area{flex-direction:column;gap:10px;}
-#pm-stage,#pm-dock{display:none;width:100%;flex-shrink:0;}
-.pm-tall #pm-stage{margin-top:8px;display:flex;flex:1 1 0;min-height:0;max-height:250px;align-items:stretch;gap:12px;padding:0 14px;justify-content:center;}
-.pm-tall #pm-dock{display:flex;justify-content:center;padding:0 14px;}
-#pm-stage .st-art{flex:0 0 112px;position:relative;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,var(--dg),transparent 70%),linear-gradient(180deg,#1a1411,#0a0807);border:1px solid var(--glass-b);box-shadow:0 10px 28px rgba(0,0,0,.6),inset 0 0 22px rgba(0,0,0,.6);}
-#pm-stage .st-art svg{position:absolute;inset:0;width:100%;height:100%;}
-#pm-stage .st-art::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent 45%);}
-#pm-stage .st-art.talk{border-color:var(--gold);animation:portraitPulse .6s ease infinite;}
-#pm-stage .st-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.01));border:1px solid var(--glass-b);box-shadow:0 10px 28px rgba(0,0,0,.5);position:relative;overflow:hidden;}
-#pm-stage .st-info::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--da);box-shadow:0 0 14px var(--da);}
-.st-dist{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:5px;color:var(--da);}
-.st-lvl{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;line-height:1;color:#fff;margin-top:-4px;}
-.st-lbl{font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:4px;color:var(--smoke);}
-#st-obj{display:flex;flex-wrap:wrap;gap:8px;}
-#st-obj .obj-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,.4);border:1px solid var(--glass-b);}
-#st-obj .obj-item.done{border-color:rgba(58,220,136,.6);background:rgba(20,70,40,.35);}
-#st-obj .obj-ic svg{width:34px!important;height:34px!important;display:block;}
-#st-obj .obj-ct{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--bone);}
-#st-obj .obj-item.tick{animation:objFlash .42s ease;}
-.pm-tall #pm-dock .pws{width:100%;max-width:420px;gap:10px;justify-content:space-between;}
-.pm-tall #pm-dock .pw{flex:1;min-width:0;padding:12px 6px;gap:5px;border-radius:12px;}
-.pm-tall #pm-dock .pw-ic svg{width:26px;height:26px;}
-.pm-tall #pm-dock .pw-nm{font-size:10px;letter-spacing:2px;}
-.pm-tall #pm-dock .pw-ct{font-size:14px;}
-.pm-tall .leon-panel{min-height:64px;}
-.pm-tall .leon-img{width:46px;height:46px;}
-.pm-tall .leon-say{font-size:14px;}
 </style>
 <script src="/dare-unlock.js"></script>
 </head>
@@ -4111,37 +4083,6 @@ window.applyMapTransform=function(smooth){
   rg.style.transform=`translate(${MAP.x*.9}px,${MAP.y*.9}px) scale(${.7+MAP.scale*.3})`;
 };
 if(typeof MAP!=='undefined')window.applyMapTransform(false);
-})();
-</script>
-<script>
-/* ═════════ GAME SCREEN STAGE + DOCK ═════════ */
-(function(){
-'use strict';
-const area=document.getElementById('board-area'),wrap=document.getElementById('board-wrap'),game=document.getElementById('game');
-const pws=document.querySelector('#game .pws');if(!area||!wrap||!pws)return;
-const home=pws.parentNode;
-const stage=document.createElement('div');stage.id='pm-stage';
-stage.innerHTML=`<div class="st-art" id="st-art"><svg viewBox="0 0 112 200" preserveAspectRatio="xMidYMax slice">${window.pmFig?pmFig({who:'donnie',x:56,y:330,h:330,crop:-60,pose:'none',mood:'stern'}):''}</svg></div>
-<div class="st-info"><div><div class="st-dist" id="st-dist"></div><div class="st-lvl" id="st-lvl"></div></div><div class="st-lbl">OBJECTIVE</div><div id="st-obj"></div></div>`;
-const dock=document.createElement('div');dock.id='pm-dock';
-area.insertBefore(stage,wrap);area.appendChild(dock);
-function place(){
-  const tall=innerHeight>=740;game.classList.toggle('pm-tall',tall);
-  if(tall&&pws.parentNode!==dock)dock.appendChild(pws);
-  else if(!tall&&pws.parentNode!==home)home.appendChild(pws);
-}
-place();addEventListener('resize',place);
-const sd=document.getElementById('st-dist'),sl=document.getElementById('st-lvl'),so=document.getElementById('st-obj');
-function sync(){
-  sd.textContent=(document.getElementById('g-dist')||{}).textContent||'';
-  sl.textContent=(document.getElementById('g-lvl')||{}).textContent||'';
-  const src=document.getElementById('obj-items');if(src)so.innerHTML=src.innerHTML;
-}
-const _o=window.renderObj;window.renderObj=function(){const r=_o.apply(this,arguments);try{sync();}catch(e){}return r;};
-const _h=window.renderHdr;window.renderHdr=function(){const r=_h.apply(this,arguments);try{sync();}catch(e){}return r;};
-function talk(){const a=document.getElementById('st-art');if(!a)return;a.classList.remove('talk');void a.offsetWidth;a.classList.add('talk');setTimeout(()=>a.classList.remove('talk'),1800);}
-const _sd=window.showDon;window.showDon=function(){talk();return _sd.apply(this,arguments);};
-const _l=window.leon;window.leon=function(){talk();return _l.apply(this,arguments);};
 })();
 </script>
 <script>
