@@ -159,6 +159,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
   <main>
     <h1 class="page-h">Unlock<br><span>the full games</span></h1>
     <p class="lede">Every game is free to try. Unlock a full game once and play it on your phone, tablet and computer.</p>
+    <p class="lede" id="freeNote" hidden style="background:var(--red);color:#fff;padding:12px 14px"><b>Every game is free tonight</b> until 12 midnight Central, no purchase needed. Buy now to keep the full game after midnight.</p>
     <div class="items" id="items"></div>
     <p class="err" id="err" role="alert"></p>
     <p class="fine">Already bought? <button class="textbtn" id="codeBtn" type="button">Enter your unlock code</button> or <button class="textbtn" id="mailBtn" type="button">restore by email</button>.</p>
@@ -174,7 +175,8 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   let CAT=[],picked=new Set();
   const items=document.getElementById("items"),sum=document.getElementById("sum"),btn=document.getElementById("checkout"),err=document.getElementById("err");
-  const owned=id=>{const p=CAT.find(x=>x.id===id);return p&&(p.pass?p.games.every(g=>DARE.owned(g)):DARE.owned(id));};
+  const has=DARE.bought||DARE.owned; // purchases only; the free-play window doesn't count as owning
+  const owned=id=>{const p=CAT.find(x=>x.id===id);return p&&(p.pass?p.games.every(g=>has(g)):has(id));};
 
   const art=id=>`<img src="/shop/art/${id}.jpg" alt="" loading="lazy" decoding="async">`;
   function render(){
@@ -194,6 +196,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:8px}
     sum.innerHTML=list.length?`${list.length} ${list.length===1?"item":"items"}<b>${money(total)}</b>`:"Pick a game to unlock";
     btn.disabled=!list.length;
   }
+  {const fn=document.getElementById("freeNote");const t=()=>{fn.hidden=!(DARE.freeNow&&DARE.freeNow())};t();DARE.onChange(t);}
   items.addEventListener("click",e=>{
     const b=e.target.closest(".pick[data-id]");if(!b)return;
     const id=b.dataset.id,p=CAT.find(x=>x.id===id);err.textContent="";

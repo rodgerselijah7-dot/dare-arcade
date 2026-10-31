@@ -135,6 +135,8 @@ h2{font-family:var(--display);font-weight:400;font-size:34px;letter-spacing:.04e
 
 /* pricing / unlocks */
 .price{grid-column:1;display:block;font-size:15px;font-style:italic;color:var(--grey);margin-top:4px}
+.free-banner{margin:0 0 18px;padding:12px 14px;background:var(--red);color:#fff;font-size:15px;line-height:1.4}
+.free-banner b{font-weight:700}
 .price.owned,.pricing.owned{color:var(--black);font-style:normal}
 .price.owned:before,.pricing.owned:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:8px;vertical-align:1px}
 .pricing{font-size:16px;color:var(--grey);margin:10px 0 0;font-style:italic}
@@ -335,6 +337,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   <div class="mosaic" id="mosaic" aria-hidden="true"></div>
 
   <main>
+    <p class="free-banner" id="freeBanner" hidden><b>Every game is free tonight.</b> All paid games are fully unlocked until 12 midnight Central. No code needed.</p>
     <section class="feature" aria-labelledby="tld">
       <h1 id="tld"><span>The Last</span><span style="color:var(--red)">Don</span></h1>
       <p class="pitch">Panther City is falling to the New Order. Match crowns, keys and fists to take Fort Worth back, one block at a time.</p>
@@ -646,14 +649,16 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   if(!window.DARE)return;
   const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble','dirt-line'];
   function paint(){
+    const free=DARE.freeNow&&DARE.freeNow(),bought=DARE.bought||DARE.owned;
     document.querySelectorAll('[data-game]').forEach(el=>{
       const g=el.dataset.game;
       if(!el.dataset.base)el.dataset.base=el.textContent;
-      const own=DARE.owned(g);
-      el.classList.toggle('owned',own);
-      el.textContent=own?'Full game unlocked':el.dataset.base;
+      const own=bought(g),open=own||free;
+      el.classList.toggle('owned',open);
+      el.textContent=own?'Full game unlocked':free?'Full game free until midnight tonight':el.dataset.base;
     });
-    const all=DARE.owned('all-access')||GAMES.every(DARE.owned),row=document.getElementById('passRow');
+    const fb=document.getElementById('freeBanner');if(fb)fb.hidden=!free;
+    const all=bought('all-access')||GAMES.every(bought),row=document.getElementById('passRow');
     row.classList.toggle('owned',all);
     row.querySelector('.status').textContent=all?'Owned':'$'+(DARE.PASS.price||14.99).toFixed(2);
     if(all)row.removeAttribute('href');else row.setAttribute('href','/shop/?add=all-access');

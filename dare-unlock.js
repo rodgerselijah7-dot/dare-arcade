@@ -34,7 +34,12 @@
   const fmt = c => clean(c).replace(/(.{4})(?=.)/g, "$1-");
   const money = n => "$" + n.toFixed(2);
   const listeners = [];
-  const owned = g => { const l = ls.get(K_OWNED, []) || []; return l.includes(g) || l.includes(PASS.id); };
+  // Free play window: every paid game is fully open until this moment, then locks back on its own.
+  // Halloween 2026: free until midnight Central (12:00 AM CDT Nov 1 = 05:00 UTC). Set to 0 to turn off.
+  const FREE_UNTIL = Date.parse("2026-11-01T05:00:00Z");
+  const freeNow = () => Date.now() < FREE_UNTIL;
+  const bought = g => { const l = ls.get(K_OWNED, []) || []; return l.includes(g) || l.includes(PASS.id); };
+  const owned = g => freeNow() || bought(g);
   const code = () => ls.get(K_CODE, "");
 
   async function check(c) {
@@ -195,5 +200,12 @@
     d.style.cssText = "position:fixed;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);z-index:2147483001;background:#fff;color:#000;padding:10px 16px;font:600 14px/1.3 -apple-system,Helvetica,Arial,sans-serif;max-width:92vw;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.35)";
     d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200);
   }
-  window.DARE = { owned, gate, panel, buy, save, code: () => fmt(code()), refresh, redeem, onChange: f => listeners.push(f), GAMES, PASS };
+  // when the free window closes, tell every page so menus and lobby labels repaint
+  if (freeNow()) setTimeout(() => listeners.forEach(f => { try { f(ls.get(K_OWNED, [])); } catch (e) {} }), Math.min(2147483000, FREE_UNTIL - Date.now() + 500));
+  // on a paid game's page, say so once
+  try {
+    const slug = location.pathname.split("/")[1];
+    if (freeNow() && GAMES[slug] && !bought(slug)) setTimeout(() => toast("Free full game until midnight tonight"), 900);
+  } catch (e) {}
+  window.DARE = { owned, bought, freeNow, freeUntil: FREE_UNTIL, gate, panel, buy, save, code: () => fmt(code()), refresh, redeem, onChange: f => listeners.push(f), GAMES, PASS };
 })();
