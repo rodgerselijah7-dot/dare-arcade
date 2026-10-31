@@ -198,6 +198,8 @@ tr.first td{color:var(--gold)}
 .padfocus{outline:3px solid var(--rose)!important;outline-offset:3px}
 #toast{position:fixed;z-index:9;top:calc(var(--st,0px) + 12px);left:50%;transform:translateX(-50%);background:var(--panel);border:2px solid var(--gold);color:var(--text);border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;white-space:nowrap;pointer-events:none}
 .kbtn{min-width:72px;font-family:var(--display);font-size:12px;background:var(--panel2);border:2px solid var(--line);border-radius:8px;color:var(--gold);padding:7px 10px;cursor:pointer;white-space:nowrap}
+.mdev{display:flex;gap:8px;flex-wrap:wrap}.mdev .kbtn[aria-selected="true"]{background:var(--gold);color:var(--bg,#120d1a);border-color:var(--gold)}
+.mleg{margin:0;font-size:13px;line-height:1.6;color:var(--text)}.mleg b{font-family:var(--display);font-weight:400;color:var(--gold);letter-spacing:.03em}
 .kbtn.wait{border-color:var(--rose);color:var(--text);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{border-color:var(--line)}}
 .tile .fav{position:absolute;top:4px;right:6px;font-style:normal;color:var(--gold);font-size:14px;text-shadow:0 1px 2px #000}
@@ -372,6 +374,8 @@ tr.first td{color:var(--gold)}
 <section id="pg-moves" class="page" hidden>
   <div class="page-in">
     <div class="bar"><button class="back" data-back aria-label="Back">&#8592;</button><div class="grow"><span class="crumb" id="mCrumb">Move list</span><h2 id="mTitle">DON</h2></div></div>
+    <div class="mdev" id="mDev" role="tablist" aria-label="Controller"></div>
+    <p class="mleg" id="mLeg"></p>
     <div class="panel table-wrap"><table><thead><tr><th>Input</th><th>Move</th><th>Damage</th><th>Notes</th></tr></thead><tbody id="mBody"></tbody></table></div>
   </div>
 </section>
@@ -867,6 +871,9 @@ function moveFocus(d){
  if(best)setPadFocus(best);
 }
 function padNav(x,y){
+ if(curPage==='moves'){const pg=$('#pg-moves');if(Math.abs(y)>.3){pg.scrollTop+=y*14;const tw=pg.querySelector('.table-wrap');if(tw&&tw.scrollHeight>tw.clientHeight)tw.scrollTop+=y*14;}
+  const now=performance.now(),h=Math.abs(x)>.6?(x>0?1:-1):0;if(!h){if(PAD.navDir==='h')PAD.navDir=null;return;}
+  if(PAD.navDir!=='h'||now>PAD.navT){const i=DEVS.findIndex(d=>d[0]===MOVE_DEV),n=DEVS[(i+h+DEVS.length)%DEVS.length];const b=[...$('#mDev').children][(i+h+DEVS.length)%DEVS.length];if(b)b.click();PAD.navT=now+(PAD.navDir!=='h'?380:220);PAD.navDir='h';}return;}
  const now=performance.now(),d=Math.abs(x)>.6?(x>0?'r':'l'):Math.abs(y)>.6?(y>0?'d':'u'):null;
  if(!d){PAD.navDir=null;return;}
  if(d!==PAD.navDir||now>PAD.navT){moveFocus(d);PAD.navT=now+(d!==PAD.navDir?380:150);PAD.navDir=d;}
@@ -3514,13 +3521,56 @@ function buildControls(){
 $('#ctReset').addEventListener('click',()=>{SET.keys=null;SET.padMap=null;REMAP=null;saveSet();SFX.ui();buildControls();});
 // ---- move list
 let MOVES_FOR=null;
+// button names by the standard gamepad slot each controller reports (by position: slot 0 is the bottom face button)
+const DEV_BTN={
+ xbox:['A','B','X','Y','LB','RB','LT','RT','View','Menu','LS','RS','D-pad ↑','D-pad ↓','D-pad ←','D-pad →','Xbox'],
+ ps5:['✕','○','□','△','L1','R1','L2','R2','Create','Options','L3','R3','D-pad ↑','D-pad ↓','D-pad ←','D-pad →','PS'],
+ switch:['B','A','Y','X','L','R','ZL','ZR','−','+','L stick','R stick','D-pad ↑','D-pad ↓','D-pad ←','D-pad →','Home']};
+const DEVS=[['xbox','Xbox'],['ps5','PS5'],['switch','Switch'],['keys','Keyboard'],['touch','Touch']];
+const DEV_RS={xbox:'RS',ps5:'R stick',switch:'R stick'};
+function moveDev(){try{const v=localStorage.getItem('rr_movedev');if(DEVS.some(d=>d[0]===v))return v;}catch(e){}
+ if(PAD.on){const l=padLabel(PAD.id);return /PlayStation/.test(l)?'ps5':/Switch/.test(l)?'switch':'xbox';}return isTouch?'touch':'keys';}
+let MOVE_DEV=null;
+function devNames(dev){
+ if(dev==='touch')return{a:'A',b:'B',jump:'JUMP',shield:'GUARD',grab:'GRAB',pause:'II'};
+ if(dev==='keys'){const kb=KB(),n=a=>keyName(kb[a][0]);return{a:n('a'),b:n('b'),jump:n('jump'),shield:n('shield'),grab:n('grab'),pause:n('pause')};}
+ const pm=PMAP(),L=DEV_BTN[dev],n=a=>(pm[a]||[]).map(i=>L[i]||('Button '+i));
+ return{a:n('a')[0]||'—',b:n('b')[0]||'—',jump:n('jump')[0]||'—',shield:n('shield')[0]||'—',grab:n('grab')[0]||'—',pause:n('pause')[0]||'—',all:n};}
+function devInput(str,dev){
+ if(dev==='touch')return str;
+ const N=devNames(dev),pad=!!DEV_BTN[dev];
+ let s=String(str);
+ s=s.replace(/(→→|←←|↑↑|↓↓)A/g,(m,d)=>pad?'Flick '+d[0]+' + A, or '+DEV_RS[dev]+' '+d[0]:'Tap '+d[0]+' + A together');
+ s=s.replace(/([→←↑↓])(A|B)\b/g,'$1 + $2');
+ s=s.replace(/ air$/,' in the air').replace(/ ledge$/,' on a ledge');
+ return s.replace(/GRAB \/ U|\bGUARD\b|\bGuard\b|\bGRAB\b|\bGrab\b|\bJump\b|\bA\b|\bB\b/g,m=>{
+  if(/^GRAB|^Grab/.test(m))return N.grab;if(/^GUARD|^Guard/.test(m))return N.shield;if(m==='Jump')return N.jump;return m==='A'?N.a:N.b;});}
+function devNote(str,dev){
+ if(dev==='touch'||!str)return str;const N=devNames(dev);
+ return String(str).replace(/\b(Hold|Press) A\b/g,'$1 '+N.a).replace(/Guard \+ A/g,N.shield+' + '+N.a);}
+function buildDevBar(){
+ const bar=$('#mDev');bar.textContent='';
+ DEVS.forEach(([id,label])=>{const b=document.createElement('button');b.className='kbtn';b.type='button';b.setAttribute('role','tab');b.textContent=label;b.setAttribute('aria-selected',id===MOVE_DEV?'true':'false');
+  b.addEventListener('click',()=>{if(MOVE_DEV===id)return;SFX.ui();MOVE_DEV=id;try{localStorage.setItem('rr_movedev',id)}catch(e){}buildMoveList();const nb=[...$('#mDev').children][DEVS.findIndex(d=>d[0]===id)];if(nb&&PAD.last)setPadFocus(nb);});bar.appendChild(b);});
+ const dev=MOVE_DEV,N=devNames(dev),leg=$('#mLeg');leg.textContent='';
+ const parts=[];
+ if(DEV_BTN[dev]){const all=N.all,j=a=>all(a).join(' or ')||'—';
+  parts.push(['Move','Left stick or D-pad'],['Attack',j('a')],['Special',j('b')],['Jump',j('jump')],['Guard',j('shield')],['Grab',j('grab')],['Smash attacks and aerials','flick '+DEV_RS[dev]],['Pause',j('pause')]);}
+ else if(dev==='keys'){const kb=KB(),k=a=>kb[a].map(keyName).join(' or ');
+  parts.push(['Move',k('left')+' · '+k('right')+' · '+k('up')+' · '+k('down')],['Attack',k('a')],['Special',k('b')],['Jump',k('jump')],['Guard',k('shield')],['Grab',k('grab')],['Pause',k('pause')]);}
+ else parts.push(['Move','left thumb on the stick'],['Buttons','A, B, JUMP, GUARD and GRAB on the right'],['Smash attacks','flick the stick with A']);
+ parts.forEach(([a,b],i)=>{if(i)leg.appendChild(document.createTextNode(' · '));const e=document.createElement('b');e.textContent=a+': ';leg.appendChild(e);leg.appendChild(document.createTextNode(b));});
+ if(DEV_BTN[dev]){const note=document.createElement('span');note.textContent=(SET.padMap?' · Showing your custom button layout from Controls.':'')+(dev==='switch'?' · Buttons follow position: Attack is the bottom face button.':'');leg.appendChild(note);}
+ if(dev==='keys'&&SET.keys){leg.appendChild(document.createTextNode(' · Showing your custom keys from Controls.'))}
+}
 const PROJ_OF={don:'coin',volt:'spark',brick:'rock',nova:'orb',sable:'wave',juno:'ring',riot:'ember',glace:'shard',roy:'slug'};
 function buildMoveList(){
  const f=MOVES_FOR||{def:ROSTER[prefs.char]};const d=f.def,M=buildMoves(d),pw=d.power;
  $('#mTitle').textContent=d.name;$('#mCrumb').textContent='Move list · '+d.tag;
+ if(!MOVE_DEV)MOVE_DEV=moveDev();buildDevBar();const DV=MOVE_DEV;
  const tb=$('#mBody');tb.textContent='';
  const sec=t=>{const tr=document.createElement('tr');tr.className='sec';const td=document.createElement('td');td.colSpan=4;td.textContent=t;tr.appendChild(td);tb.appendChild(tr);};
- const row=(inp,name,dmg,note)=>{const tr=document.createElement('tr');[[inp,'in'],[name,''],[dmg,''],[note,'sub']].forEach(([v,c])=>{const td=document.createElement('td');if(c)td.className=c;td.textContent=v;tr.appendChild(td);});tb.appendChild(tr);};
+ const row=(inp,name,dmg,note)=>{const tr=document.createElement('tr');[[devInput(inp,DV),'in'],[name,''],[dmg,''],[devNote(note,DV),'sub']].forEach(([v,c])=>{const td=document.createElement('td');if(c)td.className=c;td.textContent=v;tr.appendChild(td);});tb.appendChild(tr);};
  const dm=v=>v?(Math.round(v*pw*10)/10)+'%':'—';
  const elNote={fire:'Burns over time',shock:'Stuns longer',ice:'Chills',void:'',shadow:'',sound:'',gold:'',earth:''};
  sec('Ground');['jab','ftilt','utilt','dtilt','dashatk','slide'].forEach(k=>row(NORMAL_NAMES[k][0],NORMAL_NAMES[k][1],dm(M[k].d),k==='jab'?'Fast poke':''));
