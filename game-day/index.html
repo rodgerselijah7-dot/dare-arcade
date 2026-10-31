@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0c1230">
-<meta name="description" content="Hardwood &amp; Gridiron by Dontae Amare. NBA and NFL trivia from 2000 to 2026: a Daily Huddle, classic rounds that get harder as you streak, the Two-Minute Drill, and head-to-head races online.">
+<meta name="description" content="Game Day by Dontae Amare. NBA and NFL trivia from 2000 to 2026: a Daily Huddle, classic rounds that get harder as you streak, the Two-Minute Drill, and head-to-head races online.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Hardwood">
+<meta name="apple-mobile-web-app-title" content="Game Day">
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="manifest" href="/hardwood-gridiron/manifest.webmanifest">
-<link rel="icon" href="/hardwood-gridiron/icon-192.png">
-<link rel="apple-touch-icon" href="/hardwood-gridiron/apple-touch-icon.png">
-<title>Hardwood &amp; Gridiron</title>
+<link rel="manifest" href="/game-day/manifest.webmanifest">
+<link rel="icon" href="/game-day/icon-192.png">
+<link rel="apple-touch-icon" href="/game-day/apple-touch-icon.png">
+<title>Game Day</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
@@ -248,7 +248,7 @@ p{margin:0}
 <body>
 <div class="wrap">
   <header class="top" id="topbar">
-    <a class="brand" href="./" id="brand" aria-label="Hardwood and Gridiron home"><span class="h">Hardwood</span> <span class="a">&amp;</span> <span class="g">Gridiron</span></a>
+    <a class="brand" href="./" id="brand" aria-label="Game Day home"><span class="h">Game</span> <span class="g">Day</span></a>
     <div class="topr">
       <div class="stats" id="hud" hidden>
         <div class="stat">score<b id="score">0</b></div>
@@ -273,7 +273,7 @@ p{margin:0}
     </div>
     <div>
       <div class="label">NBA + NFL trivia · 2000 to 2026</div>
-      <h1><span class="h">Hardwood</span> <span class="a">&amp;</span><br><span class="g">Gridiron</span></h1>
+      <h1><span class="h">Game</span><br><span class="g">Day</span></h1>
     </div>
     <p class="lede">Titles, MVPs, draft nights, trades, records, halftime shows and the Texas teams. Answer before the shot clock runs out and keep your streak alive.</p>
     <div class="lfacts">
@@ -312,7 +312,7 @@ p{margin:0}
     </section>
 
     <footer class="lfoot">
-      <span>Hardwood &amp; Gridiron by Dontae Amare</span>
+      <span>Game Day by Dontae Amare</span>
       <a href="/" id="toArcade2">Back to the DARE Arcade</a>
     </footer>
   </section>
@@ -321,7 +321,7 @@ p{margin:0}
   <section class="screen" id="home">
     <div>
       <div class="label">NBA + NFL trivia · 2000 to 2026</div>
-      <h1><span class="h">Hardwood</span> <span class="a">&amp;</span><br><span class="g">Gridiron</span></h1>
+      <h1><span class="h">Game</span><br><span class="g">Day</span></h1>
     </div>
 
     <div class="card daily" id="dailyCard">
@@ -465,12 +465,12 @@ p{margin:0}
 </div>
 
 <script src="/dare-play.js"></script>
-<script src="/hardwood-gridiron/questions.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='questions.js';document.head.appendChild(s)"></script>
+<script src="/game-day/questions.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='questions.js';document.head.appendChild(s)"></script>
 <script>
 (function boot(){ if(!window.HG){ return setTimeout(boot,30) } main() })();
 function main(){
 /* ======================= settings ======================= */
-const ROUND=10, LAUNCH='2026-10-30', SITE='games.darewear.store', GAME='hardwood-gridiron';
+const ROUND=10, LAUNCH='2026-10-30', SITE='games.darewear.store', GAME='game-day';
 const Y0=2000, Y1=2026, DRILL=120;
 const TIMES={mc:15,col:15,year:20,order:20};
 const KIND={mc:'Trivia',col:'College',year:'Name the year',order:'Which came first'};
@@ -716,7 +716,7 @@ function untilTomorrow(){
   return `in ${Math.floor(left/60)}h ${left%60}m`;
 }
 const gridOf=marks=>marks.map(m=>m==='g'?'🟩':m==='y'?'🟨':'⬛').join('');
-function shareText(rec,d){return `Hardwood & Gridiron · Daily Huddle #${dayNum(d)}\n${gridOf(rec.marks)}\n${rec.right}/10 · ${fmt(rec.score)} pts\n${SITE}/${GAME}/`}
+function shareText(rec,d){return `Game Day · Daily Huddle #${dayNum(d)}\n${gridOf(rec.marks)}\n${rec.right}/10 · ${fmt(rec.score)} pts\n${SITE}/${GAME}/`}
 function copyText(text,btn,box){
   const done=()=>{const t=btn.textContent;btn.textContent='Copied';setTimeout(()=>btn.textContent=t,1400)};
   const sel=()=>{if(box){box.hidden=false;const rg=document.createRange();rg.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(rg)}};
@@ -887,7 +887,7 @@ function finish(){
     if(!ls.get('dhg-daily-'+d,null)){ls.set('dhg-daily-'+d,rec);const ds=ls.get('dhg-dstreak',{last:'',n:0});ls.set('dhg-dstreak',{last:d,n:ds.last===prevDay(d)?ds.n+1:1})}
     $('shareLbl').textContent='Your Daily Huddle';$('shareBox').textContent=shareText(rec,d);
   }
-  if(S.mode==='drill'){$('shareLbl').textContent='Your drill';$('shareBox').textContent=`Hardwood & Gridiron · Two-Minute Drill\n${gridOf(S.marks.slice(0,20))}${S.marks.length>20?'…':''}\n${S.right} right · ${fmt(S.score)} pts\n${SITE}/${GAME}/`}
+  if(S.mode==='drill'){$('shareLbl').textContent='Your drill';$('shareBox').textContent=`Game Day · Two-Minute Drill\n${gridOf(S.marks.slice(0,20))}${S.marks.length>20?'…':''}\n${S.right} right · ${fmt(S.score)} pts\n${SITE}/${GAME}/`}
   $('again').textContent=S.mode==='daily'?'Play a classic round':S.mode==='drill'?'Run the drill again':'Run it back';
   $('again').hidden=S.mode==='online';
   $('vsCard').hidden=S.mode!=='online';
@@ -973,7 +973,7 @@ async function enterRoom(code,role,open){
   }
   $('olSetup').hidden=true;$('olLobby').hidden=false;$('olCodeShow').textContent=code;
   $('olCopy').hidden=role!=='h';$('olStart').hidden=role!=='h';
-  $('olNote').textContent=role!=='h'?'The host starts the race and picks the length, league and era. You both get the same questions.':open?'Posting your match…':'Send the code to your opponent. They open Hardwood & Gridiron, tap Play online, and enter it.';
+  $('olNote').textContent=role!=='h'?'The host starts the race and picks the length, league and era. You both get the same questions.':open?'Posting your match…':'Send the code to your opponent. They open Game Day, tap Play online, and enter it.';
   $('olSet').textContent=role==='h'?`Race: ${raceLine(roundLen,league,era)}. Change it on the home screen before you create the match.`:'';
   netPeers(d.peers||[]);
   NET.timer=setTimeout(netTick,1000);
@@ -1077,7 +1077,7 @@ $('olNick').addEventListener('change',()=>{const n=cleanNick($('olNick').value);
 if(DP){
   DP.openList($('olOpen'),GAME,m=>joinOpen(m.code));
   DP.feed({accent:'#ffb31a',onJoin:m=>m.game===GAME?joinOpen(m.code):false});
-  DP.alerts.toggle($('olAlerts'),[GAME],{accent:'#ffb31a',label:'Get a notification when someone wants to race in Hardwood & Gridiron.'});
+  DP.alerts.toggle($('olAlerts'),[GAME],{accent:'#ffb31a',label:'Get a notification when someone wants to race in Game Day.'});
 }
 
 /* ======================= landing ======================= */

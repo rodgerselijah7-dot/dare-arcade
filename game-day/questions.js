@@ -1,4 +1,4 @@
-/* Hardwood & Gridiron question bank. NBA and NFL, 2000 to 2026.
+/* Game Day question bank. NBA and NFL, 2000 to 2026.
    mc:  [league, year, category, difficulty 1-3, question, answer, [3 wrong], note]
    tl:  [league, year, difficulty, event]                 -> "Name the year" and "Which came first"
    col: [league, year, difficulty, player, college]       -> "Where'd he play college ball?"
