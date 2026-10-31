@@ -20,6 +20,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /dirt-line/            Dirt Line (single-file 3D BMX racer + icons + manifest; loads three.js r128 from cdnjs)
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
+/hardwood-gridiron/    Hardwood & Gridiron (NBA + NFL trivia: index.html + questions.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /square-up/            Square Up (single-file top-down canvas zombie wave shooter + icons + manifest)
 /live-fire-range/      Live Fire Range (3D shooting range: index.html + assets/ photo textures and HDRI skies + icons + manifest; loads three.js r160 from jsDelivr)
@@ -29,7 +30,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /jenga/                Jenga (single-file 3D block tower + icons + manifest; loads three.js r128 and cannon.js 0.6.2 from cdnjs)
 /truth-or-dare/        Truth or Dare (single-file card game + icons + manifest; pass-the-phone and online rooms)
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush, Rare Rumble and Truth or Dare online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Hardwood & Gridiron, Crown Rush, Rare Rumble and Truth or Dare online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
 /api/scores.js         Live Fire Range and Dirt Line leaderboards (Upstash Redis)
 /icons/                Arcade icons
@@ -100,7 +101,7 @@ Every push to `main` redeploys automatically.
 ## Pricing
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99, Square Up $2.99, Dirt Line $2.99. All-Access Pass $14.99 (saves $15.92).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare.
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, Hardwood & Gridiron, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -116,7 +117,7 @@ Every push to `main` redeploys automatically.
 - Leaderboards use `/api/scores?game=dl`: best race time per track (`t-<track>`) and best Trick Jam score (`j-<track>`) in `arc:dl:*`, rider names in `arc:dl:names`. The page runs in arcade mode because it sets `window.DL_ARCADE=true` before loading.
 - Progress is saved on the phone (localStorage keys `dirtline*` and `dl_pid`).
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Truth or Dare)
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Hardwood & Gridiron, Truth or Dare)
 - `dare-play.js` is shared by all five games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
@@ -134,6 +135,16 @@ Every push to `main` redeploys automatically.
 - Head to head: rooms `cd-<code>` on `/api/room`. The host's question count and genre (from the home screen) set the race; the host starts each race with a random seed and both phones build the same questions from it, then play at their own pace, each sending its points per question (`p`) so the other sees the score live. Rematches, chat, Find an opponent and match alerts work like the other online games (`crate-digger` in `dare-play.js` and `/api/lfg`).
 - Landing page: opening `/crate-digger/` from the arcade shows a landing screen first (record-in-a-crate art, question count, Start digging, Daily Dig and Race a friend buttons, the three modes, one live sample of each question type, and a crate per genre that opens a classic round in that genre). Tapping the Crate Digger logo inside the game returns to it. Match invite links (`?join=CODE`) skip it.
 - Sound is synthesized with Web Audio (808 kick on correct, record scratch on wrong, hi-hat ticks in the last 5 seconds). Saved on the phone: localStorage keys `dcd-*`.
+
+## Hardwood & Gridiron
+- NBA and NFL trivia, 2000 to 2026. Built on the same format as Crate Digger: landing page, Daily Huddle, classic rounds, and head-to-head races, plus a solo Two-Minute Drill.
+- Questions live in `hardwood-gridiron/questions.js` as compact rows: `MC` (four-choice: league, year, category, difficulty 1 to 3, question, answer, three wrong answers, a note), `TL` (events with years, used for Name the year and Which came first) and `COL` (players and their college, used for College; an optional sixth field lists other schools the player attended so they never show up as wrong answers). League is `nba` or `nfl`; the year sets the era (2000s, 2010s, 2020s). Super Bowls go by the year the game was played. Ids are built from the question text.
+- Categories: Champions, MVPs, Draft, Records, Moves, Moments, Coaches, Halftime (NFL) and Texas teams, plus College and Timeline.
+- Classic round: 10, 20, 30 or 50 questions filtered by league (Both, NBA, NFL), era and category. Streak-driven difficulty, streak multipliers (x2 from 3 in a row, x3 "on fire" from 6), one 50/50 per 10 questions and one Timeout (+10 seconds) per round. Leagues alternate evenly when both are in play. No repeats until a mix is used up (`dhg-seen`).
+- Daily Huddle: the same 10 questions for everyone each day (seeded from the Central Time date), alternating NBA and NFL, one try, with a copyable grid. Daily Huddle #1 is October 30, 2026.
+- Two-Minute Drill: 120 seconds of four-choice and College questions from the chosen league and era; a miss takes 5 seconds off. Best drill score is saved separately.
+- Head to head: rooms `hg-<code>` on `/api/room`. The host's question count, league and era set the race; both phones build the same questions from the host's seed and send points per question (`p`). Rematches, chat, Find an opponent and match alerts work like the other online games (`hardwood-gridiron` in `dare-play.js` and `/api/lfg`).
+- Lifetime NBA and NFL accuracy shows on the home screen. Sound is synthesized with Web Audio (net swish and crowd on correct, arena horn on wrong, whistle chirps in the last 5 seconds). Saved on the phone: localStorage keys `dhg-*`.
 
 ## DARE Pool
 - Portrait canvas pool table, no libraries. Three games: **8-Ball** (bar rules, any pocket for the 8), **Tournament 8-Ball** (call the 8 by tapping a pocket; after contact a ball must sink or hit a rail) and **9-Ball** (lowest ball first, sink the 9 on any legal shot, the 9 respots if it drops on a foul). Fouls give ball in hand anywhere; the break is from behind the head string.

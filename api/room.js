@@ -1,4 +1,4 @@
-// Live match rooms for online play in DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Crown Rush and Truth or Dare.
+// Live match rooms for online play in DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Hardwood & Gridiron, Crown Rush and Truth or Dare.
 // POST { room, peer, presence } -> { now, peers: [{ peer, presence }] }   (each phone polls ~6x a second during a match)
 // POST { room, peer, leave: true } -> { ok: true }
 // A room is one Redis hash, arc:room:<name>, holding each player's latest state. Players who stop polling for
