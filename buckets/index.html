@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0d0c0b">
-<meta name="description" content="DARE Buckets by Dontae Amare. A 60-second basketball shootout: play solo, against the Rival, two players on one phone, or online against a friend.">
+<meta name="description" content="DARE Buckets by Dontae Amare. A 60-second basketball shootout: play solo with money balls, the 3-Point Contest, Around the World, against a Rookie, Pro or Legend CPU, two players on one phone, or online against a friend.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DARE Buckets">
@@ -59,6 +59,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .net.bad i{background:var(--amber-hot);box-shadow:0 0 6px var(--amber-hot)}
 #online{justify-content:flex-start;padding-top:max(24px,env(safe-area-inset-top))}
 #online>:first-child{margin-top:auto}#online>:last-child{margin-bottom:auto}
+#intro{justify-content:flex-start;padding-top:max(52px,env(safe-area-inset-top))}#intro>.kicker{margin-top:auto}#intro>.foot{margin-bottom:auto}
 .dp-orow .dp-join,.dp-alerts{font-family:var(--ui)}
 .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,rgba(13,12,11,.55),rgba(13,12,11,.9) 70%);animation:fade .35s ease-out;overflow-y:auto}
 @keyframes fade{from{opacity:0}}
@@ -68,7 +69,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .h2{font-family:var(--display);font-weight:900;font-size:44px;line-height:.9;margin:0;text-transform:uppercase;color:var(--bone)}
 .how{max-width:32ch;font-size:14px;line-height:1.5;color:#b9ad99;margin:0}
 .how b{color:var(--bone);font-weight:600}
-.modes{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+.modes{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px}
 .btn{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--carbon);background:var(--amber);border:0;border-radius:6px;padding:12px 28px;cursor:pointer;box-shadow:0 0 0 2px var(--carbon),0 0 0 3px var(--amber),0 8px 30px rgba(244,168,58,.3)}
 .btn small{display:block;font-family:var(--ui);font-weight:600;font-size:11px;letter-spacing:.12em;opacity:.7;margin-top:2px}
 .btn.alt{background:transparent;color:var(--bone);box-shadow:inset 0 0 0 1.5px rgba(243,234,217,.45)}
@@ -118,6 +119,12 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .court-opt span:last-child{min-width:0}
 .court-opt[aria-checked="true"]{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber),0 0 18px rgba(255,255,255,.08)}
 .court-opt:focus-visible{outline:3px solid var(--bone);outline-offset:2px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.duo .btn{font-size:16px;letter-spacing:.06em;padding:10px 6px;line-height:1.05}
+.duo .btn small{font-size:10px;letter-spacing:.06em}
+.kick2{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.career{display:grid;grid-template-columns:repeat(4,auto);gap:4px 16px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+.career b{display:block;font-size:16px;letter-spacing:.02em;color:var(--bone);font-variant-numeric:tabular-nums}
 .foot{font-size:10px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
 @media (prefers-reduced-motion:reduce){.fire,.overlay{animation:none}.val{transition:none}}
 </style>
@@ -145,15 +152,33 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
       <a class="arcade" id="arcadeLink" href="/" hidden>&lsaquo; Arcade</a>
       <div class="kicker">DARE Arcade · Shootout</div>
       <h1 class="title">DARE<span>Buckets</span></h1>
-      <p class="how"><b>Swipe up</b> to shoot. Aim with the angle, set the arc with the length. Swish for <b>+3</b>. Hit 3 straight to catch fire.</p>
+      <p class="how"><b>Swipe up</b> to shoot. Aim with the angle, set the arc with the length. Swish for <b>+3</b>. Hit 3 straight to catch fire. Gold <b>money balls</b> count double.</p>
       <div class="modes">
         <button class="btn" data-mode="solo">Solo<small>Beat your best · swish +2s</small></button>
         <button class="btn alt" id="onlineBtn">Online<small>Play a friend on their phone</small></button>
-        <button class="btn alt" data-mode="cpu">Vs CPU<small>Race the Rival to the buzzer</small></button>
+        <button class="btn alt" id="cpuBtn">Vs CPU<small>Rookie, Pro or Legend</small></button>
         <button class="btn alt" data-mode="2p">2 Player<small>One phone · left half vs right half</small></button>
+        <div class="kick2">Challenges</div>
+        <div class="duo">
+          <button class="btn alt slim" data-mode="3pt">3-Point Contest<small>5 racks · money balls</small></button>
+          <button class="btn alt slim" data-mode="atw">Around the World<small>7 spots · 60 sec</small></button>
+        </div>
       </div>
+      <p class="career" id="career" hidden></p>
       <button class="courtbtn" id="courtBtn" type="button"><span class="sw" id="courtSw"></span><span>Court · <b id="courtName">Main Arena</b></span><span aria-hidden="true">›</span></button>
       <div class="foot">Desired Ambitions Requires Execution</div>
+    </div>
+
+    <div class="overlay" id="cpuPick" hidden>
+      <div class="kicker">Vs CPU</div>
+      <h2 class="h2">Pick the Rival</h2>
+      <div class="modes">
+        <button class="btn alt" data-cpu="0">Rookie<small>Misses plenty · slow trigger</small></button>
+        <button class="btn alt" data-cpu="1">Pro<small>Streaky shooter</small></button>
+        <button class="btn alt" data-cpu="2">Legend<small>Barely misses · quick release</small></button>
+      </div>
+      <p class="how" id="cpuRec"></p>
+      <button class="btn alt slim" id="cpuBack">Back</button>
     </div>
 
     <div class="overlay clear" id="courts" hidden>
@@ -217,11 +242,19 @@ const DISP='"Big Shoulders Display", Impact, sans-serif';
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
 let W=0,H=0,R=30,G=1000,DPR=1,FY=0,quality=1;
-let best=+store.get('dare-buckets-best')||0;
+const BEST_KEY={solo:'dare-buckets-best','3pt':'dare-buckets-best-3pt',atw:'dare-buckets-best-atw'};
+const bestFor=m=>+store.get(BEST_KEY[m]||'dare-buckets-best')||0;
+let best=bestFor('solo');
+const CHALLENGE=m=>m==='3pt'||m==='atw';
+const SP3=[.12,.31,.5,.69,.88], SPW=[.1,.23,.37,.5,.63,.77,.9];
+const CPU_NAME=['ROOKIE','PRO','LEGEND'], CPU_SIG=[1.45,1,.62], CPU_THINK=[[1.1,1.0],[.7,.8],[.45,.5]];
+let cpuLv=Math.max(0,Math.min(2,+(store.get('dare-buckets-cpu')??1)));
+const buzzPhone=ms=>{try{if(navigator.vibrate)navigator.vibrate(ms)}catch(e){}};
 
 const TEAM=[
   {ball:'#d9621c',seam:'rgba(30,12,4,.9)',c1:'#ff6a1f',c2:'#f4a83a',glow:['rgba(255,190,90,.9)','rgba(255,106,31,.45)','rgba(255,60,10,0)']},
-  {ball:'#e6d8bf',seam:'rgba(40,30,20,.85)',c1:'#f3ead9',c2:'#ffd59a',glow:['rgba(255,245,225,.95)','rgba(243,234,217,.4)','rgba(243,234,217,0)']}
+  {ball:'#e6d8bf',seam:'rgba(40,30,20,.85)',c1:'#f3ead9',c2:'#ffd59a',glow:['rgba(255,245,225,.95)','rgba(243,234,217,.4)','rgba(243,234,217,0)']},
+  {ball:'#e8b931',seam:'rgba(60,35,0,.85)',c1:'#ffd84a',c2:'#fff1a8',glow:['rgba(255,235,140,.95)','rgba(255,200,40,.45)','rgba(255,200,40,0)']} // money ball
 ];
 /* states: title · lobby · count · play · wait (online: my clock is out, waiting on theirs) · over */
 const S={mode:'solo',state:'title',time:60,elapsed:0,buzzer:false,ot:0,count:0,evN:0,ev:null,waitT:0};
@@ -231,11 +264,11 @@ let players=[],floats=[];
 const swipes=new Map();
 const L={ball:[],seams:[],fire:[]};
 
-function mkPlayer(i,cpu,remote){return{i,cpu,remote:!!remote,score:0,streak:0,bestStreak:0,shots:0,makes:0,swish:0,ball:null,respawn:0,think:.8+i*.3}}
+function mkPlayer(i,cpu,remote){return{i,cpu,remote:!!remote,score:0,streak:0,bestStreak:0,shots:0,makes:0,swish:0,money:0,ball:null,respawn:0,think:.8+i*.3}}
 function setupPlayers(){
-  players=S.mode==='solo'?[mkPlayer(0,false)]:[mkPlayer(0,false),mkPlayer(1,S.mode==='cpu',S.mode==='online')];
+  players=S.mode==='solo'||CHALLENGE(S.mode)?[mkPlayer(0,false)]:[mkPlayer(0,false),mkPlayer(1,S.mode==='cpu',S.mode==='online')];
 }
-const names=()=>S.mode==='cpu'?['YOU','RIVAL']:S.mode==='online'?['YOU',NET.oppNick||'OPP']:['P1','P2'];
+const names=()=>S.mode==='cpu'?['YOU',CPU_NAME[cpuLv]]:S.mode==='online'?['YOU',NET.oppNick||'OPP']:['P1','P2'];
 const attractState=()=>S.state==='title'||S.state==='over'||S.state==='lobby';
 
 /* ---------- particle pool ---------- */
@@ -531,38 +564,51 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(W)resi
 /* ---------- game flow ---------- */
 const topScore=()=>players.reduce((m,p)=>Math.max(m,p.score),0);
 function level(){
+  if(CHALLENGE(S.mode))return 0; // a still hoop, so the shooting spots matter
   if(S.mode==='online')return live()?Math.min(6,Math.floor(S.elapsed/9)):0; // clock-driven so both phones see the same hoop
   return S.state==='play'?Math.min(6,Math.floor(topScore()/15)):0;
 }
-const mult=p=>p.streak>=6?3:p.streak>=3?2:1;
+const mult=p=>CHALLENGE(S.mode)?1:p.streak>=6?3:p.streak>=3?2:1;
 const anyFire=()=>live()&&players.some(p=>mult(p)>1);
 const homeX=p=>players.length===1?W/2:p.i?W*.7:W*.3;
 
 function spawn(p){
   if(p.remote)return;
   const lv=level(),vs=players.length>1,spread=lv>=2?Math.min(vs?.08:.28,(lv-1)*.04*(vs?1:1.75)):0,y=H-R*1.7;
-  p.ball={x:homeX(p)+(Math.random()*2-1)*W*spread,y,y0:y,vx:0,vy:0,s:1,t:0,tA:1,fly:false,rot:Math.random()*6,touched:false,scored:false,bob:p.i*1.3,trail:[]};
-  p.think=p.cpu&&S.state==='play'?.7+Math.random()*.8:1.4+Math.random()*1.2;
+  let x=homeX(p)+(Math.random()*2-1)*W*spread,money=false;
+  if(CHALLENGE(S.mode)&&S.state==='play'){
+    if(S.mode==='3pt'&&S.rack>=5){p.ball=null;p.respawn=99;return}
+    x=(S.mode==='3pt'?SP3[S.rack]:SPW[S.spot])*W;
+    money=S.mode==='3pt'&&(S.rack===4||S.ballN===4);
+  }else if(S.mode==='solo'&&S.state==='play'&&!S.buzzer)money=Math.random()<.12;
+  p.ball={x,y,y0:y,vx:0,vy:0,s:1,t:0,tA:1,fly:false,rot:Math.random()*6,touched:false,scored:false,bob:p.i*1.3,trail:[],money};
+  const th=CPU_THINK[cpuLv];
+  p.think=p.cpu&&S.state==='play'?th[0]+Math.random()*th[1]:1.4+Math.random()*1.2;
 }
-function showOnly(id){['intro','courts','online','lobby','over'].forEach(k=>$(k).hidden=k!==id);$('board').hidden=['intro','courts','online','lobby'].includes(id)} // menus get the full court; the scoreboard shows only in games and results
+function showOnly(id){['intro','cpuPick','courts','online','lobby','over'].forEach(k=>$(k).hidden=k!==id);$('board').hidden=['intro','cpuPick','courts','online','lobby'].includes(id)} // menus get the full court; the scoreboard shows only in games and results
 function labels(){
   const vs=players.length>1,n=names();
-  $('lblL').textContent=vs?n[0]:'Score';$('lblR').textContent=vs?n[1]:'Best';$('lblC').textContent='Clock';
+  $('lblL').textContent=vs?n[0]:'Score';$('lblR').textContent=vs?n[1]:'Best';$('lblC').textContent=S.mode==='3pt'?'Rack 1':S.mode==='atw'?'Spot 1 / 7':'Clock';
   elR.classList.toggle('p2',vs);$('pips2').hidden=!vs;
+  best=bestFor(CHALLENGE(S.mode)?S.mode:'solo');
+  pipEls[0][5].hidden=S.mode==='3pt';
 }
 function start(mode){
   if(mode)S.mode=mode;
   unlockAudio();
-  Object.assign(S,{state:'play',time:60,elapsed:0,buzzer:false,ot:0,evN:0,ev:null,shotN:0,shot:null});
+  Object.assign(S,{state:'play',time:60,elapsed:0,buzzer:false,ot:0,evN:0,ev:null,shotN:0,shot:null,rack:0,ballN:0,spot:0,lap:0});
   hoop.phase=0;hoop.amp=0;
   swipes.clear();pN=0;floats=[];setupPlayers();players.forEach(spawn);labels();
   cv.setAttribute('aria-label',S.mode==='2p'?'Basketball court. Left half shoots the amber ball, right half shoots the bone ball. Swipe up to shoot.':'Basketball court. Swipe up to shoot.');
   if(S.mode==='2p')floats.push({x:W/2,y:H*.5,txt:'LEFT vs RIGHT',life:1.4,c:'#f3ead9'});
+  if(S.mode==='3pt')floats.push({x:W/2,y:H*.5,txt:'RACK 1',life:1.3,c:'#f3ead9'});
+  if(S.mode==='atw')floats.push({x:W/2,y:H*.5,txt:'AROUND THE WORLD',life:1.4,c:'#f3ead9'});
+  if(S.mode==='cpu')floats.push({x:W/2,y:H*.5,txt:'VS '+CPU_NAME[cpuLv],life:1.3,c:'#f3ead9'});
   hud(true);showOnly(null);
 }
 function menu(){
   netLeave();
-  S.state='title';S.mode='solo';setupPlayers();players.forEach(spawn);labels();hud(true);showOnly('intro');
+  S.state='title';S.mode='solo';setupPlayers();players.forEach(spawn);labels();hud(true);showOnly('intro');renderCareer();
 }
 function finish(){
   const vs=players.length>1;
@@ -579,19 +625,27 @@ function finish(){
   players.forEach(p=>{if(p.ball&&!p.ball.fly)p.ball=null;p.respawn=.8});
   const box=$('statsBox'),n=names();
   $('againBtn').textContent='Run It Back';$('menuBtn').textContent='Modes';$('againBtn').disabled=false;$('overStatus').textContent='';
+  addCareer(players[0],vs&&S.mode!=='2p'?(players[0].score>players[1].score?1:0):null);
   if(!vs){
-    const p=players[0],newBest=p.score>best;
-    if(newBest){best=p.score;store.set('dare-buckets-best',best)}
-    $('overKick').textContent='Final Buzzer';
+    const p=players[0],m=CHALLENGE(S.mode)?S.mode:'solo',newBest=p.score>best;
+    if(newBest){best=p.score;store.set(BEST_KEY[m],best)}
+    $('overKick').textContent=S.mode==='3pt'?'3-Point Contest':S.mode==='atw'?'Around the World':'Final Buzzer';
     $('finalScore').textContent=p.score;
-    const v=$('verdict');v.className='tag';v.textContent=p.score>=60?'Rare air.':p.score>=40?'Crown worthy.':p.score>=20?'Bucket getter.':'Keep shooting.';
+    const v=$('verdict');v.className='tag';
+    v.textContent=S.mode==='3pt'?(p.score>=27?'Contest champ.':p.score>=20?'Splash brother.':p.score>=12?'Range.':'Keep shooting.')
+      :S.mode==='atw'?(S.lap>=3?'World tour.':S.lap>=1?'Around the world.':S.spot>=4?'Halfway there.':'Keep shooting.')
+      :p.score>=60?'Rare air.':p.score>=40?'Crown worthy.':p.score>=20?'Bucket getter.':'Keep shooting.';
     box.className='stats';box.replaceChildren();
-    [[p.makes+'/'+p.shots,'Made'],[p.swish,'Swishes'],[p.bestStreak,'Best streak']].forEach(([a,b])=>{const d=document.createElement('div'),x=document.createElement('b');x.textContent=a;d.append(x,b);box.append(d)});
+    const st=S.mode==='3pt'?[[p.makes+'/25','Made'],[p.money+'/9','Money'],[p.bestStreak,'Best streak']]
+      :S.mode==='atw'?[[p.makes+'/'+p.shots,'Made'],[S.lap,'Laps'],[p.bestStreak,'Best streak']]
+      :[[p.makes+'/'+p.shots,'Made'],[p.swish,'Swishes'],[p.money,'Money balls'],[p.bestStreak,'Best streak']];
+    st.forEach(([a,b])=>{const d=document.createElement('div'),x=document.createElement('b');x.textContent=a;d.append(x,b);box.append(d)});
     $('bestNote').textContent=newBest&&p.score>0?'New personal best':'Best · '+best;
   }else{
     const [a,b]=players,w=a.score>b.score?0:1;
     $('overKick').textContent=S.ot?'Final · Overtime':'Final Buzzer';
-    renderVs(a,b,n,S.mode==='cpu'?(w?'Rival takes it':'You win'):(w?'P2 wins':'P1 wins'),w);
+    renderVs(a,b,n,S.mode==='cpu'?(w?CPU_NAME[cpuLv].charAt(0)+CPU_NAME[cpuLv].slice(1).toLowerCase()+' takes it':'You win'):(w?'P2 wins':'P1 wins'),w);
+    if(S.mode==='cpu'&&!w){const k='dare-buckets-cpuwins-'+cpuLv;store.set(k,(+store.get(k)||0)+1)}
     $('bestNote').textContent='Desired Ambitions Requires Execution';
   }
   hud(true);
@@ -617,12 +671,38 @@ function hud(force){
   if(r!==H_.r){if(H_.r!==undefined&&r>H_.r&&vs&&!reduce)pop(elR);elR.textContent=H_.r=r}
   const t=Math.ceil(Math.max(0,S.time));if(t!==H_.t)elClock.textContent=H_.t=t;
   const low=t<=10&&S.state==='play';if(low!==H_.low)elClock.classList.toggle('low',H_.low=low);
-  const m=!vs&&a&&S.state==='play'?mult(a):1;if(m!==H_.m){H_.m=m;elFire.hidden=m<2;elFire.textContent='ON FIRE ×'+m}
-  players.forEach((p,i)=>{const st=Math.min(6,p.streak);if(st!==H_['s'+i]){H_['s'+i]=st;pipEls[i].forEach((e,k)=>{e.className=k<st?(st>=3?'on hot':'on'):''})}});
+  const m=!vs&&a&&S.state==='play'?mult(a):1,mb=!vs&&a&&S.state==='play'&&a.ball&&a.ball.money&&!a.ball.fly;
+  const fk=m+'|'+mb;if(fk!==H_.m){H_.m=fk;elFire.hidden=m<2&&!mb;elFire.textContent=mb?(S.mode==='3pt'?'MONEY BALL ×2':m>1?'MONEY BALL · ON FIRE ×'+m*2:'MONEY BALL ×2'):'ON FIRE ×'+m}
+  if(S.mode==='3pt'){
+    const left=S.rack>=5?0:5-S.ballN,k3=S.rack+'.'+left;
+    if(k3!==H_.s0){H_.s0=k3;pipEls[0].forEach((e,k)=>{e.className=k<left?(S.rack===4||k===0?'on hot':'on'):''});$('lblC').textContent=S.rack>=5?'Done':S.rack===4?'Money rack':'Rack '+(S.rack+1)}
+  }else players.forEach((p,i)=>{const st=Math.min(6,p.streak);if(st!==H_['s'+i]){H_['s'+i]=st;pipEls[i].forEach((e,k)=>{e.className=k<st?(st>=3?'on hot':'on'):''})}});
+  if(S.mode==='atw'){const sp='Spot '+(S.spot+1)+' / 7'+(S.lap?' · Lap '+(S.lap+1):'');if(sp!==H_.sp)$('lblC').textContent=H_.sp=sp}
   const bar=Math.round(Math.min(1,S.time/(S.ot?15:60))*200)/200;if(bar!==H_.bar)elBar.style.transform=`scaleX(${H_.bar=bar})`;
 }
 function pop(el){el.classList.add('pop');setTimeout(()=>el.classList.remove('pop'),130)}
 document.querySelectorAll('[data-mode]').forEach(btn=>btn.onclick=()=>start(btn.dataset.mode));
+$('cpuBtn').onclick=()=>{
+  document.querySelectorAll('[data-cpu]').forEach(b=>{const on=+b.dataset.cpu===cpuLv;b.classList.toggle('alt',!on)});
+  const w=[0,1,2].map(i=>+store.get('dare-buckets-cpuwins-'+i)||0);
+  $('cpuRec').textContent=w.some(Boolean)?`Wins · Rookie ${w[0]} · Pro ${w[1]} · Legend ${w[2]}`:'Beat all three.';
+  showOnly('cpuPick');
+};
+document.querySelectorAll('[data-cpu]').forEach(b=>b.onclick=()=>{cpuLv=+b.dataset.cpu;store.set('dare-buckets-cpu',cpuLv);start('cpu')});
+$('cpuBack').onclick=()=>showOnly('intro');
+/* career totals across every local game */
+function career(){try{return JSON.parse(store.get('dare-buckets-career')||'{}')||{}}catch(e){return{}}}
+function addCareer(p,won){
+  if(!p||S.mode==='online'&&!p)return;
+  const c=career();c.g=(c.g||0)+1;c.mk=(c.mk||0)+p.makes;c.sh=(c.sh||0)+p.shots;c.sw=(c.sw||0)+p.swish;c.bs=Math.max(c.bs||0,p.bestStreak);
+  if(won!=null)c.w=(c.w||0)+won;
+  store.set('dare-buckets-career',JSON.stringify(c));
+}
+function renderCareer(){
+  const c=career(),el=$('career');if(!c.g){el.hidden=true;return}
+  el.hidden=false;el.replaceChildren();
+  [[c.g,'Games'],[c.mk,'Makes'],[(c.sh?Math.round(c.mk/c.sh*100):0)+'%','FG'],[c.bs,'Streak']].forEach(([v,l])=>{const d=document.createElement('span'),b=document.createElement('b');b.textContent=v;d.append(b,l);el.append(d)});
+}
 $('againBtn').onclick=()=>{if(S.mode==='online')netRematch();else start()};
 $('menuBtn').onclick=menu;
 
@@ -658,6 +738,8 @@ function launch(pl,aimX,p){
   Object.assign(b,{vx:(aimX-b.x)/f.T,vy:f.vy,tA:f.tA,fly:true,t:0,trail:[]});
   if(S.state==='play')pl.shots++;
   play('shot',pl.i);
+  if(S.mode==='3pt'&&S.state==='play'&&!pl.cpu){S.ballN++;if(S.ballN>=5){S.ballN=0;S.rack++;
+    if(S.rack<5)setTimeout(()=>{if(S.mode==='3pt'&&S.state==='play')floats.push({x:W/2,y:H*.5,txt:S.rack===4?'MONEY RACK':'RACK '+(S.rack+1),life:1.2,c:S.rack===4?'#ffd84a':'#f3ead9'})},500)}}
   // online: share the shot itself (start, aim relative to the hoop, power) so the other phone can fly it locally
   if(S.mode==='online'&&!pl.remote&&S.state==='play'){
     const r3=v=>Math.round(v*1000)/1000;
@@ -685,7 +767,7 @@ const gauss=()=>(Math.random()+Math.random()+Math.random()-1.5)*1.15;
 function autoShot(pl){
   const p=.92+Math.random()*.16,T=flight(pl.ball,p).T;
   let sigma=hoop.r*.62;
-  if(S.state==='play'&&players.length>1){const gap=pl.score-players[1-pl.i].score;if(gap>6)sigma*=1.35;else if(gap<-6)sigma*=.8;if(mult(pl)>1)sigma*=.9}
+  if(S.state==='play'&&players.length>1){const gap=pl.score-players[1-pl.i].score;if(gap>6)sigma*=1.35;else if(gap<-6)sigma*=.8;if(mult(pl)>1)sigma*=.9;if(pl.cpu)sigma*=CPU_SIG[cpuLv]}
   if(S.state!=='play')sigma=hoop.r*(Math.random()<.3?1.2:.35);
   launch(pl,hoopAt(T)+gauss()*sigma,p);
 }
@@ -738,6 +820,7 @@ function step(dt){
   if(live())S.elapsed+=dt;
   if(S.state==='play'&&!S.buzzer){S.time-=dt;if(S.time<=0){S.time=0;S.buzzer=true;sfx.buzzer();swipes.clear()}}
   for(const p of players)stepPlayer(p,dt);
+  if(S.state==='play'&&S.mode==='3pt'&&S.rack>=5&&!S.buzzer&&!players.some(p=>p.ball&&p.ball.fly)){S.buzzer=true;sfx.buzzer()}
   if(S.state==='play'&&S.buzzer&&!players.some(p=>!p.remote&&p.ball&&p.ball.fly)){
     if(S.mode==='online'){S.state='wait';S.waitT=7;players[0].ball=null}
     else{finish();if(S.state==='play')players.forEach(p=>{p.ball=null;p.respawn=.6})}
@@ -755,6 +838,7 @@ function celebrate(pl,sw,pts,newFire,buzz){
   if(buzz)floats.push({x:W/2,y:H*.5,txt:'BUZZER BEATER',life:1.4,c:'#f3ead9'});
   if(newFire){sfx.fire();fx.flash=1;floats.push({x:vs?homeX(pl):W/2,y:H*.55,txt:who+(newFire===3?'BLAZING ×3':'ON FIRE ×2'),life:1.3,c:t.c1})}
   play(sw?'swish':'make');
+  if(live()&&!pl.cpu&&!pl.remote)buzzPhone(newFire?[30,40,60]:sw?35:18);
   const n=reduce?6:quality?22:12;
   for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=60+Math.random()*170;emit(hoop.x,hoop.y,Math.cos(a)*v,Math.sin(a)*v-80,.6,2+Math.random()*3,Math.random()<.5?t.c1:t.c2)}
 }
@@ -764,10 +848,17 @@ function score(pl){
   if(S.state==='play'){
     const before=mult(pl);
     pl.streak++;pl.bestStreak=Math.max(pl.bestStreak,pl.streak);pl.makes++;
-    const pts=(sw?3:2)*mult(pl);pl.score+=pts;
+    let pts=(sw?3:2)*mult(pl);
+    if(S.mode==='3pt')pts=b.money?2:1;
+    else if(S.mode==='atw'){pts=1;S.spot++;if(S.spot>=7){S.spot=0;S.lap++;pts+=5;floats.push({x:W/2,y:H*.5,txt:'AROUND THE WORLD +5',life:1.6,c:'#ffd84a'});sfx.fire()}}
+    else if(b.money)pts*=2;
+    if(b.money)pl.money++;
+    pl.score+=pts;
     if(sw)pl.swish++;
-    if(sw&&!vs&&!S.buzzer){S.time+=2;floats.push({x:hoop.x,y:hoop.y-R*.2,txt:'+2s',life:.9,c:'#f3ead9',small:1})}
+    if(sw&&!vs&&!S.buzzer&&S.mode==='solo'){S.time+=2;floats.push({x:hoop.x,y:hoop.y-R*.2,txt:'+2s',life:.9,c:'#f3ead9',small:1})}
+    if(b.money&&S.mode!=='3pt')floats.push({x:hoop.x,y:hoop.y+R*1.6,txt:'MONEY BALL',life:1,c:'#ffd84a',small:1});
     const nf=mult(pl)>before?mult(pl):0;
+    if(pl.streak===2&&!CHALLENGE(S.mode))floats.push({x:players.length>1?homeX(pl):W/2,y:H*.58,txt:(vs?names()[pl.i]+' ':'')+'HEATING UP',life:1,c:'#f4a83a',small:1});
     celebrate(pl,sw,pts,nf,S.buzzer);
     if(S.mode==='online'&&pl.i===0){S.evN++;S.ev=[S.evN,pts,sw?1:0,nf,S.buzzer?1:0]}
   }else celebrate(pl,sw,0,0,0);
@@ -1053,6 +1144,11 @@ function drawStage(){
   ctx.globalAlpha=.35+fx.boardGlow*.3+(hot?.2:0);
   ctx.drawImage(L.glow,hoop.x-W*.45,FY-H*.02,W*.9,H*.16);
   ctx.globalAlpha=1;
+  if(CHALLENGE(S.mode)&&S.state!=='title'){
+    const arr=S.mode==='3pt'?SP3:SPW,cur=S.mode==='3pt'?S.rack:S.spot,y=H-R*.5;
+    arr.forEach((f,i)=>{ctx.beginPath();ctx.ellipse(f*W,y,R*.75,R*.2,0,0,Math.PI*2);
+      ctx.fillStyle=i===cur?(S.mode==='3pt'&&i===4?'rgba(255,216,74,.7)':`rgba(${TH.glow},.6)`):i<cur?'rgba(243,234,217,.28)':'rgba(243,234,217,.09)';ctx.fill()});
+  }
   if(S.mode==='2p'&&players.length>1){
     ctx.strokeStyle='rgba(243,234,217,.12)';ctx.lineWidth=1.5;ctx.setLineDash([4,8]);
     ctx.beginPath();ctx.moveTo(W/2,FY+(H-FY)*.25);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);
@@ -1097,17 +1193,17 @@ function drawShadow(b){
   ctx.globalAlpha=a;ctx.drawImage(L.shadow,b.x-sw/2,sy-sw*.14,sw,sw*.28);ctx.globalAlpha=1;
 }
 function drawBall(pl){
-  const b=pl.ball,r=R*b.s,x=b.x,y=b.y+(b.fly?0:Math.sin(b.bob*3)*2),d=r*2,t=TEAM[pl.i],hot=live()&&mult(pl)>1;
+  const b=pl.ball,r=R*b.s,x=b.x,y=b.y+(b.fly?0:Math.sin(b.bob*3)*2),d=r*2,ti=b.money?2:pl.i,t=TEAM[ti],hot=live()&&(mult(pl)>1||b.money);
   if(b.fly&&!reduce){
     const tr=b.trail;tr.push(x,y,r);if(tr.length>21)tr.splice(0,3);
     ctx.fillStyle=hot?t.c1:t.ball;
     for(let i=0;i<tr.length-3;i+=3){const a=(i/3+1)/(tr.length/3);ctx.globalAlpha=a*(hot?.45:.18);ctx.beginPath();ctx.arc(tr[i],tr[i+1],tr[i+2]*(.6+a*.4),0,Math.PI*2);ctx.fill()}
     ctx.globalAlpha=1;
   }else if(!b.fly)b.trail.length=0;
-  if(hot){const g=r*3.4;ctx.globalAlpha=.75+Math.sin(performance.now()/90)*.15;ctx.drawImage(L.fire[pl.i],x-g/2,y-g/2,g,g);ctx.globalAlpha=1;
+  if(hot){const g=r*3.4;ctx.globalAlpha=.75+Math.sin(performance.now()/90)*.15;ctx.drawImage(L.fire[ti],x-g/2,y-g/2,g,g);ctx.globalAlpha=1;
     if(b.fly&&Math.random()<(quality?.9:.5))emit(x+(Math.random()-.5)*r,y+(Math.random()-.5)*r,(Math.random()-.5)*40,-30-Math.random()*40,.45,r*(.3+Math.random()*.35),Math.random()<.5?t.c1:t.c2)}
-  ctx.drawImage(L.ball[pl.i],x-r,y-r,d,d);
-  ctx.save();ctx.translate(x,y);ctx.rotate(b.rot);ctx.drawImage(L.seams[pl.i],-r,-r,d,d);ctx.restore();
+  ctx.drawImage(L.ball[ti],x-r,y-r,d,d);
+  ctx.save();ctx.translate(x,y);ctx.rotate(b.rot);ctx.drawImage(L.seams[ti],-r,-r,d,d);ctx.restore();
   ctx.drawImage(L.shade,x-r,y-r,d,d);
   if(!b.fly&&players.length>1&&(live()||S.state==='count')){
     ctx.font=`800 ${Math.round(R*.5)}px ${DISP}`;ctx.textAlign='center';ctx.fillStyle=pl.i?'rgba(243,234,217,.85)':'rgba(244,168,58,.9)';
@@ -1202,7 +1298,7 @@ $('courtBtn').onclick=()=>{showOnly('courts');const sel=document.querySelector('
 $('courtDone').onclick=()=>showOnly('intro');
 setTheme(store.get('dare-buckets-court')||'arena',false);
 
-setupPlayers();resize();players.forEach(spawn);hud(true);
+setupPlayers();resize();players.forEach(spawn);hud(true);renderCareer();
 requestAnimationFrame(t=>{last=t;loop(t)});
 document.addEventListener('visibilitychange',()=>{last=performance.now();acc=0});
 addEventListener('pagehide',()=>{if(NET.lobby)NET.lobby.leave().catch(()=>{})});

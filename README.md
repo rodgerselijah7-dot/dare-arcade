@@ -53,6 +53,14 @@ Every push to `main` redeploys automatically.
 - Timed levels: 90 seconds (`TIMED_SECONDS`).
 - Saves (progress, stars, high score) live in each player's browser via localStorage.
 
+## DARE Buckets
+- Modes: Solo, Vs CPU (Rookie, Pro or Legend), 2 Player (one phone), Online (two phones with a 4-character match code), and two challenges: 3-Point Contest and Around the World.
+- Solo: 60 seconds, swish for +3 and +2 seconds, streak multipliers (x2 from 3 straight, x3 from 6), and gold money balls (about 1 in 8) that count double.
+- 3-Point Contest: five racks of five from five spots on a still hoop. Each rack's last ball is a money ball and the fifth rack is all money balls (1 point, money balls 2, 34 max). It ends after the 25th ball or at the buzzer.
+- Around the World: seven spots, a make moves you to the next one, a miss keeps you there. 1 point per make and +5 for each full lap, 60 seconds.
+- Vs CPU: Rookie, Pro and Legend differ in accuracy and release speed. Wins against each are counted on the phone.
+- Saved on the phone: best scores per mode (`dare-buckets-best`, `-best-3pt`, `-best-atw`), the CPU level, wins per level, and career totals (games, makes, FG%, best streak) shown on the title screen.
+
 ## DARE Buckets online play
 - Modes: Solo, Vs CPU, 2 Player (one phone) and Online (two phones with a 4-character match code).
 - Online matches run through `/api/room`, using the same Upstash Redis database as checkout (keys start with `arc:room:` and expire after 10 minutes).
