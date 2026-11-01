@@ -197,7 +197,22 @@ mc:[
 {"c": "Texas", "q": "Lizzo moved from Detroit and grew up in which Texas city?", "a": "Houston", "w": ["Dallas", "Austin", "San Antonio"], "n": "She broke out later in Minneapolis.", "e": "c", "d": 2, "g": "pop", "id": "6a5dea0"},
 {"c": "DFW", "q": "Kelly Clarkson, the first American Idol winner, grew up in which town?", "a": "Burleson", "w": ["Grand Prairie", "Arlington", "Denton"], "n": "She was born in Fort Worth. Burleson sits just south of it.", "e": "c", "d": 2, "g": "pop", "id": "2bc37f2"},
 {"c": "DFW", "q": "Selena Gomez and Demi Lovato met as kids on which TV show?", "a": "Barney & Friends", "w": ["Sesame Street", "Wishbone", "The Mickey Mouse Club"], "n": "Barney was filmed in the DFW area. So was Wishbone.", "e": "c", "d": 2, "g": "pop", "id": "b820979"},
-{"c": "DFW", "q": "Norah Jones grew up in which DFW suburb?", "a": "Grapevine", "w": ["Plano", "Arlington", "Denton"], "n": "She went to Booker T. Washington High School in Dallas, like Erykah Badu.", "e": "c", "d": 3, "g": "pop", "id": "d6f8ea3"}
+{"c": "DFW", "q": "Norah Jones grew up in which DFW suburb?", "a": "Grapevine", "w": ["Plano", "Arlington", "Denton"], "n": "She went to Booker T. Washington High School in Dallas, like Erykah Badu.", "e": "c", "d": 3, "g": "pop", "id": "d6f8ea3"},
+{"c": "DFW", "q": "Dallas rapper BigXthaPlug dropped which album on October 30, 2026?", "a": "Better Over Time", "w": ["I Hope You're Happy", "Amar", "The Biggest"], "n": "It's his fourth studio album, with GloRilla, Lil Yachty and Leon Thomas on board.", "e": "n", "d": 2, "g": "hh", "id": "ne20261001"},
+{"c": "DFW", "q": "Which pop singer joins BigXthaPlug on \"Burn\" from Better Over Time?", "a": "Ava Max", "w": ["Dua Lipa", "Bebe Rexha", "Tate McRae"], "n": "Better Over Time runs 18 songs.", "e": "n", "d": 3, "g": "hh", "id": "ne20261002"},
+{"c": "New Era", "q": "Anderson .Paak teamed with which rapper on the October 2026 joint album Heavy Is the Crown?", "a": "Cordae", "w": ["Kendrick Lamar", "Earl Sweatshirt", "Isaiah Rashad"], "n": "It came out October 23 on APESHIT, Mass Appeal and EMPIRE.", "e": "n", "d": 1, "g": "hh", "id": "ne20261003"},
+{"c": "New Era", "q": "Gucci Mane released which album in October 2026?", "a": "Against All Odds", "w": ["Woptober", "Evil Genius", "Episodes"], "n": "It came out October 16, 2026.", "e": "n", "d": 2, "g": "hh", "id": "ne20261004"},
+{"c": "New Era", "q": "Victoria Monét's October 2026 album is called what?", "a": "Frequency of Love", "w": ["Jaguar II", "Reach Out", "Smoke"], "n": "SZA, Bruno Mars and Leon Thomas are among the guests.", "e": "n", "d": 1, "g": "rnb", "id": "ne20261005"},
+{"c": "New Era", "q": "Victoria Monét's \"Let Me\" hit No. 1 on which Billboard chart?", "a": "Adult R&B Airplay", "w": ["Hot 100", "Billboard 200", "Hot Dance/Electronic Songs"], "n": "It's one of the songs on Frequency of Love.", "e": "n", "d": 3, "g": "rnb", "id": "ne20261006"},
+{"c": "New Era", "q": "Who produced John Legend's October 2026 album Muse from start to finish?", "a": "Pharrell Williams", "w": ["Kanye West", "Raphael Saadiq", "Babyface"], "n": "Pharrell also sings on six of the 16 songs. Clipse show up on \"Bodies on the Floor.\"", "e": "n", "d": 1, "g": "rnb", "id": "ne20261007"},
+{"c": "New Era", "q": "Which rapper is featured on \"Mouf Say\" from Lucky Daye's 2026 album ALOUD!?", "a": "Pusha T", "w": ["J. Cole", "Big Sean", "Lil Wayne"], "n": "ALOUD! came out October 16, 2026.", "e": "n", "d": 2, "g": "rnb", "id": "ne20261008"},
+{"c": "New Era", "q": "Taylor Swift's \"Patient Zero\" comes from the deluxe edition of which album?", "a": "The Life of a Showgirl", "w": ["Midnights", "The Tortured Poets Department", "Lover"], "n": "It knocked Ella Langley's \"Choosin' Texas\" out of the No. 1 spot.", "e": "n", "d": 1, "g": "pop", "id": "ne20261009"},
+{"c": "New Era", "q": "After \"Patient Zero\" hit the top, how many Hot 100 No. 1s did Taylor Swift have?", "a": "16", "w": ["12", "14", "18"], "n": "It was also her 10th No. 1 debut, tying Drake for the most.", "e": "n", "d": 3, "g": "pop", "id": "ne20261010"},
+{"c": "New Era", "q": "Which movie star appears in Troye Sivan's \"She's the Best\" video?", "a": "Nicole Kidman", "w": ["Cate Blanchett", "Margot Robbie", "Naomi Watts"], "n": "She's the Best, his fourth album, came out October 9.", "e": "n", "d": 2, "g": "pop", "id": "ne20261011"},
+{"c": "New Era", "q": "BLACKPINK's Lisa released which solo EP on October 23, 2026?", "a": "Press Play", "w": ["Alter Ego", "Lalisa", "Deadline"], "n": "\"SaWaDiKa\" came out first, back in September.", "e": "n", "d": 2, "g": "pop", "id": "ne20261012"},
+{"c": "New Era", "q": "NAO opened her seasonal \"A Soulful Suite\" series in October 2026 with which album?", "a": "Autumn", "w": ["Summer", "Winter", "Spring"], "n": "It's the first entry in the series. \"Eugene\" and \"Save the World\" came out ahead of it.", "e": "n", "d": 1, "g": "neo", "id": "ne20261013"},
+{"c": "New Era", "q": "Joyce Wrice followed her 2021 debut Overgrown with which October 2026 album?", "a": "Machiko", "w": ["Stay Around", "Motive", "Iris"], "n": "JID guests on \"Catch Me If You Can.\"", "e": "n", "d": 2, "g": "neo", "id": "ne20261014"},
+{"c": "DFW", "q": "Fort Worth's Leon Bridges made his 2026 album Happiness Anytime with members of which British band?", "a": "Jungle", "w": ["Sault", "Glass Animals", "Rudimental"], "n": "J Lloyd and Lydia Kitto of Jungle produced it. It came out September 25.", "e": "n", "d": 2, "g": "neo", "id": "ne20261015"}
 ],
 rel:[
 {"t": "Rapper's Delight", "a": "The Sugarhill Gang", "y": 1979, "d": 1, "k": "single", "id": "yb766a89", "g": "hh"},
@@ -332,7 +347,16 @@ rel:[
 {"t": "Cowboy Carter", "a": "Beyoncé", "y": 2024, "d": 1, "k": "album", "id": "y53726fc", "g": "pop"},
 {"t": "Debí Tirar Más Fotos", "a": "Bad Bunny", "y": 2025, "d": 2, "k": "album", "id": "y73bca67", "g": "pop"},
 {"t": "Mayhem", "a": "Lady Gaga", "y": 2025, "d": 2, "k": "album", "id": "yd43b7d4", "g": "pop"},
-{"t": "The Art of Loving", "a": "Olivia Dean", "y": 2025, "d": 2, "k": "album", "id": "y7096f75", "g": "neo"}
+{"t": "The Art of Loving", "a": "Olivia Dean", "y": 2025, "d": 2, "k": "album", "id": "y7096f75", "g": "neo"},
+{"t": "Better Over Time", "a": "BigXthaPlug", "y": 2026, "d": 2, "k": "album", "id": "yne2026101", "g": "hh"},
+{"t": "Heavy Is the Crown", "a": "Anderson .Paak and Cordae", "y": 2026, "d": 2, "k": "album", "id": "yne2026102", "g": "hh"},
+{"t": "Against All Odds", "a": "Gucci Mane", "y": 2026, "d": 3, "k": "album", "id": "yne2026103", "g": "hh"},
+{"t": "Frequency of Love", "a": "Victoria Monét", "y": 2026, "d": 2, "k": "album", "id": "yne2026104", "g": "rnb"},
+{"t": "Muse", "a": "John Legend", "y": 2026, "d": 2, "k": "album", "id": "yne2026105", "g": "rnb"},
+{"t": "ALOUD!", "a": "Lucky Daye", "y": 2026, "d": 3, "k": "album", "id": "yne2026106", "g": "rnb"},
+{"t": "She's the Best", "a": "Troye Sivan", "y": 2026, "d": 2, "k": "album", "id": "yne2026107", "g": "pop"},
+{"t": "Autumn", "a": "NAO", "y": 2026, "d": 3, "k": "album", "id": "yne2026108", "g": "neo"},
+{"t": "Happiness Anytime", "a": "Leon Bridges", "y": 2026, "d": 2, "k": "album", "id": "yne2026109", "g": "neo"}
 ],
 ori:[
 {"a": "Nas", "c": "Queens", "d": 1, "e": "c", "id": "ob05c017", "g": "hh"},
