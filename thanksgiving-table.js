@@ -303,7 +303,7 @@
   }
 
   /* ---------- per-size layers ---------- */
-  let QMAX = 2;
+  let QMAX = 2, pendingQ = 0;
   let W = 0, H = 0, D = 1, L = null, bokeh = [], leaves = [], sparks = [];
   host.style.setProperty("--tg-grain", `url(${grainTex().toDataURL()})`);
 
@@ -507,6 +507,7 @@
   /* ---------- frame ---------- */
   let last = 0, raf = 0, born = 0, perf = [];
   function frame(now) {
+    if (pendingQ) { QMAX = pendingQ; pendingQ = 0; build(); } // rebuild and repaint in the same frame: never a blank canvas
     if (!gate.isConnected) { SND.stop(); return; }
     if (!born) born = now;
     const t = now / 1000, dt = Math.min(.05, last ? (now - last) / 1000 : 0); last = now;
@@ -580,7 +581,7 @@
 
     if (now - born > 1200 && dt > 0) {
       perf.push(dt * 1000);
-      if (perf.length >= 30) { const med = perf.sort((a, b) => a - b)[15]; perf = []; if (med > 22 && D > 1) { QMAX = Math.max(1, D - .5); build(); } }
+      if (perf.length >= 30) { const med = perf.sort((a, b) => a - b)[15]; perf = []; if (med > 22 && D > 1) pendingQ = med > 30 ? 1 : Math.max(1, D - .5); }
     }
     if (!reduce || swirl.length) raf = requestAnimationFrame(frame);
   }

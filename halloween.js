@@ -141,7 +141,7 @@
   }
 
   /* ---------- per-size layers ---------- */
-  let QMAX = 2;                      // resolution cap; lowered on the fly if a phone can't keep the scene smooth
+  let QMAX = 2, pendingQ = 0;                      // resolution cap; lowered on the fly if a phone can't keep the scene smooth
   let W = 0, H = 0, D = 1, L = null, stars = [], bats = [], embers = [], pumpkins = [];
   host.style.setProperty("--hw-grain", `url(${grainTex().toDataURL()})`);   // film grain runs as a GPU-composited CSS layer
   texJob("cloud", [768, 256], c => { CLOUD = c; });
@@ -382,6 +382,7 @@
 
   let last = 0, raf = 0, cloudX = 0, fogX = 0, fog2X = 0, grainF = 0, born = 0;
   function frame(now) {
+    if (pendingQ) { QMAX = pendingQ; pendingQ = 0; build(); } // rebuild and repaint in the same frame: never a blank canvas
     if (!gate.isConnected) { SND.stop(); return; }
     if (!born) born = now;
     const t = now / 1000, dt = Math.min(.05, last ? (now - last) / 1000 : 0); last = now;
@@ -494,7 +495,7 @@
       perf.push(dt * 1000);                                  // time between frames, which includes the actual drawing
       if (perf.length >= 30) {
         const med = perf.sort((a, b) => a - b)[15]; perf = [];
-        if (med > 22 && D > 1) { QMAX = Math.max(1, D - .5); build(); }
+        if (med > 22 && D > 1) pendingQ = med > 30 ? 1 : Math.max(1, D - .5);
       }
     }
     if (!reduce || sparks.length) raf = requestAnimationFrame(frame);

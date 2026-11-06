@@ -773,10 +773,12 @@
 
   /* ---------- frame ---------- */
   let shown = false, cloudIn = 0;
-  let last = 0, raf = 0, cloudX = 0, born = 0, nextFlock = 6, smokeT = 0, perf = [];
+  let last = 0, raf = 0, cloudX = 0, born = 0, nextFlock = 6, smokeT = 0, perf = [], pendingQ = 0;
   function frame(now) {
     if (!gate.isConnected) { SND.stop(); return; }
     if (!born) born = now;
+    // a quality change rebuilds and repaints in this same frame, so the canvas is never shown blank
+    if (pendingQ) { QMAX = pendingQ; pendingQ = 0; build(true); }
     const t = now / 1000, dt = Math.min(.05, last ? (now - last) / 1000 : 0); last = now;
     par.x += (par.tx - par.x) * Math.min(1, dt * 3); par.y += (par.ty - par.y) * Math.min(1, dt * 3);
     const wind = 14 + 16 * Math.sin(t * .17) + 8 * Math.sin(t * .53);
@@ -916,7 +918,7 @@
     // keep it smooth: if frames run long, step the resolution down and redraw the layers
     if (now - born > 250 && dt > 0) {
       perf.push(dt * 1000);
-      if (perf.length >= 24) { const med = perf.sort((a, b) => a - b)[12]; perf = []; if (med > 22 && D > 1) { QMAX = Math.max(1, D - .5); build(true); } }
+      if (perf.length >= 24) { const med = perf.sort((a, b) => a - b)[12]; perf = []; if (med > 22 && D > 1) pendingQ = med > 30 ? 1 : Math.max(1, D - .5); }
     }
     if (!reduce || swirl.length || !CLOUD) raf = requestAnimationFrame(frame);
   }
