@@ -10,7 +10,7 @@
 <meta name="description" content="Free browser games from Dontae Amare. Play The Last Don, a match-3 set in Fort Worth.">
 <meta property="og:title" content="DARE Arcade">
 <meta property="og:description" content="Browser games by Dontae Amare. Every game is free to start, with more on the way.">
-<meta property="og:image" content="https://darearcade.vercel.app/icons/og.png?v=3">
+<meta property="og:image" content="https://darearcade.vercel.app/icons/og.png?v=4">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -27,13 +27,18 @@
 if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('standalone');
 </script>
 <script>
-// Seasonal enter page: Halloween all of October (Central time). ?season=halloween previews it, ?season=off hides it.
-(function(){var q=location.search,d=document.documentElement,on=false,day=0;
-  try{var p=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',month:'numeric',day:'numeric'}).formatToParts(new Date()),mo=0;
-    p.forEach(function(x){if(x.type==='month')mo=+x.value;if(x.type==='day')day=+x.value});on=mo===10}catch(e){}
-  if(/[?&]season=halloween\b/.test(q)){on=true;if(!day||day>31)day=24}
-  if(/[?&]season=off\b/.test(q))on=false;
-  if(on){d.classList.add('halloween');d.dataset.hwLeft=Math.max(0,31-(day||31))}
+// Seasonal enter page (Central time): Halloween all of October; Thanksgiving from November 1 through the Sunday after
+// Thanksgiving (the fourth Thursday). ?season=halloween or ?season=thanksgiving previews one, ?season=off hides them.
+(function(){var q=location.search,d=document.documentElement,mo=0,day=0,yr=0;
+  try{var p=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date());
+    p.forEach(function(x){if(x.type==='month')mo=+x.value;if(x.type==='day')day=+x.value;if(x.type==='year')yr=+x.value})}catch(e){}
+  var tday=yr?1+((4-new Date(Date.UTC(yr,10,1)).getUTCDay()+7)%7)+21:26;   // fourth Thursday of November
+  var season=mo===10?'halloween':mo===11&&day<=tday+3?'thanksgiving':'';
+  if(/[?&]season=halloween\b/.test(q)){season='halloween';if(mo!==10)day=24}
+  if(/[?&]season=thanksgiving\b/.test(q)){season='thanksgiving';if(mo!==11||day>tday)day=Math.min(tday-6,20)}
+  if(/[?&]season=off\b/.test(q))season='';
+  if(season==='halloween'){d.classList.add('halloween');d.dataset.hwLeft=Math.max(0,31-(day||31))}
+  if(season==='thanksgiving'){d.classList.add('thanksgiving');d.dataset.tgLeft=Math.max(0,tday-day)}
 })();
 </script>
 <script>
@@ -262,6 +267,87 @@ html.halloween .fs-link{color:#b9a6cf}
 html.halloween .g-foot{color:#9d8ab3;z-index:1}
 @media (prefers-reduced-motion:reduce){.hw-bug,.hw-bug svg,html.halloween .g-title span+span{animation:none}html.halloween .gate{transition:opacity .3s}}
 
+/* ===== Thanksgiving enter page (html.thanksgiving): harvest sunset ===== */
+.tg,.tg-only,.sz-only{display:none}
+html.thanksgiving .tg{display:block}
+html.thanksgiving .tg-only{display:inline}
+html.thanksgiving .hw-off{display:none}
+html.thanksgiving .sz-only{display:inline}
+html.halloween .sz-only{display:inline}
+html.thanksgiving .gate{background:radial-gradient(120% 70% at 72% 92%,#ffb45c 0%,#c4503a 30%,#5a2240 62%,#1b0f2c 100%);
+  --tg-gold:#FFC75A;--tg-amber:#F08A2E;--tg-cream:#FFF2DA}
+.gate>.tg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.tg-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+html.thanksgiving .tg::after{content:"";position:absolute;inset:-60px;background:var(--tg-grain) repeat;opacity:.045;pointer-events:none;will-change:transform}
+@media (prefers-reduced-motion:no-preference){html.thanksgiving .tg::after{animation:grain .6s steps(5) infinite}}
+html.thanksgiving .g-top{color:#f0d6bd;text-shadow:0 1px 8px rgba(40,10,20,.5)}
+html.thanksgiving .g-top b::before{background:var(--tg-amber);box-shadow:0 0 10px var(--tg-amber)}
+html.thanksgiving .g-top i{font-style:normal;color:var(--tg-gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+html.thanksgiving .hw-right{display:inline-flex;align-items:center;gap:12px}
+@media (max-width:420px){html.thanksgiving .g-top{font-size:13px;letter-spacing:.1em}html.thanksgiving .hw-right{gap:10px}}
+html.thanksgiving .g-pre{color:#f3dcc4;text-shadow:0 1px 10px rgba(40,10,20,.55)}
+html.thanksgiving .tg-ed{display:block;color:var(--tg-gold);margin-top:6px}
+/* title: cream DARE, harvest-gold ARCADE, letters rise in one by one */
+html.thanksgiving .g-title{text-shadow:none}
+html.thanksgiving .g-title .ch{display:inline-block;color:transparent;-webkit-background-clip:text;background-clip:text}
+html.thanksgiving .g-title>span:first-child .ch{background-image:linear-gradient(176deg,#fffbf2 0%,#fbeedb 34%,#e9caa0 58%,#fbecd4 74%,#c9986a 100%);
+  filter:drop-shadow(0 2px 0 rgba(70,22,16,.9)) drop-shadow(0 10px 22px rgba(30,8,14,.6)) drop-shadow(0 0 26px rgba(255,170,90,.22))}
+html.thanksgiving .g-title>span+span{color:inherit;text-shadow:none}
+html.thanksgiving .g-title>span+span .ch{background-image:linear-gradient(180deg,#fff3c4 0%,#ffd26a 28%,#f3912c 60%,#b9461a 100%);
+  filter:drop-shadow(0 2px 0 rgba(80,24,8,.85)) drop-shadow(0 0 12px rgba(255,160,60,.45)) drop-shadow(0 0 30px rgba(255,120,40,.28))}
+@media (prefers-reduced-motion:no-preference){
+  html.thanksgiving .g-title .ch{opacity:0}
+  html.thanksgiving.fonts-ok .g-title .ch{animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.25s + var(--i) * 70ms)}
+  html.thanksgiving.fonts-ok .g-title>span+span .ch{animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards,hearth 5.2s ease-in-out infinite;animation-delay:calc(.25s + var(--i) * 70ms),calc(1.6s + var(--i) * 160ms)}
+  html.thanksgiving.fonts-ok .g-pre,html.thanksgiving.fonts-ok .g-sub,html.thanksgiving.fonts-ok .enter,html.thanksgiving.fonts-ok .g-hint,html.thanksgiving.fonts-ok .fs-link,html.thanksgiving.fonts-ok .g-top,html.thanksgiving.fonts-ok .g-foot{animation:fadeup 1s cubic-bezier(.2,.8,.2,1) backwards}
+  html.thanksgiving.fonts-ok .g-top{animation-delay:0s}html.thanksgiving.fonts-ok .g-pre{animation-delay:.1s}html.thanksgiving.fonts-ok .g-sub{animation-delay:1s}
+  html.thanksgiving.fonts-ok .enter{animation-delay:1.2s}html.thanksgiving.fonts-ok .g-hint{animation-delay:1.45s}html.thanksgiving.fonts-ok .fs-link{animation-delay:1.55s}html.thanksgiving.fonts-ok .g-foot{animation-delay:1.65s}
+}
+@keyframes hearth{0%,100%{filter:drop-shadow(0 2px 0 rgba(80,24,8,.85)) drop-shadow(0 0 12px rgba(255,160,60,.45)) drop-shadow(0 0 30px rgba(255,120,40,.28))}
+  50%{filter:drop-shadow(0 2px 0 rgba(80,24,8,.85)) drop-shadow(0 0 18px rgba(255,180,80,.7)) drop-shadow(0 0 46px rgba(255,130,40,.45))}}
+html.thanksgiving .g-sub{color:#fbe8d2;letter-spacing:.01em;text-shadow:0 1px 12px rgba(40,10,20,.65)}
+html.thanksgiving .g-foot{color:#f0cfae;z-index:1;text-shadow:0 1px 8px rgba(20,6,4,.7)}
+html.thanksgiving .g-foot::before,html.thanksgiving .g-foot::after{content:"";display:inline-block;width:28px;height:1px;background:linear-gradient(90deg,transparent,#f0cfae);vertical-align:middle;margin:0 12px}
+html.thanksgiving .g-foot::after{transform:scaleX(-1)}
+html.thanksgiving .g-hint{color:var(--tg-gold);text-shadow:0 1px 3px rgba(60,14,10,.85),0 0 14px rgba(40,10,20,.7)}
+html.thanksgiving .fs-link{color:#f3dcc4;border-color:rgba(255,230,200,.45)}
+html.thanksgiving .hw-snd{color:#fff2da;background:rgba(40,14,20,.5);border-color:rgba(255,210,160,.35)}
+html.thanksgiving .hw-snd[aria-pressed="true"]{border-color:rgba(255,190,90,.8);box-shadow:0 0 14px rgba(255,160,60,.45)}
+/* Enter: a warm harvest-gold button with a sheen, and a leaf that drifts down onto it */
+html.thanksgiving .enter{position:relative;color:#2a1000;border-radius:3px;overflow:visible;isolation:isolate;
+  background:linear-gradient(180deg,#ffe09a 0%,#f8b748 40%,#e8862c 72%,#bb5518 100%);
+  box-shadow:inset 0 1px 0 rgba(255,248,225,.9),inset 0 0 0 1px rgba(255,230,170,.6),inset 0 -4px 10px rgba(120,40,0,.4),0 12px 34px rgba(240,130,40,.42),0 0 70px rgba(255,170,70,.22);
+  text-shadow:0 1px 0 rgba(255,235,190,.6);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,background .2s}
+html.thanksgiving .enter::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;overflow:hidden;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,252,235,.75) 50%,transparent 62%) -160% 0/60% 100% no-repeat}
+@media (prefers-reduced-motion:no-preference){html.thanksgiving .enter::before{animation:sheen 4.8s ease-in-out 2.6s infinite}}
+html.thanksgiving .enter:hover,html.thanksgiving .enter:focus-visible{background:linear-gradient(180deg,#ffe8b0 0%,#ffc45a 40%,#f0943a 72%,#c86020 100%);color:#2a1000;transform:translateY(-2px);
+  box-shadow:inset 0 1px 0 rgba(255,250,230,.95),inset 0 0 0 1px rgba(255,235,185,.75),inset 0 -4px 10px rgba(120,40,0,.35),0 18px 44px rgba(245,140,40,.55),0 0 90px rgba(255,180,80,.32)}
+html.thanksgiving .enter:active{transform:translateY(1px) scale(.98)}
+html.thanksgiving .tg-leaf{display:block;position:absolute;top:-22px;right:26px;width:30px;height:30px;pointer-events:none;opacity:0}
+.tg-leaf svg{display:block;width:100%;height:100%;filter:drop-shadow(0 2px 2px rgba(60,15,0,.5))}
+@media (prefers-reduced-motion:no-preference){html.thanksgiving.fonts-ok .tg-leaf{animation:leafland 12s cubic-bezier(.4,0,.3,1) 2.4s infinite}}
+@media (prefers-reduced-motion:reduce){html.thanksgiving .tg-leaf{opacity:1;transform:rotate(-14deg)}}
+@keyframes leafland{
+  0%{opacity:0;transform:translate(-70px,-150px) rotate(-80deg)}
+  4%{opacity:1}
+  12%{transform:translate(-20px,-80px) rotate(30deg)}
+  20%{transform:translate(-44px,-30px) rotate(-40deg)}
+  28%{transform:translate(0,0) rotate(-14deg)}
+  33%{transform:translate(0,0) rotate(-4deg)}
+  40%{transform:translate(0,0) rotate(-16deg)}
+  48%,64%{transform:translate(0,0) rotate(-10deg)}
+  70%{transform:translate(-4px,0) rotate(-22deg)}
+  80%{opacity:1;transform:translate(70px,-46px) rotate(140deg)}
+  86%,100%{opacity:0;transform:translate(130px,-70px) rotate(260deg)}}
+/* exit: leaves swirl out of the button, the scene pushes in and fades */
+html.thanksgiving .gate{transition:opacity .85s cubic-bezier(.4,0,.2,1)}
+html.thanksgiving .tg-cv{transition:transform 1s cubic-bezier(.4,0,.2,1),filter 1s}
+html.thanksgiving.leaving .gate{transform:none;opacity:0}
+html.thanksgiving.leaving .tg-cv{transform:scale(1.12);filter:brightness(1.25)}
+html.thanksgiving.igniting .g-mid{transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s;transform:scale(1.04);opacity:0}
+@media (prefers-reduced-motion:reduce){html.thanksgiving .g-title span+span .ch{animation:none}html.thanksgiving .gate{transition:opacity .3s}}
+
 /* ===== Home Screen guide ===== */
 .fs-link{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:none;border:0;cursor:pointer;
   font-family:var(--display);letter-spacing:.18em;font-size:16px;color:#fff;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.35)}
@@ -302,14 +388,15 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
   <div class="hw" aria-hidden="true">
   </div>
-    <div class="g-top"><b>DARE</b><span class="hw-only hw-right"><i id="hwCount"></i><button class="hw-snd" id="hwSound" type="button" aria-pressed="false" aria-label="Turn on sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off" d="M16 9l5 6M21 9l-5 6"/></svg></button></span></div>
+  <div class="tg" aria-hidden="true"></div>
+    <div class="g-top"><b>DARE</b><span class="sz-only hw-right"><i id="hwCount"></i><button class="hw-snd" id="hwSound" type="button" aria-pressed="false" aria-label="Turn on sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off" d="M16 9l5 6M21 9l-5 6"/></svg></button></span></div>
   <div class="g-mid">
-    <p class="g-pre">DONTAE AMARE PRESENTS<span class="hw-only hw-ed">HALLOWEEN EDITION</span></p>
+    <p class="g-pre">DONTAE AMARE PRESENTS<span class="hw-only hw-ed">HALLOWEEN EDITION</span><span class="tg-only tg-ed">THANKSGIVING EDITION</span></p>
     <h1 class="g-title" id="gateTitle"><span>DARE</span><span>ARCADE</span></h1>
-    <p class="g-sub"><span class="hw-off">Every game is free to start. More are on the way.</span><span class="hw-only">Every game is free to start. Enter if you dare.</span></p>
-    <button class="enter" id="enterBtn" type="button"><span class="hw-only hw-bug" aria-hidden="true"><i><svg viewBox="0 0 24 24"><g stroke="#0b0610" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M9 11 3 7M9 13 2 13M9 15 3 19M10 16 6 22M15 11 21 7M15 13 22 13M15 15 21 19M14 16 18 22"/></g><ellipse cx="12" cy="13" rx="4" ry="5" fill="#0b0610"/><circle cx="12" cy="8" r="2.6" fill="#0b0610"/><circle cx="11" cy="7.6" r=".55" fill="#ff7a1a"/><circle cx="13" cy="7.6" r=".55" fill="#ff7a1a"/></svg></i></span>ENTER
+    <p class="g-sub"><span class="hw-off">Every game is free to start. More are on the way.</span><span class="hw-only">Every game is free to start. Enter if you dare.</span><span class="tg-only">Every game is free to start. Pull up a chair.</span></p>
+    <button class="enter" id="enterBtn" type="button"><span class="hw-only hw-bug" aria-hidden="true"><i><svg viewBox="0 0 24 24"><g stroke="#0b0610" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M9 11 3 7M9 13 2 13M9 15 3 19M10 16 6 22M15 11 21 7M15 13 22 13M15 15 21 19M14 16 18 22"/></g><ellipse cx="12" cy="13" rx="4" ry="5" fill="#0b0610"/><circle cx="12" cy="8" r="2.6" fill="#0b0610"/><circle cx="11" cy="7.6" r=".55" fill="#ff7a1a"/><circle cx="13" cy="7.6" r=".55" fill="#ff7a1a"/></svg></i></span><span class="tg-only tg-leaf" aria-hidden="true"><svg viewBox="-12 -12 24 26"><defs><linearGradient id="tgLeafG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb84a"/><stop offset=".55" stop-color="#e2561e"/><stop offset="1" stop-color="#9c2412"/></linearGradient></defs><path d="M0-11 2.3-6.2 6.2-8 5-3.6 10.5-3.2 7.6 0 10 2.6 4.2 3 4.4 6.6 0 4.4-4.4 6.6-4.2 3-10 2.6-7.6 0-10.5-3.2-5-3.6-6.2-8-2.3-6.2Z" fill="url(#tgLeafG)"/><path d="M0 4.4V-9M0 1-5.5-3M0 1 5.5-3" stroke="#7a2410" stroke-width=".8" fill="none" stroke-linecap="round"/><path d="M0 4.4 .6 12" stroke="#6b3412" stroke-width="1.1" stroke-linecap="round"/></svg></span>ENTER
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg></button>
-    <span class="g-hint" aria-hidden="true"><span class="hw-off">PRESS START</span><span class="hw-only">IF YOU DARE</span></span>
+    <span class="g-hint" aria-hidden="true"><span class="hw-off">PRESS START</span><span class="hw-only">IF YOU DARE</span><span class="tg-only">GATHER ROUND</span></span>
     <div><button class="fs-link" type="button" data-hs><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="1.5" width="10" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 15.5h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>PLAY FULL SCREEN</button></div>
   </div>
   <p class="g-foot">Desired Ambitions Requires Execution.</p>
@@ -552,14 +639,18 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   // Show the enter page's text only once its fonts are in (at most 1s), so nothing jumps while the app opens
   {const ok=()=>html.classList.add('fonts-ok');
     if(document.fonts&&document.fonts.load){Promise.race([Promise.all([document.fonts.load('400 1em "Bebas Neue"'),document.fonts.load('italic 400 1em "Crimson Pro"')]),new Promise(r=>setTimeout(r,1000))]).then(ok,ok)}else ok();}
-  // Halloween countdown on the enter page
-  if(html.classList.contains('halloween')){const n=+html.dataset.hwLeft||0,c=document.getElementById('hwCount');
-    if(c)c.textContent=n===0?'HAPPY HALLOWEEN':n===1?'1 NIGHT TO HALLOWEEN':n+' NIGHTS TO HALLOWEEN';
+  // Seasonal enter page: countdown, letter-by-letter title, and the painted scene
+  const HW=html.classList.contains('halloween'),TG=html.classList.contains('thanksgiving');
+  if(HW||TG){
+    const c=document.getElementById('hwCount');
+    if(HW){const n=+html.dataset.hwLeft||0;if(c)c.textContent=n===0?'HAPPY HALLOWEEN':n===1?'1 NIGHT TO HALLOWEEN':n+' NIGHTS TO HALLOWEEN';}
+    if(TG){const n=+html.dataset.tgLeft||0;if(c)c.textContent=n===0?'HAPPY THANKSGIVING':n===1?'1 DAY TO THANKSGIVING':n+' DAYS TO THANKSGIVING';}
     // split the title into letters for the reveal
     document.querySelectorAll('.g-title>span').forEach((w,wi)=>{const t=w.textContent;w.setAttribute('aria-label',t);w.textContent='';
       [...t].forEach((ch,i)=>{const l=document.createElement('span');l.className='ch';l.setAttribute('aria-hidden','true');l.textContent=ch;l.style.setProperty('--i',i+wi*4);w.appendChild(l)})});
-    const sc=document.createElement('script');sc.src='/halloween.js?v=10';document.body.appendChild(sc);
-    const sp=document.createElement('script');sp.src='/halloween-spider.js?v=2';document.body.appendChild(sp);}
+    const add=src=>{const sc=document.createElement('script');sc.src=src;document.body.appendChild(sc)};
+    if(HW){add('/halloween.js?v=10');add('/halloween-spider.js?v=2');}
+    if(TG)add('/thanksgiving.js?v=1');}
   // Enter gate
   const gate=document.getElementById('gate'),btn=document.getElementById('enterBtn');
 
@@ -568,9 +659,9 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   function enter(){
     if(done)return;done=true;
     try{sessionStorage.setItem('dare-entered','1')}catch(e){}
-    const hw=html.classList.contains('halloween')&&window.DAREHW;
-    if(hw){window.DAREHW.burst(btn);html.classList.add('igniting')}
-    setTimeout(leave,hw?320:0);
+    const fx=(html.classList.contains('halloween')&&window.DAREHW)||(html.classList.contains('thanksgiving')&&window.DARETG);
+    if(fx){fx.burst(btn);html.classList.add('igniting')}
+    setTimeout(leave,fx?320:0);
   }
   function leave(){
     lobby.inert=false;window.scrollTo(0,0);
