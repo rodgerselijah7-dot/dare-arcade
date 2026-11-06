@@ -132,7 +132,7 @@
   let W = 0, H = 0, D = 1, L = null, leaves = [], motes = [], smoke = [], flock = null, turkeys = [], close = [];
   host.style.setProperty("--tg-grain", `url(${grainTex().toDataURL()})`);
 
-  function build() {
+  function build(keep) {
     W = gate.clientWidth; H = gate.clientHeight; D = Math.min(QMAX, window.devicePixelRatio || 1);
     cv.width = Math.round(W * D); cv.height = Math.round(H * D);
     seed = 26112026;
@@ -622,7 +622,8 @@
     v.fillStyle = tg; v.fillRect(0, 0, W, H);
     L.vig = vig;
 
-    /* moving parts */
+    /* moving parts (kept as they are when only the resolution changes, so nothing jumps) */
+    if (keep && leaves.length) return;
     const nLeaves = Math.round(clamp(W * H / 24000, 20, 54));
     leaves = []; for (let i = 0; i < nLeaves; i++) leaves.push(newLeaf(true));
     motes = []; for (let i = 0, k = Math.round(clamp(W / 18, 16, 60)); i < k; i++) motes.push({ x: rnd() * W, y: yH - rnd() * H * .45, r: .5 + rnd() * 1.4, p: rnd() * 6.3, v: 3 + rnd() * 6 });
@@ -771,6 +772,7 @@
   };
 
   /* ---------- frame ---------- */
+  let shown = false, cloudIn = 0;
   let last = 0, raf = 0, cloudX = 0, born = 0, nextFlock = 6, smokeT = 0, perf = [];
   function frame(now) {
     if (!gate.isConnected) { SND.stop(); return; }
@@ -794,10 +796,11 @@
     // clouds drift slowly
     cloudX = (cloudX + dt * 6) % (W * 1.8);
     if (CLOUD) {
+      cloudIn = reduce ? 1 : Math.min(1, cloudIn + dt / 1.2);
       const cw = W * 1.8, ch = clamp(H * .2, 110, 220), [cx2, cy2] = shift(9);
       for (const [off, y, a, k] of [[0, H * .06, .62, .7], [W * .7, L.yH - H * .36, .5, 1]]) {
         const x = -((cloudX * k + off) % cw) + cx2;
-        ctx.globalAlpha = a; ctx.drawImage(CLOUD, x, y + cy2, cw, ch); ctx.drawImage(CLOUD, x + cw, y + cy2, cw, ch);
+        ctx.globalAlpha = a * cloudIn; ctx.drawImage(CLOUD, x, y + cy2, cw, ch); ctx.drawImage(CLOUD, x + cw, y + cy2, cw, ch);
       }
       ctx.globalAlpha = 1;
     }
@@ -908,13 +911,12 @@
     ctx.drawImage(L.vig, 0, 0, W, H);
 
     // cinematic open: fade up from black
-    const intro = reduce ? 1 : Math.min(1, (now - born) / 1600);
-    if (intro < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - intro * intro * (3 - 2 * intro)})`; ctx.fillRect(0, 0, W, H); }
+    if (!shown) { shown = true; cv.classList.add("on"); }            // first frame is on the canvas: fade it in over the backdrop
 
     // keep it smooth: if frames run long, step the resolution down and redraw the layers
-    if (now - born > 1200 && dt > 0) {
+    if (now - born > 250 && dt > 0) {
       perf.push(dt * 1000);
-      if (perf.length >= 30) { const med = perf.sort((a, b) => a - b)[15]; perf = []; if (med > 22 && D > 1) { QMAX = Math.max(1, D - .5); build(); } }
+      if (perf.length >= 24) { const med = perf.sort((a, b) => a - b)[12]; perf = []; if (med > 22 && D > 1) { QMAX = Math.max(1, D - .5); build(true); } }
     }
     if (!reduce || swirl.length || !CLOUD) raf = requestAnimationFrame(frame);
   }

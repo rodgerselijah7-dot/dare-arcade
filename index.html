@@ -277,7 +277,9 @@ html.halloween .sz-only{display:inline}
 html.thanksgiving .gate{background:radial-gradient(120% 70% at 72% 92%,#ffb45c 0%,#c4503a 30%,#5a2240 62%,#1b0f2c 100%);
   --tg-gold:#FFC75A;--tg-amber:#F08A2E;--tg-cream:#FFF2DA}
 .gate>.tg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.tg-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tg-cv{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0}
+.tg-cv.on{opacity:1}
+html.thanksgiving.gated{background:#1b0f2c}
 html.thanksgiving .tg::after{content:"";position:absolute;inset:-60px;background:var(--tg-grain) repeat;opacity:.045;pointer-events:none;will-change:transform}
 @media (prefers-reduced-motion:no-preference){html.thanksgiving .tg::after{animation:grain .6s steps(5) infinite}}
 html.thanksgiving .g-top{color:#f0d6bd;text-shadow:0 1px 8px rgba(40,10,20,.5)}
@@ -342,7 +344,8 @@ html.thanksgiving .tg-leaf{display:block;position:absolute;top:-22px;right:26px;
   86%,100%{opacity:0;transform:translate(130px,-70px) rotate(260deg)}}
 /* exit: leaves swirl out of the button, the scene pushes in and fades */
 html.thanksgiving .gate{transition:opacity .85s cubic-bezier(.4,0,.2,1)}
-html.thanksgiving .tg-cv{transition:transform 1s cubic-bezier(.4,0,.2,1),filter 1s}
+html.thanksgiving .tg-cv{transition:opacity 1.5s cubic-bezier(.4,0,.2,1),transform 1s cubic-bezier(.4,0,.2,1),filter 1s}
+@media (prefers-reduced-motion:reduce){html.thanksgiving .tg-cv{transition:none}}
 html.thanksgiving.leaving .gate{transform:none;opacity:0}
 html.thanksgiving.leaving .tg-cv{transform:scale(1.12);filter:brightness(1.25)}
 html.thanksgiving.igniting .g-mid{transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s;transform:scale(1.04);opacity:0}
@@ -650,7 +653,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
       [...t].forEach((ch,i)=>{const l=document.createElement('span');l.className='ch';l.setAttribute('aria-hidden','true');l.textContent=ch;l.style.setProperty('--i',i+wi*4);w.appendChild(l)})});
     const add=src=>{const sc=document.createElement('script');sc.src=src;document.body.appendChild(sc)};
     if(HW){add('/halloween.js?v=10');add('/halloween-spider.js?v=2');}
-    if(TG)add(/[?&]scene=table\b/.test(location.search)?'/thanksgiving-table.js?v=1':'/thanksgiving.js?v=4');}
+    if(TG)add(/[?&]scene=table\b/.test(location.search)?'/thanksgiving-table.js?v=1':'/thanksgiving.js?v=5');}
   // Enter gate
   const gate=document.getElementById('gate'),btn=document.getElementById('enterBtn');
 
