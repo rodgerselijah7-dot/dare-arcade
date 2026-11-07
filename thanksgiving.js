@@ -127,6 +127,83 @@
     }
   }
 
+
+  /* ---------- night: the scene follows the visitor's own clock ----------
+     0 = the harvest sunset, 1 = a moonlit night. It fades over an hour and a half at dusk and again at dawn.
+     Preview with ?tod=night|day|dusk or ?hour=21.5 */
+  const TODQ = (location.search.match(/[?&]tod=(night|day|dusk|dawn)\b/) || [])[1];
+  const HOURQ = parseFloat((location.search.match(/[?&]hour=([\d.]+)/) || [])[1]);
+  function nightAt() {
+    if (TODQ === "night") return 1; if (TODQ === "day") return 0; if (TODQ) return .5;
+    const d = new Date(), h = isFinite(HOURQ) ? HOURQ % 24 : d.getHours() + d.getMinutes() / 60;
+    return h < 12 ? 1 - ss(5.75, 7.25, h) : ss(17.25, 18.75, h);
+  }
+  let NT = nightAt();
+  const markNight = () => document.documentElement.classList.toggle("tg-night", NT > .5);
+  markNight();
+  // a moonlit copy of a painted layer: multiply by a cool blue, keeping the layer's own shape
+  function nightCopy(src, col) {
+    const c = mk(src.width, src.height), g = c.getContext("2d");
+    g.drawImage(src, 0, 0); g.globalCompositeOperation = "multiply"; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height);
+    g.globalCompositeOperation = "destination-in"; g.drawImage(src, 0, 0); return c;
+  }
+  let SPRITES_N = [], BIG_N = [], CLOUD_N = null;
+  function buildNight() {
+    let sd = 7101979; const r = () => ((sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296);   // its own dice, so day and night share the same leaves
+    const { yH } = L, wide = W > 700;
+    /* sky: deep blue, a hint of town glow on the horizon, the Milky Way and a sky full of stars */
+    const sky = mk(W * D, H * D), s = sky.getContext("2d"); s.scale(D, D);
+    const hf = yH / H, sg = s.createLinearGradient(0, 0, 0, H);
+    sg.addColorStop(0, "#03061a"); sg.addColorStop(hf * .45, "#0a1534"); sg.addColorStop(hf * .82, "#1a2a58"); sg.addColorStop(hf, "#33406e"); sg.addColorStop(1, "#262f52");
+    s.fillStyle = sg; s.fillRect(0, 0, W, H);
+    const town = s.createRadialGradient(W * .18, yH, 10, W * .18, yH, W * .6); town.addColorStop(0, "rgba(255,170,110,.16)"); town.addColorStop(1, "rgba(255,150,100,0)");
+    s.fillStyle = town; s.fillRect(0, 0, W, H);
+    // the Milky Way: a soft diagonal band dusted with faint stars
+    const ax = wide ? W * .05 : -W * .1, ay = yH * .95, bx = wide ? W * .62 : W * 1.1, by = -H * .05, len = Math.hypot(bx - ax, by - ay), ang = Math.atan2(by - ay, bx - ax);
+    s.save(); s.translate(ax, ay); s.rotate(ang);
+    const mwN = noise2(10);
+    for (let i = 0; i < 70; i++) { const u = r(), x = u * len, y = (r() - .5) * 46 * (1 + Math.sin(u * 9) * .4), rr = 30 + r() * 60;
+      const a = .035 * mwN(u * 8, i % 5) * (1 - Math.abs(u - .5));
+      const g = s.createRadialGradient(x, y, 1, x, y, rr); g.addColorStop(0, `rgba(190,200,255,${a})`); g.addColorStop(1, "rgba(190,200,255,0)"); s.fillStyle = g; s.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
+    for (let i = 0, n = Math.round(len * 1.6); i < n; i++) { const x = r() * len, y = (r() + r() + r() - 1.5) * 40;
+      s.globalAlpha = .15 + r() * .45; s.fillStyle = r() < .3 ? "#dfe6ff" : "#fff"; s.fillRect(x, y, .7, .7); }
+    s.globalAlpha = 1; s.restore();
+    for (let i = 0, n = Math.round(W * yH / 1300); i < n; i++) {
+      const x = r() * W, y = Math.pow(r(), 1.3) * yH * .96, big = r() < .08;
+      s.globalAlpha = (1 - y / yH * .7) * (.3 + r() * .6); s.fillStyle = ["#ffffff", "#dfe8ff", "#fff0d8", "#cfdcff"][Math.floor(r() * 4)];
+      s.beginPath(); s.arc(x, y, big ? 1 + r() * .7 : .35 + r() * .6, 0, Math.PI * 2); s.fill();
+    }
+    s.globalAlpha = 1;
+    const hz = s.createLinearGradient(0, yH - 90, 0, yH + 10); hz.addColorStop(0, "rgba(90,110,170,0)"); hz.addColorStop(1, "rgba(110,125,180,.35)");
+    s.fillStyle = hz; s.fillRect(0, yH - 90, W, 100);
+    L.nsky = sky;
+    /* the full moon, with its soft cold glow */
+    const MR = clamp(W * .045, 20, 40), moon = { x: wide ? W * .8 : W * .79, y: wide ? H * .16 : H * .135, R: MR };
+    const md = mk(MR * 2.4 * D, MR * 2.4 * D), m = md.getContext("2d"); m.scale(D, D); m.translate(MR * 1.2, MR * 1.2);
+    const mg = m.createRadialGradient(-MR * .25, -MR * .3, MR * .1, 0, 0, MR); mg.addColorStop(0, "#fffef6"); mg.addColorStop(.7, "#eeeadb"); mg.addColorStop(1, "#cfcbc0");
+    m.fillStyle = mg; m.beginPath(); m.arc(0, 0, MR, 0, Math.PI * 2); m.fill();
+    m.save(); m.beginPath(); m.arc(0, 0, MR, 0, Math.PI * 2); m.clip();
+    for (const [x, y, rr, a] of [[-.32, -.28, .3, .22], [.1, -.38, .22, .18], [.3, .05, .34, .2], [-.12, .2, .24, .16], [-.45, .25, .16, .14], [.05, .45, .14, .12], [.42, -.3, .12, .12]]) {
+      const g = m.createRadialGradient(x * MR, y * MR, 1, x * MR, y * MR, rr * MR); g.addColorStop(0, `rgba(120,122,140,${a * 1.5})`); g.addColorStop(1, "rgba(120,122,140,0)");
+      m.fillStyle = g; m.fillRect(-MR, -MR, MR * 2, MR * 2); }
+    for (let i = 0; i < 18; i++) { const x = (r() - .5) * MR * 1.6, y = (r() - .5) * MR * 1.6, rr = MR * (.03 + r() * .06);
+      m.strokeStyle = "rgba(110,110,130,.25)"; m.lineWidth = .6; m.beginPath(); m.arc(x, y, rr, 0, Math.PI * 2); m.stroke(); }
+    const limb = m.createRadialGradient(0, 0, MR * .7, 0, 0, MR); limb.addColorStop(0, "rgba(170,170,190,0)"); limb.addColorStop(1, "rgba(150,150,175,.35)");
+    m.fillStyle = limb; m.fillRect(-MR, -MR, MR * 2, MR * 2); m.restore();
+    const mh = mk(MR * 12 * D, MR * 12 * D), h = mh.getContext("2d"); h.scale(D, D);
+    const hg = h.createRadialGradient(MR * 6, MR * 6, MR * .9, MR * 6, MR * 6, MR * 6); hg.addColorStop(0, "rgba(220,228,255,.42)"); hg.addColorStop(.25, "rgba(170,190,255,.14)"); hg.addColorStop(1, "rgba(140,160,255,0)");
+    h.fillStyle = hg; h.fillRect(0, 0, MR * 12, MR * 12);
+    L.moon = moon; L.mdisc = md; L.mglow = mh;
+    // stars bright enough to twinkle, kept clear of the title area
+    L.tw = []; for (let i = 0; i < (wide ? 34 : 18); i++) { const x = r() * W, y = r() * yH * .7; if (Math.abs(x - W / 2) < W * .3 && y > H * .2) continue; L.tw.push({ x, y, r: .8 + r() * 1, p: r() * 6.3, f: 1 + r() * 2.5 }); }
+    /* the land under moonlight: the same paintings, cooled and darkened (farther = bluer) */
+    L.farN = nightCopy(L.far, "#4f63a6"); L.farmN = nightCopy(L.farm, "#5b6aa4"); L.nearN = nightCopy(L.near, "#46507e");
+    if (SPRITES_N.D !== D || SPRITES_N.length !== SPRITES.length) { SPRITES_N = SPRITES.map(c => nightCopy(c, "#6676ad")); SPRITES_N.D = D; }
+    if (BIG_N.src !== BIG) { BIG_N = BIG.map(c => nightCopy(c, "#7a84b8")); BIG_N.k = BIG.k; BIG_N.src = BIG; }
+    if (CLOUD && !CLOUD_N) CLOUD_N = nightCopy(CLOUD, "#7b88b6");
+  }
+  let star = null, nextStar = 8;
+
   /* ---------- per-size layers ---------- */
   let QMAX = 2;
   let W = 0, H = 0, D = 1, L = null, leaves = [], motes = [], smoke = [], flock = null, turkeys = [], close = [];
@@ -357,6 +434,7 @@
     m.fillStyle = "#24100c"; m.fillRect(hx + hw * .4, hy - hh * .55, 6 * sc, hh * .55);                 // door
     L.houseRim = { x: hx, y: hy - hh, w: hw, h: hh };
     L.chimney = { x: hx + hw * .7 + 3 * sc, y: hy - hh - 20 * sc, s: sc };
+    L.porch = { x: hx + hw * .4 + 3 * sc, y: hy - hh * .3 + 1.5 * sc, s: sc };
     L.lights.push({ x: hx + hw * .1, y: hy - hh * .8, w: 8 * sc, h: 7 * sc, panes: true }, { x: hx + hw * .72, y: hy - hh * .8, w: 8 * sc, h: 7 * sc, panes: true });
     // windmill: lattice tower and tail here; the wheel turns in the frame
     { const wx = wide ? W * .69 : W * .33, wy = fy + fd * .22, th2 = 70 * sc;
@@ -621,6 +699,7 @@
     tg.addColorStop(0, "rgba(30,10,24,.34)"); tg.addColorStop(1, "rgba(30,10,24,0)");
     v.fillStyle = tg; v.fillRect(0, 0, W, H);
     L.vig = vig;
+    if (NT > 0) buildNight();
 
     /* moving parts (kept as they are when only the resolution changes, so nothing jumps) */
     if (keep && leaves.length) return;
@@ -643,7 +722,7 @@
       flip: rnd() * 6.3, ff: 1.2 + rnd() * 2.6, s: .55 + rnd() * .75, spr: Math.floor(rnd() * 1e6) };
   }
   function drawLeaf(l, x, y) {
-    const set = l.big && BIG.length ? BIG : SPRITES, sp = set[l.spr % set.length]; if (!sp) return;
+    const nt = NT > .5 && L.nsky, set = l.big && BIG.length ? (nt ? BIG_N : BIG) : (nt ? SPRITES_N : SPRITES), sp = set[l.spr % set.length]; if (!sp) return;
     const big = l.big && BIG.length, w = (big ? sp.width / BIG.k : sp.width / D) * l.s, h = (big ? sp.height / BIG.k : sp.height / D) * l.s, c = Math.cos(l.flip);
     ctx.save(); ctx.translate(x, y); ctx.rotate(l.rot); ctx.scale(c * .85 + (c >= 0 ? .15 : -.15), 1);
     if (l.big) { ctx.shadowColor = "rgba(20,6,2,.35)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4; }   // a soft shadow sells how close it is
@@ -773,27 +852,48 @@
 
   /* ---------- frame ---------- */
   let shown = false, cloudIn = 0;
-  let last = 0, raf = 0, cloudX = 0, born = 0, nextFlock = 6, smokeT = 0, perf = [], pendingQ = 0;
+  let nCheck = 0, last = 0, raf = 0, cloudX = 0, born = 0, nextFlock = 6, smokeT = 0, perf = [], pendingQ = 0;
   function frame(now) {
     if (!gate.isConnected) { SND.stop(); return; }
     if (!born) born = now;
     // a quality change rebuilds and repaints in this same frame, so the canvas is never shown blank
     if (pendingQ) { QMAX = pendingQ; pendingQ = 0; build(true); }
+    if (now - nCheck > 1000) { nCheck = now; const n2 = nightAt(); if ((n2 > .5) !== (NT > .5)) { NT = n2; markNight(); } NT = n2; if (NT > 0 && !L.nsky) buildNight(); }
+    const N = L.nsky ? NT : 0, DY = 1 - N;
     const t = now / 1000, dt = Math.min(.05, last ? (now - last) / 1000 : 0); last = now;
     par.x += (par.tx - par.x) * Math.min(1, dt * 3); par.y += (par.ty - par.y) * Math.min(1, dt * 3);
     const wind = 14 + 16 * Math.sin(t * .17) + 8 * Math.sin(t * .53);
     ctx.setTransform(D, 0, 0, D, 0, 0);
     ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
-    ctx.drawImage(L.sky, 0, 0, W, H);
+    if (DY > 0) ctx.drawImage(L.sky, 0, 0, W, H);
+    if (N > 0) { ctx.globalAlpha = N; ctx.drawImage(L.nsky, 0, 0, W, H); ctx.globalAlpha = 1; }
 
     // sun with slowly turning rays
     const su = L.sun, [sx, sy] = shift(5), SX = su.x + sx, SY = su.y + sy;
-    ctx.globalCompositeOperation = "lighter";
-    ctx.save(); ctx.translate(SX, SY); ctx.rotate(reduce ? 0 : t * .012); ctx.globalAlpha = .55 + .1 * Math.sin(t * .4);
-    ctx.drawImage(L.rays, -L.RS, -L.RS, L.RS * 2, L.RS * 2); ctx.restore(); ctx.globalAlpha = 1;
-    ctx.drawImage(L.halo, SX - su.R * 4, SY - su.R * 4, su.R * 8, su.R * 8);
-    ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(L.disc, SX - su.R * 1.1, SY - su.R * 1.1, su.R * 2.2, su.R * 2.2);
+    if (DY > 0) {
+      ctx.globalCompositeOperation = "lighter";
+      ctx.save(); ctx.translate(SX, SY); ctx.rotate(reduce ? 0 : t * .012); ctx.globalAlpha = (.55 + .1 * Math.sin(t * .4)) * DY;
+      ctx.drawImage(L.rays, -L.RS, -L.RS, L.RS * 2, L.RS * 2); ctx.restore(); ctx.globalAlpha = DY;
+      ctx.drawImage(L.halo, SX - su.R * 4, SY - su.R * 4, su.R * 8, su.R * 8);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(L.disc, SX - su.R * 1.1, SY - su.R * 1.1, su.R * 2.2, su.R * 2.2); ctx.globalAlpha = 1;
+    }
+    // night: twinkling stars, a shooting star now and then, and the full moon
+    if (N > 0) {
+      ctx.globalCompositeOperation = "lighter";
+      for (const st of L.tw) { const a = N * (.35 + .65 * (.5 + .5 * Math.sin(t * st.f + st.p))) * (reduce ? .8 : 1);
+        ctx.fillStyle = `rgba(235,240,255,${a})`; ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(200,215,255,${a * .25})`; ctx.fillRect(st.x - st.r * 3, st.y - .3, st.r * 6, .6); ctx.fillRect(st.x - .3, st.y - st.r * 3, .6, st.r * 6); }
+      if (!reduce && !star && N > .7 && t > nextStar) { const x0 = W * (.15 + Math.random() * .6), y0 = L.yH * (.05 + Math.random() * .25); star = { x: x0, y: y0, vx: (Math.random() < .5 ? -1 : 1) * (380 + Math.random() * 200), vy: 150 + Math.random() * 80, life: 0, max: .9 }; }
+      if (star) { star.life += dt; const k = star.life / star.max;
+        if (k >= 1) { star = null; nextStar = t + 14 + Math.random() * 20; }
+        else { const x = star.x + star.vx * star.life, y = star.y + star.vy * star.life, a = Math.sin(Math.PI * k) * N, tl = .12;
+          const g = ctx.createLinearGradient(x, y, x - star.vx * tl, y - star.vy * tl); g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(1, "rgba(200,215,255,0)");
+          ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - star.vx * tl, y - star.vy * tl); ctx.stroke(); } }
+      const mo = L.moon, [mx2, my2] = shift(4), MX = mo.x + mx2, MY = mo.y + my2;
+      ctx.globalAlpha = N; ctx.drawImage(L.mglow, MX - mo.R * 6, MY - mo.R * 6, mo.R * 12, mo.R * 12);
+      ctx.globalCompositeOperation = "source-over"; ctx.drawImage(L.mdisc, MX - mo.R * 1.2, MY - mo.R * 1.2, mo.R * 2.4, mo.R * 2.4); ctx.globalAlpha = 1;
+    }
 
     // clouds drift slowly
     cloudX = (cloudX + dt * 6) % (W * 1.8);
@@ -802,7 +902,8 @@
       const cw = W * 1.8, ch = clamp(H * .2, 110, 220), [cx2, cy2] = shift(9);
       for (const [off, y, a, k] of [[0, H * .06, .62, .7], [W * .7, L.yH - H * .36, .5, 1]]) {
         const x = -((cloudX * k + off) % cw) + cx2;
-        ctx.globalAlpha = a * cloudIn; ctx.drawImage(CLOUD, x, y + cy2, cw, ch); ctx.drawImage(CLOUD, x + cw, y + cy2, cw, ch);
+        if (DY > 0) { ctx.globalAlpha = a * cloudIn * DY; ctx.drawImage(CLOUD, x, y + cy2, cw, ch); ctx.drawImage(CLOUD, x + cw, y + cy2, cw, ch); }
+        if (N > 0) { if (!CLOUD_N) CLOUD_N = nightCopy(CLOUD, "#7b88b6"); ctx.globalAlpha = a * cloudIn * N * .8; ctx.drawImage(CLOUD_N, x, y + cy2, cw, ch); ctx.drawImage(CLOUD_N, x + cw, y + cy2, cw, ch); }
       }
       ctx.globalAlpha = 1;
     }
@@ -817,22 +918,32 @@
     }
 
     const sc = Math.max(1.04, 1 + 2 * (30 * PK() + 3) / W), [fxs, fys] = shift(12), [mxs, mys] = shift(20), [nxs, nys] = shift(30);
-    ctx.drawImage(L.far, -W * (sc - 1) / 2 + fxs, -H * (sc - 1) / 2 + fys, W * sc, H * sc);
+    const lay = (d, n, ox, oy) => { const a = [-W * (sc - 1) / 2 + ox, -H * (sc - 1) / 2 + oy, W * sc, H * sc];
+      if (DY > 0) ctx.drawImage(d, ...a); if (N > 0) { ctx.globalAlpha = N; ctx.drawImage(n, ...a); ctx.globalAlpha = 1; } };
+    lay(L.far, L.farN, fxs, fys);
     // the sun's glow spilling over the ridge tops
-    ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .28;
-    ctx.drawImage(L.halo, SX - su.R * 5, SY - su.R * 4.4, su.R * 10, su.R * 8.8);
+    ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .28 * DY;
+    if (DY > 0) ctx.drawImage(L.halo, SX - su.R * 5, SY - su.R * 4.4, su.R * 10, su.R * 8.8);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(L.farm, -W * (sc - 1) / 2 + mxs, -H * (sc - 1) / 2 + mys, W * sc, H * sc);
+    lay(L.farm, L.farmN, mxs, mys);
     // lit windows, flickering softly like a fire inside
     const P = (x, y, k, ox, oy) => [(x - W / 2) * sc + W / 2 + ox, (y - H / 2) * sc + H / 2 + oy];
     for (const w of L.lights) {
       const fl = .82 + .1 * Math.sin(t * 3.1 + w.x) + .06 * Math.sin(t * 7.7 + w.y);
       const [x, y] = P(w.x, w.y, 1, mxs, mys);
       ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = fl;
-      const gw = w.w * 4.8; ctx.drawImage(L.glow, x + w.w / 2 - gw / 2, y + w.h / 2 - gw / 2, gw, gw);
+      const gw = w.w * (4.8 + 3.5 * N); ctx.drawImage(L.glow, x + w.w / 2 - gw / 2, y + w.h / 2 - gw / 2, gw, gw);
       ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
       ctx.fillStyle = `rgba(255,${200 + 30 * fl},${110 + 40 * fl},1)`; ctx.fillRect(x, y, w.w * sc, w.h * sc);
       if (w.panes) { ctx.fillStyle = "rgba(42,20,26,.9)"; ctx.fillRect(x + w.w * sc / 2 - .6, y, 1.2, w.h * sc); ctx.fillRect(x, y + w.h * sc / 2 - .6, w.w * sc, 1.2); }
+    }
+    // the porch light comes on after dark and pools on the ground
+    if (N > 0 && L.porch) {
+      const [x, y] = P(L.porch.x, L.porch.y, 1, mxs, mys), ps = L.porch.s * sc, fl = .94 + .06 * Math.sin(t * 5.3);
+      ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = N * fl;
+      ctx.drawImage(L.glow, x - 34 * ps, y - 16 * ps, 68 * ps, 50 * ps); ctx.drawImage(L.glow, x - 10 * ps, y - 10 * ps, 20 * ps, 20 * ps);
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = `rgba(255,236,190,${N})`; ctx.beginPath(); ctx.arc(x, y, 1.3 * ps, 0, Math.PI * 2); ctx.fill();
     }
     // chimney smoke
     smokeT -= dt;
@@ -841,7 +952,7 @@
       const p = smoke[i]; p.life += dt; if (p.life > p.max) { smoke.splice(i, 1); continue; }
       p.y -= 9 * dt; p.x += (wind * .35 + Math.sin(t + i) * 2) * dt; p.r += 2.6 * dt;
       const [x, y] = P(p.x, p.y, 1, mxs, mys), a = .22 * Math.sin(Math.PI * p.life / p.max);
-      ctx.fillStyle = `rgba(214,182,180,${a})`; ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = `rgba(${214 - 60 * N | 0},${182 - 20 * N | 0},${180 + 10 * N | 0},${a * (1 - .3 * N)})`; ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI * 2); ctx.fill();
     }
 
     // windmill wheel turning in the breeze
@@ -853,19 +964,20 @@
       ctx.fillStyle = "#2a1418"; ctx.beginPath(); ctx.arc(x, y, r * .16, 0, Math.PI * 2); ctx.fill();
     }
     // turkeys
-    for (const k of turkeys) { if (!reduce) stepTurkey(k, dt); const [x, y] = P(k.x, k.y, 1, mxs, mys); drawTurkey(k, x, y, t); }
+    const ta = 1 - ss(.25, .6, N);   // after dark the turkeys have gone to roost
+    if (ta > 0) { ctx.globalAlpha = ta; for (const k of turkeys) { if (!reduce) stepTurkey(k, dt); const [x, y] = P(k.x, k.y, 1, mxs, mys); drawTurkey(k, x, y, t); } ctx.globalAlpha = 1; }
 
     // dust drifting in the low sunlight
     ctx.globalCompositeOperation = "lighter";
     for (const d of motes) {
       if (!reduce) { d.x += (wind * .25) * dt; d.y += Math.sin(t * .7 + d.p) * d.v * dt * .3; if (d.x > W + 10) d.x = -10; }
       const near = 1 - Math.min(1, Math.hypot(d.x - L.sun.x, d.y - L.sun.y) / (W * .55));
-      ctx.fillStyle = `rgba(255,214,140,${(.15 + .55 * near) * (.6 + .4 * Math.sin(t * 2 + d.p))})`;
+      ctx.fillStyle = `rgba(255,214,140,${(.15 + .55 * near) * (.6 + .4 * Math.sin(t * 2 + d.p)) * DY})`;
       ctx.beginPath(); ctx.arc(d.x + mxs, d.y + mys, d.r, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalCompositeOperation = "source-over";
 
-    ctx.drawImage(L.near, -W * (sc - 1) / 2 + nxs, -H * (sc - 1) / 2 + nys, W * sc, H * sc);
+    lay(L.near, L.nearN, nxs, nys);
 
     // falling leaves (in front of everything but the text)
     for (let i = 0; i < leaves.length; i++) {
@@ -886,10 +998,10 @@
     if (L.swing) {
       const [ax, ay] = P(L.swing.x, L.swing.y, 1, nxs, nys), len = L.swing.len * sc, a = reduce ? 0 : Math.sin(t * 1.25) * .09 + Math.sin(t * .4) * .03;
       const sx = ax + Math.sin(a) * len, sy = ay + Math.cos(a) * len, hw = 16;
-      ctx.strokeStyle = "#c8a46a"; ctx.lineWidth = 1.4;
+      ctx.strokeStyle = N > .5 ? "#6f6c80" : "#c8a46a"; ctx.lineWidth = 1.4;
       ctx.beginPath(); ctx.moveTo(ax - hw * .7, ay); ctx.lineTo(sx - hw * Math.cos(a), sy + hw * Math.sin(a)); ctx.moveTo(ax + hw * .7, ay); ctx.lineTo(sx + hw * Math.cos(a), sy - hw * Math.sin(a)); ctx.stroke();
       ctx.save(); ctx.translate(sx, sy); ctx.rotate(-a);
-      const pg = ctx.createLinearGradient(0, -3, 0, 4); pg.addColorStop(0, "#a8743e"); pg.addColorStop(1, "#4a2a12");
+      const pg = ctx.createLinearGradient(0, -3, 0, 4); pg.addColorStop(0, N > .5 ? "#54496a" : "#a8743e"); pg.addColorStop(1, N > .5 ? "#1e1a2c" : "#4a2a12");
       ctx.fillStyle = pg; ctx.fillRect(-hw - 3, -2, hw * 2 + 6, 6); ctx.restore();
     }
     // now and then a big leaf drifts past close to the lens, soft and out of focus
@@ -901,7 +1013,7 @@
       drawLeaf(c, c.x, c.y);
     }
     // faint lens flare along the line from the sun through the middle of the screen
-    { const fx0 = SX, fy0 = SY, vx2 = W / 2 - fx0, vy2 = H / 2 - fy0, k0 = .85 + .15 * Math.sin(t * .5);
+    { const fx0 = SX, fy0 = SY, vx2 = W / 2 - fx0, vy2 = H / 2 - fy0, k0 = (.85 + .15 * Math.sin(t * .5)) * DY;
       ctx.globalCompositeOperation = "lighter";
       for (const [u, rr, c] of [[.55, .22, "255,190,120"], [.85, .1, "255,150,180"], [1.25, .34, "255,170,110"], [1.55, .14, "200,170,255"], [1.9, .5, "255,200,140"]]) {
         const x = fx0 + vx2 * u, y = fy0 + vy2 * u, r = L.sun.R * rr * 2;
