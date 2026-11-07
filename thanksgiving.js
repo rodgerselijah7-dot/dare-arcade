@@ -142,9 +142,20 @@
   const markNight = () => document.documentElement.classList.toggle("tg-night", NT > .5);
   markNight();
   // a moonlit copy of a painted layer: multiply by a cool blue, keeping the layer's own shape
-  function nightCopy(src, col) {
+  // desat drains the sunset's warmth (moonlight has little color); sun = also take away the glow baked in around the sun
+  function nightCopy(src, col, desat = .6, sun = false) {
     const c = mk(src.width, src.height), g = c.getContext("2d");
-    g.drawImage(src, 0, 0); g.globalCompositeOperation = "multiply"; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(src, 0, 0);
+    if (desat > 0) { g.globalCompositeOperation = "saturation"; g.globalAlpha = desat; g.fillStyle = "#808080"; g.fillRect(0, 0, c.width, c.height); g.globalAlpha = 1; }
+    g.globalCompositeOperation = "multiply"; g.fillStyle = col; g.fillRect(0, 0, c.width, c.height);
+    if (sun && L && L.sun) {
+      const k = c.width / W, x = L.sun.x * k, y = L.yH * k, r = Math.max(W * .62, 320) * k;
+      const sg = g.createRadialGradient(x, y, 0, x, y, r); sg.addColorStop(0, "#7d84a0"); sg.addColorStop(.45, "#c4c8da"); sg.addColorStop(1, "#ffffff");
+      g.fillStyle = sg; g.fillRect(0, 0, c.width, c.height);
+      // and the tree's sunlit side: cool it toward the moon
+      if (L.tree) { const t = L.tree, tg = g.createRadialGradient((t.x + t.rx * .6) * k, (t.y - t.ry * .3) * k, 0, (t.x + t.rx * .6) * k, (t.y - t.ry * .3) * k, t.rx * 1.5 * k);
+        tg.addColorStop(0, "#9aa0c0"); tg.addColorStop(1, "#ffffff"); g.fillStyle = tg; g.fillRect(0, 0, c.width, c.height); }
+    }
     g.globalCompositeOperation = "destination-in"; g.drawImage(src, 0, 0); return c;
   }
   let SPRITES_N = [], BIG_N = [], CLOUD_N = null;
@@ -156,8 +167,6 @@
     const hf = yH / H, sg = s.createLinearGradient(0, 0, 0, H);
     sg.addColorStop(0, "#03061a"); sg.addColorStop(hf * .45, "#0a1534"); sg.addColorStop(hf * .82, "#1a2a58"); sg.addColorStop(hf, "#33406e"); sg.addColorStop(1, "#262f52");
     s.fillStyle = sg; s.fillRect(0, 0, W, H);
-    const town = s.createRadialGradient(W * .18, yH, 10, W * .18, yH, W * .6); town.addColorStop(0, "rgba(255,170,110,.16)"); town.addColorStop(1, "rgba(255,150,100,0)");
-    s.fillStyle = town; s.fillRect(0, 0, W, H);
     // the Milky Way: a soft diagonal band dusted with faint stars
     const ax = wide ? W * .05 : -W * .1, ay = yH * .95, bx = wide ? W * .62 : W * 1.1, by = -H * .05, len = Math.hypot(bx - ax, by - ay), ang = Math.atan2(by - ay, bx - ax);
     s.save(); s.translate(ax, ay); s.rotate(ang);
@@ -197,10 +206,10 @@
     // stars bright enough to twinkle, kept clear of the title area
     L.tw = []; for (let i = 0; i < (wide ? 34 : 18); i++) { const x = r() * W, y = r() * yH * .7; if (Math.abs(x - W / 2) < W * .3 && y > H * .2) continue; L.tw.push({ x, y, r: .8 + r() * 1, p: r() * 6.3, f: 1 + r() * 2.5 }); }
     /* the land under moonlight: the same paintings, cooled and darkened (farther = bluer) */
-    L.farN = nightCopy(L.far, "#4f63a6"); L.farmN = nightCopy(L.farm, "#5b6aa4"); L.nearN = nightCopy(L.near, "#46507e");
-    if (SPRITES_N.D !== D || SPRITES_N.length !== SPRITES.length) { SPRITES_N = SPRITES.map(c => nightCopy(c, "#6676ad")); SPRITES_N.D = D; }
-    if (BIG_N.src !== BIG) { BIG_N = BIG.map(c => nightCopy(c, "#7a84b8")); BIG_N.k = BIG.k; BIG_N.src = BIG; }
-    if (CLOUD && !CLOUD_N) CLOUD_N = nightCopy(CLOUD, "#7b88b6");
+    L.farN = nightCopy(L.far, "#56679f", .7, true); L.farmN = nightCopy(L.farm, "#5e6b9e", .7, true); L.nearN = nightCopy(L.near, "#4a5482", .6, true);
+    if (SPRITES_N.D !== D || SPRITES_N.length !== SPRITES.length) { SPRITES_N = SPRITES.map(c => nightCopy(c, "#6a78aa", .45)); SPRITES_N.D = D; }
+    if (BIG_N.src !== BIG) { BIG_N = BIG.map(c => nightCopy(c, "#7c86b4", .45)); BIG_N.k = BIG.k; BIG_N.src = BIG; }
+    if (CLOUD && !CLOUD_N) CLOUD_N = nightCopy(CLOUD, "#8e9cc6", 1);
   }
   let star = null, nextStar = 8;
 
@@ -903,7 +912,7 @@
       for (const [off, y, a, k] of [[0, H * .06, .62, .7], [W * .7, L.yH - H * .36, .5, 1]]) {
         const x = -((cloudX * k + off) % cw) + cx2;
         if (DY > 0) { ctx.globalAlpha = a * cloudIn * DY; ctx.drawImage(CLOUD, x, y + cy2, cw, ch); ctx.drawImage(CLOUD, x + cw, y + cy2, cw, ch); }
-        if (N > 0) { if (!CLOUD_N) CLOUD_N = nightCopy(CLOUD, "#7b88b6"); ctx.globalAlpha = a * cloudIn * N * .8; ctx.drawImage(CLOUD_N, x, y + cy2, cw, ch); ctx.drawImage(CLOUD_N, x + cw, y + cy2, cw, ch); }
+        if (N > 0) { if (!CLOUD_N) CLOUD_N = nightCopy(CLOUD, "#8e9cc6", 1); ctx.globalAlpha = a * cloudIn * N * .8; ctx.drawImage(CLOUD_N, x, y + cy2, cw, ch); ctx.drawImage(CLOUD_N, x + cw, y + cy2, cw, ch); }
       }
       ctx.globalAlpha = 1;
     }
