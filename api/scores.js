@@ -1,6 +1,7 @@
-// Arcade leaderboards for Live Fire Range and Dirt Line.
+// Arcade leaderboards for Live Fire Range, Dirt Line and Frostbound.
 // GET  /api/scores?drill=bill                       -> { top: [{ pid, name, v }] }  (25 best; Live Fire Range when no game is given)
 // GET  /api/scores?game=dl&drill=t-rookie           -> Dirt Line board (t-<course> = race time, j-<course> = Trick Jam score)
+// GET  /api/scores?game=fb&drill=all               -> Frostbound board (all = best Classic score, d<YYYYMMDD> = that day's Daily climb)
 // POST { game, drill, v, pid, name }                -> { ok: true }
 // Each board is one Redis sorted set holding each player's best (lowest time, or highest score). Names live in one hash
 // per game. Players have no accounts: pid is a random id the phone makes.
@@ -12,8 +13,12 @@ const BOARDS = {
     drills: { bill: "time", prez: "time", rack: "time", mover: "time", popper: "time", ladder: "time", house: "time", sixty: "score",
       steel: "time", paper: "time", swing: "time", valley: "time", yard: "time", course: "time", threegun: "time" } },
   dl: { prefix: "arc:dl:", names: "arc:dl:names", who: "Rider", time: [20, 900], scoreMax: 2000000,
-    drills: Object.fromEntries(DL_COURSES.flatMap(c => [["t-" + c, "time"], ["j-" + c, "score"]])) }
+    drills: Object.fromEntries(DL_COURSES.flatMap(c => [["t-" + c, "time"], ["j-" + c, "score"]])) },
+  fb: { prefix: "arc:fb:", names: "arc:fb:names", who: "Climber", time: [0, 0], scoreMax: 400000,
+    drills: { all: "score" }, daily: /^d20\d{6}$/, dailyTtl: 3 * 86400 }
 };
+// A board's fixed drills, plus dated daily boards (Frostbound) that expire a few days after their day.
+const kindOf = (board, drill) => board.drills[drill] || (board.daily && board.daily.test(drill) ? "score" : null);
 const PID = /^p[a-z0-9]{6,16}$/;
 const KEEP = 500;
 const cleanName = (s, who) => String(s || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 18) || who;
@@ -26,10 +31,10 @@ module.exports = async (req, res) => {
       const q = new URL(req.url, "http://x").searchParams;
       const board = BOARDS[String((req.query && req.query.game) || q.get("game") || "lfr")];
       const drill = String((req.query && req.query.drill) || q.get("drill") || "");
-      if (!board || !board.drills[drill]) return res.status(400).json({ error: "Unknown drill." });
+      if (!board || !kindOf(board, drill)) return res.status(400).json({ error: "Unknown drill." });
       if (!(await rateLimit(`scores:get:${clientIp(req)}`, 240, 60)).ok) return res.status(429).json({ error: "Too many requests. Wait a moment." });
       const key = board.prefix + drill;
-      const flat = board.drills[drill] === "score"
+      const flat = kindOf(board, drill) === "score"
         ? await redis("ZRANGE", key, 0, 24, "REV", "WITHSCORES")
         : await redis("ZRANGE", key, 0, 24, "WITHSCORES");
       const rows = [];
@@ -43,13 +48,14 @@ module.exports = async (req, res) => {
     const b = await readJson(req);
     const board = BOARDS[String(b.game || "lfr")];
     const drill = String(b.drill || ""), pid = String(b.pid || ""), v = Number(b.v);
-    if (!board || !board.drills[drill] || !PID.test(pid) || !Number.isFinite(v)) return res.status(400).json({ error: "Bad run." });
-    const isScore = board.drills[drill] === "score";
+    if (!board || !kindOf(board, drill) || !PID.test(pid) || !Number.isFinite(v)) return res.status(400).json({ error: "Bad run." });
+    const isScore = kindOf(board, drill) === "score";
     if (isScore ? (v < 0 || v > board.scoreMax) : (v < board.time[0] || v > board.time[1])) return res.status(400).json({ error: "That run is out of range." });
     const key = board.prefix + drill;
     await redis("ZADD", key, isScore ? "GT" : "LT", Math.round(v * 100) / 100, pid);
     await redis("HSET", board.names, pid, cleanName(b.name, board.who));
     if (isScore) await redis("ZREMRANGEBYRANK", key, 0, -(KEEP + 1));
+    if (!board.drills[drill] && board.dailyTtl) await redis("EXPIRE", key, board.dailyTtl);
     else await redis("ZREMRANGEBYRANK", key, KEEP, -1);
     return res.status(200).json({ ok: true });
   } catch (e) {

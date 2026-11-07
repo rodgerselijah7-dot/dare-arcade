@@ -1,0 +1,16 @@
+{
+  "name": "Frostbound",
+  "short_name": "Frostbound",
+  "description": "Climb an ice tower through five zones to the crown at floor 500. Daily towers, missions, outfits, leaderboards and online races. By Dontae Amare.",
+  "start_url": "/frostbound/",
+  "scope": "/frostbound/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#050b18",
+  "theme_color": "#050b18",
+  "icons": [
+    { "src": "/frostbound/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/frostbound/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/frostbound/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

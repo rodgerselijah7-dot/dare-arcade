@@ -30,9 +30,10 @@ Browser games by Dontae Amare. Static site — no build step.
 /jenga/                Jenga (single-file 3D block tower + icons + manifest; loads three.js r128 and cannon.js 0.6.2 from cdnjs)
 /truth-or-dare/        Truth or Dare (single-file card game + icons + manifest; pass-the-phone and online rooms)
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rare Rumble and Truth or Dare online play (Upstash Redis)
+/frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rare Rumble, Truth or Dare and Frostbound online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
-/api/scores.js         Live Fire Range and Dirt Line leaderboards (Upstash Redis)
+/api/scores.js         Live Fire Range, Dirt Line and Frostbound leaderboards (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -109,7 +110,7 @@ Every push to `main` redeploys automatically.
 - Free play window: `FREE_UNTIL` in `dare-unlock.js` opens every paid game fully until that moment (Halloween 2026: until midnight Central, `2026-11-01T05:00:00Z`). While it's open, `DARE.owned()` is true for every game, the lobby shows a red banner and "Full game free until midnight tonight", paid games show a one-time toast, and the shop still sells (it checks `DARE.bought()`, real purchases only). Pages repaint by themselves when the window closes. Set it to a past date or 0 to turn it off.
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99, Square Up $2.99, Dirt Line $2.99. All-Access Pass $14.99 (saves $15.92).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, Game Day, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare.
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, Game Day, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare, Frostbound.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -233,3 +234,12 @@ Every push to `main` redeploys automatically.
 - The app's splash and theme colors are black (`manifest.webmanifest`), and while the enter page is up the page's `theme-color` is switched to black so the status bar matches; it goes back to the light/dark values when the lobby opens.
 - The enter page's text stays hidden until its fonts (Bebas Neue, Crimson Pro) have loaded, at most 1 second, then fades in, so the title never jumps from a fallback font. The Halloween letter reveal starts at that moment.
 - The Halloween scene makes its moon, cloud and fog textures in a background worker (falls back to the main thread after the first frames), so the page doesn't freeze while it opens. Film grain is a CSS layer. If frames come slower than ~45 a second, the scene steps its resolution down (2x, 1.5x, 1x) so it stays smooth.
+
+## Frostbound
+- Vertical tower climber on a 2D canvas, no libraries. Run to build speed (faster runs jump higher), bounce off the walls in mid-air to keep momentum, and skip 2+ floors per jump to chain combos (each combo pays floors² points). The tower starts sinking at floor 5 and speeds up every 30 seconds.
+- Five zones of 100 floors (Glacier, Basalt, Aurora, Ember, Crown) with ice, crumbling, moving, spring and spiked ledges; falling icicles and rocks, wind gusts, and rising lava from floor 300. Floors 450–500 are the Crown Ascent; landing on floor 500 takes the crown and ends the run as a win.
+- Modes: Classic (random tower), Daily (the same seeded tower for everyone each day) and Race (online, first to floor 100 or last one standing).
+- Coins, six outfits (Boy or Girl climber), 16 missions, settings (buttons or swipe controls, left-handed, haptics, music, reduced effects) and best scores are saved on the phone (localStorage `frostbound.v3`).
+- Leaderboards use `/api/scores?game=fb`: `all` (best Classic score) and `d<YYYYMMDD>` (that day's Daily; each daily board expires 3 days later) in `arc:fb:*`, names in `arc:fb:names`. Players set their name in Settings; the phone keeps a random player id.
+- Races: rooms `fb-<code>` on `/api/room`. The host's presence carries `go` (race number) and `seed`; every phone builds the same tower from the seed. Each racer's presence carries floor, position, status (`climb`, `out`, `done`) and finish time. Polls about 6 times a second while racing and every 0.6s in the lobby.
+- The same `frostbound/index.html` body also runs as a Claude artifact, where it uses Claude's database and live rooms instead.
