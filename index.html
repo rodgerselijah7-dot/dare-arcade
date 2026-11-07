@@ -39,6 +39,8 @@ if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)docume
   if(/[?&]season=off\b/.test(q))season='';
   if(season==='halloween'){d.classList.add('halloween');d.dataset.hwLeft=Math.max(0,31-(day||31))}
   if(season==='thanksgiving'){d.classList.add('thanksgiving');d.dataset.tgLeft=Math.max(0,tday-day)}
+  // after dark (the visitor's own clock) the harvest scene is moonlit: set it now so the first frame isn't a sunset
+  if(season==='thanksgiving'){var tq=(q.match(/[?&]tod=(\w+)/)||[])[1],hq=parseFloat((q.match(/[?&]hour=([\d.]+)/)||[])[1]),nd=new Date(),hh=isFinite(hq)?hq%24:nd.getHours()+nd.getMinutes()/60;if(tq?tq==='night':(hh>=18||hh<6.5))d.classList.add('tg-night')}
 })();
 </script>
 <script>
@@ -282,6 +284,7 @@ html.thanksgiving .gate{background:radial-gradient(120% 70% at 72% 92%,#ffb45c 0
 .tg-cv.on{opacity:1}
 html.thanksgiving.gated{background:#1b0f2c}
 html.thanksgiving.tg-night.gated{background:#050a1e}
+html.thanksgiving.tg-night .gate{background:radial-gradient(120% 70% at 72% 92%,#3a4672 0%,#1e2a52 34%,#0d1634 64%,#050a1e 100%)}
 html.thanksgiving .tg::after{content:"";position:absolute;inset:-60px;background:var(--tg-grain) repeat;opacity:.045;pointer-events:none;will-change:transform}
 @media (prefers-reduced-motion:no-preference){html.thanksgiving .tg::after{animation:grain .6s steps(5) infinite}}
 html.thanksgiving .g-top{color:#f0d6bd;text-shadow:0 1px 8px rgba(40,10,20,.5)}
