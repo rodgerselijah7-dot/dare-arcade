@@ -26,13 +26,14 @@ Browser games by Dontae Amare. Static site — no build step.
 /live-fire-range/      Live Fire Range (3D shooting range: index.html + assets/ photo textures and HDRI skies + icons + manifest; loads three.js r160 from jsDelivr)
 /pool/                 DARE Pool (single-file canvas 8-ball / 9-ball + icons + manifest)
 /crown-rush/           Crown Rush (single-file canvas racer + icons + manifest)
+/rumble-karts/         Rumble Karts (single-file 3D kart racer + icons + manifest; loads three.js r128 from cdnjs)
 /rare-rumble/          Rare Rumble (single-file canvas platform fighter + icons + manifest)
 /jenga/                Jenga (single-file 3D block tower + icons + manifest; loads three.js r128 and cannon.js 0.6.2 from cdnjs)
 /truth-or-dare/        Truth or Dare (single-file card game + icons + manifest; pass-the-phone and online rooms)
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
 /open-season/          Open Season (3D Texas hunting game: index.html + os-assets/ models as base64 .txt, ground textures, ambient audio and three.js loaders + icons + manifest; loads three.js r128 from cdnjs)
 /frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rare Rumble, Truth or Dare and Frostbound online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rumble Karts, Rare Rumble, Truth or Dare and Frostbound online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
 /api/scores.js         Live Fire Range, Dirt Line and Frostbound leaderboards (Upstash Redis)
 /icons/                Arcade icons
@@ -111,7 +112,7 @@ Every push to `main` redeploys automatically.
 - Free play window: `FREE_UNTIL` in `dare-unlock.js` opens every paid game fully until that moment (Halloween 2026: until midnight Central, `2026-11-01T05:00:00Z`). While it's open, `DARE.owned()` is true for every game, the lobby shows a red banner and "Full game free until midnight tonight", paid games show a one-time toast, and the shop still sells (it checks `DARE.bought()`, real purchases only). Pages repaint by themselves when the window closes. Set it to a past date or 0 to turn it off.
 - Prices live in `games.json`; checkout charges from it and the shop and pass savings are computed from it.
 - Paid (free tryout, then unlock): The Last Don $4.99, Rebel Elimination $3.99, Dead Rise $3.99, Cosmic Encounter $2.99, ORI $2.99, Break the Block $2.99, DARE Bubble Blaster $2.99, Square Up $2.99, Dirt Line $2.99. All-Access Pass $14.99 (saves $15.92).
-- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush (online games stay free so anyone a friend invites can join), Crate Digger, Game Day, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare, Frostbound.
+- Free: Crowd Run, DARE Buckets, DARE Chess, DARE Connect, DARE Dice, Crown Rush, Rumble Karts (online games stay free so anyone a friend invites can join), Crate Digger, Game Day, DARE 2048 and DARE 1010 (endless score chasers that bring players into the arcade), DARE Grand Prix, DARE Pool, Live Fire Range, Truth or Dare, Frostbound.
 
 ## DARE Bubble Blaster
 - Bubble shooter on a 10-wide hex grid. Drag to aim (the guide shows bank shots and where the bubble will land), let go to shoot, tap NEXT to swap. Arrow keys, space and S work too.
@@ -174,6 +175,13 @@ Every push to `main` redeploys automatically.
 - Private rooms post to Find an opponent and match alerts through `dare-play.js` (`crown-rush` in `/api/lfg`); joining from an alert opens `/crown-rush/?join=CODE`.
 - Clans (`/api/clans`): players have no accounts, so each phone makes a random player id and secret key (localStorage `crownrush.pid` / `crownrush.pkey`); the server keeps a hash of the key so only that phone can change its racer. Starting a clan costs 100 in-game coins. Every finished race adds the player's rank points to their clan (at most 80 per save). Redis keys: `arc:cr:clans`, `arc:cr:players`. Limits: 300 clans, 5,000 players.
 - The same file also runs as a Claude artifact, where online play uses Claude's live rooms and clans use the artifact's shared database.
+
+## Rumble Karts
+- 3D kart racer (three.js r128): 8 racers, 4 tracks with a second weather or time-of-day version each, 13 items, drift mini-turbos, slipstreams, ramps and tricks. Modes: Grand Prix (four races, points, podium), Quick race, Time trial (saved ghost) and Online. Replays after every race. Progress, records, trophies and found shortcuts are saved on the phone (localStorage keys `rk.*`).
+- Hidden shortcuts: each track has one narrow side road behind a breakable barrier (hay bales, boarded cave, ice blocks, hologram). The first time a player gets through, the minimap and track card mark it as found (`rk.scf`). Skilled CPU racers sometimes take them too.
+- Online: up to 8 racers per room on `/api/room` (rooms `rk-q` for Quick match, `rk-r-<code>` for private rooms). The earliest player in a room is the host: they pick the track, weather, class and whether CPU racers fill the grid, and start with `go` (race id, grid order, characters, names, start time on the server clock). Each phone runs its own kart and decides its own hits, and the host's phone also runs the CPU racers. Presence carries each kart's state (polled about 7 times a second while racing) and `ev`, a numbered queue of item uses that every other phone replays locally. Quick match starts on its own 12 seconds after a second racer joins.
+- Private rooms post to Find an opponent and match alerts through `dare-play.js` (`rumble-karts` in `/api/lfg`); joining from an alert or invite link opens `/rumble-karts/?join=CODE`. Match chat rides in presence and shows in the lobby and results.
+- The same game runs as a Claude artifact without online play.
 
 ## Live Fire Range
 - First-person 3D shooting game (three.js r160 from jsDelivr, with bloom from its addons). The sky, sunlight and ground come from real photographs: four Poly Haven HDRI skies (Afternoon, Golden hour, Midday, Hazy evening; CC0) and photo textures from the three.js and Babylon.js sample libraries, all in `live-fire-range/assets/`. Each HDRI ships as two lossless PNGs (RGB and exponent), and the sun's direction and strength were measured from each photo.

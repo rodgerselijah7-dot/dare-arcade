@@ -1,0 +1,29 @@
+{
+  "name": "Rumble Karts",
+  "short_name": "Rumble Karts",
+  "description": "3D kart racing with drifts, boosts, 13 items and hidden shortcuts. Grand Prix, time trial and online races with friends. By Dontae Amare.",
+  "start_url": "/rumble-karts/",
+  "scope": "/rumble-karts/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#050816",
+  "theme_color": "#050816",
+  "icons": [
+    {
+      "src": "/rumble-karts/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/rumble-karts/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/rumble-karts/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
