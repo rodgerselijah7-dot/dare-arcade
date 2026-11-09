@@ -18,7 +18,8 @@
     "square-up": { name: "Square Up", price: 2.99, rest: "Wave 6 and every wave after it, on all five maps" },
     "break-the-block": { name: "Break the Block", price: 2.99, rest: "Zones 3 to 8, levels 21 to 80" },
     "bubble": { name: "Bubble Blaster", price: 2.99, rest: "Round 4 and every round after it" },
-    "dirt-line": { name: "Dirt Line", price: 2.99, rest: "Big Air, Desert Mesa, Pine Ridge and Night Session" }
+    "dirt-line": { name: "Dirt Line", price: 2.99, rest: "Big Air, Desert Mesa, Pine Ridge and Night Session" },
+    "open-season": { name: "Open Season", price: 3.99, rest: "Trophy Stalk, Night Hogs, Piney Woods, Brush Country and High Plains Winter" }
   };
   const PASS = { id: "all-access", name: "All-Access Pass", price: 14.99 };
   // prices live in /games.json (the same file checkout charges from); the numbers above are just a fallback

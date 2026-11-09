@@ -8,5 +8,6 @@
   {"id": "break-the-block", "name": "Break the Block", "price": 2.99, "tryout": "Zones 1 and 2 (levels 1 to 20)", "unlocks": "Zones 3 to 8, levels 21 to 80"},
   {"id": "bubble", "name": "Bubble Blaster", "price": 2.99, "tryout": "Rounds 1 to 3", "unlocks": "Round 4 and every round after it, with more rows and colors each round"},
   {"id": "dirt-line", "name": "Dirt Line", "price": 2.99, "tryout": "First Ride, Rookie Loop and Pro Rhythm", "unlocks": "Big Air, Desert Mesa, Pine Ridge and Night Session"},
-  {"id": "all-access", "name": "All-Access Pass", "price": 14.99, "pass": true, "games": ["the-last-don", "rebel-elimination", "dead-rise", "square-up", "cosmic-encounter", "ori", "break-the-block", "bubble", "dirt-line"], "unlocks": "Every paid game in the arcade, including new ones"}
+  {"id": "open-season", "name": "Open Season", "price": 3.99, "tryout": "Open Season hunts on Hill Country, Rolling Prairie and River Bottom", "unlocks": "Trophy Stalk, Night Hogs, Piney Woods, Brush Country and High Plains Winter"},
+  {"id": "all-access", "name": "All-Access Pass", "price": 14.99, "pass": true, "games": ["the-last-don", "rebel-elimination", "dead-rise", "square-up", "cosmic-encounter", "ori", "break-the-block", "bubble", "dirt-line", "open-season"], "unlocks": "Every paid game in the arcade, including new ones"}
 ]

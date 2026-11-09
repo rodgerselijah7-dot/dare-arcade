@@ -690,7 +690,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <h3>Open Season</h3>
         <span class="status">Play</span>
         <p>A realistic Texas hunting game. Glass the ridge, play the wind and follow the blood trail across six maps, from Hill Country to a High Plains winter. Hunt whitetail, hogs, turkey, ducks and more from a tower, a ground blind or on foot, with rifle, shotgun and bow, and work through a 12-day season.</p>
-        <span class="price">Free to play</span>
+        <span class="price" data-game="open-season">Starter maps free. Full game $3.99</span>
       </a>
       <p class="group">Quick play</p>
       <a class="row live" href="/frostbound/">
@@ -1016,7 +1016,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 // Show what this device has unlocked
 (function(){
   if(!window.DARE)return;
-  const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble','dirt-line'];
+  const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble','dirt-line','open-season'];
   function paint(){
     const free=DARE.freeNow&&DARE.freeNow(),bought=DARE.bought||DARE.owned;
     document.querySelectorAll('[data-game]').forEach(el=>{

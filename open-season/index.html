@@ -11,6 +11,8 @@
 <link rel="manifest" href="/open-season/manifest.webmanifest">
 <link rel="icon" href="/open-season/icon-192.png">
 <link rel="apple-touch-icon" href="/open-season/apple-touch-icon.png">
+<script>window.OS_ARCADE=true;</script>
+<script src="/dare-unlock.js"></script>
 <title>Open Season</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -189,6 +191,9 @@ body.scoped #coach{top:calc(12px + env(safe-area-inset-top,0px));width:min(380px
 .opts{display:grid;gap:6px}
 .opts .lbl{margin-bottom:-2px}
 .map.locked{opacity:.5}
+.ftag{display:block;margin-top:3px;font-size:10px;font-weight:700;font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--blaze);opacity:.9}
+.mode.on .ftag{color:var(--blaze-ink)}
+.map .best .ftag{margin-top:4px}
 .lvl{display:flex;justify-content:space-between;align-items:baseline}
 .lvl strong{font:400 26px/1 var(--display)}
 .bar{height:6px;border-radius:3px;background:rgba(243,230,208,.12);overflow:hidden}.bar i{display:block;height:100%;background:var(--blaze)}
@@ -483,6 +488,12 @@ const MAPS = {
 const LEVELS = [0, 450, 1200, 2400, 4200, 6600, 9600, 13500];
 const levelOf = xp => { let l = 1; for (let i=1;i<LEVELS.length;i++) if (xp >= LEVELS[i]) l = i+1; return l; };
 const mapLocked = id => (MAPS[id].level || 1) > levelOf(profile.xp);
+/* DARE Arcade build: free tryout is Open Season on the three starter maps; the rest is the full game */
+const ARCADE = !!window.OS_ARCADE;
+const PAID_MAPS = new Set(['piney','brush','plains']), PAID_MODES = new Set(['stalk','night']);
+const ownsFull = () => !ARCADE || !window.DARE || DARE.owned('open-season');
+const paidMap = id => PAID_MAPS.has(id) && !ownsFull(), paidMode = m => PAID_MODES.has(m) && !ownsFull();
+function gateFull(title, then){ DARE.gate('open-season', () => { renderMenu(); then && then(); }, { title, onExit: () => renderMenu() }); }
 const MODES = {
   open:  { name:'Open Season', time:420, elev:[14,-6], desc:'Afternoon to last legal light. Bucks, hogs, coyotes, turkey and more are in season.' },
   stalk: { name:'Trophy Stalk', time:480, elev:[12,-6], desc:'One mature buck and his does. Read the wind, count his points and make one clean shot.' },
@@ -2738,6 +2749,7 @@ const huntU = () => G ? clamp(1 - G.time/G.dur, 0, 1) : 0;
 
 function startHunt(id){
   if (mode !== 'range' && mapLocked(id)){ toast(`Reach level ${MAPS[id].level} to hunt ${MAPS[id].name}`, 2.6); return; }
+  if (mode !== 'range' && (paidMode(mode) || paidMap(id))){ gateFull(`${paidMode(mode) ? MODES[mode].name : MAPS[id].name} is in the full game`, () => startHunt(id)); return; }
   audioInit(); state = 'loading'; showPanel(null); $('hud').hidden = true; $('intro').hidden = false; $('intro').style.opacity = 1;
   $('introMode').textContent = mode === 'range' ? 'Hunter Ed' : MODES[mode].name; $('introMap').textContent = mode === 'range' ? 'Rifle range' : MAPS[id].name; $('introWhen').textContent = 'Loading the field…';
   (ASSETS.ready ? ensureModels(MAP_FILES(id)) : Promise.resolve()).then(() => beginHunt(id));
@@ -3281,7 +3293,7 @@ function drawBCUI(){
 /* =========================================================== menus */
 function renderMenu(){
   $('cashTitle').textContent = '$' + profile.cash.toLocaleString(); $('cashGear').textContent = '$' + profile.cash.toLocaleString(); $('cashSeason').textContent = '$' + profile.cash.toLocaleString();
-  $('modes').innerHTML = Object.entries(MODES).map(([id,m]) => `<button class="mode${id===mode?' on':''}" data-mode="${id}" role="radio" aria-checked="${id===mode}">${m.name}</button>`).join('');
+  $('modes').innerHTML = Object.entries(MODES).map(([id,m]) => `<button class="mode${id===mode?' on':''}" data-mode="${id}" role="radio" aria-checked="${id===mode}">${m.name}${paidMode(id) ? '<small class="ftag">Full game</small>' : ''}</button>`).join('');
   $('modeDesc').textContent = MODES[mode].desc;
   const S = profile.settings, seg = (key, list, label) => `<span class="lbl">${label}</span><div class="seg" data-key="${key}">${Object.entries(list).map(([id,o]) => `<button class="${S[key]===id?'on':''}" data-v="${id}" title="${o.note||''}">${o.name}</button>`).join('')}</div>`;
   $('opts').innerHTML = seg('setup', SETUPS, 'Setup') + (mode === 'night' ? '' : seg('tod', { pm:{ name:'Evening' }, am:{ name:'Morning' } }, 'Time of day')) + seg('len', LENGTHS, 'Hunt length');
@@ -3290,7 +3302,7 @@ function renderMenu(){
   $('maps').innerHTML = Object.entries(MAPS).map(([id,m]) => { const best = profile.best[mode+'.'+id], lock = mapLocked(id);
     const sw = mode==='night' ? ['#03060f','#0d1426','#1c2848'] : swatch[id];
     return `<button class="map${lock?' locked':''}" data-map="${id}"><span class="swatch" style="background:linear-gradient(${sw.join(',')})"></span>
-      <span><b>${m.name}</b><small>${lock ? `Unlocks at level ${m.level}` : m.feature}</small></span><span class="best">${lock ? `Level<strong>${m.level}</strong>` : `Best<strong>${best ? best.toLocaleString() : '—'}</strong>`}</span></button>`; }).join('');
+      <span><b>${m.name}</b><small>${lock ? `Unlocks at level ${m.level}` : m.feature}</small></span><span class="best">${lock ? `Level<strong>${m.level}</strong>${paidMap(id) ? '<em class="ftag">Full game</em>' : ''}` : paidMap(id) ? `<em class="ftag">Full game</em>` : `Best<strong>${best ? best.toLocaleString() : '—'}</strong>`}</span></button>`; }).join('');
   $('edBtn').classList.toggle('hint-ed', !profile.tutorialDone);
   ensureSeason(); const SS = profile.season, lv = levelOf(profile.xp), lo = LEVELS[lv-1] || 0, hi = LEVELS[lv] || (lo + 4000);
   const best = Object.entries(profile.trophies).filter(([t]) => SPECIES[t]).sort((a,b) => (b[1].value||0)*(SPECIES[b[0]].pts||1) - (a[1].value||0)*(SPECIES[a[0]].pts||1))[0];
@@ -3337,7 +3349,10 @@ $('gearList').addEventListener('click', e => { const b = e.target.closest('.gear
   if (owned.includes(id)){ if (kind === 'call') return; equip(); armed = null; sfxClick(); }
   else if (profile.cash >= it.price){ if (armed === kind+id){ profile.cash -= it.price; owned.push(id); equip(); armed = null; tone(880,.08,'sine',.2); tone(1320,.12,'sine',.2,.08); } else { armed = kind+id; armT = 3; sfxClick(); } }
   saveProfile(); renderGear(); });
-$('modes').addEventListener('click', e => { const b = e.target.closest('.mode'); if (!b || b.dataset.mode === mode) return; mode = b.dataset.mode; clearAnimals(); populate(); renderMenu(); updateEnv(true); });
+$('modes').addEventListener('click', e => { const b = e.target.closest('.mode'); if (!b || b.dataset.mode === mode) return;
+  const pick = () => { mode = b.dataset.mode; clearAnimals(); populate(); renderMenu(); updateEnv(true); };
+  if (paidMode(b.dataset.mode)) gateFull(`${MODES[b.dataset.mode].name} is in the full game`, pick); else pick(); });
+if (ARCADE && window.DARE) DARE.onChange(() => { if (state === 'title') renderMenu(); });
 $('maps').addEventListener('click', e => { const b = e.target.closest('.map'); if (b) startHunt(b.dataset.map); });
 
 $('seasonBtn').onclick = () => { state = 'season'; renderSeason(); renderMenu(); showPanel('seasonPanel'); };
