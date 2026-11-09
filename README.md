@@ -30,6 +30,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /jenga/                Jenga (single-file 3D block tower + icons + manifest; loads three.js r128 and cannon.js 0.6.2 from cdnjs)
 /truth-or-dare/        Truth or Dare (single-file card game + icons + manifest; pass-the-phone and online rooms)
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
+/open-season/          Open Season (3D Texas hunting game: index.html + os-assets/ models as base64 .txt, ground textures, ambient audio and three.js loaders + icons + manifest; loads three.js r128 from cdnjs)
 /frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rare Rumble, Truth or Dare and Frostbound online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
