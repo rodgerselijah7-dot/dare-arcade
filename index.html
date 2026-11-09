@@ -456,6 +456,45 @@ html.thanksgiving.gated .ico{border-color:rgba(255,215,170,.3);background:rgba(2
 html.thanksgiving.gated .hs b{color:#fff3dc}
 html.thanksgiving.gated .hs-install{background:linear-gradient(180deg,#ffe09a,#e8862c);color:#2a1000;border-radius:999px}
 
+
+/* ===== Game search: pinned top bar ===== */
+.bar{position:sticky;top:0;z-index:30;align-items:center;gap:14px;padding:12px 0 10px;margin-top:6px;background:var(--wall)}
+.bar::before{content:"";position:absolute;z-index:-1;left:50%;width:100vw;transform:translateX(-50%);top:calc(-1 * env(safe-area-inset-top,0px) - 6px);bottom:0;background:var(--wall);border-bottom:1px solid transparent;transition:border-color .2s,box-shadow .2s}
+.bar.stuck::before{border-bottom-color:var(--hair);box-shadow:0 8px 24px -18px rgba(0,0,0,.35)}
+.bar .mark{flex:none;white-space:nowrap;transition:opacity .2s,max-width .25s;max-width:320px;overflow:hidden}
+.find{position:relative;flex:1 1 auto;max-width:300px;margin-left:auto;display:flex;align-items:center}
+.find input{width:100%;height:42px;border:1px solid var(--hair);border-radius:999px;background:var(--wall);color:var(--black);font:17px/1 var(--text);padding:0 40px 0 40px;-webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}
+.find input::placeholder{color:var(--grey);opacity:1}
+.find input::-webkit-search-cancel-button,.find input::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
+.find input:hover{border-color:var(--grey)}
+.find input:focus{outline:none;border-color:var(--black);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 22%,transparent)}
+.find-ico{position:absolute;left:14px;width:18px;height:18px;color:var(--grey);pointer-events:none}
+.find input:focus+.find-x,.find-x{position:absolute;right:6px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:var(--grey);display:grid;place-items:center;cursor:pointer}
+.find-x[hidden]{display:none}
+.find-x svg{width:16px;height:16px}
+.find-x:hover{color:var(--black);background:var(--hair)}
+@media (max-width:520px){
+  .bar{gap:10px}
+  .bar .mark{font-size:19px;letter-spacing:.1em}
+  .find{max-width:none;min-width:0}
+  .find input{height:40px;font-size:16px;padding:0 36px 0 36px}
+  .find-ico{left:12px;width:16px;height:16px}
+  /* while typing, the field takes the whole bar */
+  .bar.typing .mark{max-width:0;opacity:0;margin-right:-10px}
+}
+/* search results */
+.find-meta{display:none;font-family:var(--display);font-size:18px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin:0 0 4px}
+.find-none{margin:18px 0 8px;color:var(--grey);font-size:17px}
+.find-none b{display:block;color:var(--black);font-weight:600;margin-bottom:4px}
+.find-none button{display:block;margin-top:14px;font:inherit;font-family:var(--display);font-size:18px;letter-spacing:.06em;color:var(--wall);background:var(--black);border:0;padding:6px 16px 4px;cursor:pointer}
+.row mark{background:color-mix(in srgb,var(--red) 18%,transparent);color:inherit;border-radius:2px;padding:0 1px}
+html.searching .mosaic,html.searching .feature,html.searching .free-banner,html.searching .queue>h2,html.searching .queue>.lede{display:none}
+html.searching .queue{margin-top:14px;border-top:0;padding-top:4px}
+html.searching .find-meta{display:block}
+.find-only{display:none}html.searching .find-only{display:grid}html.searching .find-only.hit-hide{display:none}
+html.searching .queue p.group:first-of-type,html.searching .find-meta+.find-none+.row{margin-top:0}
+.row.hit-hide,.queue p.group.hit-hide{display:none}
+
 /* ===== Home Screen guide ===== */
 .fs-link{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:none;border:0;cursor:pointer;
   font-family:var(--display);letter-spacing:.18em;font-size:16px;color:#fff;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.35)}
@@ -509,8 +548,13 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   <p class="g-foot">Desired Ambitions Requires Execution.</p>
 </div>
 <div class="wrap">
-  <header class="bar">
+  <header class="bar" id="bar">
     <a class="mark" href="/">DARE ARCADE</a>
+    <form class="find" id="find" role="search" action="#" onsubmit="return false">
+      <svg class="find-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.75" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="Search games" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" aria-label="Search games" aria-controls="next">
+      <button type="button" class="find-x" id="qx" aria-label="Clear search" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </form>
   </header>
 
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -547,6 +591,14 @@ html.standalone .fs-link,html.standalone .tip{display:none}
     <section class="queue" aria-labelledby="next">
       <h2 id="next">More games</h2>
       <p class="lede">New games go live here after they've been tested on real phones.</p>
+      <p class="find-meta" id="findMeta" aria-live="polite"></p>
+      <div class="find-none" id="findNone" hidden><b>No games match “<span id="findWord"></span>”.</b> Try a name or a kind of game, like racing, puzzle, trivia or zombies. <button type="button" id="findReset">Show all games</button></div>
+      <a class="row live find-only" href="/the-last-don/" data-tags="match 3 puzzle crowns story comic">
+        <h3>The Last Don</h3>
+        <span class="status">Play</span>
+        <p>Panther City is falling to the New Order. Match crowns, keys and fists to take Fort Worth back, one block at a time.</p>
+        <span class="price">District 1 is free to play. Full game $4.99</span>
+      </a>
       <p class="group">Top picks</p>
       <a class="row live" href="/square-up/">
         <h3>Square Up</h3>
@@ -886,6 +938,77 @@ html.standalone .fs-link,html.standalone .tip{display:none}
     const end=()=>{if(y0==null)return;y0=null;card.style.transition='';card.style.transform='';if(dy>90){const x=hs.querySelector('.hs-x');x&&x.click()}};
     addEventListener('pointerup',end);addEventListener('pointercancel',end);
   }
+})();
+</script>
+<script>
+/* Game search: filters the list as you type. Words match names, descriptions, section names and a few everyday tags. */
+(function(){
+  const html=document.documentElement,bar=document.getElementById('bar'),q=document.getElementById('q'),qx=document.getElementById('qx');
+  const queue=document.querySelector('.queue'),meta=document.getElementById('findMeta'),none=document.getElementById('findNone'),word=document.getElementById('findWord');
+  if(!q||!queue)return;
+  const TAGS={'square-up':'zombies guns shooter','dead-rise':'zombies guns shooter 3d','rare-rumble':'fighting fighter brawl smash','crown-rush':'running runner race racing platformer multiplayer online friends',
+    'chess':'board game strategy multiplayer online friends','connect':'connect four 4 board game multiplayer online friends','dice':'craps casino gambling multiplayer online friends',
+    'truth-or-dare':'party cards multiplayer online friends','pool':'billiards 8 ball 9 ball eight nine multiplayer online friends','rebel-elimination':'shooter platformer guns action',
+    'cosmic-encounter':'space shooter galaga ships','dirt-line':'bike bikes bmx racing race','grand-prix':'cars car racing race driving','live-fire-range':'guns shooting target range',
+    'open-season':'hunting hunt deer guns rifle','frostbound':'ice tower climbing climber jump','crowd-run':'runner running','break-the-block':'breakout brick bricks arkanoid',
+    'bubble':'bubble shooter puzzle pop','ori':'puzzle blocks tetris','2048':'puzzle numbers','1010':'puzzle blocks','jenga':'tower stacking blocks 3d',
+    'buckets':'basketball hoops sports shooting','lunker-lake':'fishing fish bass','crate-digger':'music trivia quiz songs hip hop','game-day':'sports trivia quiz basketball football nba nfl'};
+  const norm=t=>(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’'`.]/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim();
+  const rows=[...queue.querySelectorAll('a.row')],groups=[...queue.querySelectorAll('p.group')];
+  let group='';const items=[];
+  for(const el of queue.children){
+    if(el.matches('p.group'))group=el.textContent;
+    if(!el.matches('a.row'))continue;
+    const h=el.querySelector('h3'),slug=(el.getAttribute('href')||'').replace(/\//g,'');
+    const name=norm(h&&h.textContent);
+    items.push({el,h,name0:h?h.innerHTML:'',name,text:' '+name+' '+norm(el.textContent)+' '+norm(group)+' '+norm(TAGS[slug]||'')+' '+norm(el.dataset.tags||'')+' '});
+  }
+  let saved=null,last='';
+  const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function mark(it,words){
+    const raw=it.h.textContent;let out=esc(raw);
+    const w=words.find(w=>w.length>1&&raw.toLowerCase().includes(w));
+    if(w){const i=raw.toLowerCase().indexOf(w);out=esc(raw.slice(0,i))+'<mark>'+esc(raw.slice(i,i+w.length))+'</mark>'+esc(raw.slice(i+w.length))}
+    it.h.innerHTML=out;
+  }
+  function run(){
+    const v=q.value,n=norm(v);qx.hidden=!v;
+    if(!n){
+      if(!html.classList.contains('searching'))return;
+      html.classList.remove('searching');
+      for(const it of items){it.el.classList.remove('hit-hide');it.h.innerHTML=it.name0}
+      groups.forEach(g=>g.classList.remove('hit-hide'));none.hidden=true;last='';
+      if(saved!=null){const y=saved;saved=null;requestAnimationFrame(()=>window.scrollTo(0,y))}
+      return;
+    }
+    if(!html.classList.contains('searching')){saved=window.scrollY;html.classList.add('searching')}
+    const words=n.split(' ');let count=0;
+    for(const it of items){
+      const ok=words.every(w=>it.text.includes(' '+w)||it.name.replace(/ /g,'').includes(w));
+      it.el.classList.toggle('hit-hide',!ok);if(ok){count++;mark(it,words)}
+    }
+    // a section heading shows only when one of its games does
+    for(const g of groups){let el=g.nextElementSibling,any=false;while(el&&!el.matches('p.group')){if(el.matches('a.row')&&!el.classList.contains('hit-hide')){any=true;break}el=el.nextElementSibling}g.classList.toggle('hit-hide',!any)}
+    meta.textContent=count?count+(count===1?' game':' games'):'';
+    none.hidden=!!count;word.textContent=v.trim();
+    if(n!==last){last=n;window.scrollTo(0,0)}
+  }
+  const ph=()=>q.placeholder=matchMedia('(max-width:520px)').matches?'Search':'Search games';ph();addEventListener('resize',ph);
+  q.addEventListener('input',run);
+  q.addEventListener('search',run);
+  q.addEventListener('focus',()=>bar.classList.add('typing'));
+  q.addEventListener('blur',()=>{if(!q.value)bar.classList.remove('typing')});
+  const clear=()=>{q.value='';run();bar.classList.remove('typing');q.blur()};
+  qx.addEventListener('click',()=>{q.value='';run();q.focus()});
+  document.getElementById('findReset').addEventListener('click',clear);
+  q.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();clear()}
+    if(e.key==='Enter'){e.preventDefault();const first=items.find(it=>!it.el.classList.contains('hit-hide')&&getComputedStyle(it.el).display!=='none');if(first&&html.classList.contains('searching'))location.href=first.el.href}
+  });
+  // "/" jumps to search on a keyboard
+  document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.metaKey&&!e.ctrlKey&&!/input|textarea|select/i.test((document.activeElement||{}).tagName||'')&&!html.classList.contains('gated')){e.preventDefault();q.focus()}});
+  // the bar gets a hairline once the page scrolls under it
+  const st=()=>bar.classList.toggle('stuck',window.scrollY>4);addEventListener('scroll',st,{passive:true});st();
 })();
 </script>
 <script src="/dare-unlock.js"></script>
