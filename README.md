@@ -33,7 +33,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
 /open-season/          Open Season (3D Texas hunting game: index.html + os-assets/ models as base64 .txt, ground textures, ambient audio and three.js loaders + icons + manifest; loads three.js r128 from cdnjs)
 /frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rumble Karts, Rare Rumble, Truth or Dare and Frostbound online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rumble Karts, Rare Rumble, Square Up, Dead Rise, Truth or Dare and Frostbound online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
 /api/scores.js         Live Fire Range, Dirt Line and Frostbound leaderboards (Upstash Redis)
 /icons/                Arcade icons
@@ -212,6 +212,14 @@ Every push to `main` redeploys automatically.
 - A player at 0 health goes down; a teammate standing next to them for 2.5 seconds revives them, and clearing a wave revives everyone. The run ends when the whole squad is down. Waves, zombie health and crate drops scale with the number of players.
 - Transport is the same as Rare Rumble: `/api/room` rooms named `su-<code>`, with direct WebRTC links between phones when a network allows them. A guest who stops sending for about 4 seconds drops out; if the host disappears for 9 seconds the guests' match ends.
 - The same source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
+
+## Dead Rise online play
+- Co-op for 2 to 4 players: Play online, Host a match, share the 4-letter code, and the host taps Start once at least one friend has joined. The host's chosen starting area is used.
+- The host's phone runs the zombies, waves, spawns, pickups, area travel and the paywall. Each guest moves, aims and shoots on their own phone against mirrored zombies and sends their position, aim, weapon, health and a numbered list of hits as presence (`inp`); the host applies each hit once, credits the kill to that player and acknowledges the last hit number in its snapshot.
+- The host sends snapshots (`snap`, about 10 to 20 a second) with every player, zombie and pickup, plus a numbered event list (kills, damage to a player, explosions, acid, slams, pickups, banners, boss, wave clear, travel, revive, game over) so a guest that misses a snapshot still sees each moment once.
+- Shared: score, combo, waves, areas and the free tryout (the host's unlock decides whether the squad goes past wave 5). Per player: health, armor, weapons, ammo and timed power-ups. Nuke and Frost hit every zombie for the whole squad.
+- A player at 0 health goes down; a teammate standing next to them for 2.5 seconds revives them, and clearing a wave revives everyone. The run ends when the whole squad is down. Waves spawn more zombies, faster, with more players.
+- Transport is the same as Square Up: `/api/room` rooms named `dr-<code>`, with direct WebRTC links between phones when a network allows them. A guest who stops sending for about 6 seconds drops out (and comes back if they return); if the host disappears for 15 seconds the guests' match ends.
 
 ## Truth or Dare
 - Card game for 2 to 12 players on one phone (pass it around), or 2 to 8 online with everyone on their own phone. Opens on a title screen (Continue, New game, Play online, How to play, House cards, and this phone's games / cards flipped / dares done).
