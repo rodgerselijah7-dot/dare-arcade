@@ -90,10 +90,18 @@ async function grantGames(sessionId, email, games) {
   if (em) await redis("SET", `arc:lic-email:${em}`, code);
   return { code, first: true };
 }
-async function licenseGames(code) {
+// Codes made in the admin page (comp: true) can expire or be revoked; those stop working on the next check.
+const compState = lic => lic.revoked ? "revoked" : lic.expires && Date.parse(lic.expires) <= Date.now() ? "expired" : "active";
+async function licenseInfo(code) {
   if (!hasRedis() || !isCode(code)) return null;
   const raw = await redis("GET", `arc:lic:${code}`);
-  return raw ? expandPass(JSON.parse(raw).games || []) : null;
+  if (!raw) return null;
+  const lic = JSON.parse(raw), state = compState(lic);
+  return { state, games: state === "active" ? expandPass(lic.games || []) : [] };
+}
+async function licenseGames(code) {
+  const info = await licenseInfo(code);
+  return info && info.state === "active" ? info.games : null;
 }
 const SITE = req => (process.env.SITE_URL || `https://${(req.headers || {}).host}`).replace(/\/$/, "");
 const nameOf = g => (findItem(g) || {}).name || g;
@@ -123,4 +131,4 @@ async function rateLimit(key, limit, windowSeconds) {
 const refOf = id => id.slice(-8).toUpperCase();
 
 module.exports = { CATALOG, GAME_IDS, findItem, gamesOf, hasRedis, redis, stripe, verifyStripe, SOURCE, PAID, sendEmail,
-  cleanCode, isCode, fmtCode, gamesInSession, grantGames, licenseGames, SITE, nameOf, unlockEmail, readRaw, readJson, clientIp, rateLimit, refOf };
+  cleanCode, isCode, fmtCode, newCode, compState, gamesInSession, grantGames, licenseGames, licenseInfo, SITE, nameOf, unlockEmail, readRaw, readJson, clientIp, rateLimit, refOf };

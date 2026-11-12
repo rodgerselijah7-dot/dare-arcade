@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Arcade Access Codes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0909;--panel:#141010;--line:#2a2322;--ink:#f1e9dc;--dim:#968b80;--gold:#F0C040;--gold-d:#C9972A;--red:#EF3B2F;--ok:#5ee08a;
+  --display:'Bebas Neue','Arial Narrow',Impact,sans-serif;--ui:Inter,system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink)}
+body{font:15px/1.5 var(--ui);min-height:100dvh;padding:max(20px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom))}
+.wrap{max-width:760px;margin:0 auto;display:grid;gap:22px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.kick{font-size:11px;letter-spacing:.22em;font-weight:700;color:var(--gold)}
+h1{font:400 44px/0.95 var(--display);letter-spacing:.02em}
+h2{font:400 26px/1 var(--display);letter-spacing:.03em}
+.panel{background:var(--panel);border:1px solid var(--line);padding:18px;display:grid;gap:14px}
+label,.lbl{font-size:11px;letter-spacing:.16em;font-weight:700;color:var(--dim);text-transform:uppercase}
+input[type=text],input[type=password],input[type=number],input[type=search]{width:100%;background:#0e0b0b;border:1px solid var(--line);color:var(--ink);font:500 16px var(--ui);padding:12px 13px;border-radius:0}
+input:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.field{display:grid;gap:6px}
+.btn{appearance:none;border:0;background:var(--gold);color:#140f05;font:700 13px var(--ui);letter-spacing:.12em;text-transform:uppercase;padding:13px 18px;cursor:pointer;border-radius:0}
+.btn:hover{background:#ffd25a}.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--dim)}
+.btn.sm{padding:8px 11px;font-size:11px}
+.btn.danger{color:var(--red)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{appearance:none;background:transparent;border:1px solid var(--line);color:var(--ink);font:600 13px var(--ui);padding:9px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{border-color:var(--gold);color:var(--gold);background:rgba(240,192,64,.08)}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}
+.games label{display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font:500 14px var(--ui);color:var(--ink);border:1px solid var(--line);padding:9px 10px;cursor:pointer}
+.games input{accent-color:var(--gold);width:16px;height:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.msg{font-size:14px;color:var(--dim);min-height:1.2em}
+.msg.err{color:var(--red)}.msg.ok{color:var(--ok)}
+.result{border:1px solid var(--gold-d);background:rgba(240,192,64,.06);padding:16px;display:grid;gap:12px}
+.code{font:400 40px/1 var(--display);letter-spacing:.12em;color:var(--gold);word-break:break-all}
+.link{font-size:13px;color:var(--dim);word-break:break-all}
+.list{display:grid;gap:8px}
+.item{border:1px solid var(--line);padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:start}
+.item .who{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+.item .meta{grid-column:1/-1;font-size:13px;color:var(--dim);display:flex;flex-wrap:wrap;gap:4px 14px}
+.item .c{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;color:var(--ink)}
+.item .acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:10px;font-weight:700;letter-spacing:.16em;padding:4px 8px;border:1px solid currentColor;white-space:nowrap}
+.pill.active{color:var(--ok)}.pill.expired{color:var(--dim)}.pill.revoked{color:var(--red)}
+.empty{color:var(--dim);font-size:14px;padding:8px 0}
+.hint{font-size:13px;color:var(--dim)}
+[hidden]{display:none!important}
+@media (max-width:520px){h1{font-size:36px}.code{font-size:27px;letter-spacing:.08em}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><div class="kick">DARE ARCADE · PRIVATE</div><h1>Access Codes</h1></div>
+    <button class="btn ghost sm" id="signOut" hidden>Sign out</button>
+  </header>
+
+  <section class="panel" id="login">
+    <h2>Sign in</h2>
+    <form id="loginF" class="field" autocomplete="on">
+      <label for="pw">Admin password</label>
+      <input type="password" id="pw" autocomplete="current-password" required>
+      <label class="row" style="text-transform:none;letter-spacing:0;font:500 14px var(--ui);color:var(--ink);gap:8px"><input type="checkbox" id="remember" checked style="accent-color:var(--gold)"> Stay signed in on this device</label>
+      <div class="row"><button class="btn" type="submit">Sign in</button></div>
+      <p class="msg" id="loginMsg" role="status"></p>
+    </form>
+  </section>
+
+  <div id="app" hidden style="display:grid;gap:22px">
+    <section class="panel">
+      <h2>Make a code</h2>
+      <form id="makeF" style="display:grid;gap:14px">
+        <div class="field"><label for="label">Who it's for</label><input type="text" id="label" maxlength="60" placeholder="Kay · brand ambassador" required></div>
+        <div class="field"><span class="lbl">Access</span>
+          <div class="seg" id="accessSeg"><button type="button" data-v="all" aria-pressed="true">All-Access (every game)</button><button type="button" data-v="pick" aria-pressed="false">Pick games</button></div>
+          <div class="games" id="games" hidden></div>
+        </div>
+        <div class="field"><span class="lbl">Expires</span>
+          <div class="seg" id="daysSeg"><button type="button" data-v="0" aria-pressed="true">Never</button><button type="button" data-v="7" aria-pressed="false">7 days</button><button type="button" data-v="30" aria-pressed="false">30 days</button><button type="button" data-v="90" aria-pressed="false">90 days</button><button type="button" data-v="365" aria-pressed="false">1 year</button></div>
+        </div>
+        <div class="row"><button class="btn" type="submit" id="makeBtn">Make code</button></div>
+        <p class="msg" id="makeMsg" role="status"></p>
+      </form>
+      <div class="result" id="result" hidden>
+        <div class="lbl" id="resWho"></div>
+        <div class="code" id="resCode"></div>
+        <div class="link" id="resLink"></div>
+        <div class="row">
+          <button class="btn sm" data-copy="msg">Copy message</button>
+          <button class="btn ghost sm" data-copy="link">Copy link</button>
+          <button class="btn ghost sm" data-copy="code">Copy code</button>
+        </div>
+        <p class="hint">The link unlocks the phone it's opened on. On another device they can type the code under “Enter unlock code” in any game.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="row" style="justify-content:space-between"><h2>Codes you've given out</h2><button class="btn ghost sm" id="reload">Refresh</button></div>
+      <input type="search" id="find" placeholder="Search by name or code" aria-label="Search codes">
+      <div class="list" id="list"><p class="empty">Loading…</p></div>
+      <p class="msg" id="listMsg" role="status"></p>
+    </section>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const K='dare_admin_key';
+let key='',catalog=[],rows=[],access='all',days=0,last=null;
+const store={get(){try{return localStorage.getItem(K)||sessionStorage.getItem(K)||''}catch(e){return''}},
+  set(v,keep){try{localStorage.removeItem(K);sessionStorage.removeItem(K);(keep?localStorage:sessionStorage).setItem(K,v)}catch(e){}},
+  clear(){try{localStorage.removeItem(K);sessionStorage.removeItem(K)}catch(e){}}};
+const fmt=c=>c.replace(/(.{4})(?=.)/g,'$1-');
+const linkOf=c=>location.origin+'/?unlock='+c;
+const nameOf=id=>(catalog.find(g=>g.id===id)||{}).name||id;
+const say=(el,t,k)=>{el.textContent=t||'';el.className='msg'+(k?' '+k:'')};
+const when=s=>s?new Date(s).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'';
+
+async function api(body){
+  const r=await fetch('/api/comp',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401){signOut();say($('loginMsg'),d.error||'Wrong password.','err');throw new Error('auth')}
+  if(!r.ok)throw new Error(d.error||'Something went wrong. Try again.');
+  return d;
+}
+function signOut(){key='';store.clear();$('app').hidden=true;$('login').hidden=false;$('signOut').hidden=true;$('pw').value=''}
+async function signIn(k,keep){
+  key=k;say($('loginMsg'),'Checking…');
+  try{await api({action:'check'})}catch(e){if(e.message!=='auth')say($('loginMsg'),e.message,'err');return}
+  store.set(k,keep);say($('loginMsg'),'');$('login').hidden=true;$('app').hidden=false;$('signOut').hidden=false;load();
+}
+$('loginF').addEventListener('submit',e=>{e.preventDefault();signIn($('pw').value,$('remember').checked)});
+$('signOut').addEventListener('click',signOut);
+
+fetch('/games.json',{cache:'no-cache'}).then(r=>r.json()).then(list=>{catalog=list;
+  $('games').innerHTML=list.filter(g=>!g.pass).map(g=>`<label><input type="checkbox" value="${g.id}"> ${g.name.replace(/</g,'&lt;')}</label>`).join('');renderList();}).catch(()=>{});
+
+function seg(id,cb){$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.v)})}
+seg('accessSeg',v=>{access=v;$('games').hidden=v!=='pick'});
+seg('daysSeg',v=>{days=+v});
+
+$('makeF').addEventListener('submit',async e=>{
+  e.preventDefault();const label=$('label').value.trim();
+  const games=access==='all'?['all-access']:[...$('games').querySelectorAll('input:checked')].map(i=>i.value);
+  if(!games.length){say($('makeMsg'),'Pick at least one game.','err');return}
+  $('makeBtn').disabled=true;say($('makeMsg'),'Making the code…');
+  try{const d=await api({action:'create',label,games,days});last=d;showResult(d);say($('makeMsg'),'');$('label').value='';load()}
+  catch(err){if(err.message!=='auth')say($('makeMsg'),err.message,'err')}
+  $('makeBtn').disabled=false;
+});
+function accessText(g){return g.includes('all-access')?'All-Access':g.map(nameOf).join(', ')}
+function showResult(d){
+  $('result').hidden=false;$('resWho').textContent=d.label+' · '+accessText(d.games)+(d.expires?' · until '+when(d.expires):' · never expires');
+  $('resCode').textContent=fmt(d.code);$('resLink').textContent=linkOf(d.code);
+}
+function messageOf(d){
+  const what=d.games.includes('all-access')?'full access to every game in the DARE Arcade':'access to '+accessText(d.games)+' in the DARE Arcade';
+  return `You've got ${what}${d.expires?' until '+when(d.expires):''}. Tap to unlock: ${linkOf(d.code)}\n\nOn another phone or computer, open any game, tap "Enter unlock code" and type: ${fmt(d.code)}`;
+}
+async function copy(t,btn){try{await navigator.clipboard.writeText(t);const o=btn.textContent;btn.textContent='Copied';setTimeout(()=>btn.textContent=o,1200)}catch(e){prompt('Copy this:',t)}}
+$('result').addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b||!last)return;const k=b.dataset.copy;copy(k==='msg'?messageOf(last):k==='link'?linkOf(last.code):fmt(last.code),b)});
+
+async function load(){
+  say($('listMsg'),'');
+  try{rows=(await api({action:'list'})).codes||[];renderList()}catch(e){if(e.message!=='auth')say($('listMsg'),e.message,'err')}
+}
+function renderList(){
+  const q=$('find').value.trim().toLowerCase().replace(/-/g,'');
+  const show=rows.filter(r=>!q||r.label.toLowerCase().includes(q)||r.code.toLowerCase().includes(q));
+  const box=$('list');
+  if(!rows.length){box.innerHTML='<p class="empty">No codes yet. Make one above.</p>';return}
+  if(!show.length){box.innerHTML='<p class="empty">No codes match that search.</p>';return}
+  box.innerHTML='';
+  for(const r of show){
+    const d=document.createElement('div');d.className='item';
+    const st=r.state==='active'?'ACTIVE':r.state==='expired'?'EXPIRED':'REVOKED';
+    d.innerHTML=`<div class="who"></div><span class="pill ${r.state}">${st}</span>
+      <div class="meta"><span class="c">${fmt(r.code)}</span><span class="acc"></span><span>Made ${when(r.created)}</span><span>${r.expires?(r.state==='expired'?'Expired ':'Until ')+when(r.expires):'Never expires'}</span></div>
+      <div class="acts"><button class="btn ghost sm" data-a="msg">Copy message</button><button class="btn ghost sm" data-a="link">Copy link</button>
+      ${r.state==='revoked'?'<button class="btn ghost sm" data-a="restore">Turn back on</button>':'<button class="btn ghost sm danger" data-a="revoke">Revoke</button>'}
+      <button class="btn ghost sm danger" data-a="delete">Delete</button></div>`;
+    d.querySelector('.who').textContent=r.label||'(no name)';d.querySelector('.acc').textContent=accessText(r.games);
+    d.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+      if(a==='msg')return copy(messageOf(r),b);if(a==='link')return copy(linkOf(r.code),b);
+      if(a==='revoke'&&!confirm(`Revoke ${r.label}'s code? Their games lock again the next time they open the arcade.`))return;
+      if(a==='delete'&&!confirm(`Delete ${r.label}'s code for good? It stops working and leaves this list.`))return;
+      b.disabled=true;try{await api({action:a,code:r.code});await load()}catch(err){if(err.message!=='auth')say($('listMsg'),err.message,'err');b.disabled=false}});
+    box.appendChild(d);
+  }
+}
+$('find').addEventListener('input',renderList);
+$('reload').addEventListener('click',load);
+const saved=store.get();if(saved)signIn(saved,!!(()=>{try{return localStorage.getItem(K)}catch(e){return null}})());
+})();
+</script>
+</body>
+</html>

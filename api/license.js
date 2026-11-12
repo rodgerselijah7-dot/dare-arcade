@@ -1,5 +1,5 @@
 // Unlock codes. GET /api/license?code=ABCD-EFGH-JKLM -> { games }   POST /api/license { email } -> emails the code
-const { hasRedis, redis, readJson, clientIp, rateLimit, cleanCode, isCode, licenseGames, sendEmail, unlockEmail, SITE } = require("./_lib");
+const { hasRedis, redis, readJson, clientIp, rateLimit, cleanCode, isCode, licenseGames, licenseInfo, sendEmail, unlockEmail, SITE } = require("./_lib");
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (!hasRedis()) return res.status(503).json({ error: "Unlocks aren't available right now. Try again later." });
@@ -7,9 +7,11 @@ module.exports = async (req, res) => {
     if (!(await rateLimit(`lic:${clientIp(req)}`, 60, 600)).ok) return res.status(429).json({ error: "Too many tries. Wait a few minutes and try again." });
     const code = cleanCode(req.query && req.query.code);
     if (!isCode(code)) return res.status(400).json({ error: "That code doesn't look right. It's 12 letters and numbers, like ABCD-EFGH-JKLM." });
-    const games = await licenseGames(code);
-    if (!games) return res.status(404).json({ error: "We couldn't find that code. Check it against your confirmation email." });
-    return res.status(200).json({ games });
+    const info = await licenseInfo(code);
+    if (!info) return res.status(404).json({ error: "We couldn't find that code. Check it against your confirmation email." });
+    if (info.state === "expired") return res.status(404).json({ error: "That code has expired." });
+    if (info.state === "revoked") return res.status(404).json({ error: "That code is no longer active." });
+    return res.status(200).json({ games: info.games });
   }
   if (req.method === "POST") {
     if (!(await rateLimit(`licmail:${clientIp(req)}`, 5, 3600)).ok) return res.status(429).json({ error: "Too many tries. Wait a while and try again." });

@@ -33,6 +33,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
 /open-season/          Open Season (3D Texas hunting game: index.html + os-assets/ models as base64 .txt, ground textures, ambient audio and three.js loaders + icons + manifest; loads three.js r128 from cdnjs)
 /frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
+/api/comp.js           Comp codes: free access codes made from /admin (needs ARCADE_ADMIN_KEY)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rumble Karts, Rare Rumble, Square Up, Dead Rise, Truth or Dare and Frostbound online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
 /api/scores.js         Live Fire Range, Dirt Line and Frostbound leaderboards (Upstash Redis)
@@ -212,6 +213,12 @@ Every push to `main` redeploys automatically.
 - A player at 0 health goes down; a teammate standing next to them for 2.5 seconds revives them, and clearing a wave revives everyone. The run ends when the whole squad is down. Waves, zombie health and crate drops scale with the number of players.
 - Transport is the same as Rare Rumble: `/api/room` rooms named `su-<code>`, with direct WebRTC links between phones when a network allows them. A guest who stops sending for about 4 seconds drops out; if the host disappears for 9 seconds the guests' match ends.
 - The same source also runs as a Claude artifact; there it uses Claude's live rooms instead of `/api/room`.
+
+## Comp codes (free access for specific people)
+- Private page: `/admin` (not linked anywhere, not indexed). Sign in with the admin password, which is the `ARCADE_ADMIN_KEY` environment variable in Vercel (at least 8 characters; redeploy after setting it).
+- Make a code for a person: All-Access or chosen games, never expiring or for 7, 30, 90 or 365 days. Each code comes with a ready-to-send message and an unlock link (`/?unlock=CODE`); the person can also type the code under "Enter unlock code" in any game.
+- The list shows every comp code with its status. Revoke (or turn back on) and Delete take effect the next time that person opens the arcade online.
+- Storage: comp codes are ordinary unlock codes, `arc:lic:<CODE>` with `{ comp: true, label, games, created, expires, revoked }`, listed in the set `arc:comp`. `/api/comp` (password in the `x-admin-key` header) lists, makes, revokes, restores and deletes them; `/api/license` turns away expired and revoked codes. Wrong passwords are limited to 8 tries per 15 minutes per network.
 
 ## Dead Rise online play
 - Co-op for 2 to 4 players: Play online, Host a match, share the 4-letter code, and the host taps Start once at least one friend has joined. The host's chosen starting area is used.
