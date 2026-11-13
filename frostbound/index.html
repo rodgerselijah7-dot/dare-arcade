@@ -415,6 +415,7 @@ body.home #hud, body.home #deck { display: none !important; }
   </footer>
 </div>
 
+<script src="/dare-play.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -2071,7 +2072,9 @@ body.home #hud, body.home #deck { display: none !important; }
     openSheet('Race online', `<p class="muted">Race friends up the same tower. First to floor ${RACE_GOAL} wins, or the last climber standing.</p>
       <button class="btn" id="createRace">CREATE RACE</button>
       <div class="set-row" style="border:0"><div>Join with a code</div></div>
-      <div class="field"><input id="codeIn" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Race code"><button class="btn alt" id="joinRace">JOIN</button></div>`);
+      <div class="field"><input id="codeIn" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Race code"><button class="btn alt" id="joinRace">JOIN</button></div>
+      ${DP && net.arcade ? '<div id="fbOpen" hidden style="margin-top:12px"></div><div id="fbAlerts" style="margin-top:12px"></div>' : ''}`);
+    if (DP && net.arcade) { try { DP.openList($('fbOpen'), 'frostbound', m => joinRace(m.code.toLowerCase(), false)); DP.alerts.toggle($('fbAlerts'), ['frostbound'], { accent: '#7fd8ff', label: 'Get a notification when someone opens a Frostbound race.' }); } catch (e) {} }
     $('createRace').onclick = () => { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; joinRace(Array.from({ length: 4 }, () => a[Math.floor(Math.random() * a.length)]).join(''), true); };
     $('joinRace').onclick = () => { const c = $('codeIn').value.trim().toLowerCase(); if (/^[a-z0-9]{4}$/.test(c)) joinRace(c, false); else $('codeIn').focus(); };
   }
@@ -2082,8 +2085,20 @@ body.home #hud, body.home #deck { display: none !important; }
     r.presence({ n: save.nick, o: save.outfit, c: save.char, host, go: 0, s: 'lobby' }).catch(() => {});
     race.unsub = r.onPeers(ch => { if (!race) return; race.peers = ch.peers; onRacePeers(); });
     renderLobby();
+    if (host) lfgStart(code);
   }
+  /* match alerts: an open race is posted to the arcade ("X wants to play"), and phones with alerts on get a notification */
+  const DP = window.DAREPlay || null;
+  let lfg = null;
+  function lfgStart(code) {
+    if (!DP || !net.arcade) return; lfgStop(); const C = code.toUpperCase();
+    lfg = { C, t: setInterval(() => DP.keep('frostbound', C), 45000) };
+    DP.post('frostbound', C, save.nick).catch(() => {});
+  }
+  function lfgStop() { if (!lfg) return; clearInterval(lfg.t); DP.cancel('frostbound', lfg.C); lfg = null; }
+  addEventListener('pagehide', lfgStop);
   function leaveRace() {
+    lfgStop();
     if (!race) return;
     try { race.unsub && race.unsub(); race.r.leave(); } catch (e) {}
     race = null; $('raceBoard').hidden = true; $('pauseBtn').hidden = false;
@@ -2111,6 +2126,7 @@ body.home #hud, body.home #deck { display: none !important; }
     if (race.state === 'lobby' && !$('sheet').hidden) renderLobby();
   }
   function beginRace() {
+    lfgStop();
     race.state = 'running';
     race.r.presence({ go: race.go, s: 'climb', f: 0, x: W / 2, y: 0, t: 0, n: save.nick, o: save.outfit, c: save.char }).catch(() => {});
     start('race', race.seed);
@@ -2229,6 +2245,15 @@ body.home #hud, body.home #deck { display: none !important; }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (st) draw(); });
   requestAnimationFrame(frame);
   initNet();
+  if (DP && ON_WEB) {
+    try {
+      const joinIt = code => { if (race) leaveRace(); joinRace(String(code).toLowerCase(), false); };
+      DP.feed({ accent: '#7fd8ff', onJoin: m => { if (m.game !== 'frostbound') return false; joinIt(m.code); return true; } });
+      setInterval(() => { DP.busy = mode !== 'menu'; }, 1000);
+      const jc = DP.joinCode && DP.joinCode();
+      if (jc) { DP.clearJoin(); const t0 = Date.now(), go = () => net.room ? joinIt(jc) : Date.now() - t0 < 8000 && setTimeout(go, 200); setTimeout(go, 400); }
+    } catch (e) {}
+  }
 })();
 </script>
 </body>

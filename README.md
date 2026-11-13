@@ -129,7 +129,7 @@ Every push to `main` redeploys automatically.
 - Leaderboards use `/api/scores?game=dl`: best race time per track (`t-<track>`) and best Trick Jam score (`j-<track>`) in `arc:dl:*`, rider names in `arc:dl:names`. The page runs in arcade mode because it sets `window.DL_ARCADE=true` before loading.
 - Progress is saved on the phone (localStorage keys `dirtline*` and `dl_pid`).
 
-## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Truth or Dare)
+## Chat and match alerts (DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rumble Karts, Truth or Dare; match alerts also in the co-op and versus games Square Up, Dead Rise, Frostbound and Rare Rumble)
 - `dare-play.js` is shared by all five games. It adds:
   - **Match chat**: a chat button during online matches. Each player's last few messages ride inside their `/api/room` presence, so chat needs no extra server calls. Quick replies, a mute button, and typing never reaches the game controls. In Buckets the button hides during play; new messages still pop up.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.

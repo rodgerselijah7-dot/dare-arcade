@@ -218,6 +218,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
     <div id="oIdle" class="ogrid">
       <button class="big" id="oHost">Host a match</button>
       <div class="ojoin"><input class="oin code" id="oCode" maxlength="4" autocapitalize="characters" autocomplete="off" placeholder="CODE" aria-label="Match code"><button class="ghost" id="oJoin">Join</button></div>
+      <div id="oOpen" hidden></div>
+      <div id="oAlerts"></div>
     </div>
     <div id="oRoom" class="ogrid" hidden>
       <div class="ocode"><span class="lbl">Match code</span><b id="oCodeTxt">ABCD</b><button class="ghost sm" id="oCopy">Copy</button></div>
@@ -274,6 +276,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </div>
 
 <script src="/dare-unlock.js"></script>
+<script src="/dare-play.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -1405,8 +1408,8 @@ async function lobbyOpen(code,role){
   LOBBY.unsubs.push(rm.on('start',m=>{if(m.sameTab||!LOBBY||LOBBY.role!=='guest')return;guestStart(m.data,m.peer)}));
   LOBBY.unsubs.push(rm.on('snap',m=>{if(m.sameTab||!isGuest())return;try{netApply(m.data)}catch(e){}}));
   LOBBY.unsubs.push(rm.on('end',m=>{if(m.sameTab||!isGuest()||!m.data||m.data.mid!==NETM.mid)return;gameOver(m.data)}));
-  renderLobby();setTimeout(renderLobby,4500)}
-async function lobbyLeave(){if(!LOBBY)return;const L=LOBBY;LOBBY=null;L.unsubs.forEach(u=>{try{u()}catch(e){}});try{await L.rm.leave()}catch(e){}}
+  renderLobby();setTimeout(renderLobby,4500);if(role==='host')lfgStart()}
+async function lobbyLeave(){lfgStop();if(!LOBBY)return;const L=LOBBY;LOBBY=null;L.unsubs.forEach(u=>{try{u()}catch(e){}});try{await L.rm.leave()}catch(e){}}
 function oMsg(t){$('oMsg').textContent=t}
 function openOnline(keep){$('titleOv').hidden=true;$('onlineOv').hidden=false;if(!keep)oMsg('');if(!$('oName').value){let n='';try{n=(window.DAREPlay&&DAREPlay.nick&&DAREPlay.nick())||localStorage.getItem('squareup.name')||''}catch(e){}$('oName').value=cleanName(n)}renderLobby()}
 function renderLobby(){
@@ -1431,7 +1434,7 @@ $('oStart').addEventListener('click',()=>{ensureAudio();hostStart()});
 $('oName').addEventListener('change',()=>{saveName();lobbyPresence()});
 $('oCopy').addEventListener('click',()=>{if(!LOBBY)return;const t=LOBBY.code;try{navigator.clipboard.writeText(t).then(()=>oMsg('Code copied.'),()=>oMsg('Code: '+t))}catch(e){oMsg('Code: '+t)}});
 function saveName(){try{localStorage.setItem('squareup.name',myName())}catch(e){}}
-function hostStart(){if(!LOBBY||LOBBY.role!=='host')return;const ps=lobbyPeers().slice(0,4);if(ps.length<2)return;
+function hostStart(){if(!LOBBY||LOBBY.role!=='host')return;lfgStop();const ps=lobbyPeers().slice(0,4);if(ps.length<2)return;
   const slots=ps.map(q=>({peer:q.peer,name:cleanName(q.presence.name)||'Player',fit:q.presence.fit||'gold'}));
   const data={v:1,mid:rid(8),map:MAP.id,slots};
   LOBBY.rm.emit('start',data).then(()=>startOnline('host',data,myPeer()),e=>oMsg(e&&e.code==='not_permitted'?'Hosting needs edit access to this page. You can still join a friend\'s match.':'Couldn\'t start the match. Try again.'))}
@@ -1877,6 +1880,23 @@ function loop(now){let dt=Math.min(.033,(now-last)/1000);last=now;wdt=state==='p
     zs.forEach((z,i)=>{const a=i/zs.length*6.28+t*.12;z.x=MAP.spawn[0]+Math.cos(a)*190;z.y=MAP.spawn[1]+Math.sin(a)*140;z.walk+=dt*7;z.face=Math.atan2(p.y-z.y,p.x-z.x)});cam.x=MAP.spawn[0]+Math.sin(t*.3)*30;cam.y=MAP.spawn[1]}
   musicTick();render();hud();requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
+
+/* ---------- match alerts: hosting posts "X wants to play" to the arcade, and phones with alerts on get a notification ---------- */
+const DP=window.DAREPlay||null,LFG_GAME='square-up';let LFG=null;
+function lfgStop(){if(!LFG)return;clearInterval(LFG.t);clearInterval(LFG.c);if(DP)DP.cancel(LFG_GAME,LFG.code);LFG=null}
+function lfgStart(){if(!DP||!ARCADE||!LOBBY||LOBBY.role!=='host')return;lfgStop();const code=LOBBY.code;
+  // stays up until the match starts, fills (4 players) or the host leaves
+  LFG={code,t:setInterval(()=>DP.keep(LFG_GAME,code),45000),c:setInterval(()=>{if(!LOBBY||LOBBY.code!==code||LOBBY.role!=='host'||lobbyPeers().length>=4||(NETM&&NETM.live))lfgStop()},2000)};
+  DP.post(LFG_GAME,code,myName()).then(r=>{if(LFG&&LFG.code===code&&r&&r.alerted)oMsg(r.alerted+(r.alerted===1?' player was':' players were')+' alerted to your match.')}).catch(()=>{})}
+addEventListener('pagehide',lfgStop);
+if(DP&&ARCADE){try{
+  const joinIt=code=>{openOnline(true);saveName();lobbyOpen(code,'guest')};
+  DP.openList($('oOpen'),LFG_GAME,m=>joinIt(m.code));
+  DP.alerts.toggle($('oAlerts'),[LFG_GAME],{accent:'#e7b847',label:'Get a notification when someone hosts a Square Up match.'});
+  DP.feed({accent:'#e7b847',onJoin:m=>{if(m.game!==LFG_GAME)return false;joinIt(m.code);return true}});
+  setInterval(()=>{DP.busy=$('titleOv').hidden&&$('onlineOv').hidden},1000);   // no pop-ups in the middle of a run
+  const jc=DP.joinCode&&DP.joinCode();if(jc){DP.clearJoin();setTimeout(()=>joinIt(jc),600)}  // ?join=CODE from an alert
+}catch(e){}}
 })();
 </script>
 </body>

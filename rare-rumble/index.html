@@ -321,6 +321,7 @@ tr.first td{color:var(--gold)}
         <div class="row" style="justify-content:flex-start;margin-top:8px"><button class="btn-ghost" id="oJoin">Join</button></div>
         <p class="eyebrow" style="margin-top:16px">Open matches</p>
         <div class="hosts" id="oHosts"><p class="note">No open matches right now.</p></div>
+        <div id="oAlerts" style="margin-top:14px"></div>
       </div>
       <div class="panel" id="oLobby" hidden>
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><p class="eyebrow">Match code</p><span class="code" id="oCodeShow">----</span></div>
@@ -3029,8 +3030,10 @@ async function netJoin(code,role){
  NET.unsubs.push(rm.on('snap',m=>{if(m.sameTab||!match||!match.online||match.online.role!=='guest')return;try{netApply(m.data);}catch(e){}}));
  NET.unsubs.push(rm.on('end',m=>{if(m.sameTab||!match||!match.online||match.online.role!=='guest'||mode==='results')return;guestEnd(m.data);}));
  lobbyPresence();hostAd();renderOnline();
+ if(role==='host')lfgStart();
 }
 async function netLeave(){
+ lfgStop();
  NET.unsubs.forEach(u=>{try{u();}catch(e){}});NET.unsubs=[];
  if(NET.rm){try{await NET.rm.leave();}catch(e){}}
  NET.rm=null;NET.role=null;NET.code='';NET.quick=false;NET.qAt=0;NET.ready=false;NET.hostPeer=null;hostAd();
@@ -3044,7 +3047,7 @@ async function quickMatch(){
 }
 function myPeer(){if(!NET.rm)return null;const me=NET.rm.peers().find(p=>p.sameTab);return me?me.peer:null;}
 function netHostStart(){
- const rm=NET.rm;if(!rm)return;
+ const rm=NET.rm;if(!rm)return;lfgStop();
  const ps=rm.peers().slice().sort((a,b)=>a.sameTab?-1:b.sameTab?1:a.peer<b.peer?-1:1).slice(0,4);
  const slots=ps.map(p=>{const pr=p.presence||{};const ch=clamp(pr.ch|0,0,ROSTER.length-1);return{peer:p.sameTab?null:p.peer,ch,skin:clamp(pr.skin|0,0,3),name:cleanName(pr.name)||'Player',me:p.sameTab,cid:typeof pr.cid==='string'?pr.cid.slice(0,12):null};});
  for(let i=1;i<slots.length;i++)for(let j=0;j<i;j++)if(slots[j].ch===slots[i].ch&&slots[j].skin===slots[i].skin)slots[i].skin=(slots[i].skin+1)%4;
@@ -3746,6 +3749,21 @@ $('#oLeave').addEventListener('click',()=>{SFX.ui();saveLast(null);netLeave().th
 $('#oStart').addEventListener('click',()=>{audioInit();SFX.ui();netHostStart();});
 $('#oName').value=(()=>{try{return localStorage.getItem('crownbrawl3name')||'';}catch(e){return'';}})();
 $('#oName').addEventListener('input',()=>{try{localStorage.setItem('crownbrawl3name',myName());}catch(e){}if(DP)try{DP.setNick(myName());}catch(e){}lobbyPresence();hostAd();});
+/* match alerts: a hosted match is posted to the arcade ("X wants to play"), and phones with alerts on get a notification */
+let LFG=null;
+function lfgStop(){if(!LFG)return;clearInterval(LFG.t);clearInterval(LFG.c);if(DP)DP.cancel('rare-rumble',LFG.code);LFG=null;}
+function lfgStart(){if(!DP||!ARCADE||NET.role!=='host'||!NET.code)return;lfgStop();const code=NET.code;
+ // comes down when the match starts, fills (4 fighters) or the host leaves
+ LFG={code,t:setInterval(()=>DP.keep('rare-rumble',code),45000),c:setInterval(()=>{if(NET.role!=='host'||NET.code!==code||hostLive()||(NET.rm&&NET.rm.peers().length>=4))lfgStop();},2000)};
+ DP.post('rare-rumble',code,myName()).then(r=>{if(LFG&&LFG.code===code&&r&&r.alerted)toast(r.alerted+(r.alerted===1?' player was':' players were')+' alerted to your match');}).catch(()=>{});}
+addEventListener('pagehide',lfgStop);
+if(DP&&ARCADE){try{
+ const joinIt=code=>{go('online',{reset:true});const t0=Date.now(),tryJoin=()=>NET.status==='ready'?netJoin(code,'guest'):Date.now()-t0<8000&&setTimeout(tryJoin,200);tryJoin();};
+ DP.alerts.toggle($('#oAlerts'),['rare-rumble'],{accent:'#f2c14e',label:'Get a notification when someone hosts a Rare Rumble match.'});
+ DP.feed({accent:'#f2c14e',onJoin:m=>{if(m.game!=='rare-rumble')return false;joinIt(m.code);return true;}});
+ setInterval(()=>{DP.busy=mode==='fight'||mode==='paused'||mode==='netpause';},1000);
+ const jc=DP.joinCode&&DP.joinCode();if(jc){DP.clearJoin();setTimeout(()=>joinIt(jc),700);}
+}catch(e){}}
 
 function applyOrient(){
  resize();applyLayout();updateRotLabel();
