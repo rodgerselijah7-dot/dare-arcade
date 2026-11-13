@@ -6,10 +6,12 @@
 // POST { op:"cancel", game, code, peer }            -> take it down (opponent found, or host left)
 // POST { op:"sub",    sub, games:[...] }            -> turn on match alerts for this device
 // POST { op:"unsub",  endpoint }                    -> turn them off
+// POST { op:"move",   old, sub }                    -> the phone replaced its push address; carry its games over
 //
 // Redis: arc:lfg   hash  "<game>:<code>" -> { game, code, nick, peer, t, exp }   (entries live 150s past their last keep)
 //        arc:push  hash  sha1(endpoint)  -> { sub, games, t }
-//        arc:pushthr:<id>  per-device throttle so one phone gets at most one alert a minute
+//        arc:pushdup:<id>:<game>:<code>  one alert per phone per match (10 minutes)
+//        arc:pushcnt:<id>  delivered alerts per phone in the last 5 minutes (capped at 6 so a busy night can't flood a phone)
 const crypto = require("crypto");
 const { hasRedis, redis, readJson, clientIp, rateLimit } = require("./_lib");
 const { vapid, sendPush } = require("./_push");
@@ -18,6 +20,7 @@ const GAMES = { buckets: "DARE Buckets", chess: "DARE Chess", connect: "DARE Con
 const CODE = /^[A-HJ-NP-Z2-9]{4}$/;
 const PEER = /^[a-z0-9]{8,24}$/;
 const LIVE_MS = 150 * 1000;
+const BURST = 6, BURST_S = 300;
 const PUSH_HOSTS = /(^|\.)(fcm\.googleapis\.com|android\.googleapis\.com|push\.services\.mozilla\.com|push\.apple\.com|notify\.windows\.com|push\.api\.chromium\.org)$/;
 const cleanNick = s => String(s || "").replace(/[^\p{L}\p{N} ._'-]/gu, "").trim().slice(0, 12) || "A player";
 const subId = ep => crypto.createHash("sha1").update(String(ep)).digest("hex");
@@ -32,6 +35,18 @@ async function openList() {
   }
   if (dead.length) redis("HDEL", "arc:lfg", ...dead).catch(() => {});
   return open.sort((a, b) => b.t - a.t);
+}
+
+// One push, with a single retry when the push service is busy or unreachable. 404/410 mean the phone's address is gone.
+async function deliver(sub, msg) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const status = await sendPush(sub, msg);
+    if (status >= 200 && status < 300) return "sent";
+    if (status === 404 || status === 410) return "gone";
+    if (status && status !== 429 && status < 500) return "failed"; // 400/403/413: a retry won't help
+    if (!attempt) await new Promise(r => setTimeout(r, 800));
+  }
+  return "failed";
 }
 
 async function alertAll(entry, excludeEp) {
@@ -50,10 +65,18 @@ async function alertAll(entry, excludeEp) {
   let sent = 0;
   await Promise.all(targets.map(async ([id, sub]) => {
     try {
-      if (!(await redis("SET", `arc:pushthr:${id}`, "1", "EX", 60, "NX"))) return; // alerted in the last minute
-      const status = await sendPush(sub, msg);
-      if (status === 404 || status === 410) await redis("HDEL", "arc:push", id);
-      else if (status >= 200 && status < 300) sent++;
+      const dup = `arc:pushdup:${id}:${entry.game}:${entry.code}`;
+      if (!(await redis("SET", dup, "1", "EX", 600, "NX"))) return; // already alerted about this match
+      if ((+(await redis("GET", `arc:pushcnt:${id}`)) || 0) >= BURST) { await redis("DEL", dup); return; }
+      const out = await deliver(sub, msg);
+      if (out === "sent") {
+        sent++;
+        const n = await redis("INCR", `arc:pushcnt:${id}`);
+        if (n === 1) await redis("EXPIRE", `arc:pushcnt:${id}`, BURST_S);
+      } else {
+        await redis("DEL", dup); // not delivered: let a re-post of this match try again
+        if (out === "gone") await redis("HDEL", "arc:push", id);
+      }
     } catch {}
   }));
   return sent;
@@ -96,13 +119,21 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true, alerted });
     }
 
-    if (op === "sub") {
+    if (op === "sub" || op === "move") {
       if (!(await rateLimit(`lfg-sub:${ip}`, 30, 3600)).ok) return res.status(429).json({ error: "Too many requests." });
       const s = b.sub || {}, keys = s.keys || {};
       let host = ""; try { const u = new URL(String(s.endpoint)); if (u.protocol === "https:") host = u.hostname; } catch {}
       if (!PUSH_HOSTS.test(host) || typeof keys.p256dh !== "string" || typeof keys.auth !== "string" || keys.p256dh.length > 120 || keys.auth.length > 48)
         return res.status(400).json({ error: "This browser's alerts aren't supported." });
-      const games = [...new Set((Array.isArray(b.games) ? b.games : []).filter(g => GAMES[g]))];
+      let games = Array.isArray(b.games) ? b.games : [];
+      if (op === "move") { // games come from the old address's record
+        const oldId = typeof b.old === "string" ? subId(b.old) : "";
+        let prev = null; try { prev = oldId && JSON.parse(await redis("HGET", "arc:push", oldId)); } catch {}
+        if (!prev) return res.status(404).json({ error: "Nothing to move." });
+        games = prev.games || [];
+        if (oldId !== subId(s.endpoint)) await redis("HDEL", "arc:push", oldId);
+      }
+      games = [...new Set(games.filter(g => GAMES[g]))];
       if (!games.length) return res.status(400).json({ error: "Pick a game." });
       await redis("HSET", "arc:push", subId(s.endpoint), JSON.stringify({ sub: { endpoint: String(s.endpoint), keys: { p256dh: keys.p256dh, auth: keys.auth } }, games, t: Date.now() }));
       return res.status(200).json({ ok: true, games });

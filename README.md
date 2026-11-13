@@ -135,7 +135,10 @@ Every push to `main` redeploys automatically.
   - **Find an opponent**: posts an open match to `/api/lfg`. Anyone with either game open sees a "<name> wants to play" pop-up with a Join button, and open matches are listed on the games' online screens. The listing drops when someone joins, the host leaves, or 2½ minutes after the host's page stops checking in.
   - **Match alerts**: phone notifications when someone posts an open match (Web Push through `/sw.js`). Players turn them on with the switch on a game's online screen. iPhones need the arcade on the Home Screen first (iOS 16.4+).
 - Joining from an alert opens `/<game>/?join=CODE` and drops the player straight into the match.
-- `/api/lfg` keys in Redis: `arc:lfg` (open matches), `arc:push` (alert subscriptions), `arc:pushthr:*` (one alert per phone per minute), `arc:vapid` (push signing keys, created on first use; set `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` env vars to use your own).
+- `/api/lfg` keys in Redis: `arc:lfg` (open matches), `arc:push` (alert subscriptions), `arc:pushdup:*` (one alert per phone per match), `arc:pushcnt:*` (at most 6 alerts per phone in 5 minutes), `arc:vapid` (push signing keys, created on first use; set `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` env vars to use your own).
+- Delivery: a push the push service turns away with a busy or network error is retried once; an alert that wasn't delivered doesn't count against the phone's limit. Addresses the push service reports as gone (404/410) are removed.
+- Staying subscribed: phones replace their push address now and then. `/sw.js` re-subscribes on `pushsubscriptionchange` and moves the phone's games to the new address (`op:"move"`), and every game page re-checks the phone's registration when it loads (`DAREPlay.alerts.sync`, at most every 12 hours unless the address changed), so the switch never shows On for a phone the server has dropped.
+- Tapping an alert while that game is already open focuses the tab and opens the match in it.
 
 ## Crate Digger
 - Music trivia across hip hop, R&B and soul, pop and neo soul, 1970s to 2026. Players pick a genre (or all) on the home screen. Four question types: Trivia (four choices), Who's from where (hometowns), Name the year (slider from 1970 to 2026, one year off still counts for 60% of the points) and Which came first (tap three releases oldest first).

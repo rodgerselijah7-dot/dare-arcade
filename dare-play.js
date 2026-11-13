@@ -288,6 +288,7 @@
   const cancel = (game, code) => { mine.delete(game + ":" + code); return api({ op: "cancel", game, code, peer }).catch(() => {}); };
 
   /* ---------- match alerts (push) ---------- */
+  let syncing = false;
   const b64ToBytes = s => { const p = "=".repeat((4 - s.length % 4) % 4), raw = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(raw, c => c.charCodeAt(0)); };
   const alerts = {
     supported() { return ONLINE && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; },
@@ -311,8 +312,30 @@
       if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(feedState.key) });
       const all = [...new Set([...this.games(), ...games])];
       await api({ op: "sub", sub: sub.toJSON(), games: all });
-      ls.set("dare-alert-games", all.join(","));
+      ls.set("dare-alert-games", all.join(",")); ls.set("dare-alert-ep", sub.endpoint); ls.set("dare-alert-sync", String(Date.now()));
       return all;
+    },
+    // Re-checks this phone's alert registration on each visit (at most every 12 hours unless something changed): makes a new
+    // push address if the old one was dropped, and re-sends the phone's games so the server never holds a stale copy.
+    async sync() {
+      if (syncing || !this.supported() || !this.games().length || Notification.permission !== "granted") return;
+      syncing = true;
+      try {
+        const reg = (await navigator.serviceWorker.getRegistration("/")) || (await this.reg());
+        await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription(), fresh = false;
+        if (!sub) {
+          if (!feedState.key) await refresh();
+          if (!feedState.key) return;
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(feedState.key) });
+          fresh = true;
+        }
+        const last = +ls.get("dare-alert-sync") || 0;
+        if (fresh || sub.endpoint !== ls.get("dare-alert-ep") || Date.now() - last > 12 * 3600e3) {
+          await api({ op: "sub", sub: sub.toJSON(), games: this.games() });
+          ls.set("dare-alert-ep", sub.endpoint); ls.set("dare-alert-sync", String(Date.now()));
+        }
+      } catch (e) {} finally { syncing = false; }
     },
     async disable(games) {
       const left = this.games().filter(g => !games.includes(g));
@@ -320,7 +343,7 @@
       const sub = reg && await reg.pushManager.getSubscription();
       if (sub) {
         if (left.length) await api({ op: "sub", sub: sub.toJSON(), games: left });
-        else { await api({ op: "unsub", endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe().catch(() => {}); }
+        else { await api({ op: "unsub", endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe().catch(() => {}); ls.set("dare-alert-ep", ""); }
       }
       ls.set("dare-alert-games", left.join(","));
       return left;
@@ -346,9 +369,17 @@
         sw.disabled = false;
       };
       paint();
-      if (this.supported() && this.games().length) this.reg().catch(() => {}); // keep the worker current
+      if (this.supported() && this.games().length) this.sync().then(() => paint()); // keep the worker and the server's copy current
     }
   };
+
+  // Every game page checks the phone's alert registration once it has loaded.
+  if (alerts.supported() && alerts.games().length) setTimeout(() => alerts.sync(), 2500);
+  // A tapped alert for a game tab that's already open: the service worker asks this page to open the match.
+  if (ONLINE && "serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => {
+    const d = e.data || {};
+    if (d.type === "dare-open" && typeof d.url === "string") { try { const u = new URL(d.url, location.origin); if (u.origin === location.origin) location.href = u.href; } catch (err) {} }
+  });
 
   window.DAREPlay = {
     online: ONLINE, peer, GAMES,
