@@ -908,7 +908,8 @@ const FX={
   pk:slot=>{if(PL[slot]===p){sfx('pick');buzz(10)}},
   hd:(x,y)=>{sfx('burst');g.fillStyle='rgba(120,170,210,.22)';g.beginPath();g.ellipse(x,y,90,55,0,0,7);g.fill()},
   ig:(x,y)=>{sfx('whoosh');lights.push({x,y,r:360,a:1,life:.3})},
-  lf:slot=>{const q=PL[slot];if(q)showToast(q.name.toUpperCase()+' LEFT','Their connection dropped')},
+  lf:slot=>{const q=PL[slot];if(q)showToast(q.name.toUpperCase()+' DROPPED','They can come back if their game reconnects')},
+  bk:slot=>{const q=PL[slot];if(q&&q!==p)showToast(q.name.toUpperCase()+' IS BACK','')},
   ul:i=>{const w=WEAP[i];if(!w)return;w.unlocked=true;sfx('unlock');buzz(25);showToast(w.name.toUpperCase(),'Unlocked at x'+w.unlock);refreshWeap()}
 };
 function fx(name,...a){FX[name](...a);if(isHost()){NETM.evId++;NETM.evq.push([NETM.evId,name,...a.map(v=>typeof v==='number'?Math.round(v*10)/10:v)]);if(NETM.evq.length>28)NETM.evq.splice(0,NETM.evq.length-28)}}
@@ -989,7 +990,8 @@ for(const id in TOG)$(id).addEventListener('click',()=>{S[TOG[id]]=!S[TOG[id]];s
 $('pauseBtn').addEventListener('click',()=>setPause(true));
 $('resumeBtn').addEventListener('click',()=>setPause(false));
 $('quitBtn').addEventListener('click',()=>{$('pauseOv').hidden=true;menuOpen=false;if(isGuest()){lobbyLeave();NETM=null;toTitle();return}gameOver()});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&!(NETM&&NETM.live))setPause(true)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&!(NETM&&NETM.live))setPause(true);
+  if(!document.hidden&&NETM&&NETM.live){last=performance.now();if(NETM.role==='guest'){NETM.lastSnap=performance.now();if(NETM.ck)NETM.ck.lastIn=0}else hostTick(true)}});
 function showGameUI(on){$('hud').hidden=!on;$('weap').hidden=!on;$('dashBtn').hidden=!on;$('nadeBtn').hidden=!on;if(!on){$('boss').hidden=true;$('rage').hidden=true;$('combo').style.opacity=0;$('downMsg').hidden=true;$('waitMsg').hidden=true}}
 function begin(){ensureAudio();NETM=null;$('titleOv').hidden=true;$('overOv').hidden=true;showGameUI(true);newRun()}
 function toTitle(){$('overOv').hidden=true;$('onlineOv').hidden=true;showGameUI(false);state='title';PL=[];loadMap(MAP.id);attract();renderBoard($('boardTitle'));buildFitList();buildMapList();$('titleOv').hidden=false}
@@ -1141,7 +1143,7 @@ function stepPlayer(pl,dt,sol,sim){
     pl.moving=ml>.1||pl.dash>0;
     pl.x=clamp(pl.x,WT+pl.r,WW-WT-pl.r);pl.y=clamp(pl.y,WT+pl.r,WH-WT-pl.r);resolve(pl,sol);
   }else{ // a teammate on the host: follow the position their phone reports
-    if(I.x!=null){const ox=pl.x,oy=pl.y,k=Math.min(1,dt*16);pl.x+=(I.x-pl.x)*k;pl.y+=(I.y-pl.y)*k;pl.vx=(pl.x-ox)/Math.max(dt,.001);pl.vy=(pl.y-oy)/Math.max(dt,.001)}
+    const sp=pl.ck?hsamp(pl,clockT(pl.ck),200):null;if(sp){const ox=pl.x,oy=pl.y;glide(pl,sp[0],sp[1],dt);pl.vx=(pl.x-ox)/Math.max(dt,.001);pl.vy=(pl.y-oy)/Math.max(dt,.001)}
     pl.moving=!!I.mv;pl.dash=I.dt?.1:0;
     if(I.dash!==pl.dashSeen){pl.dashSeen=I.dash;pl.dashT=.24;pl.dashHit=new Set();pl.inv=Math.max(pl.inv,.3);if(sim)sfx('dash')}
     if(sim){const tz=zoneAt(pl.x,pl.y);if(tz==='fire'&&pl.inv<=0)hurtP(pl,7)}}
@@ -1306,7 +1308,7 @@ function httpRoom(){
  const ICE=[{urls:['stun:stun.l.google.com:19302','stun:stun.cloudflare.com:3478']}];
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  function open(name){
-  let pres={},alive=true,down=0,seq=0,snap=Object.freeze([]);
+  let pres={},alive=true,down=0,seq=0,snap=Object.freeze([]),reqId=0,gotId=0,inFlight=0;
   const subs=[],errs=[],cache=new Map(),seen=new Set(),handlers={},queue={},lastSeen={},links=new Map(),dcPres={};
   const KEEP={snap:1,start:2,end:2},HOT=['inp'];
   const pub=()=>{const now=Date.now(),p2=Object.assign({},pres),ev={};let any=false;
@@ -1343,17 +1345,19 @@ function httpRoom(){
       const o=((d.peers||[]).find(q=>q&&q.peer===pid)||{}).presence||{};
       if(!offer&&o.o&&!pc.remoteDescription){await pc.setRemoteDescription({type:'offer',sdp:String(o.o)});await pc.setLocalDescription(await pc.createAnswer());await gathered();mine={a:pc.localDescription.sdp};continue}
       if(offer&&o.a&&!pc.remoteDescription)await pc.setRemoteDescription({type:'answer',sdp:String(o.a)});
-      await sleep(300)}
+      await sleep(450)}
     }catch(e){}
     if(!L.open){L.dead=true;stopSig();try{pc.close()}catch(e){}}})()}
   const directCount=()=>{let n=0;for(const x of snap)if(!x.sameTab){const L=links.get(x.peer);if(L&&L.open)n++}return n};
   const allDirect=()=>{const others=snap.filter(x=>!x.sameTab).length;return others>0&&directCount()===others};
   async function once(){
    let presence=pub();
-   while(JSON.stringify(presence).length>4000){const t=['start','end','snap'].find(k=>queue[k]&&queue[k].length>1)||(queue.snap&&queue.snap.length?'snap':null);if(!t)break;queue[t].shift();presence=pub()}
-   const r=await post({room:name,peer:me,presence});
+   while(JSON.stringify(presence).length>4000){const t=['start','end','snap'].find(k=>queue[k]&&queue[k].length>1)||(queue.start&&queue.start.length?'start':null)||(queue.snap&&queue.snap.length?'snap':null);if(!t)break;queue[t].shift();presence=pub()}
+   const myId=++reqId,r=await post({room:name,peer:me,presence});
    if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;throw e}
    const d=await r.json(),list=[selfPeer()],now=new Set(),msgs=[];
+   if(myId<gotId){for(const q of(d.peers||[])){const ev=q&&q.presence&&q.presence._ev;if(q&&q.peer!==me&&ev&&typeof ev==='object')for(const t in ev)if(Array.isArray(ev[t]))for(const it of ev[t])if(Array.isArray(it))deliver(String(q.peer),t,+it[0]||0,it[1])}return}
+   gotId=myId;
    for(const q of(d.peers||[])){if(!q||q.peer===me)continue;const pid=String(q.peer);now.add(pid);
     const raw=q.presence||{},ev=raw._ev,http=Object.assign({},raw);delete http._ev;
     const pr=merged(pid,http),js=JSON.stringify(pr),c=cache.get(pid);let obj;
@@ -1364,9 +1368,11 @@ function httpRoom(){
    left.forEach(x=>{seen.delete(x.peer);cache.delete(x.peer);delete dcPres[x.peer];const L=links.get(x.peer);if(L){try{L.pc&&L.pc.close()}catch(e){}links.delete(x.peer)}});now.forEach(x=>seen.add(x));
    snap=Object.freeze(list);subs.forEach(f=>{try{f({peers:snap,joined:[],left,updated:[]})}catch(e){}});
    msgs.sort((a,b)=>a.n-b.n).forEach(m=>deliver(m.peer,m.topic,m.n,m.data))}
-  (async function poll(){while(alive){const t0=performance.now(),gap=inMatch()?(allDirect()?400:100):600;
-    await sleep(Math.max(0,gap-(performance.now()-t0)));if(!alive)break;
-    try{await once();down=0}catch(e){if(!down)down=Date.now();if(Date.now()-down>15000&&!allDirect()){alive=false;errs.forEach(f=>{try{f({code:'upstream_error'})}catch(_){}})}}}})();
+  // During a match a request goes out every 110 ms even while the last one is still on its way (at most 2 at once),
+  // so updates keep a steady rhythm instead of waiting a full round trip each time.
+  const run=async()=>{inFlight++;try{await once();down=0}catch(e){if(e&&e.status===429)await sleep(800);if(!down)down=Date.now();if(Date.now()-down>20000&&!allDirect()){alive=false;errs.forEach(f=>{try{f({code:'upstream_error'})}catch(_){}})}}finally{inFlight--}};
+  (async function poll(){while(alive){const live2=inMatch(),gap=live2?(allDirect()?400:110):600;
+    if(live2&&!allDirect()){if(inFlight<2)run();await sleep(gap)}else{const t0=performance.now();await run();await sleep(Math.max(0,gap-(performance.now()-t0)))}}})();
   const R={name,
    presence:async patch=>{const hot={};let any=false;for(const k in patch){if(patch[k]===null)delete pres[k];else pres[k]=patch[k];if(HOT.includes(k)){hot[k]=patch[k];any=true}}if(any)sendAll({t:'p',p:hot})},
    peers:()=>snap,
@@ -1441,11 +1447,13 @@ function startOnline(role,data,me,hostPeer){
   if(role==='host')hostTick(true)}
 function hostPeersCheck(){}
 function hostReadInputs(){const ps=NETM.rm.peers(),now=performance.now();
-  for(const pl of PL){if(pl.local||pl.gone)continue;const q=ps.find(x=>x.peer===pl.peer);
-    if(q&&q.presence&&q.presence.inp&&typeof q.presence.inp==='object'){const I=q.presence.inp;pl.seen=now;
-      pl.inp={mx:0,my:0,a:+I.a||0,f:I.f?1:0,c:I.c|0,dash:I.dn|0,nade:I.n|0,nd:+I.nd||230,x:+I.x||pl.x,y:+I.y||pl.y,mv:I.mv?1:0,dt:I.dt?1:0};
-      if(pl.dashSeen===0&&pl.nadeSeen===0&&!pl.init){pl.init=1;pl.dashSeen=pl.inp.dash;pl.nadeSeen=pl.inp.nade}}
-    else if(now-pl.seen>4000){pl.gone=true;pl.firing=false;fx('lf',pl.slot);if(!live().length)gameOver()}}}
+  for(const pl of PL){if(pl.local)continue;const q=ps.find(x=>x.peer===pl.peer);
+    const I=q&&q.presence&&q.presence.inp&&typeof q.presence.inp==='object'?q.presence.inp:null;
+    if(I&&I.t!=null&&I.t!==pl.lastT){pl.lastT=I.t;pl.seen=now;pl.ck=pl.ck||{};clockIn(pl.ck,+I.t);hpush(pl,+I.t,[+I.x||0,+I.y||0]);
+      pl.inp=Object.assign(pl.inp||{},{mx:0,my:0,a:+I.a||0,f:I.f?1:0,c:I.c|0,dash:I.dn|0,nade:I.n|0,nd:+I.nd||230,mv:I.mv?1:0,dt:I.dt?1:0});
+      if(!pl.init){pl.init=1;pl.dashSeen=pl.inp.dash;pl.nadeSeen=pl.inp.nade;pl.x=+I.x||pl.x;pl.y=+I.y||pl.y}
+      if(pl.gone){pl.gone=false;pl.dashSeen=pl.inp.dash;pl.nadeSeen=pl.inp.nade;pl.x=+I.x||pl.x;pl.y=+I.y||pl.y;pl.hb=[[+I.t,pl.x,pl.y]];fx('bk',pl.slot)}}
+    else if(!pl.gone&&now-pl.seen>6000){pl.gone=true;pl.firing=false;pl.inp.f=0;fx('lf',pl.slot);if(!live().length)gameOver()}}}
 const r1=v=>Math.round(v*10)/10;
 function hostTick(force){const N=NETM;if(!N||!N.live&&!force)return;N.frame++;
   const direct=N.rm.allDirect?N.rm.allDirect():true,every=ARCADE?(direct?3:6):4;
@@ -1453,31 +1461,53 @@ function hostTick(force){const N=NETM;if(!N||!N.live&&!force)return;N.frame++;
   const zl=[];for(const z of zs){if(z.dead)continue;const fl=(z.crawl?1:0)|(z.armL?0:2)|(z.armR?0:4)|(z.headless?8:0)|(z.burn>0?16:0)|(z.flash>0?32:0)|(z.throwT>0?64:0)|(z.lunge>0?128:0)|(z.inside?256:0);
     const e=[z.id,TYPES.indexOf(z.type),Math.round(z.x),Math.round(z.y),Math.round(clamp(z.hp/z.max,0,1)*100),Math.round(z.face*10),fl,z.rise>0?Math.ceil(z.rise*10):0];
     if(z.type==='boss')e.push(z.mode==='tele'?1:z.mode==='charge'?2:0,Math.round(z.cdx*100),Math.round(z.cdy*100));zl.push(e)}
-  const data={mid:N.mid,st:state==='perk'?'k':state==='gate'?'g':state==='break'?'b':'p',w:wave,l:toSpawn+zs.length,sc:score,cb:combo,ct:r1(comboT),rg:rageT>0?1:0,
+  const data={mid:N.mid,ht:Math.round(performance.now()),st:state==='perk'?'k':state==='gate'?'g':state==='break'?'b':'p',w:wave,l:toSpawn+zs.length,sc:score,cb:combo,ct:r1(comboT),rg:rageT>0?1:0,
     b:bossRef&&!bossRef.dead?Math.round(clamp(bossRef.hp/bossRef.max,0,1)*1000):-1,u:WEAP.reduce((m,w,i)=>m|(w.unlocked?1<<i:0),0),P:[P.maxhp,r1(P.speed),r1(P.dashCd),r1(P.comboTime),r1(P.rate)],
-    pl:PL.map(q=>[q.slot,Math.round(q.x),Math.round(q.y),Math.round(q.ang*100),Math.ceil(q.hp),q.down?1:0,Math.round(q.rev*100),q.cur,q.firing?1:0,q.dash>0||q.dashT>0?1:0,q.lives,q.nades,q.ammo.map(a=>a===Infinity?-1:a),q.gone?1:0,q.inv>0?1:0]),
+    pl:PL.map(q=>[q.slot,Math.round(q.x),Math.round(q.y),Math.round(q.ang*100),Math.ceil(q.hp),q.down?1:0,Math.round(q.rev*100),q.cur,q.firing?1:0,q.dash>0||q.dashT>0?1:0,q.lives,q.nades,q.ammo.map(a=>a===Infinity?-1:a),q.gone?1:0,q.inv>0?1:0,...(q.local?[Math.round(performance.now()),Math.round(q.x),Math.round(q.y)]:q.hb&&q.hb.length?q.hb[q.hb.length-1].map(Math.round):[0,Math.round(q.x),Math.round(q.y)])]),
     z:zl,
     pr:props.map(q=>q.type==='mine'?[2,Math.round(q.cx),Math.round(q.cy),q.arm>0?1:0]:[q.type==='wall'?0:1,Math.round(q.x),Math.round(q.y),q.type==='wall'?Math.round(q.hp/q.max*100):(q.fuse>=0?1:0)]),
     pk:pickups.map(k=>[['hp','ammo','rage'].indexOf(k.kind),Math.round(k.x),Math.round(k.y)]),
-    fb:fire.map(f=>[Math.round(f.x),Math.round(f.y)]),
-    rk:bullets.filter(b=>b.ex).map(b=>[Math.round(b.x),Math.round(b.y),Math.round(b.vx),Math.round(b.vy)]),
-    nd:nades.map(n=>[Math.round(n.x),Math.round(n.y),Math.round(n.h),Math.round(n.fuse*10)]),
-    gb:globs.map(q=>[Math.round(q.x),Math.round(q.y),Math.round(q.h),Math.round(q.tx),Math.round(q.ty)]),
+    fb:fire.map(f=>[f.id||(f.id=++zid),Math.round(f.x),Math.round(f.y)]),
+    rk:bullets.filter(b=>b.ex).map(b=>[b.id||(b.id=++zid),Math.round(b.x),Math.round(b.y),Math.round(b.vx),Math.round(b.vy)]),
+    nd:nades.map(n=>[n.id||(n.id=++zid),Math.round(n.x),Math.round(n.y),Math.round(n.h),Math.round(n.fuse*10)]),
+    gb:globs.map(q=>[q.id||(q.id=++zid),Math.round(q.x),Math.round(q.y),Math.round(q.h),Math.round(q.tx),Math.round(q.ty)]),
     po:pools.map(q=>[q.kind==='gas'?1:0,Math.round(q.x),Math.round(q.y),q.r,Math.round(q.life*10)]),
     ih:iceHoles.map(h=>[Math.round(h.x),Math.round(h.y),Math.round(h.r),Math.round(h.life*10)]),
     ob:obs.map((o,i)=>o.hp!=null?[i,Math.round(clamp(o.hp/o.max,0,1)*100),(o.broken?1:0)|(o.alarm>0?2:0)|(o.burnT>0?4:0)|(o.spray>0?8:0)|(o.gone?16:0)]:null).filter(Boolean),
     oz:zones.filter(z=>z.e&&(z.t==='oil'||z.t==='scorch')).map(z=>z.t==='scorch'?-1:Math.round(z.burn*10)),
     tr:MAP.train?[['idle','warn','run'].indexOf(train.phase),Math.round(train.x),train.dir]:null,
-    sp:ev.stamp?[['idle','warn','run'].indexOf(ev.stamp.phase),ev.stamp.dir,ev.stamp.phase==='run'?ev.stamp.bulls.map(b=>[Math.round(b.x),Math.round(b.y),['#5a3b22','#2a2420','#7a5a3a','#d8c8a8'].indexOf(b.col)]):[]]:null,
+    sp:ev.stamp?[['idle','warn','run'].indexOf(ev.stamp.phase),ev.stamp.dir,ev.stamp.phase==='run'?ev.stamp.bulls.map(b=>[Math.round(b.x),Math.round(b.y),['#5a3b22','#2a2420','#7a5a3a','#d8c8a8'].indexOf(b.col),Math.round(b.v)]):[]]:null,
     sk:ev.strike?[ev.strike.phase==='warn'?1:0,Math.round(ev.strike.x||0),Math.round(ev.strike.y||0),r1(ev.strike.t)]:null,
     ev:N.evq.slice()};
-  let js=JSON.stringify(data);if(js.length>3900){data.ev=N.evq.slice(-10);js=JSON.stringify(data)}
-  if(js.length>3900){data.z.sort((a,b)=>hyp(a[2]-p.x,a[3]-p.y)-hyp(b[2]-p.x,b[3]-p.y));while(JSON.stringify(data).length>3900&&data.z.length)data.z.pop()}
+  // A match update rides in the host's room presence, which the arcade caps at 4 KB along with the host's lobby info.
+  const BUDGET=3350;let js=JSON.stringify(data);if(js.length>BUDGET){data.ev=N.evq.slice(-12);js=JSON.stringify(data)}
+  if(js.length>BUDGET){data.zp=1;const near=e=>Math.min(...PL.filter(q=>!q.gone).map(q=>hyp(e[2]-q.x,e[3]-q.y)));data.z.sort((a,b)=>near(a)-near(b));
+    let over=JSON.stringify(data).length-BUDGET;while(over>0&&data.z.length){over-=JSON.stringify(data.z.pop()).length+1}}
   N.rm.emit('snap',data).catch(()=>{})}
+/* Smoothing: every moving thing that comes over the network is drawn a little in the past (about one update
+   gap behind), sliding between the two updates around that moment. Without this, teammates, zombies, the
+   train and the bulls jump each time an update lands, which on a phone connection is only 3 to 8 times a second. */
+function hpush(o,t,v){const b=o.hb||(o.hb=[]);if(b.length&&t<=b[b.length-1][0]){b[b.length-1]=[t,...v];return}b.push([t,...v]);if(b.length>10)b.shift()}
+function hsamp(o,T,maxEx){const b=o.hb;if(!b||!b.length)return null;
+  if(T<=b[0][0])return b[0].slice(1);
+  for(let i=b.length-1;i>0;i--){const a=b[i-1],c=b[i];if(T>=a[0]&&T<=c[0]){const k=(T-a[0])/Math.max(1,c[0]-a[0]);return a.slice(1).map((v,j)=>v+(c[j+1]-v)*k)}}
+  const L=b[b.length-1];let A=null;for(let i=b.length-2;i>=0;i--)if(L[0]-b[i][0]>=60){A=b[i];break}
+  if(!A)return L.slice(1);const span=L[0]-A[0];if(span>900)return L.slice(1);const ex=Math.min(T-L[0],maxEx==null?220:maxEx,span);return L.slice(1).map((v,j)=>v+(v-A[j+1])*ex/span)}
+/* ease toward the smoothed spot; small steps land exactly, bigger corrections glide instead of popping */
+function glide(o,x,y,dt){const d=hyp(x-o.x,y-o.y);if(d<4||d>260){o.x=x;o.y=y;return}const k=Math.min(1,dt*16);o.x+=(x-o.x)*k;o.y+=(y-o.y)*k}
+/* Clock + delay estimate for one stream of timestamped updates: offset is the smallest (receive time - send time)
+   seen recently, delay covers how far apart updates usually arrive. */
+function clockIn(c,sent){const now=performance.now();c.offs=c.offs||[];c.offs.push(now-sent);if(c.offs.length>40)c.offs.shift();c.off=Math.min(...c.offs);
+  if(c.lastIn){const gp=now-c.lastIn;c.gaps=c.gaps||[];c.gaps.push(gp);if(c.gaps.length>30)c.gaps.shift();
+    const s2=c.gaps.slice().sort((a,b)=>a-b);c.delay=clamp(s2[Math.floor(s2.length*.85)]*1.1+30,70,480)}c.lastIn=now}
+/* the moment to draw, in the sender's clock; it runs at normal speed and eases toward the estimate, so the picture never jumps back and forth */
+function clockT(c){const now=performance.now(),tgt=now-(c.off||0)-(c.delay==null?160:c.delay);
+  if(c.rt==null||Math.abs(tgt-(c.rt+(now-c.at)))>700){c.rt=tgt;c.at=now;return tgt}
+  let t=c.rt+(now-c.at);t+=(tgt-t)*Math.min(1,(now-c.at)/1000*1.5);c.rt=t;c.at=now;return t}
 /* guest side */
 function guestSend(){const N=NETM;N.frame++;if(N.frame%2)return;const I=p.inp;
-  N.rm.presence({inp:{x:Math.round(p.x),y:Math.round(p.y),a:Math.round(I.a*100)/100,f:I.f?1:0,c:p.cur,dn:I.dash,n:I.nade,nd:I.nd,mv:p.moving?1:0,dt:p.dash>0?1:0}}).catch(()=>{})}
-function netApply(d){const N=NETM;if(!N||d.mid!==N.mid)return;N.lastSnap=performance.now();$('waitMsg').hidden=!(d.st==='k'||d.st==='g');
+  N.rm.presence({inp:{t:Math.round(performance.now()),x:Math.round(p.x),y:Math.round(p.y),a:Math.round(I.a*100)/100,f:I.f?1:0,c:p.cur,dn:I.dash,n:I.nade,nd:I.nd,mv:p.moving?1:0,dt:p.dash>0?1:0}}).catch(()=>{})}
+function netApply(d){const N=NETM;if(!N||d.mid!==N.mid)return;const HT=+d.ht||0;if(HT&&HT<=(N.lastHT||0))return;N.lastHT=HT;N.lastSnap=performance.now();N.ck=N.ck||{};clockIn(N.ck,HT);N.evPend=N.evPend||[];$('waitMsg').hidden=!(d.st==='k'||d.st==='g');
   if(d.st==='k')$('waitMsg').textContent='The host is picking a perk for the squad…';else if(d.st==='g')$('waitMsg').textContent='The host is unlocking the full game…';
   state=d.st==='b'?'break':d.st==='k'?'perk':d.st==='g'?'gate':'play';
   wave=d.w|0;toSpawn=Math.max(0,(d.l|0)-(d.z||[]).length);score=d.sc|0;combo=d.cb|0;comboT=+d.ct||0;rageT=d.rg?1:0;
@@ -1489,40 +1519,40 @@ function netApply(d){const N=NETM;if(!N||d.mid!==N.mid)return;N.lastSnap=perform
     if(q===p){if(hp<p.hp-.5&&!q.down){shake=Math.max(shake,6);sfx('hurt');buzz(30);for(let i=0;i<5;i++)parts.push({x:p.x,y:p.y,vx:rand(-90,90),vy:rand(-90,90),life:.3,max:.3,col:'#8e2a2a',s:3,h:18})}
       p.hp=hp;if(Math.abs(p.nades-(e[11]|0))>0&&performance.now()-(p.nadeAt||0)>1500)p.nades=e[11]|0;
       const am=(e[12]||[]).map(a=>a<0?Infinity:a);if(am.join()!==p.ammo.join()){p.ammo=am;wch=true}
-      if(q.down||wasDown||hyp(e[1]-p.x,e[2]-p.y)>220){p.x=e[1];p.y=e[2];p.vx=p.vy=0}
+      if(q.down||wasDown){p.x=e[1];p.y=e[2];p.vx=p.vy=0}
       if(q.down)p.firing=false}
-    else{q.hp=hp;q.tx=e[1];q.ty=e[2];if(q.x==null||hyp(q.tx-q.x,q.ty-q.y)>300){q.x=q.tx;q.y=q.ty}q.ang=(e[3]|0)/100;q.cur=e[7]|0;q.firing=!!e[8];q.dashF=!!e[9];q.nades=e[11]|0;q.ammo=(e[12]||[]).map(a=>a<0?Infinity:a)}}
+    else{q.hp=hp;q.ang=(e[3]|0)/100;const rt=+e[15]||0;q.ck=q.ck||{};if(!q.hb||!q.hb.length||q.gone){q.x=e[16]==null?e[1]:e[16];q.y=e[17]==null?e[2]:e[17]}if(rt&&rt!==q.rawT){q.rawT=rt;clockIn(q.ck,rt);hpush(q,rt,[+e[16],+e[17]])}q.cur=e[7]|0;q.firing=!!e[8];q.dashF=!!e[9];q.nades=e[11]|0;q.ammo=(e[12]||[]).map(a=>a<0?Infinity:a)}}
   if(wch)refreshWeap();
   const seenZ=new Set();
   for(const e of d.z||[]){const id=e[0];seenZ.add(id);let z=N.zmap&&N.zmap.get(id);const type=TYPES[e[1]]||'walker',hp=(e[4]|0)/100,fl=e[6]|0;
-    if(!z){z={id,type,x:e[2],y:e[3],tx:e[2],ty:e[3],r:ET[type].r,hp,max:1,look:lookFor(type),walk:rand(0,6),face:0,flash:0,throwT:0,armL:true,armR:true,stag:0,lunge:0,rise:0,riseKind:MAP.rise?(MAP.id==='river'||MAP.id==='lake'?'water':MAP.id==='southside'?'vent':MAP.id==='rail'?'gravel':'dirt'):'dirt',mode:'walk',cdx:0,cdy:0,kx:0,ky:0};
-      (N.zmap=N.zmap||new Map()).set(id,z);zs.push(z);if(e[7]>0)sfx('rise')}
+    if(!z){z={id,type,x:e[2],y:e[3],born:HT,r:ET[type].r,hp,max:1,look:lookFor(type),walk:rand(0,6),face:0,flash:0,throwT:0,armL:true,armR:true,stag:0,lunge:0,rise:0,riseKind:MAP.rise?(MAP.id==='river'||MAP.id==='lake'?'water':MAP.id==='southside'?'vent':MAP.id==='rail'?'gravel':'dirt'):'dirt',mode:'walk',cdx:0,cdy:0,kx:0,ky:0};
+      (N.zmap=N.zmap||new Map()).set(id,z);(N.zwait=N.zwait||[]).push(z)}
     if(hp<z.hp-.001){for(let i=0;i<3;i++)parts.push({x:z.x,y:z.y,vx:rand(-120,120),vy:rand(-120,120),life:.3,max:.3,col:'#5a1414',s:rand(2,3),h:18*ET[type].s})}
-    z.hp=hp;z.tx=e[2];z.ty=e[3];z.face=(e[5]|0)/10;z.crawl=!!(fl&1);z.armL=!(fl&2);z.armR=!(fl&4);z.headless=!!(fl&8);z.burn=fl&16?1:0;if(fl&32)z.flash=.08;if(fl&64)z.throwT=.3;if(fl&128&&!(z.lunge>0))z.lunge=.3;
+    z.hp=hp;hpush(z,HT,[e[2],e[3]]);z.face=(e[5]|0)/10;z.crawl=!!(fl&1);z.armL=!(fl&2);z.armR=!(fl&4);z.headless=!!(fl&8);z.burn=fl&16?1:0;if(fl&32)z.flash=.08;if(fl&64)z.throwT=.3;if(fl&128&&!(z.lunge>0))z.lunge=.3;
     z.rise=(e[7]|0)/10;if(type==='boss'){z.mode=e[8]===1?'tele':e[8]===2?'charge':'walk';z.cdx=(e[9]|0)/100;z.cdy=(e[10]|0)/100}}
-  if(N.zmap)for(const [id,z] of N.zmap)if(!seenZ.has(id)){N.zmap.delete(id);z.dead=true}
-  zs=zs.filter(z=>!z.dead);
+  if(N.zmap&&!d.zp)for(const [id,z] of N.zmap)if(!seenZ.has(id)){N.zmap.delete(id);N.evPend.push([HT,()=>{z.dead=true}])}
   props=(d.pr||[]).map(e=>e[0]===2?{type:'mine',cx:e[1],cy:e[2],arm:e[3]?1:0,blink:(performance.now()/1000)}:e[0]===0?{type:'wall',x:e[1],y:e[2],w:34,h:34,hp:e[3],max:100}:{type:'barrel',x:e[1],y:e[2],w:24,h:24,cx:e[1]+12,cy:e[2]+12,fuse:e[3]?1:-1});
   const oldPk=pickups;pickups=(d.pk||[]).map(e=>{const kind=['hp','ammo','rage'][e[0]]||'ammo',o=oldPk.find(k=>k.kind===kind&&Math.abs(k.x-e[1])<2&&Math.abs(k.y-e[2])<2);return{kind,x:e[1],y:e[2],t:o?o.t:0}});
-  fire=(d.fb||[]).map(e=>({x:e[0],y:e[1],vx:0,vy:0,life:1}));
-  rkts=(d.rk||[]).map(e=>({x:e[0],y:e[1],vx:e[2],vy:e[3],t:0}));
-  nades=(d.nd||[]).map(e=>({x:e[0],y:e[1],h:e[2],fuse:e[3]/10}));
-  globs=(d.gb||[]).map(e=>({x:e[0],y:e[1],h:e[2],tx:e[3],ty:e[4]}));
+  N.pj=N.pj||new Map();const pjSeen=new Set();
+  const track=(list,kind,mk)=>{for(const e of list||[]){const k=kind+e[0];pjSeen.add(k);let o=N.pj.get(k);if(!o){o=mk(e);o.kind=kind;o.born=HT;N.pj.set(k,o)}hpush(o,HT,e.slice(1,kind==='g'?4:kind==='n'?4:3));o.last=e}};
+  track(d.fb,'f',e=>({x:e[1],y:e[2],vx:0,vy:0,life:1}));track(d.rk,'r',e=>({x:e[1],y:e[2],vx:e[3],vy:e[4],t:0}));
+  track(d.nd,'n',e=>({x:e[1],y:e[2],h:e[3],fuse:e[4]/10}));track(d.gb,'g',e=>({x:e[1],y:e[2],h:e[3],tx:e[4],ty:e[5]}));
+  for(const [k,o] of N.pj)if(!pjSeen.has(k)){N.pj.delete(k);N.evPend.push([HT,()=>{o.gone=1}])}
   pools=(d.po||[]).map(e=>({kind:e[0]?'gas':'acid',x:e[1],y:e[2],r:e[3],life:e[4]/10}));
   iceHoles=(d.ih||[]).map(e=>({x:e[0],y:e[1],r:e[2],life:e[3]/10}));
   for(const e of d.ob||[]){const o=obs[e[0]];if(!o)continue;o.hp=o.max*e[1]/100;const f=e[2]|0;
     if(f&1&&!o.broken){o.broken=true;if(o.kind==='car'||o.kind==='carv')o.col='#2b2725';if(o.kind==='hydrant')o.ht=6}
     o.alarm=f&2?Math.max(o.alarm||0,.6):0;o.burnT=f&4?Math.max(o.burnT||0,.6):0;o.spray=f&8?Math.max(o.spray||0,.6):0;if(f&16&&!o.gone){o.gone=true;obsDirty=true}}
   if(Array.isArray(d.oz)){let i=0;for(const z of zones)if(z.e&&(z.t==='oil'||z.t==='scorch')){const v=d.oz[i++];if(v===-1&&z.t!=='scorch'){z.t='scorch';g.fillStyle='rgba(0,0,0,.5)';g.beginPath();g.ellipse(z.e.cx,z.e.cy,z.e.rx*1.1,z.e.ry*1.1,0,0,7);g.fill()}else if(v>=0)z.burn=v/10}}
-  if(d.tr&&MAP.train){train.phase=['idle','warn','run'][d.tr[0]]||'idle';train.x=d.tr[1];train.dir=d.tr[2]||1}
+  if(d.tr&&MAP.train){const ph=['idle','warn','run'][d.tr[0]]||'idle';if(ph==='run'&&train.phase!=='run')train.hb=[];train.phase=ph;train.dir=d.tr[2]||1;if(ph==='run')hpush(train,HT,[d.tr[1]]);else train.x=d.tr[1]}
   if(d.sp&&ev.stamp){ev.stamp.phase=['idle','warn','run'][d.sp[0]]||'idle';ev.stamp.dir=d.sp[1]||1;const cols=['#5a3b22','#2a2420','#7a5a3a','#d8c8a8'];
-    const old=ev.stamp.bulls||[];ev.stamp.bulls=(d.sp[2]||[]).map((e,i)=>({x:e[0],y:e[1],col:cols[e[2]]||cols[0],walk:old[i]?old[i].walk:rand(0,6),tx:e[0]}))}
+    const old=ev.stamp.bulls||[];ev.stamp.bulls=(d.sp[2]||[]).map((e,i)=>{const b=old[i]&&old[i].hb?old[i]:{x:e[0],y:e[1],walk:rand(0,6),hb:[]};b.col=cols[e[2]]||cols[0];hpush(b,HT,[e[0],e[1]]);return b})}
   if(d.sk&&ev.strike){ev.strike.phase=d.sk[0]?'warn':'idle';ev.strike.x=d.sk[1];ev.strike.y=d.sk[2];ev.strike.t=+d.sk[3]||0}
   const evs=Array.isArray(d.ev)?d.ev:[];
   if(N.evSeen<0)N.evSeen=evs.length?(+evs[evs.length-1][0]||0):0;
-  else for(const e of evs){const n=+e[0]||0;if(n<=N.evSeen)continue;N.evSeen=n;guestEvent(e.slice(1))}}
+  else for(const e of evs){const n=+e[0]||0;if(n<=N.evSeen)continue;N.evSeen=n;const ee=e.slice(1);N.evPend.push([HT,()=>guestEvent(ee)])}}
 function guestEvent(e){const [name,...a]=e;
-  if(name==='k'){const z=NETM.zmap&&NETM.zmap.get(a[7]);if(z){z.dead=true;NETM.zmap.delete(a[7]);zs=zs.filter(q=>!q.dead)}FX.k(a[0],a[1],a[2],a[3],a[4],a[5],a[6],z?z.look:null);return}
+  if(name==='k'){const z=(NETM.zmap&&NETM.zmap.get(a[7]))||zs.find(q=>q.id===a[7]);if(z){z.dead=true;NETM.zmap.delete(a[7]);zs=zs.filter(q=>!q.dead);if(z.hb&&z.hb.length){const L=z.hb[z.hb.length-1];a[0]=L[1];a[1]=L[2]}}FX.k(a[0],a[1],a[2],a[3],a[4],a[5],a[6],z?z.look:null);return}
   if(name==='ul'){const w=WEAP[a[0]];if(w){w.unlocked=false}FX.ul(a[0]);return}
   if(FX[name])try{FX[name](...a)}catch(err){}}
 function guestUpdate(dt){
@@ -1532,22 +1562,31 @@ function guestUpdate(dt){
   p.firing=!!p.inp.f;
   if(!(p.ammo[p.cur]>0)&&p.inp.f)cycle(-1);
   breath(dt);
-  const k=Math.min(1,dt*12);
-  for(const q of PL){if(q===p||q.tx==null)continue;const ox=q.x,oy=q.y;q.x+=(q.tx-q.x)*k;q.y+=(q.ty-q.y)*k;q.vx=(q.x-ox)/Math.max(dt,.001);q.vy=(q.y-oy)/Math.max(dt,.001);
+  const N=NETM,T=N.ck?clockT(N.ck):0;
+  // moments (kills, explosions, removals) play when the smoothed picture reaches them
+  if(N.evPend&&N.evPend.length){N.evPend.sort((a,b)=>a[0]-b[0]);while(N.evPend.length&&N.evPend[0][0]<=T){try{N.evPend.shift()[1]()}catch(e){}}if(N.evPend.length>120)N.evPend.splice(0,N.evPend.length-120).forEach(x=>{try{x[1]()}catch(e){}})}
+  if(N.zwait&&N.zwait.length){N.zwait=N.zwait.filter(z=>{if(z.born>T)return true;if(N.zmap.get(z.id)===z){zs.push(z);if(z.rise>0)sfx('rise')}return false})}
+  zs=zs.filter(z=>!z.dead);
+  for(const q of PL){if(q===p||!q.hb)continue;const ox=q.x,oy=q.y,v=q.ck&&q.ck.off!=null?hsamp(q,clockT(q.ck)):null;if(v)glide(q,v[0],v[1],dt);q.vx=(q.x-ox)/Math.max(dt,.001);q.vy=(q.y-oy)/Math.max(dt,.001);
     q.moving=hyp(q.vx,q.vy)>25&&!q.down;q.dash=q.dashF?.1:0;if(q.moving)q.walk+=dt*(q.dash>0?22:13);q.flash-=dt;q.inv=q.invF?.2:0;if(q.moving&&!q.down)footMark(q,1)}
-  for(const z of zs){z.x+=(z.tx-z.x)*k;z.y+=(z.ty-z.y)*k;if(!(z.rise>0))z.walk+=dt*(z.type==='runner'?15:z.type==='boss'&&z.mode==='charge'?18:8);z.flash-=dt;z.throwT-=dt;if(z.lunge>0)z.lunge-=dt;
+  for(const z of zs){const v=hsamp(z,T);if(v)glide(z,v[0],v[1],dt);if(!(z.rise>0))z.walk+=dt*(z.type==='runner'?15:z.type==='boss'&&z.mode==='charge'?18:8);z.flash-=dt;z.throwT-=dt;if(z.lunge>0)z.lunge-=dt;
     if(z.rise>0&&Math.random()<dt*25)riseDust(z);if(z.burn>0)burnFx(z)}
   for(const q of PL)cosmeticFire(q,dt);
   for(const b of bullets){b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.flame){b.vx*=.94;b.vy*=.94}b.life-=dt}
   bullets=bullets.filter(b=>b.life>0);
-  for(const r of rkts){r.t+=dt;if(Math.random()<.5)parts.push({x:r.x+r.vx*r.t,y:r.y+r.vy*r.t,vx:rand(-20,20),vy:rand(-20,20),life:.4,max:.4,col:'#55505c',s:7,smoke:1})}
+  fire=[];rkts=[];nades=[];globs=[];
+  if(N.pj)for(const o of N.pj.values()){if(o.born>T)continue;const v=hsamp(o,T,300);if(v){o.x=v[0];o.y=v[1];if(o.kind==='n'||o.kind==='g')o.h=v[2];if(o.kind==='n')o.fuse=(o.last[4]|0)/10}({f:fire,r:rkts,n:nades,g:globs})[o.kind].push(o)}
+  for(const r of rkts){r.t=0;if(Math.random()<.5)parts.push({x:r.x,y:r.y,vx:rand(-20,20),vy:rand(-20,20),life:.4,max:.4,col:'#55505c',s:7,smoke:1})}
   for(const f of fire)if(Math.random()<.6)parts.push({x:f.x,y:f.y,vx:rand(-30,30),vy:rand(-30,30),life:.25,max:.25,col:'#ff7a3d',s:4,h:16});
-  if(ev.stamp&&ev.stamp.phase==='run')for(const b of ev.stamp.bulls)b.walk+=dt*20;
+  if(ev.stamp&&ev.stamp.phase==='run')for(const b of ev.stamp.bulls){b.walk+=dt*20;const v=hsamp(b,T,400);if(v){b.x=v[0];b.y=v[1]}}
+  if(MAP.train&&train.phase==='run'&&train.hb&&train.hb.length){const v=hsamp(train,T,1500);if(v)train.x=v[0]}
   for(const k2 of pickups)k2.t+=dt;
   for(const q of props)if(q.type==='mine')q.blink+=dt;
   updTrain(dt);worldTick(dt);cues(dt);stepFx(dt);
   guestSend();
-  if(performance.now()-NETM.lastSnap>9000){NETM.live=false;lobbyLeave();showToast('HOST LEFT','The match ended');gameOver()}}
+  const gap=performance.now()-NETM.lastSnap;
+  if(gap>2500&&state!=='perk'&&state!=='gate'){$('waitMsg').hidden=false;$('waitMsg').textContent='Waiting for the host… (their game may be paused)'}else if(gap<2500&&N.waitShown)$('waitMsg').hidden=!(state==='perk'||state==='gate');N.waitShown=gap>2500;
+  if(gap>25000){NETM.live=false;lobbyLeave();showToast('HOST LEFT','The match ended');gameOver()}}
 function guestHazards(){if(p.down||p.dead)return;
   if(ev.stamp&&ev.stamp.phase==='run'){const L=MAP.lane;for(const b of ev.stamp.bulls)if(Math.abs(p.x-b.x)<24+p.r&&Math.abs(p.y-b.y)<14+p.r){p.y=p.y<(L.y1+L.y2)/2?L.y1-p.r-4:L.y2+p.r+4;p.vx+=ev.stamp.dir*200}}
   for(const h of iceHoles){const dx=p.x-h.x,dy=(p.y-h.y)/.75,d=hyp(dx,dy);if(d<h.r+p.r-6&&p.dash<=0){const nx=dx/(d||1),ny=dy/(d||1);p.x=h.x+nx*(h.r+p.r-4);p.y=h.y+ny*(h.r+p.r-4)*.75;p.vx*=-.3;p.vy*=-.3}}}
