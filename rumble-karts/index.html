@@ -1790,9 +1790,14 @@ function setQuality(mode){QUAL.mode=mode;
   const sm=mode==='ultra'?(LOW?2048:4096):mode==='fast'?1024:(LOW?1024:2048);
   if(sun.shadow.mapSize.x!==sm){sun.shadow.mapSize.set(sm,sm);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}}
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mode==='fast'?1.25:(LOW?2:2)));resize();}
-function qualityTick(dt){if(QUAL.mode!=='auto')return;QUAL.fps.push(dt);if(QUAL.fps.length<45)return;const a=QUAL.fps.reduce((x,y)=>x+y,0)/QUAL.fps.length;QUAL.fps.length=0;
-  if(a>1/48&&QUAL.scale>QUAL.min){QUAL.scale=Math.max(QUAL.min,QUAL.scale-0.08);if(QUAL.scale<0.75)QUAL.bloom2=false;}
-  else if(a<1/57&&QUAL.scale<QUAL.max){QUAL.scale=Math.min(QUAL.max,QUAL.scale+0.04);}}
+// Adaptive resolution. Judged on the median of ~1.5 s of frames so one-off hitches never trigger it, held off while
+// the game settles after loading or a new track, and changed rarely: each change resizes the render buffers.
+function qualityHold(sec){QUAL.hold=Math.max(QUAL.hold||0,sec);QUAL.fps.length=0;}
+function qualityTick(dt){if(QUAL.mode!=='auto')return;if(QUAL.hold>0){QUAL.hold-=dt;return;}if(dt>0.25)return;QUAL.fps.push(dt);if(QUAL.fps.length<90)return;
+  const m=QUAL.fps.slice().sort((x,y)=>x-y)[QUAL.fps.length>>1];QUAL.fps.length=0;QUAL.cool=(QUAL.cool||0)-1;
+  if(m>1/45){QUAL.bad=(QUAL.bad||0)+1;QUAL.good=0;}else if(m<1/58){QUAL.good=(QUAL.good||0)+1;QUAL.bad=0;}else{QUAL.bad=0;QUAL.good=0;}
+  if(QUAL.bad>=2&&QUAL.scale>QUAL.min){QUAL.scale=Math.max(QUAL.min,QUAL.scale-(m>1/32?0.15:0.1));QUAL.bad=0;QUAL.cool=4;if(QUAL.scale<0.75)QUAL.bloom2=false;}
+  else if(QUAL.good>=4&&QUAL.cool<=0&&QUAL.scale<QUAL.max){QUAL.scale=Math.min(QUAL.max,QUAL.scale+0.1);QUAL.good=0;QUAL.cool=4;}}
 
 /* ---------- name tags over rivals ---------- */
 const TAGS=[];
@@ -2351,7 +2356,7 @@ function makeRace(trackIdx,opts){const T=trackOf(trackIdx);for(const b of T.boxe
   const others=opts.othersList||(opts.solo?[]:CHARS.map((c,i)=>i).filter(i=>i!==opts.player));
   const R=SIM.newRace({T,track:trackIdx,laps:opts.laps||3,cls:opts.cls,player:opts.player,others,mode:opts.mode,seed:(Math.random()*1e9)|0,grid:opts.grid});
   KV.forEach(v=>v.root.visible=false);S.vis=R.karts.map(k=>KV[k.ch]);S.vis.forEach(v=>{v.root.visible=true;v.pitch=0;v.tilt=0;v.anim=null;v.susp=0;v.suspV=0;});
-  R.karts.forEach(k=>k.prevPlace=0);FXA.clear();FXN.clear();SKID.clear();clearFX();return R;}
+  R.karts.forEach(k=>k.prevPlace=0);FXA.clear();FXN.clear();SKID.clear();clearFX();S.needWarm=true;return R;}
 
 /* ---- demo race behind the menus ---- */
 function startDemo(trackIdx){S.demo=true;S.rp=null;const R=makeRace(trackIdx,{player:(Math.random()*8)|0,cls:2,mode:'quick',laps:99,variant:Math.random()<0.35?1:0});
@@ -2689,7 +2694,7 @@ function renderHow(){renderItemGuide();$('howKeys').innerHTML=isTouch?
 
 /* ---------- main loop ---------- */
 let lastT=performance.now();
-function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-lastT)/1000);lastT=now;S.t+=dt;qualityTick(dt);
+function frame(now){requestAnimationFrame(frame);if(S.needWarm&&S.R){S.needWarm=false;warmShaders(S.R);now=performance.now();}let dt=Math.min(0.05,(now-lastT)/1000);lastT=now;S.t+=dt;qualityTick(dt);
   if(S.slowT>0)S.slowT-=dt;const ts=S.slowT>0?0.3:1,sdt=dt*ts;
   if(S.state==='char'||S.state==='podium'){renderShow(dt);return;}
   if(S.state==='replay'){replayFrame(dt);return;}
@@ -2766,13 +2771,22 @@ function introCam(R,P){const T=R.T,N=T.N,q=1-S.intro/S.introLen,pt={},lk={};
     camera.position.set(lerp(f[0],P.x-c*dist,e),lerp(f[1],P.y+h,e),lerp(f[2],P.z-sn*dist,e));
     camera.lookAt(lerp(f[3],P.x+c*3.2,e),lerp(f[4],P.y+1.1,e),lerp(f[5],P.z+sn*3.2,e));}}
 
+/* ---------- shader warm-up ----------
+   three.js compiles a shader the first time something is drawn with it, which freezes the game for a moment. Compile every
+   shader the current scene can need (hidden karts, shields, item meshes, the showroom) while a loading screen or wipe hides it. */
+function warmShaders(R){try{const hid=[];const showAll=root=>root.traverse(o=>{if(!o.visible&&!o.isLight){hid.push(o);o.visible=true;}});
+  if(R&&R.karts.length){const k=R.karts[0],keep=R.objs;R.objs=['goo','bomb','rocket','ice','tornado'].map((type,i)=>({type,x:k.x+i*2,y:k.y+1,z:k.z,h:0,age:1,ttl:9,fuse:9,r:1.5}));syncItems(R,S.t);R.objs=keep;}
+  const rt0=renderer.getRenderTarget();renderer.setRenderTarget(POST.main);showAll(scene);renderer.compile(scene,camera);if(typeof show!=='undefined'){showAll(show);renderer.compile(show,showCam);}renderer.setRenderTarget(rt0);
+  hid.forEach(o=>o.visible=false);if(R)syncItems(R,S.t);}catch(e){console.warn('warm',e);}
+  if(typeof qualityHold==='function')qualityHold(2.5);}
 /* ---------- boot ---------- */
 setQuality(settings.gfx);
 const fontsReady=document.fonts&&document.fonts.ready?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve();
 fontsReady.then(()=>{
   try{makePortraits();}catch(e){console.warn('portraits',e);}
-  startDemo(0);$('loading').hidden=true;setScreen('title');S.state='menu';renderCabinet();
-  requestAnimationFrame(frame);});
+  startDemo(0);warmShaders(S.R);POST.render(scene,camera,0);
+  // two frames behind the loading screen so the first visible frame is a normal one
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{$('loading').hidden=true;setScreen('title');S.state='menu';renderCabinet();lastT=performance.now();requestAnimationFrame(frame);}));});
 // unlock audio on the first touch anywhere
 addEventListener('pointerdown',()=>AU.init(),{once:true});
 
