@@ -2618,7 +2618,7 @@ function renderShow(dt){const a=camera.aspect;showCam.aspect=a;
     SV.forEach((v,i)=>{const th=i*step-S.carA,x=Math.sin(th)*RAD,z=CZ+Math.cos(th)*RAD,sel=i===G.ch,ped=S.carPeds[i];
       v.root.visible=Math.cos(th)>-0.3;ped.visible=v.root.visible;ped.position.set(x,0,z);v.root.position.set(x,0.3,z);
       if(sel){v.spinA=(v.spinA===undefined?-0.6:v.spinA)+dt*0.55;}else v.spinA=lerp(v.spinA===undefined?0:v.spinA,-0.6+Math.atan2(x,8-z)*0.2,1-Math.exp(-dt*3));
-      v.root.rotation.set(0,v.spinA,0);ped.userData.ring.material.color.copy(CHARS[i]._tc||(CHARS[i]._tc=C(CHARS[i].trim))).multiplyScalar(sel?2.6+Math.sin(S.t*4)*0.4:0.7));
+      v.root.rotation.set(0,v.spinA,0);ped.userData.ring.material.color.copy(CHARS[i]._tc||(CHARS[i]._tc=C(CHARS[i].trim))).multiplyScalar(sel?2.6+Math.sin(S.t*4)*0.4:0.7);
       if(sel){v.drv.rotation.x=Math.sin(S.t*1.2)*0.05;if(!v.anim&&Math.sin(S.t*0.7)>0.97)setAnim(v,'wave',1.6);}
       animDriver(v,{steerVis:sel?Math.sin(S.t*0.9)*0.6:0,hitT:0,inp:{}},dt,S.t);});
     if(a<1){showCam.fov=50;showCam.position.set(0,4.6,13.5);showCam.lookAt(0,-2.6,-1);}else{showCam.fov=30;showCam.position.set(0,3.3,12.8);showCam.lookAt(0,-0.55,0);}}
