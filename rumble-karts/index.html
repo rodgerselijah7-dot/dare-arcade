@@ -761,11 +761,20 @@ function aiThink(R,k,dt){
   // curvature ahead for drift decisions
   let curv=0;if(k.sc>=0){const B=T.SC[k.sc];for(let q=8;q<44;q+=3)curv+=B.K[Math.min(B.N-1,k.bl.i+q)]*3;}else for(let q=8;q<44;q+=3)curv+=T.K[(i+q)%N]*3;
   inp.thr=1;inp.back=false;
-  if(k.drift){inp.steer=clamp(err*2.4+k.drift*0.55,-1,1);
-    const rel=k.drift*curv;inp.drift=!(rel<0.18&&k.driftT>0.5)&&!(k.tier>=a.driftWant&&rel<0.4)&&k.driftT<3.6+a.skill*0.8;}
+  // where the kart will be across the road in a moment (sideways slide included)
+  const onMain=k.sc<0,lat=onMain?k.loc.lat:0,latV=onMain?k.v*Math.sin(wrapA(k.mh-Math.atan2(T.TZ[i],T.TX[i]))):0,
+    edge=onMain&&!bK?T.hw-0.9:1e9,pl=lat+latV*0.55,pl2=lat+latV*1.0;
+  if(k.drift){const d=k.drift;inp.steer=clamp(err*2.4+d*0.3,-1,1);
+    const rel=d*curv;inp.drift=!(rel<0.18&&k.driftT>0.5)&&!(k.tier>=a.driftWant&&rel<0.4)&&k.driftT<3.6+a.skill*0.8;
+    // keep the slide on the tarmac: tighten when drifting wide, open up when cutting into the inside verge
+    if(Math.abs(pl2)>edge-1.2){const out=Math.sign(pl2)===-d;inp.steer=out?d:-d;
+      if(Math.abs(pl)>edge-0.2||(out&&Math.abs(pl2)>edge+0.8&&k.driftT>0.25))inp.drift=false;}}
   else{inp.steer=clamp(err*2.8,-1,1);
-    const want2=Math.abs(curv)>0.55&&k.v>16&&!k.air&&R.r()<0.06+a.skill*0.25;
-    if(want2){inp.drift=true;inp.steer=Math.sign(curv);a.driftWant=a.skill>0.8&&Math.abs(curv)>1.4?2:1;}else inp.drift=false;}
+    if(Math.abs(pl)>edge-0.4)inp.steer=clamp(inp.steer-Math.sign(pl)*0.6,-1,1);
+    // only commit to a drift with room on the outside of the corner
+    const sg=Math.sign(curv),room=onMain?edge+sg*lat:9;
+    const want2=Math.abs(curv)>0.55&&k.v>16&&!k.air&&room>2.2&&Math.abs(pl)<edge-1&&Math.abs(err)<0.5&&R.r()<0.06+a.skill*0.25;
+    if(want2){inp.drift=true;inp.steer=sg;a.driftWant=a.skill>0.8&&Math.abs(curv)>1.4?2:1;}else inp.drift=false;}
   if(Math.abs(err)>1.1&&k.v>12)inp.thr=0.4;
   // stuck / reversing
   if(k.v<3&&R.t>2&&!k.hitT){a.stuckT+=dt;if(a.stuckT>1.2){a.revT=0.9;a.stuckT=0;}}else a.stuckT=Math.max(0,a.stuckT-dt);
@@ -1708,7 +1717,7 @@ const POST=(()=>{
   const pass=(m,t)=>{quad.material=m;renderer.setRenderTarget(t);renderer.render(qs,cam);};
   const _sunP=new THREE.Vector3();
   const P={U,bright,main,rays:0,flare:0,
-    setSize(){const v=renderer.getDrawingBufferSize(new THREE.Vector2()),s=QUAL.scale,w=Math.max(2,(v.x*s)|0),h=Math.max(2,(v.y*s)|0);
+    setSize(){const v=renderer.getDrawingBufferSize(P._v||(P._v=new THREE.Vector2())),s=QUAL.scale,w=Math.max(2,(v.x*s)|0),h=Math.max(2,(v.y*s)|0);
       if(w===P.w&&h===P.h)return;P.w=w;P.h=h;main.setSize(w,h);const bw=Math.max(2,w>>2),bh=Math.max(2,h>>2);bA.setSize(bw,bh);bB.setSize(bw,bh);rA.setSize(bw,bh);cA.setSize(Math.max(2,bw>>1),Math.max(2,bh>>1));cB.setSize(Math.max(2,bw>>1),Math.max(2,bh>>1));
       bright.uniforms.px.value.set(1/w,1/h);U.res.value.set(w,h);},
     grade(g){U.exposure.value=g.exp;U.sat.value=g.sat;U.contrast.value=g.con;U.lift.value.set(...g.lift);U.gain.value.set(...g.gain);U.bloom.value=g.bloom;bright.uniforms.thr.value=g.thr;U.vig.value=g.vig;},
@@ -2609,7 +2618,7 @@ function renderShow(dt){const a=camera.aspect;showCam.aspect=a;
     SV.forEach((v,i)=>{const th=i*step-S.carA,x=Math.sin(th)*RAD,z=CZ+Math.cos(th)*RAD,sel=i===G.ch,ped=S.carPeds[i];
       v.root.visible=Math.cos(th)>-0.3;ped.visible=v.root.visible;ped.position.set(x,0,z);v.root.position.set(x,0.3,z);
       if(sel){v.spinA=(v.spinA===undefined?-0.6:v.spinA)+dt*0.55;}else v.spinA=lerp(v.spinA===undefined?0:v.spinA,-0.6+Math.atan2(x,8-z)*0.2,1-Math.exp(-dt*3));
-      v.root.rotation.set(0,v.spinA,0);ped.userData.ring.material.color.setScalar(0).add(new THREE.Color(C(CHARS[i].trim)).multiplyScalar(sel?2.6+Math.sin(S.t*4)*0.4:0.7));
+      v.root.rotation.set(0,v.spinA,0);ped.userData.ring.material.color.copy(CHARS[i]._tc||(CHARS[i]._tc=C(CHARS[i].trim))).multiplyScalar(sel?2.6+Math.sin(S.t*4)*0.4:0.7));
       if(sel){v.drv.rotation.x=Math.sin(S.t*1.2)*0.05;if(!v.anim&&Math.sin(S.t*0.7)>0.97)setAnim(v,'wave',1.6);}
       animDriver(v,{steerVis:sel?Math.sin(S.t*0.9)*0.6:0,hitT:0,inp:{}},dt,S.t);});
     if(a<1){showCam.fov=50;showCam.position.set(0,4.6,13.5);showCam.lookAt(0,-2.6,-1);}else{showCam.fov=30;showCam.position.set(0,3.3,12.8);showCam.lookAt(0,-0.55,0);}}
