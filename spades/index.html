@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<title>Spades</title>
+<link rel="manifest" href="/spades/manifest.webmanifest">
+<link rel="icon" href="/spades/icon-192.png">
+<link rel="apple-touch-icon" href="/spades/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#d4af37;--gold2:#f3d77a;--bg:#0b0b0d;--felt:#0f3d2a;--felt2:#0a2a1d;--ink:#f4f1e8;--muted:#a9a59a;--red:#c8102e;--card:#fbfaf6;--line:#2a2a2e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+input{user-select:text;-webkit-user-select:text}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding-top:env(safe-area-inset-top)}
+#bar{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(#141416,#0b0b0d);border-bottom:1px solid var(--line)}
+.team{flex:1;min-width:0;padding:6px 10px;border-radius:10px;background:#18181b;border:1px solid var(--line)}
+.team .lbl{font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team .pts{font-family:'Bebas Neue';font-size:26px;line-height:1}
+.team .bags{font-size:11px;color:var(--muted)}
+.team.us .pts{color:var(--gold2)}
+.ibtn{width:40px;height:40px;flex:none;border-radius:10px;border:1px solid var(--line);background:#18181b;color:var(--gold);font-size:19px;position:relative;display:grid;place-items:center}
+.ibtn svg{width:20px;height:20px}
+.ibtn .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#e5352b}
+[hidden]{display:none!important}
+#table{position:relative;flex:1;background:radial-gradient(ellipse at center,var(--felt) 0%,var(--felt2) 70%,#06150e 100%);overflow:hidden}
+#table::after{content:"♠";position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:180px;color:rgba(255,255,255,.035);pointer-events:none}
+.seat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:2;max-width:110px}
+.seat.n{top:10px;left:50%;transform:translateX(-50%)}
+.seat.w{left:6px;top:40%;transform:translateY(-50%)}
+.seat.e{right:6px;top:40%;transform:translateY(-50%)}
+.seat.s{bottom:8px;left:50%;transform:translateX(-50%);max-width:none}
+.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-family:'Bebas Neue';font-size:22px;background:#111;border:2px solid #333;transition:box-shadow .2s}
+.avatar.mate{border-color:var(--gold)}
+.seat.turn .avatar{box-shadow:0 0 0 3px rgba(212,175,55,.35),0 0 18px rgba(212,175,55,.6)}
+.seat.s.turn .stat{box-shadow:0 0 0 2px var(--gold)}
+.name{font-size:11px;font-weight:600;max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat{font-size:11px;background:rgba(0,0,0,.45);padding:2px 8px;border-radius:20px;color:var(--gold2);white-space:nowrap}
+.stat.nil{color:#ff8a8a}
+.away{font-size:10px;color:#ff8a8a}
+.backs{display:flex;height:22px}
+.back{width:15px;height:22px;border-radius:3px;margin-left:-9px;background:repeating-linear-gradient(45deg,#1a1a1a 0 3px,#2a2410 3px 6px);border:1px solid var(--gold)}
+.back:first-child{margin-left:0}
+.bubble{position:absolute;top:-6px;left:50%;transform:translate(-50%,-100%);background:var(--gold);color:#111;font-weight:800;font-size:13px;padding:4px 10px;border-radius:14px;white-space:nowrap;animation:pop .25s ease-out;z-index:5}
+.seat.n .bubble{top:auto;bottom:-8px;transform:translate(-50%,100%)}
+@keyframes pop{from{opacity:0}}
+#trick{position:absolute;left:50%;top:44%;width:0;height:0;z-index:3}
+.tcard{position:absolute;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .35s}
+#status{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);font-size:13px;background:rgba(0,0,0,.55);padding:6px 14px;border-radius:20px;white-space:nowrap;z-index:4;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+#coach{position:absolute;left:10px;right:10px;bottom:44px;z-index:6;background:rgba(12,12,14,.94);border:1px solid var(--gold);border-radius:14px;padding:10px 12px 10px 12px;font-size:13px;line-height:1.42;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#coach b.tag{display:inline-block;font-family:'Bebas Neue';font-size:15px;letter-spacing:.08em;color:#111;background:var(--gold);padding:0 7px;border-radius:5px;margin-right:6px}
+#coach em{color:var(--gold2);font-style:normal;font-weight:700}
+#broken{position:absolute;right:10px;bottom:10px;font-size:11px;color:var(--muted);z-index:2}
+#broken.on{color:var(--gold2)}
+#banner{position:absolute;top:0;left:0;right:0;background:#5a1414;color:#fff;font-size:12px;text-align:center;padding:5px;z-index:8}
+.card{width:58px;height:84px;border-radius:7px;background:var(--card);color:#111;box-shadow:0 2px 6px rgba(0,0,0,.45);position:relative;font-weight:800}
+.card.red{color:var(--red)}
+.card .r{position:absolute;top:4px;left:5px;font-size:17px;line-height:1}
+.card .s1{position:absolute;top:21px;left:5px;font-size:15px;line-height:1}
+.card .big{position:absolute;right:5px;bottom:3px;font-size:30px;line-height:1}
+.card.down{background:repeating-linear-gradient(45deg,#151515 0 5px,#2a2410 5px 10px);border:2px solid var(--gold)}
+.card.down *{display:none}
+#handWrap{height:calc(132px + env(safe-area-inset-bottom));background:linear-gradient(#0b0b0d,#111114);border-top:1px solid var(--line);position:relative}
+#hand{position:absolute;left:0;right:0;top:22px;height:100px}
+#hand .card{position:absolute;top:0;transition:transform .18s,filter .18s,left .25s}
+#hand .card.dim{filter:brightness(.5)}
+#hand .card.sel{transform:translateY(-20px)}
+#hand .card.tip{box-shadow:0 0 0 3px var(--gold),0 0 16px var(--gold)}
+#hint{position:absolute;top:4px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+#peekBtn{position:absolute;left:50%;top:50px;transform:translateX(-50%);z-index:5;padding:10px 18px;border-radius:12px;border:1px solid var(--gold);background:#111;color:var(--gold2);font-weight:800}
+#watchNote{position:absolute;inset:22px 0 0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.overlay.show{display:flex}
+.panel{width:100%;max-width:400px;background:#121214;border:1px solid #2f2a18;border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.6);max-height:92vh;overflow:auto}
+.panel h2{font-family:'Bebas Neue';font-size:34px;letter-spacing:.04em;margin:0 0 4px;color:var(--gold)}
+.panel p{color:var(--muted);font-size:14px;margin:6px 0 12px;line-height:1.45}
+.btn{display:block;width:100%;padding:14px;border-radius:12px;border:0;font-weight:800;font-size:15px;letter-spacing:.04em;margin-top:10px}
+.btn.gold{background:linear-gradient(var(--gold2),var(--gold));color:#111}
+.btn.ghost{background:#1c1c20;color:var(--ink);border:1px solid #333}
+.btn:disabled{opacity:.45}
+.btn small{display:block;font-weight:600;font-size:11px;opacity:.7;letter-spacing:0;margin-top:2px}
+.seg{display:flex;gap:8px;margin:8px 0}
+.seg button{flex:1;padding:10px;border-radius:10px;border:1px solid #333;background:#1c1c20;color:var(--ink);font-weight:700}
+.seg button.on{border-color:var(--gold);color:var(--gold2);background:#221d0c}
+.bidgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.bidgrid button{padding:11px 0;border-radius:9px;border:1px solid #333;background:#1c1c20;color:var(--ink);font-weight:800;font-size:15px}
+.bidgrid button.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.bidgrid button.tip:not(.on){box-shadow:0 0 0 2px var(--gold)}
+.bidgrid button.nil{grid-column:span 2;color:#ff8a8a}
+.bidgrid button.nil.on{background:#ff8a8a;color:#111}
+.est{font-size:12px;color:var(--muted);text-align:center}
+table.sum{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+table.sum th,table.sum td{padding:7px 6px;border-bottom:1px solid #26262a;text-align:right}
+table.sum th:first-child,table.sum td:first-child{text-align:left;color:var(--muted)}
+table.sum th{color:var(--gold2);font-family:'Bebas Neue';font-size:20px;font-weight:400}
+.pos{color:#7fe0a0}.neg{color:#ff8a8a}
+.rules{font-size:13px;color:#cfcabd;line-height:1.5}
+.rules b{color:var(--gold2)}
+.title{font-family:'Bebas Neue';font-size:64px;line-height:.9;text-align:center;color:var(--gold);margin:4px 0}
+.title small{display:block;font-size:16px;letter-spacing:.3em;color:var(--muted)}
+.lab{font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-top:12px}
+.field{width:100%;padding:13px;border-radius:12px;border:1px solid #333;background:#0d0d0f;color:var(--ink);font-size:16px;margin-top:6px}
+.field.code{font-family:'Bebas Neue';font-size:26px;letter-spacing:.3em;text-align:center;text-transform:uppercase}
+.joinrow{display:flex;gap:8px;align-items:stretch}
+.joinrow .btn{width:auto;padding:0 22px;margin-top:6px}
+.bigcode{font-family:'Bebas Neue';font-size:60px;letter-spacing:.16em;text-align:center;color:var(--gold2);line-height:1;margin:6px 0}
+.seats{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;gap:8px;margin:10px 0}
+.stile{border:1px solid #333;background:#1a1a1d;border-radius:12px;padding:10px 6px;text-align:center;font-size:13px;font-weight:700;min-height:58px;color:var(--ink)}
+.stile small{display:block;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.stile.t0{border-color:rgba(212,175,55,.6)}
+.stile.t1{border-color:rgba(120,170,255,.5)}
+.stile.me{background:#221d0c}
+.stile.empty{color:var(--muted);font-weight:600}
+.stile.n{grid-column:2;grid-row:1}.stile.w{grid-column:1;grid-row:2}.stile.e{grid-column:3;grid-row:2}.stile.s{grid-column:2;grid-row:3}
+.seats .mid{grid-column:2;grid-row:2;display:grid;place-items:center;font-size:34px;color:rgba(212,175,55,.35)}
+.note{font-size:12px;color:var(--muted);text-align:center;min-height:16px}
+.tutstep{font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.tutbig{font-size:46px;text-align:center;margin:8px 0}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#111;border:1px solid var(--gold);color:var(--ink);padding:8px 16px;border-radius:20px;font-size:13px;z-index:90;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <div class="team us"><div class="lbl" id="lUs">You + Partner</div><div class="pts" id="sUs">0</div><div class="bags" id="bUs">0 bags</div></div>
+    <div class="team"><div class="lbl" id="lThem">Opponents</div><div class="pts" id="sThem">0</div><div class="bags" id="bThem">0 bags</div></div>
+    <button class="ibtn" id="chatBtn" aria-label="Chat" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><i class="dot" hidden></i></button>
+    <button class="ibtn" id="menuBtn" aria-label="Menu">☰</button>
+  </div>
+  <div id="table">
+    <div id="banner" hidden></div>
+    <div class="seat n" id="vN"><div class="avatar"></div><div class="name"></div><div class="stat"></div><div class="away" hidden>away</div><div class="backs"></div></div>
+    <div class="seat w" id="vW"><div class="avatar"></div><div class="name"></div><div class="stat"></div><div class="away" hidden>away</div><div class="backs"></div></div>
+    <div class="seat e" id="vE"><div class="avatar"></div><div class="name"></div><div class="stat"></div><div class="away" hidden>away</div><div class="backs"></div></div>
+    <div class="seat s" id="vS"><div class="stat"></div></div>
+    <div id="trick"></div>
+    <div id="status"></div>
+    <div id="coach" hidden></div>
+    <div id="broken">♠ not broken</div>
+  </div>
+  <div id="handWrap"><div id="hint"></div><div id="hand"></div><button id="peekBtn" hidden>Look at my cards</button><div id="watchNote" hidden>You're watching this game</div></div>
+</div>
+
+<!-- start -->
+<div class="overlay show" id="ovStart"><div class="panel">
+  <div class="title"><small>THE CLASSIC</small>SPADES</div>
+  <p style="text-align:center">You and your partner against two opponents. Bid your tricks, make your contract, watch your bags.</p>
+  <button class="btn gold" id="btnSolo">PLAY THE COMPUTER</button>
+  <button class="btn ghost" id="btnOnline">PLAY ONLINE<small>4 seats, each on their own phone</small></button>
+  <button class="btn ghost" id="btnTut">TUTORIAL<small>New to Spades? Learn by playing one coached hand</small></button>
+  <button class="btn ghost" id="btnRules1">HOW TO PLAY</button>
+</div></div>
+
+<!-- solo settings -->
+<div class="overlay" id="ovSolo"><div class="panel">
+  <h2>Vs Computer</h2>
+  <div class="lab">Play to</div>
+  <div class="seg" id="segTarget"><button data-v="250">250</button><button data-v="500" class="on">500</button></div>
+  <div class="lab">Opponent skill</div>
+  <div class="seg" id="segSkill"><button data-v="1">Casual</button><button data-v="2" class="on">Sharp</button></div>
+  <div class="lab">Blind Nil</div>
+  <div class="seg" id="segBlind"><button data-v="1" class="on">On</button><button data-v="0">Off</button></div>
+  <p style="font-size:12px">Blind Nil: bid zero before you look at your cards, for ±200. Only allowed when your team is down by 100 or more.</p>
+  <button class="btn gold" id="btnDeal">DEAL ME IN</button>
+  <button class="btn ghost" data-back="ovSolo">BACK</button>
+</div></div>
+
+<!-- online -->
+<div class="overlay" id="ovOnline"><div class="panel">
+  <h2>Play Online</h2>
+  <div id="olSetup">
+    <p>Four seats, two teams. Empty seats are filled by bots.</p>
+    <div class="lab">Your name</div>
+    <input class="field" id="olNick" maxlength="16" placeholder="What should we call you?" autocomplete="nickname">
+    <button class="btn gold" id="olCreate">CREATE A ROOM</button>
+    <div class="joinrow"><input class="field code" id="olCode" maxlength="4" placeholder="CODE" autocapitalize="characters" autocomplete="off" spellcheck="false"><button class="btn ghost" id="olJoin">JOIN</button></div>
+    <button class="btn ghost" id="olFind" hidden>FIND PLAYERS<small>Post your room so anyone can join</small></button>
+    <p class="note" id="olStatus"></p>
+    <div id="olOpen" hidden></div>
+    <div id="olAlerts" hidden></div>
+    <button class="btn ghost" data-back="ovOnline">BACK</button>
+  </div>
+  <div id="olLobby" hidden>
+    <div class="lab" style="text-align:center" id="olRole">You're the host</div>
+    <div class="bigcode" id="olCodeShow">----</div>
+    <button class="btn ghost" id="olCopy">COPY INVITE</button>
+    <div class="lab">Seats <span style="text-transform:none;letter-spacing:0">· tap an open seat to sit there. Partners sit across.</span></div>
+    <div class="seats" id="olSeats"></div>
+    <div id="olHostSet">
+      <div class="lab">Play to</div>
+      <div class="seg" id="olTarget"><button data-v="250">250</button><button data-v="500">500</button></div>
+      <div class="lab">Blind Nil</div>
+      <div class="seg" id="olBlind"><button data-v="1">On</button><button data-v="0">Off</button></div>
+    </div>
+    <p class="note" id="olWait"></p>
+    <button class="btn gold" id="olStart">START</button>
+    <p class="note" id="olNote"></p>
+    <button class="btn ghost" id="olLeave">LEAVE ROOM</button>
+  </div>
+</div></div>
+
+<!-- blind nil choice -->
+<div class="overlay" id="ovBlind"><div class="panel">
+  <h2>Go Blind?</h2>
+  <p>Your team is down by 100 or more, so you can bid <b style="color:#ff8a8a">Blind Nil</b> without looking at your cards. Take zero tricks for +200. Take even one and it's −200.</p>
+  <button class="btn gold" id="btnGoBlind">BID BLIND NIL</button>
+  <button class="btn ghost" id="btnLook">LOOK AT MY CARDS</button>
+</div></div>
+
+<!-- bid -->
+<div class="overlay" id="ovBid"><div class="panel">
+  <h2>Your Bid</h2>
+  <p id="bidInfo"></p>
+  <p id="bidCoach" class="rules" hidden></p>
+  <div class="bidgrid" id="bidGrid"></div>
+  <div class="est" id="bidEst"></div>
+  <button class="btn gold" id="btnBid" disabled>PLACE BID</button>
+</div></div>
+
+<!-- round summary -->
+<div class="overlay" id="ovRound"><div class="panel">
+  <h2 id="rTitle">Hand Over</h2>
+  <table class="sum" id="rTable"></table>
+  <p id="rNote"></p>
+  <p id="rCoach" class="rules" hidden></p>
+  <button class="btn gold" id="btnNext">NEXT HAND</button>
+  <button class="btn ghost" id="btnNext2" hidden></button>
+  <p class="note" id="rWait" hidden>Waiting for the host to deal the next hand…</p>
+</div></div>
+
+<!-- tutorial intro -->
+<div class="overlay" id="ovTut"><div class="panel">
+  <div class="tutstep" id="tutStep">1 of 5</div>
+  <div class="tutbig" id="tutIcon">♠</div>
+  <h2 id="tutHead"></h2>
+  <p id="tutText" class="rules"></p>
+  <button class="btn gold" id="tutNext">NEXT</button>
+  <button class="btn ghost" id="tutSkip">SKIP TO THE HAND</button>
+</div></div>
+
+<!-- menu -->
+<div class="overlay" id="ovMenu"><div class="panel">
+  <h2>Menu</h2>
+  <button class="btn ghost" id="btnResume">RESUME</button>
+  <button class="btn ghost" id="btnRules2">HOW TO PLAY</button>
+  <button class="btn ghost" id="btnCoach">COACH: OFF</button>
+  <button class="btn ghost" id="btnSound">SOUND: ON</button>
+  <button class="btn gold" id="btnQuit">QUIT TO TITLE</button>
+</div></div>
+
+<!-- rules -->
+<div class="overlay" id="ovRules"><div class="panel">
+  <h2>How to Play</h2>
+  <div class="rules">
+  <p><b>Teams.</b> You sit across from your partner. Each hand, all 52 cards are dealt, 13 each.</p>
+  <p><b>Bidding.</b> Everyone bids how many tricks they expect to win. Your bid plus your partner's is your team's contract. Bid <b>Nil</b> if you think you can take zero tricks.</p>
+  <p><b>Blind Nil.</b> If your team is down by 100 or more, you can bid Nil before looking at your cards: +200 if you take no tricks, −200 if you take any.</p>
+  <p><b>Play.</b> Follow the suit that was led if you can. If you can't, play anything. A spade trumps every other suit. Highest spade wins, otherwise the highest card of the suit that was led.</p>
+  <p><b>Breaking spades.</b> You can't lead spades until a spade has been played on another suit, unless you have nothing but spades.</p>
+  <p><b>Scoring.</b> Make your contract: 10 × bid, plus 1 point per extra trick (a "bag"). Miss it: lose 10 × bid. Every <b>10 bags</b> costs 100 points. Nil: +100 made, −100 busted.</p>
+  <p><b>Winning.</b> First team to the target wins. Fall to −200 and you lose.</p>
+  <p><b>Controls.</b> Tap a card to lift it, tap again to play. Dimmed cards can't be played right now.</p>
+  </div>
+  <button class="btn gold" id="btnRulesClose">GOT IT</button>
+</div></div>
+<div id="toast"></div>
+
+<script src="/dare-play.js"></script>
+<script>
+(()=>{
+/* ================= basics ================= */
+const SUITS=['S','H','C','D'], SYM={S:'♠',H:'♥',C:'♣',D:'♦'}, SNAME={S:'spade',H:'heart',C:'club',D:'diamond'};
+const RN={11:'J',12:'Q',13:'K',14:'A'}, rname=r=>RN[r]||String(r);
+const VPOS=['S','W','N','E'];
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cd=id=>({s:id[0],r:+id.slice(1),id});
+const lbl=c=>rname(c.r)+SYM[c.s];
+const ALL=[];for(const s of SUITS)for(let r=2;r<=14;r++)ALL.push(s+r);
+const team=p=>p%2, mate=p=>(p+2)%4;
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const cfg=Object.assign({target:500,skill:2,blind:1,nick:'',sound:true},ls.get('spades-cfg',{}));
+const saveCfg=()=>ls.set('spades-cfg',cfg);
+
+/* ================= state =================
+   G is the whole table, plain JSON. Offline (and on an online host's phone) the director below runs it;
+   online guests receive it from the host and only render it. */
+let G=null, MODE='', MY=0, RUN=0, PEND=null, sel=null, SENT=0, PEEK='', COACH=false;
+
+function newG(seats,opts){
+  return {g:1+(Math.random()*1e9|0),v:0,ph:'deal',seats,target:opts.target,bn:opts.blind,skill:opts.skill||2,
+    scores:[0,0],bags:[0,0],dealer:Math.random()*4|0,hand:0,tn:0,
+    hands:[[],[],[],[]],bids:[null,null,null,null],blind:[0,0,0,0],tricks:[0,0,0,0],trick:[],last:null,broken:false,turn:-1,sum:null,over:null};
+}
+function deal(){
+  const d=ALL.slice();for(let i=d.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[d[i],d[j]]=[d[j],d[i]];}
+  G.hands=[0,1,2,3].map(i=>d.slice(i*13,i*13+13));
+  G.bids=[null,null,null,null];G.blind=[0,0,0,0];G.tricks=[0,0,0,0];G.trick=[];G.broken=false;
+  G.dealer=(G.dealer+1)%4;G.hand++;G.sum=null;G.turn=-1;G.ph='bid';
+}
+const H=p=>G.hands[p].map(cd);
+const name=p=>p===MY?'You':G.seats[p].n;
+const blindOK=p=>!!G.bn && G.scores[team(p)]<=G.scores[1-team(p)]-100;
+
+/* ================= rules ================= */
+function legal(p){
+  const h=H(p);
+  if(!G.trick.length){const non=h.filter(c=>c.s!=='S');return (!G.broken&&non.length)?non:h;}
+  const ls_=G.trick[0][1][0], f=h.filter(c=>c.s===ls_);
+  return f.length?f:h;
+}
+function beats(a,b,ls_){if(a.s===b.s)return a.r>b.r;if(a.s==='S')return true;if(b.s==='S')return false;return a.s===ls_&&b.s!==ls_;}
+function winnerOf(tr){let w=tr[0];const ls_=tr[0][1][0];for(const t of tr.slice(1))if(beats(cd(t[1]),cd(w[1]),ls_))w=t;return w;}
+function isMaster(c,p){
+  const seen=new Set(G.hands.flat());
+  for(let r=c.r+1;r<=14;r++){const id=c.s+r;if(seen.has(id)&&!G.hands[p].includes(id))return false;}
+  return true;
+}
+const val=c=>(c.s==='S'?100:0)+c.r;
+const lowest=L=>L.slice().sort((a,b)=>val(a)-val(b))[0];
+const highest=L=>L.slice().sort((a,b)=>val(b)-val(a))[0];
+const teamBid=T=>[T,T+2].reduce((s,p)=>s+(G.bids[p]>0?G.bids[p]:0),0);
+const teamTricks=T=>[T,T+2].reduce((s,p)=>s+(G.bids[p]!==0?G.tricks[p]:0),0);
+
+/* ================= AI ================= */
+function estimate(h){
+  let t=0;const by={S:[],H:[],C:[],D:[]};h.forEach(c=>by[c.s].push(c.r));
+  const sp=by.S,sl=sp.length;
+  if(sp.includes(14))t+=1; if(sp.includes(13))t+=sl>=2?1:.4; if(sp.includes(12))t+=sl>=3?.8:.25; if(sp.includes(11))t+=sl>=4?.5:0;
+  if(sl>=4)t+=(sl-3)*.75;
+  for(const s of['H','C','D']){const a=by[s],n=a.length;
+    if(a.includes(14))t+=n<=5?1:.6; if(a.includes(13))t+=(n>=2&&n<=4)?.8:(n>=5?.3:.15); if(a.includes(12)&&n>=3&&n<=4)t+=.3;
+    if(sl>=2){if(n===0)t+=Math.min(sl-1,2)*.7;else if(n===1&&!a.includes(14))t+=.5;else if(n===2)t+=.2;}}
+  return t;
+}
+const suggestBid=p=>Math.max(1,Math.round(estimate(H(p))));
+function aiBid(p){
+  const mb=G.bids[mate(p)], behind=G.scores[1-team(p)]-G.scores[team(p)];
+  if(blindOK(p)&&mb!==0&&behind>=200&&Math.random()<.35) return 'B';
+  const h=H(p),e=estimate(h),sp=h.filter(c=>c.s==='S');
+  if(e<1.2&&!sp.some(c=>c.r>=12)&&sp.length<=3&&mb!==0&&!h.some(c=>c.r===14)&&G.scores[team(p)]<G.target-60&&Math.random()<(G.skill===2?.85:.5)) return 'b0';
+  let b=Math.max(1,Math.round(e-(G.skill===2?.1:0)));
+  if(G.skill===1)b=Math.max(1,b+(Math.random()<.3?(Math.random()<.5?-1:1):0));
+  if(mb!=null&&mb+b>12)b=Math.max(1,12-mb);
+  return 'b'+Math.min(b,13);
+}
+function aiPlay(p){
+  const L=legal(p); if(L.length===1)return L[0];
+  const nil=G.bids[p]===0, mNil=G.bids[mate(p)]===0&&G.tricks[mate(p)]===0, T=team(p), tb=teamBid(T), tt=teamTricks(T);
+  const satisfied=tb>0&&tt>=tb&&!mNil;
+  const oppNil=[(p+1)%4,(p+3)%4].filter(q=>G.bids[q]===0&&G.tricks[q]===0);
+  const pos=G.trick.length, non=L.filter(c=>c.s!=='S');
+  if(pos===0){
+    if(nil)return lowest(L);
+    if(mNil){const m=non.filter(c=>isMaster(c,p));if(m.length)return highest(m);return highest(non.length?non:L);}
+    if(oppNil.length&&G.skill===2)return lowest(non.length?non:L);
+    if(!satisfied){const m=non.filter(c=>isMaster(c,p));if(m.length)return m[0];
+      const ms=L.filter(c=>c.s==='S'&&isMaster(c,p));if(ms.length&&G.skill===2)return ms[0];}
+    if(non.length){const cnt={};H(p).forEach(c=>cnt[c.s]=(cnt[c.s]||0)+1);
+      const s=Object.keys(cnt).filter(s=>s!=='S'&&non.some(c=>c.s===s)).sort((a,b)=>cnt[a]-cnt[b])[0];
+      return lowest(non.filter(c=>c.s===s));}
+    return lowest(L);
+  }
+  const ls_=G.trick[0][1][0], wt=winnerOf(G.trick), w=cd(wt[1]);
+  const canBeat=L.filter(c=>beats(c,w,ls_)), under=L.filter(c=>!beats(c,w,ls_));
+  const last=pos===3, mateWin=wt[0]===mate(p);
+  if(nil){if(under.length)return highest(under);return last?highest(L):lowest(L);}
+  if(mNil){const mateLater=!G.trick.some(t=>t[0]===mate(p));if((mateWin||mateLater)&&canBeat.length)return highest(canBeat);}
+  if(oppNil.includes(wt[0])&&under.length)return highest(under);
+  if(satisfied){if(under.length){const u=under.filter(c=>c.s!=='S');return highest(u.length?u:under);}return lowest(L);}
+  if(mateWin){const secure=last||w.s==='S'||(isMaster(w,p)&&pos===2);if(secure||G.skill===1)return lowest(under.length?under:L);}
+  if(canBeat.length){
+    const follow=canBeat.filter(c=>c.s===ls_);
+    if(follow.length){if(last)return lowest(follow);const m=follow.filter(c=>isMaster(c,p));if(m.length)return lowest(m);
+      if(pos===1&&G.skill===2)return lowest(L);return highest(follow);}
+    return lowest(canBeat);
+  }
+  return lowest(non.length?non:L);
+}
+const botAction=(p,kind)=>kind==='bid'?aiBid(p):'p'+aiPlay(p).id;
+
+/* ================= director (offline + online host) ================= */
+function commit(){G.v++;render();if(NET.on&&NET.role==='h')pushPres({st:G});}
+const isTut=()=>MODE==='tut';
+function getInput(p,kind,tok){
+  G.turn=p;G.ph=kind;commit();
+  if(G.seats[p].bot) return sleep(isTut()?1100:(kind==='bid'?650:(G.skill===2?620:520))).then(()=>tok===RUN?botAction(p,kind):null);
+  return new Promise(res=>{PEND={p,kind,res,tok};});
+}
+function applyAction(p,a){
+  if(!PEND||PEND.p!==p||PEND.tok!==RUN)return false;
+  a=String(a);
+  if(PEND.kind==='bid'){
+    if(a==='B'){if(!blindOK(p))return false;}
+    else{const n=+a.slice(1);if(a[0]!=='b'||!(n>=0&&n<=13))return false;}
+  } else {
+    if(a[0]!=='p'||!legal(p).some(c=>c.id===a.slice(1)))return false;
+  }
+  const r=PEND.res;PEND=null;r(a);return true;
+}
+async function runHand(tok){
+  for(let i=1;i<=4;i++){
+    const p=(G.dealer+i)%4, a=await getInput(p,'bid',tok); if(tok!==RUN||a==null)return;
+    G.turn=-1;if(a==='B'){G.bids[p]=0;G.blind[p]=1;}else G.bids[p]=+a.slice(1);
+    commit(); await sleep(350); if(tok!==RUN)return;
+  }
+  let leader=(G.dealer+1)%4;
+  for(let t=0;t<13;t++){
+    for(let i=0;i<4;i++){
+      const p=(leader+i)%4, a=await getInput(p,'play',tok); if(tok!==RUN||a==null)return;
+      const id=a.slice(1);G.turn=-1;
+      G.hands[p]=G.hands[p].filter(x=>x!==id);
+      if(id[0]==='S')G.broken=true;
+      G.trick.push([p,id]); commit(); await sleep(260); if(tok!==RUN)return;
+    }
+    const w=winnerOf(G.trick)[0];
+    G.tricks[w]++; G.last={tn:G.tn,w,c:G.trick}; G.trick=[]; G.tn++; G.turn=-1; commit();
+    await sleep(isTut()?2700:1550); if(tok!==RUN)return;
+    leader=w;
+  }
+  scoreHand(); commit();
+}
+function startDirector(){const tok=++RUN;PEND=null;runHand(tok);}
+function nextHand(){if(G.over!=null){const s=G.seats,o={target:G.target,blind:G.bn,skill:G.skill};G=newG(s,o);}deal();resetView();startDirector();}
+
+function scoreHand(){
+  const S={bid:['',''],won:['',''],bags:[0,0],pts:[0,0],notes:[],T:[0,0],tt:[0,0]};
+  for(const T of[0,1]){
+    const pl=[T,T+2];let pts=0,bags=0;const tb=teamBid(T),tt=teamTricks(T);
+    S.T[T]=tb;S.tt[T]=tt;
+    if(tb>0){if(tt>=tb){pts+=tb*10+(tt-tb);bags+=tt-tb;}else pts-=tb*10;}else bags+=tt;
+    for(const p of pl)if(G.bids[p]===0){const v=G.blind[p]?200:100,nm=G.blind[p]?'Blind Nil':'Nil';
+      if(G.tricks[p]===0){pts+=v;S.notes.push(`${G.seats[p].n} made ${nm} (+${v})`);}
+      else{pts-=v;bags+=G.tricks[p];pts+=G.tricks[p];S.notes.push(`${G.seats[p].n} busted ${nm} (−${v})`);}}
+    S.bid[T]=pl.map(p=>G.bids[p]===0?(G.blind[p]?'BN':'Nil'):G.bids[p]).join(' + ');
+    S.won[T]=pl.map(p=>G.tricks[p]).join(' + ');
+    G.bags[T]+=bags;
+    while(G.bags[T]>=10){G.bags[T]-=10;pts-=100;S.notes.push(`Team ${G.seats[T].n} & ${G.seats[T+2].n} hit 10 bags (−100)`);}
+    S.bags[T]=bags;S.pts[T]=pts;G.scores[T]+=pts;
+  }
+  const[a,b]=G.scores;let over=null;
+  if((a>=G.target||b>=G.target)&&a!==b)over=a>b?0:1;
+  else if(a<=-200&&b>-200)over=1;else if(b<=-200&&a>-200)over=0;
+  if(isTut())over=null;
+  G.sum=S;G.over=over;G.ph=over!=null?'over':'score';G.turn=-1;
+}
+
+/* ================= rendering ================= */
+let DT={tn:-1,ids:[]}, collectedTn=-1, anim=false, PREVB=null, bidKey='', tipId=null;
+function resetView(){DT={tn:-1,ids:[]};collectedTn=G&&G.last?G.last.tn:-1;anim=false;PREVB=null;bidKey='';$('trick').innerHTML='';sel=null;SENT=0;}
+const vp=p=>VPOS[(p-(MY>=0?MY:0)+4)%4];
+function cardEl(c,down){
+  const d=document.createElement('div');d.className='card'+(c.s==='H'||c.s==='D'?' red':'')+(down?' down':'');
+  d.innerHTML=`<span class="r">${rname(c.r)}</span><span class="s1">${SYM[c.s]}</span><span class="big">${SYM[c.s]}</span>`;return d;
+}
+function render(){
+  if(!G)return;
+  renderTop();renderSeats();renderHand();renderTrick();renderStatus();renderOverlays();
+  $('broken').textContent=G.broken?'♠ broken':'♠ not broken';$('broken').classList.toggle('on',G.broken);
+}
+function renderTop(){
+  const U=team(MY>=0?MY:0);
+  const nm=T=>(MODE==='solo'||MODE==='tut')?(T===U?'You + Partner':'Opponents'):[T,T+2].map(p=>p===MY?'You':G.seats[p].n).join(' + ');
+  $('lUs').textContent=nm(U);$('lThem').textContent=nm(1-U);
+  $('sUs').textContent=G.scores[U];$('sThem').textContent=G.scores[1-U];
+  const bg=n=>n+' bag'+(n===1?'':'s');$('bUs').textContent=bg(G.bags[U]);$('bThem').textContent=bg(G.bags[1-U]);
+}
+function statText(p){
+  const b=G.bids[p];if(b==null)return p===MY?'You':'—';
+  return (p===MY?'You · ':'')+(b===0?(G.blind[p]?'Blind Nil':'Nil'):'Bid '+b)+' · Won '+G.tricks[p];
+}
+function renderSeats(){
+  const hk=G.g+':'+G.hand;
+  if(!PREVB||PREVB.k!==hk)PREVB={k:hk,b:[null,null,null,null]};
+  for(let p=0;p<4;p++){
+    const el=$('v'+vp(p)), st=el.querySelector('.stat');
+    st.textContent=statText(p);st.className='stat'+(G.bids[p]===0?' nil':'');
+    el.classList.toggle('turn',G.turn===p&&(G.ph==='bid'||G.ph==='play'));
+    if(vp(p)!=='S'){
+      const av=el.querySelector('.avatar');av.textContent=(G.seats[p].n||'?')[0].toUpperCase();av.classList.toggle('mate',MY>=0&&p===mate(MY));
+      el.querySelector('.name').textContent=G.seats[p].n+(MY>=0&&p===mate(MY)&&(MODE==='host'||MODE==='guest')?' · partner':'');
+      el.querySelector('.away').hidden=!G.seats[p].away;
+      const bk=el.querySelector('.backs');const n=G.hands[p].length;
+      if(bk.childElementCount!==n){bk.innerHTML='';for(let i=0;i<n;i++){const x=document.createElement('div');x.className='back';bk.appendChild(x);}}
+    }
+    if(PREVB.b[p]==null&&G.bids[p]!=null){bubble(p,G.bids[p]===0?(G.blind[p]?'BLIND NIL':'NIL'):'Bid '+G.bids[p]);beep(440,.06);}
+    PREVB.b[p]=G.bids[p];
+  }
+}
+function bubble(p,t){
+  const seat=$('v'+vp(p));seat.querySelectorAll('.bubble').forEach(b=>b.remove());
+  const b=document.createElement('div');b.className='bubble';b.textContent=t;seat.appendChild(b);setTimeout(()=>b.remove(),1800);
+}
+const myTurn=k=>MY>=0&&G.turn===MY&&G.ph===k&&!(SENT&&Date.now()-SENT<4000);
+const handHidden=()=>MY>=0&&G.ph==='bid'&&G.bids[MY]==null&&blindOK(MY)&&PEEK!==G.g+':'+G.hand;
+function renderHand(){
+  const el=$('hand');el.innerHTML='';
+  $('watchNote').hidden=MY>=0;
+  if(MY<0){$('hint').textContent='';$('peekBtn').hidden=true;return;}
+  const h=H(MY).sort((a,b)=>SUITS.indexOf(a.s)-SUITS.indexOf(b.s)||b.r-a.r);
+  const hidden=handHidden();
+  $('peekBtn').hidden=!hidden||G.turn===MY;
+  const W=el.clientWidth,cw=58,n=h.length;
+  if(!n){$('hint').textContent='';return;}
+  const step=n>1?Math.min(cw+4,(W-16-cw)/(n-1)):0,x0=(W-(cw+step*(n-1)))/2;
+  const mine=myTurn('play'),L=mine?legal(MY):[];
+  tipId=(mine&&(COACH||isTut()))?aiPlay(MY).id:null;
+  h.forEach((c,i)=>{
+    const d=cardEl(c,hidden);d.style.left=(x0+i*step)+'px';d.style.zIndex=i;
+    const ok=L.some(x=>x.id===c.id);
+    if(mine)d.classList.add(ok?'playable':'dim');
+    if(sel===c.id)d.classList.add('sel');
+    if(tipId===c.id)d.classList.add('tip');
+    d.onclick=()=>{
+      if(!myTurn('play'))return;
+      if(!ok){beep(140,.08,.05);flashHint(G.trick.length?`You must follow ${SYM[G.trick[0][1][0]]} if you can`:'Spades aren\'t broken yet');return;}
+      if(sel===c.id){sel=null;act('p'+c.id);}else{sel=c.id;renderHand();beep(700,.03,.03);}
+    };
+    el.appendChild(d);
+  });
+  $('hint').textContent=mine?'Tap a card to lift · tap again to play':'';
+}
+let hintT=null;
+function flashHint(t){$('hint').textContent=t;$('hint').style.color='#ff8a8a';clearTimeout(hintT);hintT=setTimeout(()=>{$('hint').style.color='';G&&renderHand();},1500);}
+const OFF={S:[-29,4],W:[-92,-48],N:[-29,-104],E:[34,-48]};
+const FROM={S:[-29,260],W:[-260,-48],N:[-29,-300],E:[220,-48]};
+function addTrickCard(p,id,n){
+  const d=cardEl(cd(id));d.classList.add('tcard');const v=vp(p),[fx,fy]=FROM[v],[tx,ty]=OFF[v];
+  d.style.transform=`translate(${fx}px,${fy}px) rotate(${(Math.random()*30-15)|0}deg)`;d.style.zIndex=n;
+  $('trick').appendChild(d);sndPlay();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.transform=`translate(${tx}px,${ty}px) rotate(${(Math.random()*10-5).toFixed(1)}deg)`;}));
+}
+function showCards(tn,list){
+  if(DT.tn!==tn){$('trick').innerHTML='';DT={tn,ids:[]};}
+  list.forEach(([p,id])=>{if(!DT.ids.includes(id)){DT.ids.push(id);addTrickCard(p,id,DT.ids.length);}});
+}
+function renderTrick(){
+  if(anim)return;
+  if(G.last&&G.last.tn>collectedTn){
+    const L=G.last;showCards(L.tn,L.c);collectedTn=L.tn;anim=true;
+    const g=G.g;
+    setTimeout(()=>{
+      if(!G||G.g!==g){anim=false;return;}
+      team(L.w)===team(MY>=0?MY:0)?sndWin():beep(240,.12,.05);
+      const[fx,fy]=FROM[vp(L.w)];
+      [...$('trick').children].forEach(d=>{d.style.transform=`translate(${fx}px,${fy}px) scale(.5)`;d.style.opacity='0';});
+      setTimeout(()=>{anim=false;$('trick').innerHTML='';DT={tn:-1,ids:[]};if(G)render();},380);
+    },isTut()?1900:950);
+    renderStatus();return;
+  }
+  if(G.trick.length)showCards(G.tn,G.trick);
+  else if(DT.ids.length&&DT.tn!==G.tn){$('trick').innerHTML='';DT={tn:-1,ids:[]};}
+}
+function renderStatus(){
+  let t='';
+  if(anim&&G.last){const w=G.last.w;t=w===MY?'You take the trick':`${G.seats[w].n} takes the trick`;}
+  else if(G.ph==='bid')t=G.turn===MY?(handHidden()?'Blind Nil or look?':'Your bid'):G.turn>=0?`${G.seats[G.turn].n} is bidding…`:'';
+  else if(G.ph==='play')t=G.turn===MY?(G.trick.length?'Your turn':'Your lead'):G.turn>=0?`${G.seats[G.turn].n}…`+(G.seats[G.turn].away?' (away)':''):'';
+  $('status').textContent=t;$('status').hidden=!t||isTut();
+  renderCoach();
+}
+
+/* ---------- tutorial coach ---------- */
+function renderCoach(){
+  const on=isTut()&&G&&(G.ph==='bid'||G.ph==='play');
+  $('coach').hidden=!on; if(!on)return;
+  const T='<b class="tag">Coach</b>';let s='';
+  const pName=p=>p===MY?'you':G.seats[p].n;
+  if(anim&&G.last){
+    const L=G.last,ls_=L.c[0][1][0],wc=cd(L.c.find(t=>t[0]===L.w)[1]);
+    const why=(wc.s==='S'&&ls_!=='S')?`they were out of ${SNAME[ls_]}s and trumped it with a spade (<em>${lbl(wc)}</em>). A spade beats any other suit.`:`<em>${lbl(wc)}</em> was the highest ${SNAME[ls_]}, the suit that was led.`;
+    s=`${L.w===MY?'You win':G.seats[L.w].n+' wins'} the trick: ${why} ${team(L.w)===team(MY)?'That counts toward your team\'s bid.':''}`;
+  } else if(G.ph==='bid'){
+    if(G.turn===MY){
+      const sb=suggestBid(MY);
+      s=`Your bid. Count the tricks you expect to win: each <em>Ace</em>, a <em>King</em> with at least one more card of its suit, and high spades (A♠ K♠ Q♠). Lots of spades or a missing suit add more. This hand looks like about <em>${sb}</em>, so that's highlighted. Your bid plus your partner's is your team's contract.`;
+    } else s=`Everyone bids how many <em>tricks</em> (rounds of 4 cards) they think they'll win. Bidding goes around the table, starting left of the dealer. Your partner is across from you (top).`;
+  } else if(G.ph==='play'&&G.turn<0){
+    s=G.trick.length?'Watch where each card goes. The highest card of the suit that was led wins, unless someone trumps with a spade.':'Here comes the next card.';
+  } else if(G.ph==='play'){
+    if(G.turn===MY){
+      const L=legal(MY),c=aiPlay(MY),cl=`<em>${lbl(c)}</em>`;
+      if(!G.trick.length){
+        s=G.broken?'You lead. Spades are broken now, so you can lead anything. ':(L.every(x=>x.s!=='S')&&G.hands[MY].some(x=>x[0]==='S')?'You lead. Spades aren\'t broken yet (nobody has trumped with one), so you can\'t lead a spade. ':'You lead. ');
+        s+=isMaster(c,MY)&&c.s!=='S'?`Try ${cl}: it's the highest ${SNAME[c.s]} left, so it should win.`:`Try ${cl}: lead low from a short suit. Once you run out of it, you can trump that suit with spades.`;
+      } else {
+        const ls_=G.trick[0][1][0],wt=winnerOf(G.trick),w=cd(wt[1]),follows=H(MY).some(x=>x.s===ls_);
+        s=follows?`${SNAME[ls_][0].toUpperCase()+SNAME[ls_].slice(1)}s were led, so you must play a ${SNAME[ls_]}. `:`You're out of ${SNAME[ls_]}s, so you can play anything. A spade will trump it. `;
+        if(wt[0]===mate(MY)&&!beats(c,w,ls_))s+=`Your partner is already winning with ${lbl(w)}, so save your good cards and play low: ${cl}.`;
+        else if(beats(c,w,ls_))s+=c.s==='S'&&ls_!=='S'?`Trump it with ${cl} to take the trick.`:`${cl} beats ${lbl(w)} and should take it.`;
+        else s+=`You can't beat ${lbl(w)} here, so get rid of a low card: ${cl}.`;
+      }
+      s+=' The glowing card is my pick.';
+    } else {
+      s=G.trick.length?`${G.seats[G.turn].n} is playing. Everyone must follow the suit that was led (${SYM[G.trick[0][1][0]]}) if they can.`:`${G.seats[G.turn].n} leads this trick. The player who wins a trick leads the next one.`;
+    }
+  }
+  $('coach').innerHTML=T+s;
+}
+
+/* ---------- overlays ---------- */
+function renderOverlays(){
+  // blind / bid
+  const bidTurn=myTurn('bid');
+  const blindTurn=bidTurn&&handHidden();
+  show('ovBlind',blindTurn);
+  if(bidTurn&&!blindTurn){const k=G.g+':'+G.hand;if(bidKey!==k){bidKey=k;openBid();}show('ovBid',true);}
+  else show('ovBid',false);
+  // round summary
+  if(G.ph==='score'||G.ph==='over')renderSummary();else show('ovRound',false);
+}
+function openBid(){
+  const grid=$('bidGrid');grid.innerHTML='';let choice=null;
+  const mb=G.bids[mate(MY)],tip=suggestBid(MY);
+  const opp=[1,3].map(i=>(MY+i)%4).filter(p=>G.bids[p]!=null).map(p=>`${G.seats[p].n} ${G.bids[p]===0?(G.blind[p]?'Blind Nil':'Nil'):G.bids[p]}`);
+  $('bidInfo').textContent=(mb==null?'Your partner bids after you. ':`Partner bid ${mb===0?(G.blind[mate(MY)]?'Blind Nil':'Nil'):mb}. `)+(opp.length?'Opponents: '+opp.join(', ')+'.':'');
+  const mk=(v,t,cls='')=>{const b=document.createElement('button');b.textContent=t;b.className=cls+((isTut()||COACH)&&v===tip?' tip':'');
+    b.onclick=()=>{choice=v;[...grid.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');$('btnBid').disabled=false;$('btnBid').textContent=v===0?'BID NIL':'BID '+v;};grid.appendChild(b);};
+  mk(0,'NIL','nil');for(let i=1;i<=13;i++)mk(i,String(i));
+  $('bidCoach').hidden=!isTut();
+  if(isTut())$('bidCoach').innerHTML='<b>Coach:</b> count the tricks you expect to win. Each <b>Ace</b>, a <b>King</b> with at least one more card of its suit, and high spades (A♠ K♠ Q♠) are good bets. Lots of spades, or a suit you have none of, add more. My pick is outlined in gold.';
+  $('bidEst').textContent=`This hand looks like about ${tip} trick${tip===1?'':'s'}.`;
+  $('btnBid').disabled=true;$('btnBid').textContent='PLACE BID';
+  $('btnBid').onclick=()=>{if(choice==null)return;show('ovBid',false);act('b'+choice);};
+}
+function renderSummary(){
+  const S=G.sum;if(!S)return;
+  const U=team(MY>=0?MY:0),O=1-U,f=v=>`<span class="${v>0?'pos':v<0?'neg':''}">${v>0?'+':''}${v}</span>`;
+  $('rTable').innerHTML=`<tr><th></th><th>${MODE==='solo'||MODE==='tut'?'Us':'Yours'}</th><th>Them</th></tr>
+   <tr><td>Bids</td><td>${S.bid[U]}</td><td>${S.bid[O]}</td></tr>
+   <tr><td>Tricks</td><td>${S.won[U]}</td><td>${S.won[O]}</td></tr>
+   <tr><td>Bags this hand</td><td>${S.bags[U]}</td><td>${S.bags[O]}</td></tr>
+   <tr><td>Hand points</td><td>${f(S.pts[U])}</td><td>${f(S.pts[O])}</td></tr>
+   <tr><td><b>Total</b></td><td><b>${G.scores[U]}</b></td><td><b>${G.scores[O]}</b></td></tr>`;
+  const final=G.over!=null;
+  $('rTitle').textContent=isTut()?'Tutorial Done':final?(G.over===U?'You Win!':'They Win'):`Hand ${G.hand} Over`;
+  $('rNote').textContent=S.notes.join(' · ');
+  const isBoss=MODE!=='guest';
+  $('btnNext').hidden=!isBoss;$('rWait').hidden=isBoss;$('btnNext2').hidden=true;
+  $('rCoach').hidden=!isTut();
+  if(isTut()){
+    const tb=S.T[U],tt=S.tt[U];
+    $('rCoach').innerHTML=tb>0?(tt>=tb?`<b>You made it.</b> Your team bid ${tb} and took ${tt}. That's ${tb}×10 = ${tb*10} points${tt>tb?`, plus ${tt-tb} for the extra trick${tt-tb>1?'s':''} (bags). Careful: every 10 bags costs 100 points.`:'.'}`:`<b>Set.</b> Your team bid ${tb} but only took ${tt}, so you lose ${tb}×10 = ${tb*10}. Bidding a little lower is safer than getting set.`):'Your team bid Nil all around this time.';
+    $('rCoach').innerHTML+=' A real game keeps dealing hands until a team reaches the target score.';
+    $('btnNext').textContent='PLAY A REAL GAME';$('btnNext').onclick=()=>{show('ovRound',false);startSolo();};
+    $('btnNext2').hidden=false;$('btnNext2').textContent='REPLAY TUTORIAL';$('btnNext2').onclick=()=>{show('ovRound',false);startTut(true);};
+  } else if(final){
+    $('btnNext').textContent='PLAY AGAIN';$('btnNext').onclick=()=>{show('ovRound',false);nextHand();};
+    $('rWait').textContent='Waiting for the host to start another game…';
+  } else {
+    $('btnNext').textContent='NEXT HAND';$('btnNext').onclick=()=>{show('ovRound',false);nextHand();};
+    $('rWait').textContent='Waiting for the host to deal the next hand…';
+  }
+  if(!$('ovRound').classList.contains('show')){
+    show('ovRound',true);
+    if(final)G.over===U?[0,1,2].forEach(i=>setTimeout(()=>beep(523+i*130,.15,.07),i*120)):beep(180,.3,.06);
+  }
+}
+
+/* ---------- actions from this phone ---------- */
+function act(a){
+  if(MODE==='guest'){SENT=Date.now();pushPres({act:{g:G.g,k:Math.random().toString(36).slice(2,10),a}});render();return;}
+  applyAction(MY,a);
+}
+$('btnGoBlind').onclick=()=>{show('ovBlind',false);act('B');};
+$('btnLook').onclick=()=>{PEEK=G.g+':'+G.hand;render();};
+$('peekBtn').onclick=()=>{PEEK=G.g+':'+G.hand;render();};
+
+/* ================= modes ================= */
+const BOTN=['West','Partner','East'];
+function startSolo(){
+  leaveNet();MODE='solo';MY=0;COACH=false;
+  G=newG([{n:'You'},{n:'West',bot:1},{n:'Partner',bot:1},{n:'East',bot:1}],{target:cfg.target,blind:cfg.blind,skill:cfg.skill});
+  hideAll();deal();resetView();startDirector();
+}
+const TUT=[
+  ['♠','The goal','Spades is a team game. You and your partner (sitting across from you) try to win exactly the number of tricks you promised. First team to the target score wins.'],
+  ['🂡','Tricks','Each round, everyone plays one card. That\'s a <b>trick</b>. You must follow the suit that was led if you can. The highest card of that suit wins the trick.'],
+  ['♠','Spades are trump','If you\'re out of the suit that was led, you can play a <b>spade</b>, and any spade beats every other suit. You can\'t lead spades until one has been played this way ("broken").'],
+  ['🎯','Bidding','Before playing, everyone bids how many tricks they\'ll win. Make your team\'s total and you score 10 per trick bid. Fall short and you lose that much. Extra tricks are <b>bags</b>: 10 bags costs 100.'],
+  ['🧑‍🏫','Your coach','You\'ll play one full hand now. The coach box explains every step, and the glowing card or bid is the move I\'d make. You can follow it or make your own call.']
+];
+let tutI=0;
+function startTut(skipIntro){
+  leaveNet();hideAll();
+  if(skipIntro){beginTutHand();return;}
+  tutI=0;tutShow();show('ovTut',true);
+}
+function tutShow(){const[i,h,t]=TUT[tutI];$('tutStep').textContent=`${tutI+1} of ${TUT.length}`;$('tutIcon').textContent=i;$('tutHead').textContent=h;$('tutText').innerHTML=t;$('tutNext').textContent=tutI===TUT.length-1?"LET'S PLAY":'NEXT';}
+$('tutNext').onclick=()=>{if(tutI<TUT.length-1){tutI++;tutShow();}else{show('ovTut',false);beginTutHand();}};
+$('tutSkip').onclick=()=>{show('ovTut',false);beginTutHand();};
+function beginTutHand(){
+  MODE='tut';MY=0;
+  G=newG([{n:'You'},{n:'West',bot:1},{n:'Partner',bot:1},{n:'East',bot:1}],{target:500,blind:0,skill:1});
+  G.dealer=3; // you bid and lead last... dealer East means West starts
+  deal();resetView();startDirector();
+}
+function hideAll(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'));}
+function toTitle(){RUN++;PEND=null;leaveNet();G=null;MODE='';$('trick').innerHTML='';$('hand').innerHTML='';$('coach').hidden=true;$('status').textContent='';hideAll();show('ovStart',true);}
+
+/* ================= online ================= */
+const DP=window.DAREPlay||null;
+const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==='function');
+const ON_SITE=/^https?:$/.test(location.protocol)&&!IN_CLAUDE;
+const GAME_ID='spades';
+const CODE_ABC='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const newCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(4)),b=>CODE_ABC[b%CODE_ABC.length]).join('');
+const cleanNick=s=>String(s||'').replace(/[\u0000-\u001f\u007f-\u009f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,16);
+const NET={on:false,lobby:null,code:'',role:'',me:'',unsub:null,lob:null,seen:{},gone:{},hostGoneAt:0,joinedAt:0,lfg:false,lfgT:0,
+  pollMs(){return !this.on?1500:(G&&G.ph!=='score'&&G.ph!=='over')?(this.role==='h'?550:800):1200;}};
+function httpRoom(){
+  const me=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>'abcdefghijklmnopqrstuvwxyz0123456789'[b%36]).join('');
+  const post=(body,keep)=>fetch('/api/room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:!!keep});
+  return{async join(nm){
+    let pres={},alive=true,snap=Object.freeze([]),wake=null;const subs=[];
+    const self=()=>({peer:me,presence:pres,sameTab:true});
+    async function once(){
+      const r=await post({room:nm,peer:me,presence:pres});
+      if(!r.ok){let m='';try{m=(await r.json()).error||''}catch(e){}throw new Error(m||"Couldn't reach the match server.");}
+      const d=await r.json(),list=[self()];
+      for(const p of(d.peers||[]))if(p&&p.peer!==me)list.push({peer:String(p.peer),presence:p.presence||{},sameTab:false});
+      snap=list;subs.forEach(f=>{try{f({peers:snap})}catch(e){console.error(e)}});
+    }
+    await once();
+    (async function loop(){while(alive){await new Promise(r=>{wake=r;setTimeout(r,NET.pollMs());});wake=null;if(!alive)break;try{await once();}catch(e){}}})();
+    return{presence:async patch=>{pres={...pres,...patch};for(const k in patch)if(patch[k]===null)delete pres[k];if(wake){const w=wake;wake=null;setTimeout(w,50);}},
+      peers:()=>snap,onPeers:f=>{subs.push(f);setTimeout(()=>f({peers:snap}),0);return()=>{const i=subs.indexOf(f);if(i>=0)subs.splice(i,1);};},
+      leave:async()=>{alive=false;if(wake)wake();try{await post({room:nm,peer:me,leave:true},true)}catch(e){}}};
+  }};
+}
+NET.roomP=IN_CLAUDE?window.claude.use('room').catch(()=>null):Promise.resolve(ON_SITE?httpRoom():null);
+
+const CHAT=DP&&DP.chat?DP.chat({accent:'#d4af37',quick:['Nice!','Partner 🤝','Set ’em','Bags 😬','GG','😂'],onSend(){pushPres({});},onMessage(){if(!CHAT.isOpen())$('chatBtn').querySelector('.dot').hidden=false;},onOpen(o){if(o)$('chatBtn').querySelector('.dot').hidden=true;}}):null;
+if(CHAT)CHAT.showButton(false);
+$('chatBtn').onclick=()=>{if(CHAT)CHAT.open();};
+
+function pushPres(patch){
+  if(!NET.lobby)return;patch=patch||{};
+  if(CHAT){const ob=CHAT.outbox();if(ob)patch.chat=ob;}
+  NET.lobby.presence(patch).catch(()=>{});
+}
+const myPeer=()=>{const s=NET.lobby&&NET.lobby.peers().find(p=>p.sameTab||p.isMe);return s?s.peer:'';};
+const others=()=>NET.lobby?NET.lobby.peers().filter(p=>!(p.sameTab||p.isMe)&&p.kind!=='agent'&&p.presence&&p.presence.app==='spades'):[];
+const nickOf=p=>cleanNick(p.presence.nick)||'Player';
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2200);}
+function banner(t){$('banner').textContent=t;$('banner').hidden=!t;}
+
+function openOnline(){
+  hideAll();show('ovOnline',true);
+  if(NET.on){renderLobby();return;}
+  $('olSetup').hidden=false;$('olLobby').hidden=true;
+  $('olNick').value=cfg.nick||(DP&&DP.nick&&DP.nick())||'';
+  NET.roomP.then(room=>{
+    $('olCreate').disabled=$('olJoin').disabled=!room;
+    $('olStatus').textContent=room?'':(IN_CLAUDE?"Online rooms aren't available in this view.":'Online play runs on the DARE Arcade site.');
+  });
+  $('olFind').hidden=!(DP&&ON_SITE);$('olAlerts').hidden=!(DP&&ON_SITE);
+  if(DP&&ON_SITE&&DP.refresh)DP.refresh();
+}
+async function enterRoom(code,role,open){
+  const nick=cleanNick($('olNick').value);
+  if(!nick){$('olStatus').textContent='Add your name first.';$('olNick').focus();return;}
+  if(!/^[A-Z0-9]{4}$/.test(code)){$('olStatus').textContent='Room codes are 4 letters or numbers.';return;}
+  cfg.nick=nick;saveCfg();if(DP&&DP.setNick)DP.setNick(nick);
+  $('olCreate').disabled=$('olJoin').disabled=true;$('olStatus').textContent='Connecting…';
+  const room=await NET.roomP;let lobby=null;
+  try{lobby=room&&await room.join('sp-'+code.toLowerCase());}catch(e){$('olStatus').textContent=(e&&e.message)||"Couldn't connect. Try again.";}
+  $('olCreate').disabled=$('olJoin').disabled=false;
+  if(!lobby){if(!room)$('olStatus').textContent='Online play runs on the DARE Arcade site.';return;}
+  $('olStatus').textContent='';
+  RUN++;PEND=null;G=null;MODE=role==='h'?'host':'guest';
+  Object.assign(NET,{on:true,lobby,code,role,me:'',seen:{},gone:{},hostGoneAt:0,joinedAt:Date.now(),
+    lob:role==='h'?{seats:['','','',''],tg:cfg.target,bn:cfg.blind}:null});
+  pushPres({app:'spades',role,nick,want:null,act:null,st:null,lob:NET.lob});
+  NET.unsub=lobby.onPeers(()=>netPeers());
+  if(DP)DP.busy=true;
+  if(CHAT){CHAT.reset();CHAT.attach('the table');CHAT.showButton(false);}
+  $('chatBtn').hidden=!CHAT;
+  if(open&&DP&&ON_SITE){
+    NET.lfg=true;
+    DP.post(GAME_ID,code,nick).then(r=>{if(NET.code===code)$('olNote').textContent=r&&r.alerted?`Room posted. ${r.alerted} player${r.alerted===1?' was':'s were'} alerted.`:'Room posted for anyone to join. You can also share the code.';})
+      .catch(e=>{NET.lfg=false;$('olNote').textContent="Couldn't post the room. Share the code instead.";});
+    NET.lfgT=setInterval(()=>{if(NET.lfg)DP.keep(GAME_ID,code);},45000);
+  }
+  $('olNote').textContent=role==='h'?(open?'Posting your room…':'Send the code to your friends. They open Spades, tap Play online and enter it.'):'';
+  renderLobby();
+}
+function lfgStop(){if(NET.lfg){clearInterval(NET.lfgT);if(DP)DP.cancel(GAME_ID,NET.code);NET.lfg=false;}}
+function leaveNet(){
+  if(!NET.on)return;NET.on=false;lfgStop();
+  try{NET.unsub&&NET.unsub();}catch(e){}
+  const l=NET.lobby;NET.lobby=null;if(l)l.leave().catch(()=>{});
+  if(CHAT)CHAT.detach();$('chatBtn').hidden=true;if(DP)DP.busy=false;banner('');
+}
+function leaveRoom(msg){toTitle();if(msg)toast(msg);}
+
+/* lobby */
+function lobState(){
+  if(NET.role==='h')return NET.lob;
+  const h=others().find(p=>p.presence.role==='h');return h&&h.presence.lob||null;
+}
+function peerName(id){if(id===NET.me)return cfg.nick||'You';const p=(NET.lobby?NET.lobby.peers():[]).find(q=>q.peer===id);return p?nickOf(p):'Player';}
+function renderLobby(){
+  if(!NET.on||(G&&G.seats))return;
+  $('olSetup').hidden=true;$('olLobby').hidden=false;
+  $('olCodeShow').textContent=NET.code;
+  const lob=lobState(),h=NET.role==='h',host=others().find(p=>p.presence.role==='h');
+  $('olRole').textContent=h?"You're the host":host?nickOf(host)+' is the host':'Looking for the room…';
+  const box=$('olSeats');box.innerHTML='';
+  const POSN=['s','w','n','e'],LAB=['South','West','North','East'];
+  for(let i=0;i<4;i++){
+    const id=lob?lob.seats[i]:'',b=document.createElement('button');
+    b.className=`stile ${POSN[i]} t${i%2}`+(id===NET.me?' me':'')+(id?'':' empty');
+    b.innerHTML=`<small>${LAB[i]} · Team ${i%2?'B':'A'}</small>${id?peerName(id)+(id===NET.me?' (you)':''):'Bot'}`;
+    b.onclick=()=>{if(!lob||id)return;if(h){const j=lob.seats.indexOf(NET.me);lob.seats[j]='';lob.seats[i]=NET.me;pushPres({lob});renderLobby();}else pushPres({want:i});};
+    box.appendChild(b);
+  }
+  const mid=document.createElement('div');mid.className='mid';mid.textContent='♠';box.appendChild(mid);
+  $('olHostSet').hidden=!h;$('olStart').hidden=!h;$('olCopy').hidden=!h;
+  if(h){
+    document.querySelectorAll('#olTarget button').forEach(b=>b.classList.toggle('on',+b.dataset.v===NET.lob.tg));
+    document.querySelectorAll('#olBlind button').forEach(b=>b.classList.toggle('on',+b.dataset.v===NET.lob.bn));
+    const humans=NET.lob.seats.filter(Boolean).length,bots=4-humans;
+    $('olStart').disabled=humans<2;
+    $('olStart').textContent=humans<2?'WAITING FOR PLAYERS':bots?`START · ${bots} BOT${bots>1?'S':''}`:'START';
+    $('olWait').textContent='';
+  } else {
+    $('olWait').textContent=host?`Waiting for ${nickOf(host)} to start. Playing to ${lob?lob.tg:500}${lob&&lob.bn?', Blind Nil on':''}.`:(Date.now()-NET.joinedAt>6000?'No room with that code yet. Check the code, or wait for the host to create it.':'Looking for the room…');
+    if(host&&lob&&!lob.seats.includes(NET.me)&&lob.seats.every(Boolean))$('olWait').textContent+=" The table is full, so you'll watch.";
+  }
+}
+function netPeers(){
+  if(!NET.on)return;
+  NET.me=myPeer();
+  const os=others();
+  if(CHAT)for(const p of os)CHAT.receive(p.peer,p.presence.chat,nickOf(p));
+  if(NET.role==='h')hostTick(os);else guestTick(os);
+}
+function hostTick(os){
+  const now=Date.now(),ids=new Set(os.map(p=>p.peer));
+  if(!G){
+    const lob=NET.lob;let ch=false;
+    if(NET.me&&!lob.seats.includes(NET.me)){lob.seats[lob.seats.indexOf('')]=NET.me;ch=true;}
+    for(let i=0;i<4;i++)if(lob.seats[i]&&lob.seats[i]!==NET.me&&!ids.has(lob.seats[i])){lob.seats[i]='';ch=true;}
+    for(const p of os){
+      if(p.presence.role==='h')continue;
+      let at=lob.seats.indexOf(p.peer);
+      if(at<0){const f=[2,1,3,0].find(i=>!lob.seats[i]);if(f==null)continue;lob.seats[f]=p.peer;at=f;ch=true;toast(nickOf(p)+' sat down');}
+      const w=p.presence.want;if(w!=null&&w>=0&&w<4&&!lob.seats[w]){lob.seats[at]='';lob.seats[w]=p.peer;ch=true;}
+    }
+    if(ch)pushPres({lob});
+    renderLobby();return;
+  }
+  // in game: presence + actions
+  let changed=false;
+  G.seats.forEach((s,i)=>{
+    if(s.bot||!s.id||s.id===NET.me)return;
+    if(ids.has(s.id)){NET.gone[s.id]=0;if(s.away){s.away=0;changed=true;}}
+    else{if(!NET.gone[s.id])NET.gone[s.id]=now;if(!s.away&&now-NET.gone[s.id]>5000){s.away=1;changed=true;toast(s.n+' lost connection');}}
+  });
+  for(const p of os){
+    const a=p.presence.act;
+    if(a&&a.g===G.g&&a.k&&NET.seen[p.peer]!==a.k){NET.seen[p.peer]=a.k;const seat=G.seats.findIndex(s=>s.id===p.peer);if(seat>=0)applyAction(seat,a.a);}
+  }
+  if(changed)commit();
+}
+setInterval(()=>{ // an away player's turn is played by a bot after 15 seconds
+  if(!NET.on||NET.role!=='h'||!G||!PEND)return;
+  const s=G.seats[PEND.p];
+  if(s&&s.away&&s.id&&Date.now()-(NET.gone[s.id]||Date.now())>15000)applyAction(PEND.p,botAction(PEND.p,PEND.kind));
+},1000);
+function guestTick(os){
+  const host=os.find(p=>p.presence.role==='h');
+  if(!host){
+    if(!NET.hostGoneAt)NET.hostGoneAt=Date.now();
+    const gone=Date.now()-NET.hostGoneAt;
+    if(G&&gone>6000)banner('The host lost connection. Waiting…');
+    if(G&&gone>40000){leaveRoom('The host left the room.');return;}
+    if(!G)renderLobby();return;
+  }
+  NET.hostGoneAt=0;banner('');
+  const st=host.presence.st;
+  if(!st||!st.seats){if(G){G=null;hideAll();show('ovOnline',true);}renderLobby();return;}
+  if(!G||st.g!==G.g||st.v>G.v){
+    const fresh=!G||st.g!==G.g;
+    G=JSON.parse(JSON.stringify(st));
+    MY=G.seats.findIndex(s=>s.id===NET.me);
+    if(fresh){resetView();hideAll();}
+    if(SENT&&!(G.turn===MY))SENT=0;
+    render();
+  }
+}
+function hostStart(){
+  const lob=NET.lob;if(lob.seats.filter(Boolean).length<2)return;
+  lfgStop();$('olNote').textContent='';
+  let b=1;const taken=new Set();
+  const seats=lob.seats.map(id=>{if(!id)return{n:'Bot '+(b++),bot:1};let n=peerName(id),k=2;while(taken.has(n.toLowerCase()))n=n.slice(0,13)+' '+k++;taken.add(n.toLowerCase());return{n,id};});
+  G=newG(seats,{target:lob.tg,blind:lob.bn,skill:2});
+  MY=seats.findIndex(s=>s.id===NET.me);
+  hideAll();deal();resetView();startDirector();
+}
+function joinOpen(code){leaveNet();openOnline();$('olCode').value=code;enterRoom(code,'g');return true;}
+
+/* ================= audio ================= */
+let actx=null;
+function beep(f=520,d=.05,v=.06,type='triangle'){
+  if(!cfg.sound)return;
+  try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;
+    g.gain.value=v;g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}
+}
+const sndPlay=()=>beep(300+Math.random()*80,.07,.07,'square');
+const sndWin=()=>{beep(660,.08);setTimeout(()=>beep(880,.1),80)};
+
+/* ================= wiring ================= */
+function show(id,on){$(id).classList.toggle('show',!!on);}
+function seg(id,get,set){const el=$(id);el.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',+b.dataset.v===get());b.onclick=()=>{set(+b.dataset.v);el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};});}
+seg('segTarget',()=>cfg.target,v=>{cfg.target=v;saveCfg();});
+seg('segSkill',()=>cfg.skill,v=>{cfg.skill=v;saveCfg();});
+seg('segBlind',()=>cfg.blind,v=>{cfg.blind=v;saveCfg();});
+$('olTarget').onclick=e=>{const b=e.target.closest('button');if(!b||!NET.lob)return;NET.lob.tg=cfg.target=+b.dataset.v;saveCfg();pushPres({lob:NET.lob});renderLobby();};
+$('olBlind').onclick=e=>{const b=e.target.closest('button');if(!b||!NET.lob)return;NET.lob.bn=cfg.blind=+b.dataset.v;saveCfg();pushPres({lob:NET.lob});renderLobby();};
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{show(b.dataset.back,false);show('ovStart',true);});
+$('btnSolo').onclick=()=>{beep(520,.05);show('ovStart',false);show('ovSolo',true);};
+$('btnDeal').onclick=()=>startSolo();
+$('btnTut').onclick=()=>{beep(520,.05);startTut(false);};
+$('btnOnline').onclick=()=>openOnline();
+$('olCreate').onclick=()=>enterRoom(newCode(),'h');
+$('olFind').onclick=()=>enterRoom(newCode(),'h',true);
+$('olJoin').onclick=()=>enterRoom($('olCode').value.trim().toUpperCase(),'g');
+$('olCode').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);});
+$('olCode').addEventListener('keydown',e=>{if(e.key==='Enter')$('olJoin').click();});
+$('olLeave').onclick=()=>leaveRoom();
+$('olStart').onclick=()=>hostStart();
+$('olCopy').onclick=async()=>{
+  const link=ON_SITE?location.origin+'/spades/?join='+NET.code:'';
+  const text=link?`Play Spades with me. Room ${NET.code}: ${link}`:`Play Spades with me. Tap Play online and enter room ${NET.code}.`;
+  try{await navigator.clipboard.writeText(text);toast(link?'Invite link copied':'Invite copied');}catch(e){toast('Room code: '+NET.code);}
+};
+let rulesBack=null;
+$('btnRules1').onclick=()=>{rulesBack='ovStart';show('ovStart',false);show('ovRules',true);};
+$('btnRules2').onclick=()=>{rulesBack='ovMenu';show('ovMenu',false);show('ovRules',true);};
+$('btnRulesClose').onclick=()=>{show('ovRules',false);if(rulesBack)show(rulesBack,true);};
+$('menuBtn').onclick=()=>{
+  $('btnCoach').hidden=!G||isTut()||MY<0;$('btnCoach').textContent='HINTS: '+(COACH?'ON':'OFF');
+  $('btnQuit').textContent=NET.on?'LEAVE ROOM':'QUIT TO TITLE';$('btnSound').textContent='SOUND: '+(cfg.sound?'ON':'OFF');
+  show('ovMenu',true);
+};
+$('btnResume').onclick=()=>show('ovMenu',false);
+$('btnSound').onclick=()=>{cfg.sound=!cfg.sound;saveCfg();$('btnSound').textContent='SOUND: '+(cfg.sound?'ON':'OFF');};
+$('btnCoach').onclick=()=>{COACH=!COACH;$('btnCoach').textContent='HINTS: '+(COACH?'ON':'OFF');bidKey='';render();};
+$('btnQuit').onclick=()=>{if(!G&&!NET.on){show('ovMenu',false);return;}toTitle();};
+window.addEventListener('resize',()=>G&&renderHand());
+window.addEventListener('pagehide',()=>{if(NET.on&&NET.lobby)NET.lobby.leave().catch(()=>{});});
+if(DP&&ON_SITE){
+  if(DP.feed)DP.feed({accent:'#d4af37',onJoin:m=>m.game===GAME_ID?joinOpen(m.code):false});
+  if(DP.openList)DP.openList($('olOpen'),GAME_ID,m=>joinOpen(m.code));
+  if(DP.alerts&&DP.alerts.toggle)DP.alerts.toggle($('olAlerts'),[GAME_ID],{accent:'#d4af37',label:'Get a notification when someone opens a Spades room.'});
+  if(DP.joinCode&&DP.joinCode()){const c=DP.joinCode();DP.clearJoin();openOnline();$('olCode').value=c;
+    if(cfg.nick||DP.nick()){$('olNick').value=cfg.nick||DP.nick();enterRoom(c,'g');}else $('olStatus').textContent='Add your name, then tap Join.';}
+}
+window.__spades={get G(){return G},get MY(){return MY},get MODE(){return MODE}};
+})();
+</script>
+</body>
+</html>

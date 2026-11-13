@@ -1,0 +1,16 @@
+{
+  "name": "Spades",
+  "short_name": "Spades",
+  "description": "Classic partnership Spades. Play the computer, learn with a coached tutorial, or play online with friends. By Dontae Amare.",
+  "start_url": "/spades/",
+  "scope": "/spades/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0b0d",
+  "theme_color": "#0b0b0d",
+  "icons": [
+    { "src": "/spades/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/spades/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/spades/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
