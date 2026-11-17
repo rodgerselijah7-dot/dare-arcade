@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Reviews — DARE Arcade</title>
+<meta name="description" content="Player reviews and ratings for every game in the DARE Arcade. Tell us what you love.">
+<meta property="og:title" content="DARE Arcade Reviews">
+<meta property="og:description" content="Player reviews and ratings for every game in the DARE Arcade.">
+<meta property="og:image" content="https://darearcade.vercel.app/icons/og.png?v=7">
+<link rel="manifest" href="/manifest.webmanifest?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#FFFFFF; --black:#000000; --grey:#6B6B6B; --hair:#E6E6E4; --red:#D8261B; --body:#222222; --gold:#C9972A; --soft:#F6F5F2;
+  color-scheme:light dark;
+  --display:'Bebas Neue','Oswald','Arial Narrow',Impact,sans-serif;
+  --text:'Crimson Pro',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --wall:#000000; --black:#FFFFFF; --grey:#9A9A9A; --hair:#262626; --red:#EF3B2F; --body:#D9D9D9; --gold:#E0B23F; --soft:#0E0E0E; }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--wall);-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh;background:var(--wall);color:var(--black);font-family:var(--text);font-size:19px;line-height:1.55;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:0 22px 80px}
+.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 12px;background:var(--wall)}
+.bar::before{content:"";position:absolute;z-index:-1;left:50%;width:100vw;transform:translateX(-50%);top:calc(-1 * env(safe-area-inset-top,0px) - 6px);bottom:0;background:var(--wall);border-bottom:1px solid transparent;transition:border-color .2s}
+.bar.stuck::before{border-bottom-color:var(--hair)}
+.back{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-size:22px;letter-spacing:.08em;text-decoration:none}
+.back svg{width:18px;height:18px}
+.back:hover{color:var(--red)}
+.writeBtn{font-family:var(--display);font-size:19px;letter-spacing:.06em;background:var(--black);color:var(--wall);border:0;padding:6px 16px 4px;cursor:pointer;text-decoration:none}
+.writeBtn:hover{background:var(--red)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(64px,17vw,112px);line-height:.86;letter-spacing:.01em;margin-top:18px}
+h1 span{color:var(--red)}
+.lede{color:var(--body);margin:10px 0 0;max-width:34em}
+h2{font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.04em;line-height:1}
+.eyebrow{font-family:var(--display);font-size:17px;letter-spacing:.14em;color:var(--grey)}
+.stars{display:inline-flex;gap:1px;color:var(--gold);letter-spacing:0;line-height:1}
+.stars svg{width:1em;height:1em;display:block}
+.stars .off{color:var(--hair)}
+
+/* write */
+.write{margin-top:34px;border:1px solid var(--black);padding:22px 22px 24px;scroll-margin-top:80px}
+.write h2{margin-bottom:14px}
+.f{display:block;margin-top:16px}
+.f>span{display:block;font-family:var(--display);font-size:16px;letter-spacing:.14em;color:var(--grey);margin-bottom:6px}
+select,input[type=text],textarea{width:100%;border:1px solid var(--hair);background:var(--wall);padding:10px 12px;font-size:18px;border-radius:0;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--grey) 50%),linear-gradient(135deg,var(--grey) 50%,transparent 50%);background-position:calc(100% - 20px) 55%,calc(100% - 14px) 55%;background-size:6px 6px;background-repeat:no-repeat;padding-right:38px}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--black)}
+textarea{min-height:120px;resize:vertical;line-height:1.45}
+.count{display:block;text-align:right;font-size:14px;color:var(--grey);margin-top:4px}
+.pick{display:flex;gap:6px;align-items:center}
+.pick button{background:none;border:0;padding:2px;cursor:pointer;color:var(--hair);transition:transform .12s,color .12s;-webkit-tap-highlight-color:transparent}
+.pick button svg{width:42px;height:42px;display:block}
+.pick button.on{color:var(--gold)}
+.pick button:active{transform:scale(.9)}
+.pick .say{margin-left:8px;font-style:italic;color:var(--grey);font-size:17px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:20px}
+.post{font-family:var(--display);font-size:22px;letter-spacing:.06em;background:var(--red);color:#fff;border:0;padding:8px 26px 6px;cursor:pointer}
+.post:disabled{opacity:.45;cursor:default}
+.linkish{background:none;border:0;padding:0;font-size:16px;color:var(--grey);text-decoration:underline;cursor:pointer}
+.linkish:hover{color:var(--red)}
+.note{font-size:16px;color:var(--grey);margin-top:12px}
+.note.err{color:var(--red)}
+.note.ok{color:var(--black)}
+.yours{font-size:16px;color:var(--grey);margin-top:-4px}
+
+/* filters */
+.filters{display:flex;gap:10px;align-items:center;margin-top:44px;border-top:1px solid var(--black);padding-top:22px;flex-wrap:wrap}
+.filters select{flex:1 1 200px;width:auto}
+.seg{display:flex;border:1px solid var(--hair)}
+.seg button{background:none;border:0;padding:9px 14px 7px;font-family:var(--display);font-size:18px;letter-spacing:.06em;color:var(--grey);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--black);color:var(--wall)}
+
+/* summary */
+.sum{display:grid;grid-template-columns:auto 1fr;gap:6px 26px;align-items:center;margin-top:24px;padding:20px 0;border-bottom:1px solid var(--hair)}
+.sum .big{font-family:var(--display);font-size:76px;line-height:.85}
+.sum .stars{font-size:22px;margin-top:6px}
+.sum .n{font-size:16px;color:var(--grey);margin-top:4px}
+.bars{display:grid;gap:4px}
+.bars div{display:grid;grid-template-columns:28px 1fr 30px;gap:8px;align-items:center;font-size:15px;color:var(--grey)}
+.bars i{display:block;height:8px;background:var(--hair);position:relative;overflow:hidden}
+.bars i b{position:absolute;inset:0 auto 0 0;background:var(--gold)}
+.sum .play{grid-column:1 / -1;justify-self:start;margin-top:12px}
+
+/* top rated */
+.top{margin-top:24px}
+.top ol{list-style:none;margin-top:8px}
+.top li button{width:100%;display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;background:none;border:0;border-bottom:1px solid var(--hair);padding:10px 0;text-align:left;cursor:pointer}
+.top li button:hover b{color:var(--red)}
+.top .rk{font-family:var(--display);font-size:22px;color:var(--grey)}
+.top b{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.03em;line-height:1}
+.top .r{font-size:15px;color:var(--grey);display:flex;gap:8px;align-items:center;white-space:nowrap}
+.top .r .stars{font-size:15px}
+
+/* reviews */
+.list{margin-top:10px}
+.rev{padding:20px 0;border-bottom:1px solid var(--hair)}
+.rev .hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.rev .g{font-family:var(--display);font-size:24px;letter-spacing:.03em;line-height:1;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.rev .g:hover{color:var(--red)}
+.rev .stars{font-size:17px;flex:none}
+.rev .who{font-size:15px;color:var(--grey);margin-top:4px}
+.rev .who .you{font-family:var(--display);letter-spacing:.08em;color:var(--wall);background:var(--black);padding:1px 6px 0;margin-left:6px;font-size:13px}
+.rev p{margin-top:8px;color:var(--body);white-space:pre-line;overflow-wrap:anywhere}
+.rev .rep{margin-top:8px;font-size:14px}
+.empty{padding:30px 0;color:var(--grey);font-style:italic}
+.more{display:block;margin:24px auto 0;font-family:var(--display);font-size:20px;letter-spacing:.06em;background:none;border:1px solid var(--black);padding:8px 24px 6px;cursor:pointer}
+.more:hover{background:var(--black);color:var(--wall)}
+.foot{margin-top:56px;font-size:15px;color:var(--grey)}
+@media (max-width:520px){
+  .wrap{padding:0 18px 70px}
+  .write{padding:18px 16px 20px;margin-left:-4px;margin-right:-4px}
+  .pick button svg{width:38px;height:38px}
+  .sum{grid-template-columns:1fr;gap:14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar" id="bar">
+    <a class="back" href="/"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ARCADE</a>
+    <a class="writeBtn" href="#write" id="jumpWrite">Write a review</a>
+  </header>
+
+  <h1>RE<span>VIEWS</span></h1>
+  <p class="lede">What players think of every game in the arcade. Played something you love, or something we should fix? Rate it and tell us.</p>
+
+  <form class="write" id="write" autocomplete="off" novalidate>
+    <h2 id="writeTitle">Rate a game</h2>
+    <label class="f"><span>Game</span><select id="wGame" required><option value="">Pick a game…</option></select></label>
+    <p class="yours" id="wYours" hidden></p>
+    <div class="f"><span>Your rating</span>
+      <div class="pick" id="wStars" role="radiogroup" aria-label="Rating"></div>
+    </div>
+    <label class="f"><span>Your name</span><input type="text" id="wName" maxlength="20" placeholder="How you want to show up" autocapitalize="words"></label>
+    <label class="f"><span>Your review <i style="font-family:var(--text);letter-spacing:0;text-transform:none">(optional)</i></span>
+      <textarea id="wText" maxlength="500" placeholder="What do you like? What would make it better?"></textarea>
+      <span class="count" id="wCount">0 / 500</span>
+    </label>
+    <div class="actions">
+      <button class="post" id="wPost" type="submit" disabled>Post review</button>
+      <button class="linkish" id="wDelete" type="button" hidden>Delete my review</button>
+    </div>
+    <p class="note" id="wNote" aria-live="polite"></p>
+  </form>
+
+  <div class="filters">
+    <select id="fGame" aria-label="Show reviews for"><option value="">All games</option></select>
+    <div class="seg" role="group" aria-label="Sort">
+      <button type="button" data-s="new" aria-pressed="true">Newest</button>
+      <button type="button" data-s="top" aria-pressed="false">Top rated</button>
+    </div>
+  </div>
+  <div id="summary"></div>
+  <div class="list" id="list"><p class="empty">Loading reviews…</p></div>
+  <button class="more" id="more" hidden>More reviews</button>
+  <p class="foot">Reviews are from players. Keep it real and keep it clean: no links, handles or phone numbers. Spot something that doesn't belong? Tap Report.</p>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const STAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.6l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.9 6.2 20.1l1.4-6.4L2.7 9.3l6.5-.7z"/></svg>';
+const SAY=['','Not for me','Needs work','It\'s alright','Really good','Love it'];
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let pid=store.get('dare-rev-pid');
+if(!pid||!/^r[a-z0-9]{10,32}$/.test(pid)){pid='r'+Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>(b%36).toString(36)).join('');store.set('dare-rev-pid',pid)}
+let GAMES={},STATS={},MINE={},mineIds=new Set(),stars=0,filter='',sort='new',cursor=null,loading=false;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const starRow=(v,cls='')=>{let h='<span class="stars '+cls+'" aria-label="'+v+' out of 5 stars">';for(let i=1;i<=5;i++)h+=STAR.replace('<svg','<svg class="'+(v>=i-.25?'':'off')+'"');return h+'</span>'};
+const ago=t=>{const s=(Date.now()-t)/1000;if(s<60)return'just now';const m=s/60;if(m<60)return Math.floor(m)+'m ago';const h=m/60;if(h<24)return Math.floor(h)+'h ago';const d=h/24;if(d<7)return Math.floor(d)+'d ago';
+  return new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:new Date(t).getFullYear()===new Date().getFullYear()?undefined:'numeric'})};
+async function api(path,body){
+  const r=await fetch('/api/reviews'+path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
+  let d={};try{d=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(d.error||'Something went wrong. Try again.');return d;
+}
+
+/* ---------- write ---------- */
+const pick=$('wStars');
+for(let i=1;i<=5;i++){const b=document.createElement('button');b.type='button';b.innerHTML=STAR;b.setAttribute('role','radio');b.setAttribute('aria-label',i+(i===1?' star':' stars'));b.dataset.v=i;pick.appendChild(b)}
+const say=document.createElement('span');say.className='say';pick.appendChild(say);
+function setStars(v){stars=v;[...pick.querySelectorAll('button')].forEach(b=>{const on=+b.dataset.v<=v;b.classList.toggle('on',on);b.setAttribute('aria-checked',+b.dataset.v===v)});say.textContent=SAY[v]||'';ready()}
+pick.addEventListener('click',e=>{const b=e.target.closest('button');if(b){setStars(+b.dataset.v);if(navigator.vibrate)navigator.vibrate(8)}});
+pick.addEventListener('mouseover',e=>{const b=e.target.closest('button');if(!b)return;[...pick.querySelectorAll('button')].forEach(x=>x.classList.toggle('on',+x.dataset.v<=+b.dataset.v));say.textContent=SAY[b.dataset.v]});
+pick.addEventListener('mouseleave',()=>setStars(stars));
+$('wName').value=store.get('dare-rev-name')||'';
+$('wText').addEventListener('input',()=>{$('wCount').textContent=$('wText').value.length+' / 500'});
+function ready(){$('wPost').disabled=!($('wGame').value&&stars)}
+function note(t,kind){const n=$('wNote');n.textContent=t||'';n.className='note'+(kind?' '+kind:'')}
+function loadMine(){
+  const g=$('wGame').value,m=MINE[g];
+  $('wYours').hidden=!m;$('wDelete').hidden=!m;
+  if(m){$('wYours').textContent='You gave this '+m.stars+(m.stars===1?' star':' stars')+' '+ago(m.t)+'. Change anything and post to update it.';setStars(m.stars);$('wText').value=m.text||'';$('writeTitle').textContent='Update your review';$('wPost').textContent='Update review'}
+  else{$('writeTitle').textContent='Rate a game';$('wPost').textContent='Post review'}
+  $('wCount').textContent=$('wText').value.length+' / 500';ready();
+}
+$('wGame').addEventListener('change',()=>{const had=MINE[$('wGame').value];if(!had){setStars(0);$('wText').value=''}loadMine();note('')});
+$('write').addEventListener('submit',async e=>{
+  e.preventDefault();if($('wPost').disabled)return;
+  const name=$('wName').value.trim();store.set('dare-rev-name',name);
+  $('wPost').disabled=true;note('Posting…');
+  try{
+    const d=await api('',{op:'save',game:$('wGame').value,stars,text:$('wText').value,name,pid});
+    const g=d.review.game,upd=!!MINE[g];MINE[g]=d.review;mineIds.add(d.review.id);
+    note(upd?'Your review is updated. Thanks!':'Thanks! Your review is up.','ok');loadMine();
+    await refresh(true);
+  }catch(err){note(err.message,'err')}finally{ready()}
+});
+$('wDelete').addEventListener('click',async()=>{
+  const g=$('wGame').value;if(!MINE[g])return;
+  try{await api('',{op:'remove',game:g,pid});mineIds.delete(MINE[g].id);delete MINE[g];setStars(0);$('wText').value='';loadMine();note('Your review was deleted.');await refresh(true)}
+  catch(err){note(err.message,'err')}
+});
+
+/* ---------- browse ---------- */
+function renderSummary(){
+  const box=$('summary');
+  if(filter){
+    const s=STATS[filter];
+    if(!s){box.innerHTML='';return}
+    let bars='';for(let i=5;i>=1;i--){const c=s.d[i-1]||0;bars+='<div><span>'+i+'★</span><i><b style="width:'+(s.n?c/s.n*100:0)+'%"></b></i><span>'+c+'</span></div>'}
+    box.innerHTML='<div class="sum"><div><div class="big">'+s.avg.toFixed(1)+'</div>'+starRow(s.avg)+'<div class="n">'+s.n+(s.n===1?' rating':' ratings')+'</div></div><div class="bars">'+bars+'</div><a class="writeBtn play" href="/'+esc(filter)+'/">Play '+esc(GAMES[filter])+'</a></div>';
+  }else{
+    const top=Object.entries(STATS).filter(([g])=>GAMES[g]).sort((a,b)=>b[1].avg-a[1].avg||b[1].n-a[1].n).slice(0,5);
+    if(!top.length){box.innerHTML='';return}
+    box.innerHTML='<div class="top"><span class="eyebrow">Players\' favorites</span><ol>'+top.map(([g,s],i)=>'<li><button type="button" data-g="'+esc(g)+'"><span class="rk">'+(i+1)+'</span><b>'+esc(GAMES[g])+'</b><span class="r">'+starRow(s.avg)+s.avg.toFixed(1)+' · '+s.n+'</span></button></li>').join('')+'</ol></div>';
+  }
+}
+function card(r){
+  const you=mineIds.has(r.id);
+  return '<article class="rev"><div class="hd"><button type="button" class="g" data-g="'+esc(r.game)+'">'+esc(GAMES[r.game]||r.game)+'</button>'+starRow(r.stars)+'</div>'+
+    '<div class="who">'+esc(r.name)+' · '+ago(r.t)+(r.edited?' · edited':'')+(you?'<span class="you">YOU</span>':'')+'</div>'+
+    (r.text?'<p>'+esc(r.text)+'</p>':'')+(you?'':'<button type="button" class="linkish rep" data-rep="'+esc(r.id)+'">Report</button>')+'</article>';
+}
+async function refresh(reset){
+  if(loading)return;loading=true;
+  try{
+    const q=new URLSearchParams({list:'1',sort});if(filter)q.set('game',filter);
+    if(!reset&&cursor!=null)q.set(sort==='top'?'skip':'before',cursor);
+    const d=await api('?'+q);
+    GAMES=d.games||GAMES;STATS=d.stats||{};
+    const html=(d.reviews||[]).map(card).join('');
+    if(reset){$('list').innerHTML=html||'<p class="empty">'+(filter?'No reviews for '+esc(GAMES[filter])+' yet. Be the first.':'No reviews yet. Be the first.')+'</p>';renderSummary()}
+    else $('list').insertAdjacentHTML('beforeend',html);
+    const last=(d.reviews||[]).slice(-1)[0];
+    cursor=sort==='top'?((reset?0:+cursor||0)+(d.reviews||[]).length):(last?last.t:null);
+    $('more').hidden=!d.more;
+  }catch(err){if(reset)$('list').innerHTML='<p class="empty">'+esc(err.message)+'</p>'}
+  finally{loading=false}
+}
+function setFilter(g,push){
+  filter=GAMES[g]?g:'';$('fGame').value=filter;
+  if(push){const u=new URL(location.href);if(filter)u.searchParams.set('game',filter);else u.searchParams.delete('game');history.replaceState(null,'',u)}
+  refresh(true);
+}
+$('fGame').addEventListener('change',()=>setFilter($('fGame').value,true));
+document.querySelector('.seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sort=b.dataset.s;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));refresh(true)});
+document.addEventListener('click',async e=>{
+  const g=e.target.closest('[data-g]');if(g){setFilter(g.dataset.g,true);document.querySelector('.filters').scrollIntoView({behavior:'smooth',block:'start'});return}
+  const r=e.target.closest('[data-rep]');
+  if(r){r.disabled=true;try{await api('',{op:'report',id:r.dataset.rep});r.textContent='Reported. Thanks.'}catch(err){r.textContent=err.message}}
+});
+$('more').addEventListener('click',()=>refresh(false));
+$('jumpWrite').addEventListener('click',e=>{e.preventDefault();$('write').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>$('wGame').value?null:$('wGame').focus({preventScroll:true}),400)});
+const bar=$('bar');const st=()=>bar.classList.toggle('stuck',scrollY>4);addEventListener('scroll',st,{passive:true});st();
+
+/* ---------- start ---------- */
+(async()=>{
+  try{const d=await api('');GAMES=d.games;STATS=d.stats||{}}catch(e){}
+  const names=Object.entries(GAMES).sort((a,b)=>a[1].localeCompare(b[1],undefined,{numeric:true}));
+  for(const [g,n] of names){$('wGame').add(new Option(n,g));$('fGame').add(new Option(n,g))}
+  try{MINE=(await api('',{op:'mine',pid})).mine||{};mineIds=new Set(Object.values(MINE).map(r=>r.id))}catch(e){}
+  const q=new URLSearchParams(location.search),g=q.get('game');
+  if(g&&GAMES[g]){$('wGame').value=g;loadMine();filter=g;$('fGame').value=g}
+  if(location.hash==='#write'||q.has('write'))setTimeout(()=>$('write').scrollIntoView({block:'start'}),60);
+  refresh(true);
+})();
+})();
+</script>
+</body>
+</html>

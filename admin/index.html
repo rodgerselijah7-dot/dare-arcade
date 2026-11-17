@@ -110,6 +110,14 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-o
       <div class="list" id="list"><p class="empty">Loading…</p></div>
       <p class="msg" id="listMsg" role="status"></p>
     </section>
+
+    <section class="panel">
+      <div class="row" style="justify-content:space-between"><h2>Player reviews</h2><button class="btn ghost sm" id="revReload">Refresh</button></div>
+      <p style="font-size:14px;color:var(--dim);margin:-4px 0 10px">Newest 200, with anything players reported at the top. Delete removes a review for good and updates the game's rating.</p>
+      <input type="search" id="revFind" placeholder="Search by game, name or words" aria-label="Search reviews">
+      <div class="list" id="revList"><p class="empty">Loading…</p></div>
+      <p class="msg" id="revMsg" role="status"></p>
+    </section>
   </div>
 </div>
 
@@ -173,6 +181,7 @@ $('result').addEventListener('click',e=>{const b=e.target.closest('[data-copy]')
 
 async function load(){
   say($('listMsg'),'');
+  loadReviews();
   try{rows=(await api({action:'list'})).codes||[];renderList()}catch(e){if(e.message!=='auth')say($('listMsg'),e.message,'err')}
 }
 function renderList(){
@@ -200,6 +209,43 @@ function renderList(){
   }
 }
 $('find').addEventListener('input',renderList);
+
+/* ---------- player reviews (moderation) ---------- */
+let revs=[],revGames={};
+async function loadReviews(){
+  say($('revMsg'),'');
+  try{
+    const r=await fetch('/api/reviews',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({op:'admin-list'})});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Couldn\'t load reviews.');
+    revs=d.reviews||[];revGames=d.games||{};renderReviews();
+  }catch(e){say($('revMsg'),e.message,'err')}
+}
+function renderReviews(){
+  const q=$('revFind').value.trim().toLowerCase(),box=$('revList');
+  const show=revs.filter(r=>!q||(revGames[r.game]||r.game).toLowerCase().includes(q)||r.name.toLowerCase().includes(q)||(r.text||'').toLowerCase().includes(q));
+  if(!revs.length){box.innerHTML='<p class="empty">No reviews yet.</p>';return}
+  if(!show.length){box.innerHTML='<p class="empty">No reviews match that search.</p>';return}
+  box.innerHTML='';
+  for(const r of show){
+    const d=document.createElement('div');d.className='item';
+    d.innerHTML=`<div class="who"></div><span class="pill ${r.reports?'revoked':'active'}">${r.reports?'REPORTED '+r.reports+'×':'★'.repeat(r.stars)}</span>
+      <div class="meta"><span class="g"></span><span>${r.reports?r.stars+'★ · ':''}${when(r.t)}${r.edited?' (edited)':''}</span></div>
+      <div class="txt" style="grid-column:1/-1;font-size:15px;white-space:pre-line;overflow-wrap:anywhere"></div>
+      <div class="acts"><a class="btn ghost sm" href="/reviews/?game=${encodeURIComponent(r.game)}" target="_blank" rel="noopener">View</a><button class="btn ghost sm danger" data-a="del">Delete</button></div>`;
+    d.querySelector('.who').textContent=r.name;d.querySelector('.g').textContent=revGames[r.game]||r.game;
+    d.querySelector('.txt').textContent=r.text||'(stars only)';
+    d.querySelector('[data-a]').addEventListener('click',async e=>{
+      if(!confirm(`Delete ${r.name}'s review of ${revGames[r.game]||r.game}? This can't be undone.`))return;
+      const b=e.currentTarget;b.disabled=true;
+      try{const x=await fetch('/api/reviews',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({op:'admin-delete',id:r.id})});
+        if(!x.ok)throw new Error((await x.json().catch(()=>({}))).error||'Couldn\'t delete it.');await loadReviews()}
+      catch(err){say($('revMsg'),err.message,'err');b.disabled=false}
+    });
+    box.appendChild(d);
+  }
+}
+$('revFind').addEventListener('input',renderReviews);
+$('revReload').addEventListener('click',loadReviews);
 $('reload').addEventListener('click',load);
 const saved=store.get();if(saved)signIn(saved,!!(()=>{try{return localStorage.getItem(K)}catch(e){return null}})());
 })();

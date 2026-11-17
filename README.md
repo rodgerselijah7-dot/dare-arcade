@@ -273,3 +273,11 @@ Every push to `main` redeploys automatically.
 - Leaderboards use `/api/scores?game=fb`: `all` (best Classic score) and `d<YYYYMMDD>` (that day's Daily; each daily board expires 3 days later) in `arc:fb:*`, names in `arc:fb:names`. Players set their name in Settings; the phone keeps a random player id.
 - Races: rooms `fb-<code>` on `/api/room`. The host's presence carries `go` (race number) and `seed`; every phone builds the same tower from the seed. Each racer's presence carries floor, position, status (`climb`, `out`, `done`) and finish time. Polls about 6 times a second while racing and every 0.6s in the lobby.
 - The same `frostbound/index.html` body also runs as a Claude artifact, where it uses Claude's database and live rooms instead.
+
+
+## Reviews
+
+- `/reviews/` lets players rate any game 1 to 5 stars with an optional comment (one review per player per game; posting again updates it, and they can delete it). Browse all reviews or one game's, newest or top rated, with each game's average and star breakdown. The lobby shows each game's rating and has a Reviews button in the top bar.
+- Kept clean automatically: strong swears are starred out, links, handles and phone numbers are refused, and posting is rate limited. Players can tap Report.
+- Moderate from `/admin` under **Player reviews**: reported reviews come first; Delete removes one for good.
+- API: `api/reviews.js`. When you add a game, add it to the `GAMES` list there so it can be reviewed.
