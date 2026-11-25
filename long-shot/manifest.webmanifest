@@ -1,0 +1,29 @@
+{
+  "name": "Long Shot",
+  "short_name": "Long Shot",
+  "description": "Elemental archery duels: campaign, siege, 2v2, free-for-all, Crown Cup and online play. By Dontae Amare.",
+  "start_url": "/long-shot/",
+  "scope": "/long-shot/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07070a",
+  "theme_color": "#07070a",
+  "icons": [
+    {
+      "src": "/long-shot/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/long-shot/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/long-shot/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

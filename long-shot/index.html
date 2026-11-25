@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Long Shot — DARE Arcade</title>
+<meta name="description" content="Elemental archery duels by Dontae Amare. Campaign, Siege, 2v2, free-for-all, Crown Cup and online play.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="manifest" href="/long-shot/manifest.webmanifest">
+<link rel="icon" href="/long-shot/icon-192.png">
+<link rel="apple-touch-icon" href="/long-shot/apple-touch-icon.png">
+<link rel="stylesheet" href="/long-shot/css/style.css">
+</head>
+<body>
+<canvas id="glc"></canvas>
+<div id="flash"></div>
+
+<!-- ============ HUD ============ -->
+<div id="hud"><div class="side" id="hudL"></div>
+  <div id="windBox"><div class="lbl">WIND</div><div class="wg"><i id="wfill"></i><em></em></div><div id="wtxt">CALM</div></div>
+  <div class="side r" id="hudR"></div></div>
+<div id="scoreBox"><div><span>SCORE</span><b id="scoreV">0</b></div><div id="arrowsLeftBox"><span>ARROWS</span><b id="arrowsV">8</b></div><button id="bWind">WIND: CALM</button></div>
+<div id="tag"></div>
+<div id="hint">Drag back anywhere to draw · release to fire</div>
+<button id="pauseBtn" aria-label="Pause"></button>
+<button id="emoteBtn" aria-label="Emote"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg></button>
+<div id="emoteWheel"><button>GG</button><button>NICE SHOT</button><button>TOO EASY</button><button>RUN IT BACK</button></div>
+<div id="arrows"></div>
+<div id="banner"></div>
+<div id="replayTag"><span class="dot"></span>INSTANT REPLAY<small>TAP TO SKIP</small></div>
+<div id="toasts"></div>
+
+<!-- ============ LOADING ============ -->
+<div class="scr on" id="sLoad">
+  <div class="logo menuLogo"><span class="lt">LONG SHOT</span></div>
+  <div class="loadbar"><i id="loadBar"></i></div>
+  <div class="kick" id="loadTxt">LOADING</div>
+</div>
+
+<!-- ============ SPLASH ============ -->
+<div class="scr dim" id="sSplash">
+  <div class="kick">DARE ARCADE PRESENTS</div>
+  <div class="shake"><div class="logo"><span class="lt">LONG</span><span class="lt b">SHOT</span>
+    <div class="flyArrow"><svg viewBox="0 0 180 30"><defs><linearGradient id="fa" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".6" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff"/></linearGradient></defs><path d="M0 15H150" stroke="url(#fa)" stroke-width="3"/><path d="M150 15h14" stroke="#e8d3ad" stroke-width="3"/><path d="M180 15l-18-8 4 8-4 8z" fill="#dfe6ee"/><path d="M118 15l-14-9h10l10 9-10 9h-10z" fill="#e2283c"/></svg></div></div></div>
+  <div class="sub" style="margin-top:14px">ELEMENTAL ARCHERY DUELS</div>
+  <div class="tap">TAP TO ENTER</div>
+  <div class="foot">FORT WORTH · DARE</div>
+</div>
+
+<!-- ============ MENU ============ -->
+<div class="scr dim" id="sMenu">
+  <div class="topbar"><div class="rankb" id="mRank">1</div><div class="tb-mid"><div class="tb-l"><b id="mRankN">BRONZE</b><span id="mLvl">LEVEL 1</span></div><div class="xpbar"><i id="mXp"></i></div></div><div class="crowns"><svg viewBox="0 0 24 24"><path d="M3 18l1.5-10 5 4L12 5l2.5 7 5-4L21 18z" fill="#f2c94c"/></svg><b id="mCrowns">0</b></div></div>
+  <div class="logo menuLogo"><span class="lt">LONG SHOT</span></div>
+  <div class="tiles">
+    <button class="tile gold big" data-go="sPlay"><div class="ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg></div><div><h3>PLAY</h3><p>VS CPU · 2 Player · 2v2 · Free-for-all · Crown Cup</p></div></button>
+    <div class="tgrid">
+      <button class="tile sm" data-act="camp"><div class="ic r"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 18l1.5-10 5 4L12 5l2.5 7 5-4L21 18z"/></svg></div><div><h3>CAMPAIGN</h3><p id="mCamp">Southside Saga</p></div></button>
+      <button class="tile sm" data-act="online"><div class="ic b"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1.3" fill="#fff"/><path d="M1.5 9a15 15 0 0 1 21 0"/></svg></div><div><h3>ONLINE</h3><p>Quick match</p></div></button>
+      <button class="tile sm" data-act="armory"><div class="ic w"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 3c6 3 6 15 0 18M6 3v18M14 12h8M19 9l3 3-3 3"/></svg></div><div><h3>ARMORY</h3><p>Archers · bows · trails</p></div></button>
+      <button class="tile sm" data-act="chal"><div class="ic p"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="#fff"/></svg></div><div><h3>CHALLENGES</h3><p id="mDaily">Daily · Practice</p></div></button>
+    </div>
+    <div class="tgrid">
+      <button class="tile sm" data-act="missions"><div class="ic r"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg></div><div><h3>MISSIONS</h3><p id="mMis">Daily · Weekly</p></div><span class="badge" id="mBadge"></span></button>
+      <button class="tile sm" data-act="profile"><div class="ic g"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.6 6.3L21 9l-5 4.4L17.5 20 12 16.5 6.5 20 8 13.4 3 9l6.4-.7z"/></svg></div><div><h3>PROFILE</h3><p id="mProf">Achievements</p></div></button>
+    </div>
+  </div>
+  <div class="mini"><button class="chip" data-go="sHow">HOW TO PLAY</button><button class="chip" data-act="settings">SETTINGS</button></div>
+</div>
+
+<!-- ============ PLAY ============ -->
+<div class="scr dim2" id="sPlay">
+  <div class="ttl">CHOOSE A MODE</div>
+  <div class="tiles">
+    <button class="tile gold" data-act="duel-cpu"><div class="ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg></div><div><h3>VS CPU</h3><p>Rookie, Marksman or Legend</p></div></button>
+    <button class="tile" data-act="duel-local"><div class="ic w"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="8" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M2.5 20c.8-4 3-6 5.5-6s4.7 2 5.5 6M13.5 14.6c3-1 7 .5 8 4.4"/></svg></div><div><h3>2 PLAYER</h3><p>Pass and play on one phone</p></div></button>
+    <button class="tile" data-act="team"><div class="ic b"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="6" cy="7" r="2.5"/><circle cx="11" cy="7" r="2.5"/><circle cx="18" cy="7" r="2.5" opacity=".5"/><rect x="3" y="11" width="10" height="8" rx="2"/><rect x="15" y="11" width="6" height="8" rx="2" opacity=".5"/></svg></div><div><h3>2V2 TEAMS</h3><p>Squads of two · mix humans and CPU</p></div></button>
+    <button class="tile" data-act="ffa"><div class="ic r"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="9" r="2.3"/><circle cx="12" cy="6" r="2.3"/><circle cx="19" cy="9" r="2.3"/><circle cx="12" cy="15" r="2.3"/></svg></div><div><h3>FREE-FOR-ALL</h3><p>3 or 4 archers · last one standing</p></div></button>
+    <button class="tile" data-act="siege"><div class="ic p"><svg viewBox="0 0 24 24" fill="#fff"><path d="M4 21V9l2-2 2 2v3h2V5l2-2 2 2v7h2V9l2-2 2 2v12z"/></svg></div><div><h3>SIEGE</h3><p id="pSiege">Defend your tower against endless waves</p></div></button>
+    <button class="tile" data-act="cup"><div class="ic g"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12v3a6 6 0 0 1-12 0zM3 4h3v2a3 3 0 0 1-3-2zM21 4h-3v2a3 3 0 0 0 3-2zM10 12h4v4h3v3H7v-3h3z"/></svg></div><div><h3>CROWN CUP</h3><p>8-archer knockout tournament</p></div></button>
+  </div>
+  <button class="btn sm" data-go="sMenu">BACK</button>
+</div>
+
+<!-- ============ SETUP ============ -->
+<div class="scr dim2" id="sSetup">
+  <div class="ttl" id="setupT">CHOOSE YOUR ARCHER</div>
+  <div id="setupBody" class="col"></div>
+  <button class="btn pri" id="bStart">START DUEL</button>
+  <button class="btn sm" data-go="sPlay">BACK</button>
+</div>
+
+<!-- ============ CAMPAIGN ============ -->
+<div class="scr dim2" id="sCamp">
+  <div class="ttl">SOUTHSIDE SAGA<small id="campStars">0 / 24 STARS</small></div>
+  <div class="list" id="campList"></div>
+  <button class="btn sm" data-go="sMenu">BACK</button>
+</div>
+<div class="scr dim2" id="sStory">
+  <div class="kick" id="storyCh">CHAPTER 1</div>
+  <div class="ttl" id="storyT">THE BOTTOM</div>
+  <canvas id="storyBoss" width="420" height="300" class="bossc"></canvas>
+  <div class="bossn" id="storyBossN">LIL DEUCE</div>
+  <div class="note" id="storyTxt"></div>
+  <div class="note small" id="storyMods"></div>
+  <button class="btn pri" id="bFight">FIGHT</button>
+  <button class="btn sm" data-act="camp">BACK</button>
+</div>
+
+<!-- ============ CUP ============ -->
+<div class="scr dim2" id="sCup">
+  <div class="ttl">CROWN CUP<small>WIN 3 MATCHES TO TAKE THE CUP</small></div>
+  <div id="cupBracket"></div>
+  <button class="btn pri" id="bCup">PLAY QUARTERFINAL</button>
+  <button class="btn sm" data-go="sPlay">BACK</button>
+</div>
+
+<!-- ============ CHALLENGES ============ -->
+<div class="scr dim2" id="sChal">
+  <div class="ttl">CHALLENGES</div>
+  <div class="card"><div class="kick">DAILY CHALLENGE</div><h3 id="dTitle">TODAY'S RANGE</h3><p id="dInfo"></p><button class="btn pri" id="bDaily">PLAY DAILY</button></div>
+  <div class="card"><div class="kick">PRACTICE RANGE</div><h3>FREE FIRE</h3><p>Unlimited arrows, every element, full aim guide. Moving targets respawn. Toggle the wind to train for game day.</p><button class="btn" id="bPractice">ENTER RANGE</button></div>
+  <button class="btn sm" data-go="sMenu">BACK</button>
+</div>
+
+<!-- ============ ONLINE ============ -->
+<div class="scr dim2" id="sOnline">
+  <div class="ttl">ONLINE DUEL<small>PHONE TO PHONE</small></div>
+  <div class="onrow"><canvas id="onPrev" width="300" height="220"></canvas><div><div class="kick">YOUR LOADOUT</div><b id="onName">SOUTHSIDE GOLD</b><p id="onQ"></p><button class="chip" data-act="armory">CHANGE IN ARMORY</button></div></div>
+  <div class="seg" id="segBoO"><button data-v="3" class="on">BEST OF 3</button><button data-v="5">BEST OF 5</button></div>
+  <div class="seg" id="segElO"><button data-v="1" class="on">ELEMENTS ON</button><button data-v="0">ELEMENTS OFF</button></div>
+  <button class="btn pri" id="bQuick">QUICK MATCH</button>
+  <div class="row2"><button class="btn half" id="bHost">HOST CODE</button><input id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters"><button class="btn half red" id="bJoin">JOIN</button></div>
+  <div class="note" id="netMsg"></div>
+  <button class="btn sm" data-go="sMenu">BACK</button>
+</div>
+<div class="scr dim2" id="sHost"><div class="note">Share this code with your rival</div><div id="code">----</div><div class="note" id="hostMsg">Connecting…</div><button class="btn sm" id="bHostBack">CANCEL</button></div>
+<div class="scr dim2" id="sQuick"><div class="spinner"></div><div class="ttl">FINDING A RIVAL</div><div class="note" id="quickMsg">Searching the lobby…</div><button class="btn sm" id="bQuickBack">CANCEL</button></div>
+
+<!-- ============ MISSIONS ============ -->
+<div class="scr dim2" id="sMissions">
+  <div class="ttl">MISSIONS<small>COMPLETE THEM IN ANY MODE · CLAIM FOR CROWNS AND XP</small></div>
+  <div class="list" id="misList"></div>
+  <button class="btn sm" data-go="sMenu">BACK</button>
+</div>
+
+<!-- ============ ARMORY ============ -->
+<div class="scr dim2" id="sArmory">
+  <div class="armtop"><div class="ttl">ARMORY</div><div class="crowns"><svg viewBox="0 0 24 24"><path d="M3 18l1.5-10 5 4L12 5l2.5 7 5-4L21 18z" fill="#f2c94c"/></svg><b id="aCrowns">0</b></div></div>
+  <div class="tabs" id="armTabs"><button data-t="out" class="on">ARCHERS</button><button data-t="bow">BOWS</button><button data-t="trail">TRAILS</button><button data-t="pose">POSES</button><button data-t="quiver">QUIVER</button></div>
+  <div class="armprev"><canvas id="armPrev" width="420" height="300"></canvas><div class="arminfo"><b id="armName"></b><p id="armDesc"></p><button class="btn pri" id="armAct">EQUIP</button></div></div>
+  <div class="grid" id="armGrid"></div>
+  <button class="btn sm" id="bArmBack">BACK</button>
+</div>
+
+<!-- ============ PROFILE ============ -->
+<div class="scr dim2" id="sProfile">
+  <div class="profhead"><div class="rankb big" id="pRank">1</div><div><b id="pRankN">BRONZE</b><span id="pLvl">LEVEL 1 · 0 / 260 XP</span><div class="xpbar"><i id="pXp"></i></div></div></div>
+  <div class="tabs" id="profTabs"><button data-t="ach" class="on">ACHIEVEMENTS</button><button data-t="season">SEASON PASS</button><button data-t="stats">STATS</button></div>
+  <div id="profBody" class="list"></div>
+  <button class="btn sm" data-go="sMenu">BACK</button>
+</div>
+
+<!-- ============ SETTINGS ============ -->
+<div class="scr dim2" id="sSettings">
+  <div class="ttl">SETTINGS</div>
+  <div class="settings">
+    <label>GRAPHICS</label><div class="seg" id="setGfx"><button data-v="low">LOW</button><button data-v="high">HIGH</button><button data-v="ultra">ULTRA</button></div>
+    <label>MUSIC <span id="vMus"></span></label><input type="range" id="setMus" min="0" max="1" step=".05">
+    <label>EFFECTS <span id="vSfx"></span></label><input type="range" id="setSfx" min="0" max="1" step=".05">
+    <label>AIM SENSITIVITY <span id="vSens"></span></label><input type="range" id="setSens" min=".6" max="1.6" step=".05">
+    <div class="tg"><span>SOUND</span><button data-k="sound"></button></div>
+    <div class="tg"><span>ANNOUNCER VOICE</span><button data-k="voice"></button></div>
+    <div class="tg"><span>VIBRATION <small>(ANDROID)</small></span><button data-k="haptics"></button></div>
+    <div class="tg"><span>INSTANT REPLAYS</span><button data-k="replay"></button></div>
+    <div class="tg"><span>LEFT-HANDED LAYOUT</span><button data-k="lefty"></button></div>
+    <div class="tg"><span>COLORBLIND-FRIENDLY</span><button data-k="cb"></button></div>
+  </div>
+  <button class="btn" id="bSetBack">DONE</button>
+</div>
+
+<!-- ============ HOW ============ -->
+<div class="scr dim2" id="sHow">
+  <div class="ttl">HOW TO PLAY</div>
+  <div class="how" id="howList"></div>
+  <button class="btn" data-go="sMenu" style="margin-top:6px">GOT IT</button>
+</div>
+
+<div class="scr dim2" id="sPause">
+  <div class="ttl">PAUSED</div>
+  <button class="btn pri" id="bResume">RESUME</button>
+  <button class="btn" id="bPhoto">PHOTO MODE</button>
+  <button class="btn" id="bPauseSet">SETTINGS</button>
+  <button class="btn red" id="bQuit">QUIT TO MENU</button>
+</div>
+
+<!-- ============ RESULTS ============ -->
+<div class="scr dim" id="sOver">
+  <div class="logo" id="overTitle"><span class="lt">VICTORY</span></div>
+  <div class="sub" id="overSub">2 — 0</div>
+  <div class="xpbox" id="xpBox"><div class="xprow"><span id="xpLvl">LEVEL 1</span><span id="xpGain">+0 XP</span><span class="cr" id="crGain">+0</span></div><div class="xpbar big"><i id="xpFill"></i></div><div id="unlocks"></div></div>
+  <div class="stats" id="stats"></div>
+  <button class="btn pri" id="bNext">REMATCH</button>
+  <a class="btn" id="bClip" download="long-shot-ko.webm">SAVE KO CLIP</a>
+  <button class="btn sm" id="bMenu">MENU</button>
+</div>
+
+<div class="scr dim2" id="sMsg"><div class="ttl" id="msgT">DISCONNECTED</div><div class="note" id="msgB"></div><button class="btn" id="bMsgOk">OK</button></div>
+
+<!-- ============ PHOTO ============ -->
+<div id="photoUI"><div class="phtop"><button data-f="none" class="on">NATURAL</button><button data-f="noir">NOIR</button><button data-f="gold">GOLD</button><button data-f="vintage">VINTAGE</button><button data-f="vivid">VIVID</button></div>
+  <div class="phbot"><input type="range" id="phZoom" min=".4" max="3" step=".01"><div class="row2"><button class="btn half" id="phExit">EXIT</button><button class="btn half pri" id="phSnap">CAPTURE</button></div><div class="note small">Drag to frame your shot</div></div></div>
+<div id="photoOut"><img id="phImg" alt="Captured photo"><div class="note small">Long-press the photo to save it, or use the button.</div><div class="row2"><a class="btn half pri" id="phSave" download="long-shot-photo.png">SAVE</a><button class="btn half" id="phClose">CLOSE</button></div></div>
+
+<script src="/long-shot/js/net-room.js"></script>
+<script src="/long-shot/js/core.js"></script>
+<script src="/long-shot/js/audio.js"></script>
+<script src="/long-shot/js/post.js"></script>
+<script src="/long-shot/js/engine.js"></script>
+<script src="/long-shot/js/render.js"></script>
+<script src="/long-shot/js/detail.js"></script>
+<script src="/long-shot/js/ui.js"></script>
+</body>
+</html>

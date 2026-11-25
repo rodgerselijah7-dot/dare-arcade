@@ -34,6 +34,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
 /open-season/          Open Season (3D Texas hunting game: index.html + os-assets/ models as base64 .txt, ground textures, ambient audio and three.js loaders + icons + manifest; loads three.js r128 from cdnjs)
 /frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
+/long-shot/            Long Shot (canvas + WebGL archery duels: index.html + css/ + js/ + icons + manifest; online duels over /api/room)
 /api/comp.js           Comp codes: free access codes made from /admin (needs ARCADE_ADMIN_KEY)
 /api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rumble Karts, Rare Rumble, Square Up, Dead Rise, Truth or Dare, Spades and Frostbound online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
