@@ -317,7 +317,7 @@ function update(dt){G.t+=dt;const prevX=G.cam.x;if(G.state==='photo'){return}
   if(G.arrows.length)G.flightT=G.arrows[0].t;for(const ar of G.arrows){ar.trail.push(ar.x,ar.y);if(ar.trail.length>48)ar.trail.splice(0,2);trailFx(ar)}
   if(!G.arrows.length){if(st==='replay'){G.timer=1.4;G.state='replayEnd'}else flightDone()}}
  else if(st==='flight'&&!G.arrows.length)flightDone();
- else if(st==='waveEnd'){G.timer-=dt;if(G.timer<=0){G.wave++;spawnWave();G.state='intro';G.timer=1.8;const b=G.wave%5===0;banner('WAVE '+G.wave,b?'WARLORD INCOMING':(G.A.length-G.cfg.slots.length)+' RAIDERS');musicMode(1);if(b)say('Warlord incoming')}}
+ else if(st==='waveEnd'){G.timer-=dt;if(G.timer<=0){if(typeof siegeLock==='function'&&siegeLock())return;G.wave++;spawnWave();G.state='intro';G.timer=1.8;const b=G.wave%5===0;banner('WAVE '+G.wave,b?'WARLORD INCOMING':(G.A.length-G.cfg.slots.length)+' RAIDERS');musicMode(1);if(b)say('Warlord incoming')}}
  else if(st==='replayEnd'){G.timer-=dt;if(G.timer<=0)endReplay()}
  else if(st==='resolve'){G.timer-=dt;if(G.timer<=0)endTurn()}
  else if(st==='wait'){if(G.netRes)endTurn()}

@@ -627,7 +627,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <h3>Long Shot</h3>
         <span class="status">Play</span>
         <p>Elemental archery duels. Read the wind, nail the perfect release and fire Fire, Frost, Thunder, Split, Venom, Seeker and Barrier arrows across six maps. An 8-chapter Southside campaign, endless Siege waves, 2v2, free-for-all, the Crown Cup, daily missions, and online duels with friends.</p>
-        <span class="price">Free to play</span>
+        <span class="price" data-game="long-shot">Chapters 1 and 2, Siege waves 1 to 5 and online duels free. Full game $3.99</span>
       </a>
       <a class="row live" href="/square-up/">
         <h3>Square Up</h3>
@@ -1074,7 +1074,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
 // Show what this device has unlocked
 (function(){
   if(!window.DARE)return;
-  const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble','dirt-line','open-season'];
+  const GAMES=['the-last-don','rebel-elimination','dead-rise','square-up','cosmic-encounter','ori','break-the-block','bubble','dirt-line','open-season','long-shot'];
   function paint(){
     const free=DARE.freeNow&&DARE.freeNow(),bought=DARE.bought||DARE.owned;
     document.querySelectorAll('[data-game]').forEach(el=>{

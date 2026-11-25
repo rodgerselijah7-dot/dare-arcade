@@ -90,7 +90,19 @@ function menuUpd(){const r=rankOf(SV.level);for(const id of['mRank','pRank']){$(
  $('mDaily').textContent=SV.daily.date===todayKey()&&SV.daily.done?'Daily done · streak '+SV.daily.streak:'New daily ready';
  const n=Object.keys(SV.ach).length;$('mProf').textContent=n+' / '+ACH.length+' · Tier '+seasonTier();const rd=msnReady().length;$('mBadge').style.display=rd?'block':'none';$('mBadge').textContent=rd;$('mMis').textContent=rd?rd+' ready to claim':'Daily · Weekly'}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{sfx.ui();show(b.dataset.go)}));
+// ---------- DARE ARCADE FULL GAME ----------
+// Free tryout: VS CPU, 2 Player, practice, daily, missions, online duels, Campaign chapters 1-2 and Siege waves 1-5.
+// Full game: Campaign chapters 3-8, Siege wave 6 and up, 2v2, free-for-all and the Crown Cup.
+const FULL='long-shot',FREE_CH=2,FREE_WAVES=5;
+const fullOwned=()=>!window.DARE||DARE.owned(FULL);
+function needFull(title,then,onExit){if(fullOwned())return then();DARE.gate(FULL,()=>{paintLocks();then()},{title,exitLabel:'Not now',onExit:()=>{paintLocks();onExit&&onExit()}})}
+function paintLocks(){const own=fullOwned();document.querySelectorAll('[data-act="team"],[data-act="ffa"],[data-act="cup"]').forEach(b=>b.classList.toggle('full',!own));
+ const ps=$('pSiege');if(ps)ps.textContent=own?'Defend your tower against endless waves':'Waves 1 to 5 free · endless waves in the full game'}
+function siegeLock(){if(G.mode!=='siege'||G.wave<FREE_WAVES||fullOwned())return false;G.state='gate';tagHide();
+ DARE.gate(FULL,()=>{paintLocks();G.state='waveEnd';G.timer=0},{title:'You held the tower through wave '+FREE_WAVES,exitLabel:'End run',onExit:()=>{G.siegeEnd=1;G.state='over';G.timer=.8;G.matchWinner=1;banner('RUN COMPLETE','WAVE '+FREE_WAVES+' · SCORE '+G.score);musicMode(0)}});return true}
+if(window.DARE){DARE.onChange(paintLocks);setTimeout(paintLocks,0)}
 document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{ac();sfx.ui();const a=b.dataset.act;
+ if(a==='team'||a==='ffa'||a==='cup'){const nm={team:'2v2 Teams',ffa:'Free-for-all',cup:'The Crown Cup'}[a];return needFull(nm+' is in the full game',()=>a==='cup'?openCup():openSetup(a))}
  if(a==='camp')openCamp();else if(a==='online')openOnline();else if(a==='armory')openArmory();else if(a==='chal')openChal();else if(a==='profile')openProfile('ach');else if(a==='settings')openSettings('sMenu');
  else if(a==='cup')openCup();else if(a==='missions')openMissions();else openSetup(a)}));
 
@@ -143,10 +155,10 @@ $('bStart').onclick=()=>{ac();const k=SETUP.kind,L=myLoad();let cfg;usedNames=[]
 // ---------- CAMPAIGN ----------
 function openCamp(){const L=$('campList');L.innerHTML='';$('campStars').textContent=campStars()+' / 24 STARS';
  CAMP.forEach((c,k)=>{const un=k===0||SV.camp[k-1]>0;const st=SV.camp[k]||0;const b=document.createElement('button');b.className='citem'+(un?'':' lk');
-  b.innerHTML=`<div class="num">${k+1}</div><div><b>${c.n}</b><span>${un?'VS '+c.boss+' · '+BIOMES[c.b].name.split(' · ')[0]:'Clear chapter '+k+' to unlock'}</span></div><div class="stars">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>`;
+  b.innerHTML=`<div class="num">${k+1}</div><div><b>${c.n}</b><span>${un?'VS '+c.boss+' · '+BIOMES[c.b].name.split(' · ')[0]+(k>=FREE_CH&&!fullOwned()?' · FULL GAME':''):'Clear chapter '+k+' to unlock'}</span></div><div class="stars">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>`;
   if(un)b.onclick=()=>{sfx.ui();openStory(k)};L.appendChild(b)});show('sCamp')}
 let campSel=0;
-function openStory(k){campSel=k;const c=CAMP[k];$('storyCh').textContent='CHAPTER '+(k+1)+' · '+BIOMES[c.b].name;$('storyT').textContent=c.n;$('storyBossN').textContent=c.boss;$('storyTxt').textContent=c.story;
+function openStory(k){if(k>=FREE_CH&&!fullOwned())return needFull('Chapter '+(k+1)+' is in the full game',()=>openStory(k),()=>openCamp());campSel=k;const c=CAMP[k];$('storyCh').textContent='CHAPTER '+(k+1)+' · '+BIOMES[c.b].name;$('storyT').textContent=c.n;$('storyBossN').textContent=c.boss;$('storyTxt').textContent=c.story;
  const m=[];if(c.mods.wind)m.push('Heavy wind');if(c.mods.noGuide)m.push('No aim guide');if(c.mods.wall)m.push('Breakable wall');if(c.mods.plat)m.push('Moving platform');if(c.mods.bossHp)m.push('Boss has '+c.mods.bossHp+' HP');if(c.mods.bossQ)m.push('Boss quiver: '+c.mods.bossQ.map(x=>ARW[x].n).join(', '));m.push(c.bo===1?'Single round':'Best of '+c.bo);m.push(['Rookie','Marksman','Legend'][c.diff]+' AI');
  $('storyMods').textContent=m.join(' · ');regPrev($('storyBoss'),cv2=>figureTo(cv2,c.o,-1,2.1,262,true,{bow:k>=6?'gold':'ebony'}));show('sStory')}
 $('bFight').onclick=()=>{ac();const k=campSel,c=CAMP[k];const L=myLoad();
@@ -343,11 +355,11 @@ $('sSplash').addEventListener('pointerdown',()=>{if(entered)return;entered=true;
 window.__G=G;window.__SV=SV;
 
 // ---------- SIEGE RESULTS ----------
-function siegeOver(){const ms=G.ms[0];const waves=G.wave-1;const before=ownedSnapshot();const rec=waves>(SV.siege.best||0);
+function siegeOver(){const ms=G.ms[0];const ended=G.siegeEnd;G.siegeEnd=0;const waves=G.wave-(ended?0:1);const before=ownedSnapshot();const rec=waves>(SV.siege.best||0);
  SV.siege.best=Math.max(SV.siege.best||0,waves);SV.siege.score=Math.max(SV.siege.score||0,G.score);SV.stats.siegebest=Math.max(SV.stats.siegebest||0,waves);
  addStat('matches',1);addStat('waves',waves);['hits','heads','kos','longs','killcams','burns','freezes','zaps','splits','venoms','seeks','blocks','perfects'].forEach(k=>addStat(k,ms[k]||0));
  const R=applyXp(60+waves*50+ms.kos*15+(ms.perfects||0)*10,10+waves*12+ms.kos*2,before);
- showResults({title:rec?'NEW RECORD':'TOWER FALLEN',sub:'REACHED WAVE '+G.wave+' · SCORE '+G.score,stats:[[waves,'WAVES CLEARED'],[G.kills,'RAIDERS DOWN'],[G.score,'SCORE'],[ms.heads,'HEADSHOTS'],[ms.perfects||0,'PERFECTS'],[SV.siege.best,'BEST WAVE']],R,next:'DEFEND AGAIN',nextFn:()=>{startMatch(Object.assign({},G.cfg,{seed:Math.random()*1e9|0}));G.score=0;scoreUpd()}})}
+ showResults({title:rec?'NEW RECORD':ended?'TOWER HELD':'TOWER FALLEN',sub:(ended?'CLEARED WAVE ':'REACHED WAVE ')+G.wave+' · SCORE '+G.score,stats:[[waves,'WAVES CLEARED'],[G.kills,'RAIDERS DOWN'],[G.score,'SCORE'],[ms.heads,'HEADSHOTS'],[ms.perfects||0,'PERFECTS'],[SV.siege.best,'BEST WAVE']],R,next:'DEFEND AGAIN',nextFn:()=>{startMatch(Object.assign({},G.cfg,{seed:Math.random()*1e9|0}));G.score=0;scoreUpd()}})}
 
 // ---------- MISSIONS ----------
 const MTPL=[['wins','Win # matches',[2,3],[60,90]],['heads','Land # headshots',[3,5],[60,90]],['perfects','Land # perfect releases',[3,6],[60,100]],['kos','Knock out # archers',[3,5],[50,80]],

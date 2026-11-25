@@ -9,5 +9,6 @@
   {"id": "bubble", "name": "Bubble Blaster", "price": 2.99, "tryout": "Rounds 1 to 3", "unlocks": "Round 4 and every round after it, with more rows and colors each round"},
   {"id": "dirt-line", "name": "Dirt Line", "price": 2.99, "tryout": "First Ride, Rookie Loop and Pro Rhythm", "unlocks": "Big Air, Desert Mesa, Pine Ridge and Night Session"},
   {"id": "open-season", "name": "Open Season", "price": 3.99, "tryout": "Open Season hunts on Hill Country, Rolling Prairie and River Bottom", "unlocks": "Trophy Stalk, Night Hogs, Piney Woods, Brush Country and High Plains Winter"},
-  {"id": "all-access", "name": "All-Access Pass", "price": 14.99, "pass": true, "games": ["the-last-don", "rebel-elimination", "dead-rise", "square-up", "cosmic-encounter", "ori", "break-the-block", "bubble", "dirt-line", "open-season"], "unlocks": "Every paid game in the arcade, including new ones"}
+  {"id": "long-shot", "name": "Long Shot", "price": 3.99, "tryout": "VS CPU, 2 Player, online duels, Campaign chapters 1 and 2, and Siege waves 1 to 5", "unlocks": "Campaign chapters 3 to 8, endless Siege, 2v2 Teams, Free-for-all and the Crown Cup"},
+  {"id": "all-access", "name": "All-Access Pass", "price": 14.99, "pass": true, "games": ["the-last-don", "rebel-elimination", "dead-rise", "square-up", "cosmic-encounter", "ori", "break-the-block", "bubble", "dirt-line", "open-season", "long-shot"], "unlocks": "Every paid game in the arcade, including new ones"}
 ]
