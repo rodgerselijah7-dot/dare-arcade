@@ -227,6 +227,7 @@ $('bMenu').onclick=toMenu;$('bMsgOk').onclick=toMenu;
 // ---------- PAUSE / PHOTO ----------
 let pausedFrom=null;
 $('pauseBtn').onclick=e=>{e.stopPropagation();if(G.state==='paused'||G.state==='photo')return;pausedFrom=G.state;if(G.sub!=='online')G.state='paused';show('sPause')};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.cfg&&G.mode!=='demo'&&G.sub!=='online'&&!['paused','photo','done','gate','boot'].includes(G.state)&&$('pauseBtn').style.display==='flex')$('pauseBtn').click()});
 $('bResume').onclick=()=>{hideAll();if(G.state==='paused')G.state=pausedFrom};
 $('bQuit').onclick=toMenu;
 $('bPauseSet').onclick=()=>openSettings('sPause');

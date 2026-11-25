@@ -264,3 +264,4 @@ body.hud4 #emoteWheel{top:calc(env(safe-area-inset-top) + 174px)}
 /* full-game tag on modes outside the free tryout (DARE Arcade) */
 .tile.full{position:relative}
 .tile.full::after{content:'FULL GAME';position:absolute;top:8px;right:10px;font:800 9px/1 Inter,sans-serif;letter-spacing:.14em;color:#f2c94c;border:1px solid rgba(242,201,76,.55);padding:4px 6px;border-radius:4px;background:rgba(0,0,0,.35)}
+a.chip{color:#fff;text-decoration:none;display:inline-flex;align-items:center}

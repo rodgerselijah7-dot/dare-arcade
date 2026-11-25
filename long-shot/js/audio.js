@@ -3,7 +3,7 @@ let AC=null,noiseB=null,master=null,sfxBus=null,musBus=null,musFilter=null,amb=n
 function ac(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);
   sfxBus=AC.createGain();sfxBus.connect(master);musFilter=AC.createBiquadFilter();musFilter.type='lowpass';musFilter.frequency.value=18000;musBus=AC.createGain();musBus.connect(musFilter).connect(master);
   const n=AC.sampleRate*2;noiseB=AC.createBuffer(1,n,AC.sampleRate);const d=noiseB.getChannelData(0);let b=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;b=(b+.02*w)/1.02;d[i]=w*.6+b*3}applyVol()}
- if(AC.state==='suspended')AC.resume()}catch(e){}return AC}
+ if(AC.state==='suspended'&&!document.hidden)AC.resume()}catch(e){}return AC}
 function applyVol(){if(!AC)return;master.gain.value=SV.set.sound?1:0;sfxBus.gain.value=SV.set.sfx;musBus.gain.value=SV.set.music*.55}
 function out(node){if(AC.createStereoPanner&&Math.abs(PAN)>.02){const p=AC.createStereoPanner();p.pan.value=clamp(PAN,-1,1);node.connect(p).connect(sfxBus)}else node.connect(sfxBus)}
 function env(g,t,a,peak,dec){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec)}
@@ -65,3 +65,15 @@ function pickVoice(){try{const vs=speechSynthesis.getVoices();VOICE=vs.find(v=>/
 try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
 function say(txt){if(!SV.set.voice||!SV.set.sound)return;try{if(!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);if(VOICE)u.voice=VOICE;u.rate=1.02;u.pitch=.62;u.volume=Math.min(1,SV.set.sfx);speechSynthesis.speak(u)}catch(e){}}
 function buzz(p){if(!SV.set.haptics)return;try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+
+// ---------- LEAVING THE PAGE ----------
+// Back to the arcade, app switch or screen lock: stop music, effects, the announcer and vibration at once,
+// and pick the music back up where it was when the game is shown again.
+let HUSH=false;
+function hush(on,gone){if(on===HUSH&&!gone)return;HUSH=on;try{
+ if(on){if(window.speechSynthesis)speechSynthesis.cancel();if(navigator.vibrate)navigator.vibrate(0);if(MUS.timer){clearInterval(MUS.timer);MUS.timer=null}
+  if(AC){if(gone){AC.close().catch(()=>{});AC=null;MUS.on=false}else if(AC.state==='running')AC.suspend().catch(()=>{})}}
+ else if(AC&&AC.state!=='closed'){AC.resume().catch(()=>{});if(MUS.on&&!MUS.timer){MUS.next=AC.currentTime+.1;MUS.timer=setInterval(musTick,40)}}}catch(e){}}
+document.addEventListener('visibilitychange',()=>hush(document.hidden));
+addEventListener('pagehide',e=>hush(true,!e.persisted));
+addEventListener('pageshow',()=>{if(!document.hidden)hush(false)});
