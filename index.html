@@ -807,6 +807,12 @@ html.standalone .fs-link,html.standalone .tip{display:none}
         <p>NBA and NFL trivia from 2000 to 2026: titles, MVPs, draft nights, trades, records, halftime shows and the Texas teams. A Daily Huddle, classic rounds that get harder as you streak, the Two-Minute Drill, and head-to-head races online.</p>
         <span class="price">Free to play</span>
       </a>
+      <a class="row live" href="/slang-search/">
+        <h3>Slang Search</h3>
+        <span class="status">Play</span>
+        <p>A slang word search where every clue is a definition. A new Daily Search every day across 12 themes, from the group chat to Texas, the studio and Grandma's porch. Five levels from Rookie to Legend, unlimited theme packs, a leaderboard, and head-to-head races online.</p>
+        <span class="price">Free to play</span>
+      </a>
       <a class="row pass" id="passRow" href="/shop/?add=all-access">
         <h3>All-Access Pass</h3>
         <span class="status">$14.99</span>
@@ -993,7 +999,7 @@ html.standalone .fs-link,html.standalone .tip{display:none}
     'cosmic-encounter':'space shooter galaga ships','dirt-line':'bike bikes bmx racing race','grand-prix':'cars car racing race driving','live-fire-range':'guns shooting target range',
     'open-season':'hunting hunt deer guns rifle','frostbound':'ice tower climbing climber jump','crowd-run':'runner running','break-the-block':'breakout brick bricks arkanoid',
     'bubble':'bubble shooter puzzle pop','ori':'puzzle blocks tetris','2048':'puzzle numbers','1010':'puzzle blocks','jenga':'tower stacking blocks 3d',
-    'buckets':'basketball hoops sports shooting','lunker-lake':'fishing fish bass','crate-digger':'music trivia quiz songs hip hop','game-day':'sports trivia quiz basketball football nba nfl','long-shot':'archery archer bow arrows duel siege multiplayer online friends'};
+    'buckets':'basketball hoops sports shooting','lunker-lake':'fishing fish bass','crate-digger':'music trivia quiz songs hip hop','game-day':'sports trivia quiz basketball football nba nfl','slang-search':'word search words slang trivia puzzle daily dictionary multiplayer online friends','long-shot':'archery archer bow arrows duel siege multiplayer online friends'};
   const norm=t=>(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’'`.]/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim();
   const rows=[...queue.querySelectorAll('a.row')],groups=[...queue.querySelectorAll('p.group')];
   let group='';const items=[];

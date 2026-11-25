@@ -1,7 +1,9 @@
-// Arcade leaderboards for Live Fire Range, Dirt Line and Frostbound.
+// Arcade leaderboards for Live Fire Range, Dirt Line, Frostbound and Slang Search.
 // GET  /api/scores?drill=bill                       -> { top: [{ pid, name, v }] }  (25 best; Live Fire Range when no game is given)
 // GET  /api/scores?game=dl&drill=t-rookie           -> Dirt Line board (t-<course> = race time, j-<course> = Trick Jam score)
 // GET  /api/scores?game=fb&drill=all               -> Frostbound board (all = best Classic score, d<YYYYMMDD> = that day's Daily climb)
+// GET  /api/scores?game=ss&drill=d20261125-R      -> Slang Search board (d<YYYYMMDD>-<level> = that day's Daily Search score
+//                                                     on Rookie K, Easy E, Regular R, Hard H or Legend L; all = all-time points)
 // POST { game, drill, v, pid, name }                -> { ok: true }
 // Each board is one Redis sorted set holding each player's best (lowest time, or highest score). Names live in one hash
 // per game. Players have no accounts: pid is a random id the phone makes.
@@ -15,7 +17,9 @@ const BOARDS = {
   dl: { prefix: "arc:dl:", names: "arc:dl:names", who: "Rider", time: [20, 900], scoreMax: 2000000,
     drills: Object.fromEntries(DL_COURSES.flatMap(c => [["t-" + c, "time"], ["j-" + c, "score"]])) },
   fb: { prefix: "arc:fb:", names: "arc:fb:names", who: "Climber", time: [0, 0], scoreMax: 400000,
-    drills: { all: "score" }, daily: /^d20\d{6}$/, dailyTtl: 3 * 86400 }
+    drills: { all: "score" }, daily: /^d20\d{6}$/, dailyTtl: 3 * 86400 },
+  ss: { prefix: "arc:ss:", names: "arc:ss:names", who: "Player", time: [0, 0], scoreMax: 5000000,
+    drills: { all: "score" }, daily: /^d20\d{6}-[KERHL]$/, dailyTtl: 3 * 86400 }
 };
 // A board's fixed drills, plus dated daily boards (Frostbound) that expire a few days after their day.
 const kindOf = (board, drill) => board.drills[drill] || (board.daily && board.daily.test(drill) ? "score" : null);

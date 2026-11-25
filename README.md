@@ -21,6 +21,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /grand-prix/           DARE Grand Prix (single-file pseudo-3D racer + icons + manifest)
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /game-day/             Game Day (NBA + NFL trivia: index.html + questions.js + icons + manifest)
+/slang-search/          Slang Search (daily slang word search: index.html + words.js + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /square-up/            Square Up (single-file top-down canvas zombie wave shooter + icons + manifest)
 /live-fire-range/      Live Fire Range (3D shooting range: index.html + assets/ photo textures and HDRI skies + icons + manifest; loads three.js r160 from jsDelivr)
@@ -36,9 +37,9 @@ Browser games by Dontae Amare. Static site — no build step.
 /frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
 /long-shot/            Long Shot (canvas + WebGL archery duels: index.html + css/ + js/ + icons + manifest; online duels over /api/room)
 /api/comp.js           Comp codes: free access codes made from /admin (needs ARCADE_ADMIN_KEY)
-/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Crown Rush, Rumble Karts, Rare Rumble, Square Up, Dead Rise, Truth or Dare, Spades and Frostbound online play (Upstash Redis)
+/api/room.js           Live match rooms for DARE Buckets, DARE Chess, DARE Connect, DARE Dice, DARE Pool, Crate Digger, Game Day, Slang Search, Crown Rush, Rumble Karts, Rare Rumble, Square Up, Dead Rise, Truth or Dare, Spades and Frostbound online play (Upstash Redis)
 /api/clans.js          Crown Rush clans (Upstash Redis)
-/api/scores.js         Live Fire Range, Dirt Line and Frostbound leaderboards (Upstash Redis)
+/api/scores.js         Live Fire Range, Dirt Line, Frostbound and Slang Search leaderboards (Upstash Redis)
 /icons/                Arcade icons
 ```
 
@@ -282,3 +283,10 @@ Every push to `main` redeploys automatically.
 - Kept clean automatically: strong swears are starred out, links, handles and phone numbers are refused, and posting is rate limited. Players can tap Report.
 - Moderate from `/admin` under **Player reviews**: reported reviews come first; Delete removes one for good.
 - API: `api/reviews.js`. When you add a game, add it to the `GAMES` list there so it can be reviewed.
+
+## Slang Search settings
+- Words live in `slang-search/words.js`: 12 themes, each `"WORD|definition|example with ~ where the word goes"`. Themes with a `day` (0 = Sunday) run the Daily Search on that weekday; every theme is also an unlimited pack. Words are letters only, 10 letters max, and must be unique across the file.
+- Levels (`CFG` in `slang-search/index.html`): Rookie 7×7, Easy 9×9, Regular 10×10, Hard 12×12 and Legend 13×13 (no letter counts or examples). Daily #1 is November 1, 2026.
+- Leaderboard: `/api/scores?game=ss`, one board per level per day (`d<YYYYMMDD>-<K|E|R|H|L>`, kept 3 days) plus `all` (all-time points).
+- Head to head: rooms `ss-<code>` on `/api/room`; presence `{app:"slang",nick,ready,readyAt,found,done,ms,score}`. The code's first letter is the level, and both phones build the same board from the code. Two to four players.
+- The same page also runs as a Claude artifact, where the leaderboard and head to head use Claude's own shared data and rooms instead.

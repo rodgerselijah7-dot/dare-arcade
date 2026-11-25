@@ -1,0 +1,16 @@
+{
+  "name": "Slang Search",
+  "short_name": "Slang Search",
+  "description": "A daily slang word search by Dontae Amare: read the definition, find the word. Five levels, twelve theme packs, a leaderboard and head-to-head races online.",
+  "start_url": "/slang-search/",
+  "scope": "/slang-search/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbfaf6",
+  "theme_color": "#fbfaf6",
+  "icons": [
+    { "src": "/slang-search/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/slang-search/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/slang-search/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
