@@ -33,6 +33,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /truth-or-dare/        Truth or Dare (single-file card game + icons + manifest; pass-the-phone and online rooms)
 /spades/               Spades (single-file partnership card game + icons + manifest; vs computer, coached tutorial, online rooms)
 /lunker-lake/          Lunker Lake (single-file canvas fishing game + icons + manifest)
+/southside-acres/      Southside Acres (single-file 3D farming game with three.js bundled inline + icons + manifest; saves on the device)
 /open-season/          Open Season (3D Texas hunting game: index.html + os-assets/ models as base64 .txt, ground textures, ambient audio and three.js loaders + icons + manifest; loads three.js r128 from cdnjs)
 /frostbound/           Frostbound (single-file canvas tower climber + icons + manifest)
 /long-shot/            Long Shot (canvas + WebGL archery duels: index.html + css/ + js/ + icons + manifest; online duels over /api/room)

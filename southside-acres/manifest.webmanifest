@@ -1,0 +1,16 @@
+{
+  "name": "Southside Acres",
+  "short_name": "Southside Acres",
+  "description": "A 3D farming game rooted in Fort Worth: grow crops, raise animals, run Southside businesses and build your dream farm. By Dontae Amare.",
+  "start_url": "/southside-acres/",
+  "scope": "/southside-acres/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#86c254",
+  "theme_color": "#86c254",
+  "icons": [
+    { "src": "/southside-acres/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/southside-acres/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/southside-acres/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
