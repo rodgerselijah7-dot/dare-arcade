@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/acres?cron=1", "schedule": "*/5 * * * *" }
+  ]
+}

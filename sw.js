@@ -8,7 +8,7 @@ self.addEventListener("push", e => {
   const title = d.title || "DARE Arcade";
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || "Someone wants to play a match.",
-    icon: "/icons/arcade-192.png?v=2",
+    icon: d.icon || "/icons/arcade-192.png?v=2",
     badge: "/icons/favicon-32.png?v=2",
     tag: d.tag || "dare-match",
     renotify: true,

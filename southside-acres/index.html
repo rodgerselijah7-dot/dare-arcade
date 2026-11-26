@@ -4791,6 +4791,7 @@ function loadLocal(){
 }
 S=loadLocal();
 function normalize(){
+  if(S.inv)for(const k of Object.keys(S.inv))if(!ITEMS[k]||!(S.inv[k]>0))delete S.inv[k];
   const d=fresh();for(const k in d)if(S[k]===undefined)S[k]=d[k];
   S.stats=S.stats||{};S.ach=S.ach||{};S.credited=S.credited||{};S.helpReq=S.helpReq||{};
 }
@@ -7832,6 +7833,7 @@ const Notify={desk:null,mode:'none',last:{},sentAt:{},state:'off',
       if(this.mode==='desktop'){const r=await this.desk.permissions.request(['notifications']);this.state=r.notifications}
       else if(this.mode==='web'){const p=await Notification.requestPermission();this.state=p==='granted'?'granted':p==='denied'?'denied':'prompt'}
     }catch(e){this.state='unavailable'}
+    if(this.state==='granted'&&Net.arcade)await Alerts.subscribe();
     if(this.state==='granted')this.send('Notifications are on! We’ll tell you when your farm needs you. 🌾');
     rerenderSheet();
   },
@@ -7861,7 +7863,7 @@ const Notify={desk:null,mode:'none',last:{},sentAt:{},state:'off',
     const away=document.hidden||!document.hasFocus();
     try{document.title=(away&&total?`(${total}) `:'')+'Southside Acres'}catch(e){}
     try{if(this.desk&&this.desk.app)this.desk.app.dock.setBadge(total?String(total):'').catch(()=>{})}catch(e){}
-    const on=S.notif&&S.notif.on&&this.state==='granted';
+    const on=S.notif&&S.notif.on&&this.state==='granted'&&!(Net.arcade&&Alerts.sub);
     if(on&&away){
       const pref=S.notif,msgs=[];
       const rose=k=>c[k]>0&&!(this.last[k]>0)&&pref[k]!==false&&now()-(this.sentAt[k]||0)>10*60000;
@@ -7887,14 +7889,14 @@ function notifHTML(){
   }else if(st==='denied'){
     h+=`<div class="row"><div class="e">🔕</div><div class="m"><div class="t">Notifications are blocked</div><div class="sub">You said no earlier. ${Notify.mode==='desktop'?'Open the app’s Permissions to turn them on.':'Turn them on in your browser’s site settings.'}</div></div>${Notify.mode==='desktop'?'<button class="btn sm" data-act="notifManage">Permissions</button>':''}</div>`;
   }else{
-    h+=`<div class="row"><div class="e">🔔</div><div class="m"><div class="t">Farm alerts</div><div class="sub">${Notify.mode==='desktop'?'System notifications while the app is open or minimized':'Browser notifications while the game is open in a tab'}</div></div>${on?tg(true,'notifOff'):`<button class="btn gold sm" data-act="notifOn">Turn on</button>`}</div>`;
+    h+=`<div class="row"><div class="e">🔔</div><div class="m"><div class="t">Farm alerts</div><div class="sub">${Notify.mode==='desktop'?'System notifications while the app is open or minimized':Net.arcade&&Alerts.sub?'Phone alerts — even when the game is closed':Net.arcade?'Phone alerts when your farm is ready':'Browser notifications while the game is open in a tab'}</div></div>${on?tg(true,'notifOff'):`<button class="btn gold sm" data-act="notifOn">Turn on</button>`}</div>`;
     if(on)h+=NOTE_TYPES.map(([k,e,n])=>srow(e,n,'',tg(S.notif[k]!==false,'notifType:'+k))).join('');
   }
   if(Notify.mode!=='desktop')h+=`<div id="installRow"></div>`;
   return h;
 }
 ACTS.notifOn=()=>Notify.enable();
-ACTS.notifOff=()=>{S.notif.on=false;save();rerenderSheet()};
+ACTS.notifOff=()=>{S.notif.on=false;save();if(Net.arcade)Alerts.clear();rerenderSheet()};
 ACTS.notifType=k=>{S.notif[k]=S.notif[k]===false;save();rerenderSheet()};
 ACTS.notifManage=()=>{try{Notify.desk.permissions.manage().then(()=>Notify.init())}catch(e){}};
 ACTS.installApp=async()=>{try{const r=await Notify.desk.install.request();if(r==='installed')toast('Installing the desktop app…')}catch(e){toast('Couldn’t start the install')}};
@@ -8080,7 +8082,7 @@ const Net={dev:Math.random().toString(36).slice(2,10),user:null,owner:false,like
   status(){return this.online?'Synced to your account — play on any device':'Saved on this device'},
   async init(){
     try{
-      if(!window.claude||!window.claude.use)return this.offline();
+      if(!window.claude||!window.claude.use)return ARC.on()?this.initArcade():this.offline();
       const to=new Promise(r=>setTimeout(()=>r(null),11000));
       const [db,user]=await Promise.all([Promise.race([claude.use('db'),to]),Promise.race([claude.use('user'),to])]);
       if(!db||!user)return this.offline();
@@ -8416,7 +8418,7 @@ ACTS.frAdd=async()=>{const el=$('#frCode');const code=(el&&el.value||'').trim().
 ACTS.frGift=uid=>{S.giftSent=S.giftSent||{};if(S.giftSent[uid]===dayKey())return;
   // send 3 of a crop you have plenty of (it leaves your silo)
   const opts=Object.keys(S.inv).filter(id=>ITEMS[id]&&ITEMS[id].k==='crop'&&have(id)>=6);if(!opts.length)return toast('Grow a few more crops first — gifts are 3 of a crop you have 6+ of');
-  const id=opts.sort((a,b)=>have(b)-have(a))[0];take({[id]:3});S.giftSent[uid]=dayKey();
+  const id=opts.sort((a,b)=>have(b)-have(a))[0];take(id,3);S.giftSent[uid]=dayKey();
   try{Net.db.collection('gifts').add({to:uid,from:(S.name||'A Southside farm').slice(0,24),item:id,qty:3,t:now()}).catch(()=>{})}catch(e){}
   stat('gifts');sfx.coin();toast(`🎁 Sent 3× ${E(id)} — they’ll get it next time they play`);addXP(5);save();rerenderSheet()};
 
@@ -8437,6 +8439,99 @@ function perfTick(tp){fpsN++;if(!fpsT)fpsT=tp;if(tp-fpsT<1000)return;const fps=M
 function frameSkip(tp){if(gq()!=='save')return false;if(tp-(frameSkip.last||0)<31)return true;frameSkip.last=tp;return false}
 ACTS.cycleGQ=()=>{const k=Object.keys(GQ);S.gq=k[(k.indexOf(gq())+1)%k.length];R3.low=false;lowFps=0;save();rerenderSheet()};
 ACTS.toggleFps=()=>{S.fpsMeter=!S.fpsMeter;save();rerenderSheet()};
+
+/* ================= DARE ARCADE ONLINE: the live neighborhood + closed-game alerts =================
+   On the arcade site there is no Claude account, so the phone keeps a secret farm key and talks to /api/acres.
+   ADB mimics the small slice of the database API the game already uses, so markets, help, chat, likes, friends
+   and gifts work the same way as on Claude. Alerts are scheduled on the server and pushed through the arcade's
+   service worker, so they arrive with the game fully closed. */
+const ARC={on(){return !window.claude&&/^https?:$/.test(location.protocol)&&(/^\/southside-acres/.test(location.pathname)||/^(localhost|127\.)/.test(location.hostname))}};
+const ADB={key:null,uid:null,cache:{},
+  async call(op,body={},ka){const r=await fetch('/api/acres',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op,key:this.key,...body}),keepalive:!!ka});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},
+  snap(rows){return{size:rows.length,docs:rows.map(d=>({id:d.id,exists:true,data:()=>d}))}},
+  one(d){return{exists:!!d,id:d&&d.id,data:()=>d}},
+  doc(path){const p=path.split('/'),c=p[0],id=p[1],self=this;
+    return{
+      async get(){if(c==='codes'){const r=await self.call('lookup',{code:id});return self.one(r.uid?{uid:r.uid}:null)}
+        if(c==='farms'){const r=await self.call('getFarm',{id});return self.one(r.farm)}
+        if(c==='market'||c==='help'){const r=await self.call(c);const d=(r.items||[]).find(x=>x.id===id);return self.one(d)}
+        return self.one(null)},
+      async set(d){if(c==='farms')return self.call('farm',{farm:d});if(c==='codes')return self.call('code');if(c==='likes')return self.call('like',{farm:id});return null},
+      async update(){return null},
+      async delete(){if(c==='market')return self.call('unlist',{id});if(c==='help')return self.call('unask',{id});if(c==='chat')return self.call('unsay',{id});return null},
+      async acquire(){return{acquired:true}},
+      onSnapshot(){return()=>{}}}},
+  collection(path){const self=this;let n=50;
+    const q={orderBy(){return q},limit(k){n=k;return q},
+      async add(d){if(path==='chat')return{id:(await self.call('say',{txt:d.txt,farm:d.farm})).id};
+        if(path==='help')return{id:(await self.call('ask',d)).id};
+        if(path==='gifts')return self.call('gift',{to:d.to,item:d.item,qty:d.qty,from:d.from});
+        if(path==='market')return{id:(await self.call('list',d)).id};return{}},
+      onSnapshot(cb,err){
+        const poll=async()=>{if(document.hidden)return;try{
+          let rows;if(path==='farms')rows=(await self.call('farms')).farms;
+          else if(path==='gifts')rows=(await self.call('gifts')).gifts;
+          else if(path.startsWith('likes/')){const r=await self.call('likes');cb({size:r.n,docs:[]});return}
+          else rows=(await self.call(path)).items;
+          cb(self.snap((rows||[]).slice(0,n)))}catch(e){err&&err(e)}};
+        const every={chat:7000,market:15000,help:20000,farms:45000,gifts:60000}[path]||60000;
+        poll();const h=setInterval(poll,every);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});return()=>clearInterval(h)}};
+    return q}};
+
+async function arcKey(){let k=null;try{k=localStorage.getItem('acres-key')}catch(e){}
+  if(!/^[A-Za-z0-9]{32}$/.test(k||'')){const A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';k=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>A[b%62]).join('');try{localStorage.setItem('acres-key',k)}catch(e){}}
+  const h=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('acres:'+k)));
+  return[k,Array.from(h,b=>b.toString(16).padStart(2,'0')).join('').slice(0,16)]}
+
+Net.initArcade=async function(){
+  try{const [k,uid]=await arcKey();ADB.key=k;ADB.uid=uid;
+    // make sure the neighborhood answers before switching online
+    const r=await fetch('/api/acres',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'farms'})});if(!r.ok)return this.offline();
+    this.db=ADB;this.uid=uid;this.online=true;this.arcade=true;this.owner=false;
+    // atomic first-buyer-wins operations go straight to the server
+    this.buy=async l=>{if(!validListing(l))return false;try{return (await ADB.call('buy',{id:l.id})).ok}catch(e){return false}};
+    this.claimForBot=async lid=>{if(!lid)return true;try{return (await ADB.call('buy',{id:lid,bot:true})).ok}catch(e){return false}};
+    this.fillHelp=async h=>{try{return (await ADB.call('fill',{id:h.id})).ok}catch(e){return false}};
+    this.loadCloud=async()=>{};this.flush=async()=>{};this.queueSave=()=>{};
+    this.status=()=>'Saved on this phone · live neighborhood on';
+    this.subscribe();this.publishFarm(true);try{frInit()}catch(e){}
+    $('#netDot').className='on';if(sheetKey)rerenderSheet();
+    Alerts.init();
+  }catch(e){this.offline()}
+};
+
+/* ---------- alerts with the game closed ---------- */
+const Alerts={sub:null,
+  async init(){if(!this.supported())return;
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)this.schedule(true);else this.clear()});
+    addEventListener('pagehide',()=>this.schedule(true));
+    try{const reg=await navigator.serviceWorker.ready;const s=await reg.pushManager.getSubscription();if(s)this.sub=s.toJSON()}catch(e){}
+    if(S.notif&&S.notif.on&&Notification.permission==='granted'&&!this.sub)this.subscribe()},
+  supported(){return Net.arcade&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window},
+  keyBytes(s){const p='='.repeat((4-s.length%4)%4),raw=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(raw,c=>c.charCodeAt(0))},
+  async subscribe(){if(!this.supported())return false;
+    try{const reg=await navigator.serviceWorker.register('/sw.js').then(()=>navigator.serviceWorker.ready);let s=await reg.pushManager.getSubscription();
+      if(!s){const d=await (await fetch('/api/lfg',{cache:'no-store'})).json();if(!d.key)return false;s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:this.keyBytes(d.key)})}
+      this.sub=s.toJSON();await ADB.call('alerts',{sub:this.sub,items:[]});return true}catch(e){return false}},
+  // the next moment each kind of thing will be ready, as push alerts
+  plan(){const t=now(),pref=S.notif||{},out=[];
+    const soon=(tag,k,at,body)=>{if(pref[k]===false||!(at>t+30000))return;const ex=out.find(o=>o.tag===tag);if(!ex||at<ex.at){if(ex)out.splice(out.indexOf(ex),1);out.push({tag,at,body})}};
+    for(const o of S.objs){
+      if(o.t==='plot'&&o.c){const at=o.pt+growTime(o.c);soon('crops','crops',at,`🌾 Your ${ITEMS[o.c].n.toLowerCase()} is ready to harvest!`)}
+      else if(o.t==='pen'){const P=PENS[o.k];for(const a of o.a)if(a.f){const at=a.f+P.time*1000*(1-.1*stars('pen_'+P.out));soon('animals','animals',at,`${({chicken:'🐔',cow:'🐄',pig:'🐷',sheep:'🐑',goat:'🐐'})[ANIMAL_KIND[o.k]]||'🐄'} Your animals have ${ITEMS[P.out].n.toLowerCase()} ready to collect!`)}}
+      else if(o.t==='bld'){for(const q of o.q){const r=BUILDINGS[o.k].r[q.r];soon('goods','goods',q.end,`${BUILDINGS[o.k].e} ${r?ITEMS[r.out].n:'Your goods'} ${r&&r.q>1?'are':'is'} done at the ${BUILDINGS[o.k].n}!`)}}
+      else if(o.t==='tree'&&!o.dead){const T=TREES[o.k];soon('orchard','orchard',o.pt+T.time*1000,`🍎 Your ${T.n.toLowerCase()} is full of ${ITEMS[T.fruit].n.toLowerCase()}!`)}
+      else if(o.t==='hive')soon('orchard','orchard',(o.ht||0)+hiveTime(),'🍯 Fresh honey is ready at the beehive!');
+    }
+    if(S.feat.dock&&S.boat&&S.boat.state==='away')soon('ships','ships',S.boat.t,'⛵ A cargo boat just docked — new crates to fill!');
+    if(S.feat.station&&S.train&&S.train.state==='away')soon('train','ships',S.train.t,'🚂 The train is in — load it up!');
+    const tm=new Date();tm.setHours(24,0,30,0);if(!dailyReady())soon('daily','daily',+tm+9*3600000,'🎁 Your daily gift is waiting at the farmhouse.');
+    return out},
+  schedule(ka){if(!Net.arcade||!this.sub||!(S.notif&&S.notif.on))return;try{save()}catch(e){}
+    ADB.call('alerts',{sub:this.sub,items:this.plan()},ka).catch(()=>{})},
+  clear(){if(!Net.arcade||!this.sub)return;ADB.call('alerts',{items:[]}).catch(()=>{})},
+  off(){this.sub=null;if(Net.arcade)ADB.call('noalerts').catch(()=>{})}
+};
 
 /* ================= BOOT ================= */
 $('#btnBuild').onclick=()=>{initAudio();openShop()};
