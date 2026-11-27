@@ -27,16 +27,21 @@
 if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('standalone');
 </script>
 <script>
-// Seasonal enter page (Central time): Halloween all of October; Thanksgiving from November 1 through the Sunday after
-// Thanksgiving (the fourth Thursday). ?season=halloween or ?season=thanksgiving previews one, ?season=off hides them.
+// Seasonal enter page (Central time): Halloween all of October; Thanksgiving from November 1 through Thanksgiving Day
+// (the fourth Thursday); Black Friday from the next day through Cyber Monday (it turns electric blue on Monday).
+// ?season=halloween, thanksgiving, blackfriday or cybermonday previews one, ?season=off hides them.
 (function(){var q=location.search,d=document.documentElement,mo=0,day=0,yr=0;
   try{var p=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date());
     p.forEach(function(x){if(x.type==='month')mo=+x.value;if(x.type==='day')day=+x.value;if(x.type==='year')yr=+x.value})}catch(e){}
   var tday=yr?1+((4-new Date(Date.UTC(yr,10,1)).getUTCDay()+7)%7)+21:26;   // fourth Thursday of November
-  var season=mo===10?'halloween':mo===11&&day<=tday+3?'thanksgiving':'';
+  var after=mo===11?day-tday:mo===12?day+30-tday:-9;   // days after Thanksgiving
+  var season=mo===10?'halloween':mo===11&&day<=tday?'thanksgiving':after>=1&&after<=4?'blackfriday':'';
   if(/[?&]season=halloween\b/.test(q)){season='halloween';if(mo!==10)day=24}
   if(/[?&]season=thanksgiving\b/.test(q)){season='thanksgiving';if(mo!==11||day>tday)day=Math.min(tday-6,20)}
+  if(/[?&]season=(blackfriday|cybermonday)\b/.test(q)){season='blackfriday';after=/cybermonday/.test(q)?4:(+(q.match(/[?&]bfday=(\d)/)||[])[1]||1)}
   if(/[?&]season=off\b/.test(q))season='';
+  // Black Friday is built on the Thanksgiving enter page (same effects), with its own look and scene
+  if(season==='blackfriday'){d.classList.add('thanksgiving','bf');d.dataset.bfDay=after;if(after===4)d.classList.add('bf-cyber')}
   if(season==='halloween'){d.classList.add('halloween');d.dataset.hwLeft=Math.max(0,31-(day||31))}
   if(season==='thanksgiving'){d.classList.add('thanksgiving');d.dataset.tgLeft=Math.max(0,tday-day)}
   // after dark (the visitor's own clock) the harvest scene is moonlit: set it now so the first frame isn't a sunset
@@ -517,6 +522,36 @@ html.searching .queue p.group:first-of-type,html.searching .find-meta+.find-none
 }
 @media (max-width:370px){.bar .mark{font-size:17px;letter-spacing:.05em}}
 
+
+/* ===== Black Friday (built on the Thanksgiving enter page): black and gold, with red neon (electric blue on Cyber Monday) ===== */
+html.bf{--bf-neon:#ff3b4a;--bf-gold:#F2C14E;--bf-champ:#efe4cf}
+html.bf.bf-cyber{--bf-neon:#46c8ff}
+html.bf.gated{background:#000}
+html.bf .gate{background:radial-gradient(120% 70% at 50% 76%,#2b1d0e 0%,#0e0a07 42%,#000 100%)}
+html.bf .g-top{color:var(--bf-champ);text-shadow:0 1px 8px rgba(0,0,0,.7)}
+html.bf .g-top b::before{background:var(--bf-neon);box-shadow:0 0 10px var(--bf-neon),0 0 2px #fff}
+html.bf #hwCount{color:var(--bf-gold);background:rgba(20,16,12,.55);border-color:rgba(242,193,78,.4)}
+html.bf #hwCount::before{background:linear-gradient(135deg,#fff0b0,#d99a1c);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h8.6l9.4 9.4-8.6 8.6L3 11.6zM7.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z' fill-rule='evenodd'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h8.6l9.4 9.4-8.6 8.6L3 11.6zM7.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z' fill-rule='evenodd'/%3E%3C/svg%3E") center/contain no-repeat}
+html.bf .g-pre{color:var(--bf-champ);text-shadow:0 1px 10px rgba(0,0,0,.8)}
+html.bf .tg-ed{color:var(--bf-gold)}
+html.bf .tg-ed::before,html.bf .tg-ed::after{background:linear-gradient(90deg,transparent,rgba(242,193,78,.95))}
+html.bf .g-title>span:first-child .ch{background-image:linear-gradient(176deg,#ffffff 0%,#f2f2f2 30%,#a9a9a9 52%,#f7f7f7 70%,#8c8c8c 100%)}
+html.bf .g-title>span+span .ch{background-image:linear-gradient(100deg,transparent 42%,rgba(255,252,236,.95) 50%,transparent 58%),linear-gradient(180deg,#fff8d6 0%,#ffe08a 26%,#f2b632 56%,#b97c10 84%,#7a4f06 100%)}
+html.bf .g-title{filter:drop-shadow(0 4px 18px rgba(0,0,0,.75))}
+html.bf .g-sub{color:#f3ead9;text-shadow:0 1px 12px rgba(0,0,0,.85)}
+html.bf .g-hint{color:var(--bf-neon);text-shadow:0 0 8px var(--bf-neon),0 0 22px color-mix(in srgb,var(--bf-neon) 60%,transparent),0 1px 2px #000;letter-spacing:.22em}
+html.bf .g-foot{color:#d9caa8;text-shadow:0 1px 8px #000}
+html.bf .g-foot::before,html.bf .g-foot::after{background:linear-gradient(90deg,transparent,#d9caa8)}
+@media (max-width:480px){html.bf .g-foot::before,html.bf .g-foot::after{display:none}}
+html.bf .tg-leaf{display:none}
+html.bf .enter{background:linear-gradient(180deg,#fff4c8 0%,#ffd76a 34%,#f0ac2a 70%,#b8770e 100%);color:#1a1000;
+  box-shadow:0 0 0 1px rgba(255,236,170,.6) inset,0 10px 30px rgba(242,182,50,.35),0 0 60px rgba(242,182,50,.18)}
+html.bf .enter:hover,html.bf .enter:focus-visible{background:linear-gradient(180deg,#fffbe2 0%,#ffe48c 34%,#f6bb3c 70%,#c88512 100%);color:#1a1000}
+html.bf.gated .hs-card{background:linear-gradient(180deg,rgba(26,22,18,.94),rgba(6,5,4,.96));color:#f3ead9;border-top:1px solid rgba(242,193,78,.5)}
+html.bf.gated .hs h2{color:#fff8e6}
+
 /* ===== Home Screen guide ===== */
 .fs-link{display:inline-flex;align-items:center;gap:8px;margin-top:22px;background:none;border:0;cursor:pointer;
   font-family:var(--display);letter-spacing:.18em;font-size:16px;color:#fff;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.35)}
@@ -868,13 +903,19 @@ html.standalone .fs-link,html.standalone .tip{display:none}
   if(HW||TG){
     const c=document.getElementById('hwCount');
     if(HW){const n=+html.dataset.hwLeft||0;if(c)c.textContent=n===0?'HAPPY HALLOWEEN':n===1?'1 NIGHT TO HALLOWEEN':n+' NIGHTS TO HALLOWEEN';}
-    if(TG){const n=+html.dataset.tgLeft||0;if(c)c.textContent=n===0?'HAPPY THANKSGIVING':n===1?'1 DAY TO THANKSGIVING':n+' DAYS TO THANKSGIVING';}
+    const BF=html.classList.contains('bf');
+    if(TG&&!BF){const n=+html.dataset.tgLeft||0;if(c)c.textContent=n===0?'HAPPY THANKSGIVING':n===1?'1 DAY TO THANKSGIVING':n+' DAYS TO THANKSGIVING';}
+    if(BF){const n=+html.dataset.bfDay||1,cy=n===4,set=(sel,t)=>{const e=document.querySelector(sel);if(e)e.textContent=t};
+      if(c)c.textContent=n===1?'BLACK FRIDAY':cy?'CYBER MONDAY':(4-n)===1?'1 DAY TO CYBER MONDAY':(4-n)+' DAYS TO CYBER MONDAY';
+      set('.tg-ed',cy?'CYBER MONDAY EDITION':'BLACK FRIDAY EDITION');
+      set('.g-sub .tg-only','Every game is free to start. No lines, no limits.');
+      set('.g-hint .tg-only',cy?'NOW ONLINE':'DOORS ARE OPEN');}
     // split the title into letters for the reveal
     document.querySelectorAll('.g-title>span').forEach((w,wi)=>{const t=w.textContent;w.setAttribute('aria-label',t);w.textContent='';
       [...t].forEach((ch,i)=>{const l=document.createElement('span');l.className='ch';l.setAttribute('aria-hidden','true');l.textContent=ch;l.style.setProperty('--i',i+wi*4);w.appendChild(l)})});
     const add=src=>{const sc=document.createElement('script');sc.src=src;document.body.appendChild(sc)};
     if(HW){add('/halloween.js?v=11');add('/halloween-spider.js?v=2');}
-    if(TG)add(/[?&]scene=table\b/.test(location.search)?'/thanksgiving-table.js?v=2':'/thanksgiving.js?v=8');}
+    if(TG)add(html.classList.contains('bf')?'/blackfriday.js?v=1':/[?&]scene=table\b/.test(location.search)?'/thanksgiving-table.js?v=2':'/thanksgiving.js?v=8');}
   // Enter gate
   const gate=document.getElementById('gate'),btn=document.getElementById('enterBtn');
 

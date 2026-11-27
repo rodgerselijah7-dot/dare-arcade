@@ -292,3 +292,10 @@ Every push to `main` redeploys automatically.
 - Leaderboard: `/api/scores?game=ss`, one board per level per day (`d<YYYYMMDD>-<K|E|R|H|L>`, kept 3 days) plus `all` (all-time points).
 - Head to head: rooms `ss-<code>` on `/api/room`; presence `{app:"slang",nick,ready,readyAt,found,done,ms,score}`. The code's first letter is the level, and both phones build the same board from the code. Two to four players.
 - The same page also runs as a Claude artifact, where the leaderboard and head to head use Claude's own shared data and rooms instead.
+
+
+## Black Friday enter page
+
+- From the day after Thanksgiving through Cyber Monday (Central time), the enter page turns black and gold: spotlights sweeping over a city skyline, a mirror-black street with a red neon horizon and grid, gold bokeh, falling foil confetti, glitter and camera flashes. On Cyber Monday the neon turns electric blue. The countdown pill reads Black Friday, then the days to Cyber Monday. Enter throws a burst of gold confetti (with a cash-register "cha-ching" if sound is on).
+- Built on the Thanksgiving enter page (`html.thanksgiving.bf`), so it keeps all its effects; the scene is `blackfriday.js`. Thanksgiving now runs through Thanksgiving Day.
+- Preview with `/?season=blackfriday` (add `&bfday=2` or `3` for the weekend) or `/?season=cybermonday`.
