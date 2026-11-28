@@ -1,0 +1,16 @@
+{
+  "name": "Divine Axioms",
+  "short_name": "Divine Axioms",
+  "description": "The game of the book Divine Axioms & Maxims by Dontae Amare. Restore all 47 axioms and climb the mountain trail.",
+  "start_url": "/divine-axioms/",
+  "scope": "/divine-axioms/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e3ddd2",
+  "theme_color": "#e3ddd2",
+  "icons": [
+    { "src": "/divine-axioms/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/divine-axioms/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/divine-axioms/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -25,7 +25,7 @@ const GAMES = {
   "cosmic-encounter": "Cosmic Encounter", "dirt-line": "Dirt Line", "grand-prix": "Grand Prix", "live-fire-range": "Live Fire Range",
   "open-season": "Open Season", "frostbound": "Frostbound", "crowd-run": "Crowd Run", "break-the-block": "Break the Block",
   "bubble": "Bubble Blaster", "ori": "ORI", "2048": "2048", "1010": "1010", "jenga": "Jenga", "buckets": "Buckets",
-  "lunker-lake": "Lunker Lake", "southside-acres": "Southside Acres", "long-shot": "Long Shot", "crate-digger": "Crate Digger", "game-day": "Game Day", "slang-search": "Slang Search"
+  "lunker-lake": "Lunker Lake", "southside-acres": "Southside Acres", "long-shot": "Long Shot", "crate-digger": "Crate Digger", "game-day": "Game Day", "slang-search": "Slang Search", "divine-axioms": "Divine Axioms"
 };
 const PID = /^r[a-z0-9]{10,32}$/;
 const ID = /^[a-z0-9]{10}$/;

@@ -22,6 +22,7 @@ Browser games by Dontae Amare. Static site — no build step.
 /crate-digger/         Crate Digger (music trivia: index.html + questions.js + icons + manifest)
 /game-day/             Game Day (NBA + NFL trivia: index.html + questions.js + icons + manifest)
 /slang-search/          Slang Search (daily slang word search: index.html + words.js + icons + manifest)
+/divine-axioms/        Divine Axioms (game of the book Divine Axioms & Maxims: single-file word puzzle with the cover photos inlined + icons + manifest)
 /dead-rise/            Dead Rise (single-file 3D zombie FPS + icons + manifest; loads three.js r128 from cdnjs)
 /square-up/            Square Up (single-file top-down canvas zombie wave shooter + icons + manifest)
 /live-fire-range/      Live Fire Range (3D shooting range: index.html + assets/ photo textures and HDRI skies + icons + manifest; loads three.js r160 from jsDelivr)
